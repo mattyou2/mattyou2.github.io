@@ -5,17 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mattyou Cloud - Mattyou Studios</title>
     <style>
-        /* Zorgt dat de browser geen witte randen heeft */
+        /* Verwijder de witte randen van de browser */
         body, html {
             margin: 0;
             padding: 0;
             height: 100%;
             width: 100%;
-            overflow: hidden; 
+            overflow: hidden; /* Voorkomt dubbele scrollbalken */
             background-color: #000;
         }
 
-        /* De iframe die de hele pagina vult */
+        /* Maak de iframe volledig scherm */
         .fullscreen-iframe {
             position: absolute;
             top: 0;
@@ -25,7 +25,7 @@
             border: none;
         }
 
-        /* Jouw herkenbare Mattyou Studios Badge */
+        /* Jouw Mattyou Studios Badge stijl */
         .studio-badge {
             position: absolute;
             bottom: 15px;
@@ -46,7 +46,7 @@
             text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
             user-select: none;
             cursor: default;
-            z-index: 9999; /* Zorgt dat de badge altijd zichtbaar blijft */
+            z-index: 9999; /* Zorgt dat de badge altijd bovenop de site ligt */
         }
     </style>
 </head>
