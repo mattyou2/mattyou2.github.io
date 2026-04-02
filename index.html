@@ -3,59 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minecraft Wiki - Mattyou Studios</title>
+    <title>Mattyou Studios - Dashboard</title>
     <style>
-        /* Verwijder de witte randen van de browser */
-        body, html {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            width: 100%;
-            overflow: hidden; /* Voorkomt dubbele scrollbalken */
-            background-color: #000;
-        }
-
-        /* Maak de iframe volledig scherm */
-        .fullscreen-iframe {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-
-        /* Jouw Mattyou Studios Badge stijl */
-        .studio-badge {
-            position: absolute;
-            bottom: 15px;
-            right: 15px;
-            background: radial-gradient(circle at center, #1b2735 0%, #090a0f 100%);
-            background-image: 
-                radial-gradient(white, rgba(255,255,255,.1) 1px, transparent 20px),
-                linear-gradient(135deg, #020111 0%, #191621 25%, #20202c 50%, #191621 75%, #020111 100%);
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.8), 0 0 10px rgba(100, 149, 237, 0.3);
+        body {
+            background-color: #0f172a;
             color: white;
-            padding: 12px 24px;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            font-size: 18px;
-            font-weight: 800;
-            border: 2px solid rgba(255, 255, 255, 0.15);
-            border-radius: 12px;
-            pointer-events: auto;
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-            user-select: none;
-            cursor: default;
-            z-index: 9999; /* Zorgt dat de badge altijd bovenop de site ligt */
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 50px;
         }
+        h1 { border-bottom: 2px solid #38bdf8; padding-bottom: 10px; }
+        .app-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            width: 100%;
+            max-width: 800px;
+            margin-top: 40px;
+        }
+        .app-card {
+            background: #1e293b;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            border: 1px solid #334155;
+            transition: transform 0.2s;
+            text-decoration: none;
+            color: white;
+        }
+        .app-card:hover {
+            transform: scale(1.05);
+            border-color: #38bdf8;
+        }
+        .app-card h3 { margin: 10px 0; }
     </style>
 </head>
 <body>
 
-    <iframe class="fullscreen-iframe" src="https://mattyou-mc-wiki.base44.app/" allowfullscreen></iframe>
+    <h1>Mattyou Studios Apps</h1>
+    <p>Welkom op mijn officiële dashboard. Kies een app hieronder:</p>
 
-    <div class="studio-badge">
-        Made by Mattyou Studios™
+    <div class="app-container">
+        <a href="/wiki" class="app-card">
+            <h3>Minecraft Wiki</h3>
+            <p>De complete gids voor Minecraft Java Edition.</p>
+        </a>
+
+        <div class="app-card" style="opacity: 0.5;">
+            <h3>Binnenkort...</h3>
+            <p>Hier komt mijn volgende project.</p>
+        </div>
     </div>
 
 </body>
