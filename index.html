@@ -5,56 +5,118 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mattyou Studios - Dashboard</title>
     <style>
+        /* Donker thema basis */
         body {
-            background-color: #0f172a;
-            color: white;
-            font-family: 'Segoe UI', sans-serif;
+            background-color: #0b0e14;
+            color: #ffffff;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 50px;
+            justify-content: center;
+            min-height: 100vh;
         }
-        h1 { border-bottom: 2px solid #38bdf8; padding-bottom: 10px; }
-        .app-container {
+
+        /* Titel styling */
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+        }
+
+        p.subtitle {
+            color: #94a3b8;
+            font-size: 1.2rem;
+            margin-bottom: 40px;
+        }
+
+        /* Container voor de app-kaarten */
+        .app-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            width: 100%;
-            max-width: 800px;
-            margin-top: 40px;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            width: 90%;
+            max-width: 900px;
         }
+
+        /* De app-kaarten styling */
         .app-card {
             background: #1e293b;
-            padding: 20px;
-            border-radius: 15px;
+            padding: 30px;
+            border-radius: 20px;
             text-align: center;
-            border: 1px solid #334155;
-            transition: transform 0.2s;
             text-decoration: none;
             color: white;
+            border: 2px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
+
         .app-card:hover {
-            transform: scale(1.05);
+            transform: translateY(-10px);
             border-color: #38bdf8;
+            box-shadow: 0 15px 40px rgba(56, 189, 248, 0.2);
+            background: #243046;
         }
-        .app-card h3 { margin: 10px 0; }
+
+        .app-card h3 {
+            font-size: 1.8rem;
+            margin: 0 0 10px 0;
+        }
+
+        .app-card p {
+            color: #cbd5e1;
+            font-size: 1rem;
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        /* Jouw Mattyou Studios Badge onderaan */
+        .footer-badge {
+            margin-top: 50px;
+            background: radial-gradient(circle at center, #1b2735 0%, #090a0f 100%);
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-weight: bold;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
     </style>
 </head>
 <body>
 
-    <h1>Mattyou Studios Apps</h1>
-    <p>Welkom op mijn officiële dashboard. Kies een app hieronder:</p>
+    <h1>Mattyou Studios</h1>
+    <p class="subtitle">Ontdek mijn officiële apps en projecten</p>
 
-    <div class="app-container">
+    <div class="app-grid">
+        
         <a href="/wiki" class="app-card">
             <h3>Minecraft Wiki</h3>
-            <p>De complete gids voor Minecraft Java Edition.</p>
+            <p>De ultieme Nederlandstalige gids voor Minecraft Java Edition.</p>
         </a>
 
-        <div class="app-card" style="opacity: 0.5;">
+        <a href="/cloud" class="app-card">
+            <h3>Mattyou Cloud</h3>
+            <p>Snel en veilig bestanden opslaan met Mattyou Cloud.</p>
+        </a>
+
+        <div class="app-card" style="opacity: 0.4; border-style: dashed; background: transparent;">
             <h3>Binnenkort...</h3>
-            <p>Hier komt mijn volgende project.</p>
+            <p>Er wordt gewerkt aan nieuwe vette projecten.</p>
         </div>
+
+    </div>
+
+    <div class="footer-badge">
+        Made by Mattyou Studios™
     </div>
 
 </body>
