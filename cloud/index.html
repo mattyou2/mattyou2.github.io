@@ -2,20 +2,18 @@
 <html lang="nl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Mattyou Cloud - Mattyou Studios</title>
     <style>
-        /* Verwijder de witte randen van de browser */
         body, html {
             margin: 0;
             padding: 0;
             height: 100%;
             width: 100%;
-            overflow: hidden; /* Voorkomt dubbele scrollbalken */
+            overflow: hidden;
             background-color: #000;
         }
 
-        /* Maak de iframe volledig scherm */
         .fullscreen-iframe {
             position: absolute;
             top: 0;
@@ -25,11 +23,10 @@
             border: none;
         }
 
-        /* Jouw Mattyou Studios Badge stijl */
         .studio-badge {
-            position: absolute;
-            bottom: 15px;
-            right: 15px;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
             background: radial-gradient(circle at center, #1b2735 0%, #090a0f 100%);
             background-image: 
                 radial-gradient(white, rgba(255,255,255,.1) 1px, transparent 20px),
@@ -38,25 +35,18 @@
             color: white;
             padding: 12px 24px;
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 800;
             border: 2px solid rgba(255, 255, 255, 0.15);
             border-radius: 12px;
-            pointer-events: auto;
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-            user-select: none;
-            cursor: default;
-            z-index: 9999; /* Zorgt dat de badge altijd bovenop de site ligt */
+            z-index: 9999;
+            pointer-events: none;
+            white-space: nowrap;
         }
     </style>
 </head>
 <body>
-
     <iframe class="fullscreen-iframe" src="https://mattyou-cloud.bolt.host" allowfullscreen></iframe>
-
-    <div class="studio-badge">
-        Made by Mattyou Studios™
-    </div>
-
+    <div class="studio-badge">Made by Mattyou Studios™</div>
 </body>
 </html>
