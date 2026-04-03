@@ -16,6 +16,8 @@
             align-items: center;
             justify-content: center;
             min-height: 100vh;
+            padding: 40px 20px;
+            box-sizing: border-box;
         }
 
         /* Titel styling */
@@ -26,12 +28,14 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             font-weight: 800;
+            text-align: center;
         }
 
         p.subtitle {
             color: #94a3b8;
             font-size: 1.2rem;
             margin-bottom: 40px;
+            text-align: center;
         }
 
         /* Container voor de app-kaarten */
@@ -39,8 +43,8 @@
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 25px;
-            width: 90%;
-            max-width: 900px;
+            width: 100%;
+            max-width: 1000px;
         }
 
         /* De app-kaarten styling */
@@ -80,37 +84,48 @@
 
         /* Jouw Mattyou Studios Badge onderaan */
         .footer-badge {
-            margin-top: 50px;
+            margin-top: 60px;
             background: radial-gradient(circle at center, #1b2735 0%, #090a0f 100%);
-            padding: 10px 20px;
-            border-radius: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            font-weight: bold;
-            font-size: 0.9rem;
-            color: rgba(255, 255, 255, 0.8);
+            padding: 12px 24px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            font-weight: 800;
+            font-size: 1rem;
+            color: white;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
         }
     </style>
 </head>
 <body>
 
     <h1>Mattyou Studios</h1>
-    <p class="subtitle">Ontdek mijn officiële apps en projecten</p>
+    <p class="subtitle">Mijn officiële apps, games en projecten</p>
 
     <div class="app-grid">
         
         <a href="/wiki" class="app-card">
             <h3>Minecraft Wiki</h3>
-            <p>De ultieme Nederlandstalige gids voor Minecraft Java Edition.</p>
+            <p>De ultieme gids voor Minecraft Java Edition.</p>
         </a>
 
         <a href="/cloud" class="app-card">
             <h3>Mattyou Cloud</h3>
-            <p>Snel en veilig bestanden opslaan met Mattyou Cloud.</p>
+            <p>Snel en veilig bestanden opslaan in de cloud.</p>
         </a>
 
         <a href="/web-launch" class="app-card">
             <h3>Web Launch</h3>
             <p>Start je nieuwe webprojecten razendsnel op.</p>
+        </a>
+
+        <a href="/game-studio" class="app-card">
+            <h3>Game Studio</h3>
+            <p>Het kloppend hart van Mattyou game ontwikkeling.</p>
+        </a>
+
+        <a href="/games" class="app-card">
+            <h3>Mattyou Games</h3>
+            <p>Speel de vetste games gemaakt door Mattyou Studios.</p>
         </a>
 
     </div>
