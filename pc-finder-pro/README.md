@@ -1,5 +1,5 @@
 <div align="center">
-<img width="1200" height="475" alt="GHBanner" src="[https://mattyou.odoo.com/web/image/650-1ec04e9f/Mattyou-studios-wallpaper.webp" />
+<img width="1200" height="475" alt="GHBanner" src="https://mattyou.odoo.com/web/image/650-1ec04e9f/Mattyou-studios-wallpaper.webp" />
 </div>
 
 # Mattyou Studios
