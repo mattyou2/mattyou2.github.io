@@ -1,5 +1,5 @@
-const API_KEY = "HIER_JOUW_GOOGLE_AI_STUDIO_SLEUTEL_PLAKKEN";
-const URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+const API_KEY = "AIzaSyA_CudCVDmGxOY4S1T3cKT60DJEhekre3w";
+const URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${AIzaSyA_CudCVDmGxOY4S1T3cKT60DJEhekre3w}`;
 
 const searchBtn = document.getElementById('searchBtn');
 const userInput = document.getElementById('userInput');
