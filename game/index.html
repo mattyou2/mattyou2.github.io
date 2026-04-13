@@ -3,202 +3,153 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mattyou Studios - Games</title>
+    <title>Mattyou Studios - Playable Games</title>
     <style>
+        /* Donker thema basis - Exact hetzelfde als dashboard */
         body {
             background-color: #0b0e14;
             color: #ffffff;
-            font-family: 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             margin: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
             min-height: 100vh;
-            padding-bottom: 50px;
-        }
-
-        /* Header met terugknop */
-        .nav-header {
-            width: 100%;
-            padding: 20px 40px;
-            display: flex;
-            align-items: center;
-            background: rgba(30, 41, 59, 0.5);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 40px 20px;
             box-sizing: border-box;
-            position: sticky;
-            top: 0;
-            z-index: 100;
         }
 
-        .back-btn {
-            text-decoration: none;
-            color: #38bdf8;
-            font-weight: 700;
-            transition: 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .back-btn:hover { color: #ffffff; }
-
-        /* Pagina Titel */
-        .page-title {
-            text-align: center;
-            margin: 50px 0 30px;
-        }
-
-        .page-title h1 {
+        /* Titel styling - Exact hetzelfde als dashboard */
+        h1 {
             font-size: 3rem;
-            margin: 0;
+            margin-bottom: 10px;
             background: linear-gradient(90deg, #38bdf8, #818cf8);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             font-weight: 800;
+            text-align: center;
         }
 
-        /* Game Lijst Grid */
-        .game-grid {
+        p.subtitle {
+            color: #94a3b8;
+            font-size: 1.2rem;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        /* Container voor de app-kaarten */
+        .app-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 25px;
             width: 100%;
-            max-width: 1100px;
-            padding: 20px;
-            box-sizing: border-box;
+            max-width: 1000px;
         }
 
-        /* Game Kaart */
-        .game-card {
+        /* De kaarten styling - Exact hetzelfde als dashboard */
+        .app-card {
             background: #1e293b;
+            padding: 30px;
             border-radius: 20px;
-            overflow: hidden;
-            border: 2px solid rgba(255, 255, 255, 0.05);
-            transition: all 0.3s ease;
+            text-align: center;
             text-decoration: none;
             color: white;
+            border: 2px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             display: flex;
             flex-direction: column;
+            justify-content: center;
         }
 
-        .game-card:hover {
-            transform: translateY(-8px);
+        .app-card:hover {
+            transform: translateY(-10px);
             border-color: #38bdf8;
             box-shadow: 0 15px 40px rgba(56, 189, 248, 0.2);
+            background: #243046;
         }
 
-        /* Thumbnail placeholder */
-        .game-thumb {
-            width: 100%;
-            height: 180px;
-            background: #0f172a;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 900;
-            font-size: 1.2rem;
-            color: #334155;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-
-        .playable .game-thumb {
-            background: linear-gradient(135deg, #1e293b 0%, #38bdf8 100%);
-            color: white;
-        }
-
-        .game-info {
-            padding: 20px;
-        }
-
-        .game-info h3 {
+        .app-card h3 {
+            font-size: 1.8rem;
             margin: 0 0 10px 0;
-            font-size: 1.5rem;
         }
 
-        .game-info p {
-            color: #94a3b8;
-            font-size: 0.95rem;
-            line-height: 1.4;
-            margin-bottom: 15px;
+        .app-card p {
+            color: #cbd5e1;
+            font-size: 1rem;
+            line-height: 1.5;
+            margin: 0;
         }
 
-        /* Status Labels */
-        .status {
-            display: inline-block;
-            padding: 5px 12px;
-            border-radius: 8px;
-            font-size: 0.8rem;
+        /* Specifieke styling voor de Terug-knop onderaan */
+        .back-container {
+            margin-top: 40px;
+        }
+
+        .back-link {
+            text-decoration: none;
+            color: #38bdf8;
+            font-weight: 700;
+            font-size: 1.1rem;
+            transition: 0.3s;
+        }
+
+        .back-link:hover {
+            color: #ffffff;
+            text-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+        }
+
+        /* Footer Badge */
+        .footer-badge {
+            margin-top: 60px;
+            background: radial-gradient(circle at center, #1b2735 0%, #090a0f 100%);
+            padding: 12px 24px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
             font-weight: 800;
-            text-transform: uppercase;
+            font-size: 1rem;
+            color: white;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
         }
 
-        .status-online { background: #10b981; color: white; }
-        .status-soon { background: #64748b; color: white; }
-
-        /* Coming Soon kaarten styling */
-        .soon {
-            opacity: 0.7;
+        /* "Coming Soon" kaart is minder fel */
+        .coming-soon {
+            opacity: 0.6;
             cursor: default;
         }
-        .soon:hover { transform: none; border-color: rgba(255, 255, 255, 0.05); box-shadow: none; }
+        .coming-soon:hover {
+            transform: none;
+            border-color: rgba(255, 255, 255, 0.05);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
     </style>
 </head>
 <body>
 
-    <div class="nav-header">
-        <a href="index.html" class="back-btn">← Terug naar Dashboard</a>
-    </div>
+    <h1>Playable Games</h1>
+    <p class="subtitle">Speel direct in je browser</p>
 
-    <div class="page-title">
-        <h1>Speelbare Games</h1>
-        <p style="color: #94a3b8;">Ontdek de nieuwste projecten van Mattyou Studios</p>
-    </div>
-
-    <div class="game-grid">
+    <div class="app-grid">
         
-        <a href="https://mattyou2.github.io/game/rolling-balls/" class="game-card playable">
-            <div class="game-thumb">Rolling Balls</div>
-            <div class="game-info">
-                <span class="status status-online">Nu Speelbaar</span>
-                <h3>Rolling Balls</h3>
-                <p>Een uitdagende 3D ball-roller waarbij snelheid en precisie centraal staan.</p>
-            </div>
+        <a href="https://mattyou2.github.io/game/rolling-balls/" class="app-card">
+            <h3>Rolling Balls</h3>
+            <p>Een uitdagende 3D game van Mattyou Studios.</p>
         </a>
 
-        <div class="game-card soon">
-            <div class="game-thumb">Project: Stealth</div>
-            <div class="game-info">
-                <span class="status status-soon">Coming Soon</span>
-                <h3>Project: Stealth</h3>
-                <p>Blijf in de schaduw en voltooi missies zonder gezien te worden. In ontwikkeling.</p>
-            </div>
-        </div>
-
-        <div class="game-card soon">
-            <div class="game-thumb">Cube Runner</div>
-            <div class="game-info">
-                <span class="status status-soon">Coming Soon</span>
-                <h3>Cube Runner</h3>
-                <p>Een snelle arcade runner die je reflexen tot het uiterste zal testen.</p>
-            </div>
-        </div>
-
-        <div class="game-card soon">
-            <div class="game-thumb">Unknown World</div>
-            <div class="game-info">
-                <span class="status status-soon">In Planning</span>
-                <h3>Mystery Project</h3>
-                <p>Een geheim nieuw project dat binnenkort onthuld zal worden.</p>
-            </div>
+        <div class="app-card coming-soon">
+            <h3>More Games</h3>
+            <p>Coming Soon...</p>
         </div>
 
     </div>
 
-    <div style="margin-top: 50px; color: #334155; font-weight: 800;">
-        MATTYOU STUDIOS GAME LIBRARY
+    <div class="back-container">
+        <a href="https://mattyou2.github.io/" class="back-link">← Terug naar Dashboard</a>
+    </div>
+
+    <div class="footer-badge">
+        Made by Mattyou Studios™
     </div>
 
 </body>
