@@ -1,0 +1,47 @@
+<div id="mattyou-container" style="position: relative; width: 1400px; height: 900px; border: 3px solid #0a0a0a; overflow: hidden; border-radius: 18px; background-color: #000; box-shadow: 0 20px 45px rgba(0,0,0,0.7);">
+    
+    <div id="splash-screen" style="
+        position: absolute; 
+        top: 0; left: 0; width: 100%; height: 100%; 
+        background-color: #080808; 
+        display: flex; flex-direction: column; align-items: center; justify-content: center; 
+        z-index: 9999; 
+        opacity: 1;
+        transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        pointer-events: none;">
+        
+        <h1 style="color: #ffffff; font-family: 'Segoe UI', sans-serif; font-size: 30px; font-weight: 900; letter-spacing: 5px; text-transform: uppercase; margin-bottom: 25px; user-select: none; text-shadow: 0 0 15px rgba(255,255,255,0.3);">
+            Mattyou Game studios
+        </h1>
+
+        <div style="width: 35px; height: 35px; border: 3px solid rgba(255,255,255,0.1); border-top-color: #ffffff; border-radius: 50%; animation: spin 0.7s linear infinite;"></div>
+    </div>
+
+    <iframe src="https://itch.io/embed-upload/17037444?color=333333" width="100%" height="100%" style="border: none;" allow="autoplay; fullscreen; vr" allowfullscreen="">
+    </iframe>
+
+    <div style="position: absolute; bottom: 0; left: 0; width: 100%; height: 30px; background: #050505; border-top: 1px solid #222; display: flex; align-items: center; justify-content: center; z-index: 10;">
+        <span style="color: #eeeeee; font-family: 'Segoe UI', sans-serif; font-size: 16px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; user-select: none;">
+            Mattyou 3D Studios
+        </span>
+    </div>
+</div>
+
+<style>
+    @keyframes spin { 
+        to { transform: rotate(360deg); } 
+    }
+</style>
+
+<script>
+    // Start de 0.9s timer direct zodra de pagina geladen is
+    setTimeout(function() {
+        var splash = document.getElementById('splash-screen');
+        splash.style.opacity = '0';
+        
+        // Verwijder het element volledig na de fade-out (0.5s)
+        setTimeout(function() { 
+            splash.style.display = 'none'; 
+        }, 500);
+    }, 900); 
+</script>
