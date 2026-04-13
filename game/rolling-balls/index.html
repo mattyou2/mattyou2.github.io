@@ -1,11 +1,11 @@
-<div id="mattyou-container" style="position: relative; width: 1400px; height: 900px; border: 3px solid #0a0a0a; overflow: hidden; border-radius: 18px; background-color: #000; box-shadow: 0 20px 45px rgba(0,0,0,0.7);">
+<div id="mattyou-container" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; border: none; overflow: hidden; background-color: #000; z-index: 9999;">
     
     <div id="splash-screen" style="
         position: absolute; 
         top: 0; left: 0; width: 100%; height: 100%; 
         background-color: #080808; 
         display: flex; flex-direction: column; align-items: center; justify-content: center; 
-        z-index: 9999; 
+        z-index: 10000; 
         opacity: 1;
         transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         pointer-events: none;">
@@ -28,18 +28,17 @@
 </div>
 
 <style>
+    body { margin: 0; padding: 0; overflow: hidden; }
     @keyframes spin { 
         to { transform: rotate(360deg); } 
     }
 </style>
 
 <script>
-    // Start de 0.9s timer direct zodra de pagina geladen is
     setTimeout(function() {
         var splash = document.getElementById('splash-screen');
         splash.style.opacity = '0';
         
-        // Verwijder het element volledig na de fade-out (0.5s)
         setTimeout(function() { 
             splash.style.display = 'none'; 
         }, 500);
