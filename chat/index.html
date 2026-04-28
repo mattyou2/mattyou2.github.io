@@ -1,0 +1,21 @@
+<div id="chat-venster" style="padding: 10px; background: #eee; border: 1px solid #ccc;">
+    Aan het laden...
+</div>
+
+<script>
+    const scriptURL = "https://script.google.com/macros/s/AKfycbzSkUXfAuB0DYYbne_kwj493cEVpXqVcsQ4PCAEbSDmT_1DC1cuYj1DXguxjK8JHjTORA/exec";
+
+    async function updateChat() {
+        try {
+            const response = await fetch(scriptURL);
+            const data = await response.json();
+            document.getElementById('chat-venster').innerHTML = `<b>${data.user}:</b> ${data.msg}`;
+        } catch (error) {
+            console.log("Fout bij ophalen:", error);
+        }
+    }
+
+    // Ververs elke 3 seconden
+    setInterval(updateChat, 3000);
+    updateChat();
+</script>
