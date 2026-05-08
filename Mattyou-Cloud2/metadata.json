@@ -1,6 +1,6 @@
 {
-  "name": "Bolt to GitHub Pages",
-  "description": "A tool to prepare and deploy Bolt.new projects to GitHub Pages with automated workflows.",
+  "name": "Mattyou Cloud",
+  "description": "Een geavanceerde cloud opslag oplossing met Supabase integratie en gebruikersbeheer.",
   "requestFramePermissions": [],
   "majorCapabilities": []
 }
