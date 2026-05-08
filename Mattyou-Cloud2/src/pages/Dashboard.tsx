@@ -1,248 +1,230 @@
-import { useState, useEffect, useRef } from 'react';
-import { Cloud, File, HardDrive, Share2, Upload, Trash2, Eye, Loader2, Download } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Users, Loader, Crown, TrendingUp } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { supabase, File as FileType } from '../lib/supabase';
-import FilePreview from '../components/FilePreview';
+import { supabase, Profile } from '../lib/supabase';
 
-export default function Dashboard() {
-  const { user, profile, refreshProfile } = useAuth();
-  const [files, setFiles] = useState<FileType[]>([]);
+export default function Requests() {
+  const { user } = useAuth();
+  const [users, setUsers] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState(false);
-  const [previewFile, setPreviewFile] = useState<FileType | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [updating, setUpdating] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const isAdmin = user?.email === 'treurmattheo@gmail.com';
 
   useEffect(() => {
-    if (user) {
-      loadFiles();
+    if (isAdmin) {
+      loadUsers();
     }
-  }, [user]);
+  }, [user, isAdmin]);
 
-  const loadFiles = async () => {
+  const loadUsers = async () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from('files')
+        .from('profiles')
         .select('*')
-        .eq('user_id', user?.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setFiles(data || []);
+
+      setUsers(data || []);
     } catch (error) {
-      console.error('Fout bij laden bestanden:', error);
+      console.error('Error loading users:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !user) return;
-
-    // Check storage limit
-    const currentUsed = profile?.storage_used || 0;
-    const limit = profile?.storage_limit || 10737418240;
-    if (currentUsed + file.size > limit) {
-      alert('Opslaglimiet overschreden! Upgrade je plan voor meer ruimte.');
-      return;
-    }
-
-    setUploading(true);
+  const handlePlanChange = async (userId: string, newPlan: 'free' | 'plus' | 'premium') => {
+    if (!isAdmin) return;
+    setUpdating(userId);
     try {
-      const storagePath = `${user.id}/${Date.now()}_${file.name}`;
-      
-      const { error: uploadError } = await supabase.storage
-        .from('files')
-        .upload(storagePath, file);
+      const storageMap = {
+        free: 10737418240,
+        plus: 53687091200,
+        premium: 1099511627776,
+      };
 
-      if (uploadError) throw uploadError;
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          plan: newPlan,
+          plan_updated_at: new Date().toISOString(),
+          storage_limit: storageMap[newPlan],
+        })
+        .eq('id', userId);
 
-      const { error: dbError } = await supabase.from('files').insert({
-        user_id: user.id,
-        filename: file.name,
-        file_size: file.size,
-        file_type: file.type,
-        storage_path: storagePath,
-      });
+      if (error) throw error;
 
-      if (dbError) throw dbError;
-
-      await loadFiles();
-      await refreshProfile();
-      alert('Bestand succesvol geüpload!');
+      await loadUsers();
     } catch (error) {
-      console.error('Upload fout:', error);
-      alert('Upload mislukt.');
+      console.error('Error updating user plan:', error);
     } finally {
-      setUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
+      setUpdating(null);
     }
   };
 
-  const handleDelete = async (file: FileType) => {
-    if (!confirm(`Weet je zeker dat je "${file.filename}" wilt verwijderen?`)) return;
-
-    try {
-      const { error: storageError } = await supabase.storage
-        .from('files')
-        .remove([file.storage_path]);
-
-      if (storageError) throw storageError;
-
-      const { error: dbError } = await supabase
-        .from('files')
-        .delete()
-        .eq('id', file.id);
-
-      if (dbError) throw dbError;
-
-      await loadFiles();
-      await refreshProfile();
-    } catch (error) {
-      console.error('Verwijder fout:', error);
-      alert('Kon bestand niet verwijderen.');
-    }
+  const getStorageDisplay = (storageLimit: number) => {
+    if (storageLimit >= 1099511627776) return '1TB';
+    if (storageLimit >= 53687091200) return '50GB';
+    return '10GB';
   };
 
-  const formatBytes = (bytes: number) => {
-    if (bytes === 0) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  const filteredUsers = users.filter(u =>
+    u.username.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const planStats = {
+    free: users.filter(u => u.plan === 'free').length,
+    plus: users.filter(u => u.plan === 'plus').length,
+    premium: users.filter(u => u.plan === 'premium').length,
   };
+
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="text-center">
+          <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
+            <Users className="w-8 h-8 text-red-600" />
+          </div>
+          <p className="text-slate-50 text-xl font-semibold">Access Denied</p>
+          <p className="text-slate-400 mt-2">Only the admin account can access this page</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-8">
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-50 mb-2">Dashboard</h1>
-          <p className="text-slate-400">Welkom terug, @{profile?.username}</p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 p-4 md:p-8">
+      <div className="max-w-7xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-4xl md:text-5xl font-bold text-slate-50 mb-3">User Management</h1>
+          <p className="text-slate-400 text-lg">Manage accounts and assign subscription tiers</p>
         </div>
-        
-        <div className="flex gap-3">
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleUpload}
-            className="hidden"
-          />
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg flex items-center transition-all disabled:opacity-50"
-          >
-            {uploading ? (
-              <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-            ) : (
-              <Upload className="w-5 h-5 mr-2" />
-            )}
-            {uploading ? 'Uploaden...' : 'Bestand Uploaden'}
-          </button>
-        </div>
-      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-slate-900 p-6 rounded-xl border border-slate-700">
-          <div className="flex items-center mb-4">
-            <HardDrive className="w-6 h-6 text-blue-400 mr-2" />
-            <h3 className="text-lg font-semibold text-slate-50">Opslag Gebruikt</h3>
+        {!loading && users.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl p-6 shadow-lg border border-blue-500/20">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-blue-100 text-sm font-medium">Free Tier</p>
+                  <p className="text-3xl font-bold text-white mt-1">{planStats.free}</p>
+                </div>
+                <TrendingUp className="w-12 h-12 text-blue-200 opacity-20" />
+              </div>
+            </div>
+            <div className="bg-gradient-to-br from-amber-600 to-amber-700 rounded-xl p-6 shadow-lg border border-amber-500/20">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-amber-100 text-sm font-medium">Plus Tier</p>
+                  <p className="text-3xl font-bold text-white mt-1">{planStats.plus}</p>
+                </div>
+                <Crown className="w-12 h-12 text-amber-200 opacity-20" />
+              </div>
+            </div>
+            <div className="bg-gradient-to-br from-purple-600 to-purple-700 rounded-xl p-6 shadow-lg border border-purple-500/20">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-purple-100 text-sm font-medium">Premium Tier</p>
+                  <p className="text-3xl font-bold text-white mt-1">{planStats.premium}</p>
+                </div>
+                <Crown className="w-12 h-12 text-purple-200 opacity-20" />
+              </div>
+            </div>
           </div>
-          <p className="text-2xl font-bold text-slate-50">{formatBytes(profile?.storage_used || 0)}</p>
-          <div className="mt-2 bg-slate-800 rounded-full h-1.5 overflow-hidden">
-            <div 
-              className="bg-blue-500 h-full" 
-              style={{ width: `${((profile?.storage_used || 0) / (profile?.storage_limit || 1)) * 100}%` }}
-            />
-          </div>
-          <p className="text-xs text-slate-500 mt-2">
-            Van de {formatBytes(profile?.storage_limit || 10737418240)}
-          </p>
-        </div>
-
-        <div className="bg-slate-900 p-6 rounded-xl border border-slate-700 text-center flex flex-col justify-center">
-          <Share2 className="w-6 h-6 text-green-400 mx-auto mb-2" />
-          <p className="text-2xl font-bold text-slate-50">{files.length}</p>
-          <p className="text-sm text-slate-400">Totaal geüpload</p>
-        </div>
-
-        <div className="bg-slate-900 p-6 rounded-xl border border-slate-700 text-center flex flex-col justify-center">
-          <Cloud className="w-6 h-6 text-purple-400 mx-auto mb-2" />
-          <p className="text-2xl font-bold text-slate-50 uppercase">{profile?.plan}</p>
-          <p className="text-sm text-slate-400">Huidig Plan</p>
-        </div>
-      </div>
-
-      <div className="bg-slate-900 rounded-xl border border-slate-700 overflow-hidden">
-        <div className="p-6 border-b border-slate-700">
-          <h2 className="text-xl font-semibold text-slate-50">Mijn Bestanden</h2>
-        </div>
+        )}
 
         {loading ? (
-          <div className="p-12 text-center text-slate-400">
-            <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2" />
-            Laden...
+          <div className="flex flex-col items-center justify-center py-12">
+            <Loader className="w-8 h-8 animate-spin text-blue-400 mb-3" />
+            <p className="text-slate-400">Loading users...</p>
           </div>
-        ) : files.length === 0 ? (
-          <div className="p-12 text-center">
-            <File className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-slate-50 mb-2">Nog geen bestanden</h3>
-            <p className="text-slate-400 mb-6">Upload je eerste bestand om te beginnen.</p>
+        ) : users.length === 0 ? (
+          <div className="bg-slate-900 rounded-xl border border-slate-700 p-12 text-center shadow-lg">
+            <Users className="w-16 h-16 text-slate-600 mx-auto mb-4" />
+            <p className="text-slate-50 text-lg font-medium">No users found</p>
+            <p className="text-slate-400 mt-2">Users will appear here once they create accounts</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-slate-800/50 text-slate-400 text-xs uppercase tracking-wider">
-                  <th className="px-6 py-4 font-medium">Naam</th>
-                  <th className="px-6 py-4 font-medium">Grootte</th>
-                  <th className="px-6 py-4 font-medium">Type</th>
-                  <th className="px-6 py-4 font-medium">Datum</th>
-                  <th className="px-6 py-4 font-medium text-right">Acties</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800">
-                {files.map((file) => (
-                  <tr key={file.id} className="hover:bg-slate-800/30 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center">
-                        <File className="w-5 h-5 text-blue-400 mr-3" />
-                        <span className="text-slate-200 font-medium truncate max-w-xs">{file.filename}</span>
+          <div className="space-y-4">
+            <div className="flex items-center gap-4 mb-6">
+              <input
+                type="text"
+                placeholder="Search users..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="flex-1 px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-50 placeholder-slate-500 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {filteredUsers.map((userItem) => (
+                <div
+                  key={userItem.id}
+                  className="bg-slate-900 rounded-xl p-6 border border-slate-700 hover:border-slate-600 transition-all shadow-lg"
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <h3 className="text-lg font-semibold text-slate-50">@{userItem.username}</h3>
+                        {userItem.plan === 'free' && (
+                          <span className="px-2.5 py-1 bg-blue-950 text-blue-300 rounded-full text-xs font-medium">
+                            Free
+                          </span>
+                        )}
+                        {userItem.plan === 'plus' && (
+                          <span className="px-2.5 py-1 bg-amber-950 text-amber-300 rounded-full text-xs font-medium flex items-center gap-1">
+                            <Crown className="w-3 h-3" />
+                            Plus
+                          </span>
+                        )}
+                        {userItem.plan === 'premium' && (
+                          <span className="px-2.5 py-1 bg-purple-950 text-purple-300 rounded-full text-xs font-medium flex items-center gap-1">
+                            <Crown className="w-3 h-3" />
+                            Premium
+                          </span>
+                        )}
                       </div>
-                    </td>
-                    <td className="px-6 py-4 text-slate-400 text-sm">{formatBytes(file.file_size)}</td>
-                    <td className="px-6 py-4 text-slate-400 text-sm truncate max-w-[100px]">{file.file_type}</td>
-                    <td className="px-6 py-4 text-slate-400 text-sm">{new Date(file.created_at).toLocaleDateString()}</td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex justify-end gap-2">
-                        <button 
-                          onClick={() => setPreviewFile(file)}
-                          className="p-2 text-slate-400 hover:text-blue-400 hover:bg-slate-700/50 rounded-lg transition-all"
-                          title="Bekijken"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                        <button 
-                          onClick={() => handleDelete(file)}
-                          className="p-2 text-slate-400 hover:text-red-400 hover:bg-slate-700/50 rounded-lg transition-all"
-                          title="Verwijderen"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                      <p className="text-sm text-slate-500">
+                        Joined {new Date(userItem.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-2xl font-bold text-blue-400">{getStorageDisplay(userItem.storage_limit)}</p>
+                      <p className="text-xs text-slate-400">Storage</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2 pt-4 border-t border-slate-700">
+                    <button
+                      onClick={() => handlePlanChange(userItem.id, 'free')}
+                      disabled={updating === userItem.id || userItem.plan === 'free'}
+                      className="px-3 py-2 bg-blue-950 hover:bg-blue-900 text-blue-300 rounded-lg text-xs font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Free
+                    </button>
+                    <button
+                      onClick={() => handlePlanChange(userItem.id, 'plus')}
+                      disabled={updating === userItem.id || userItem.plan === 'plus'}
+                      className="px-3 py-2 bg-amber-950 hover:bg-amber-900 text-amber-300 rounded-lg text-xs font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Plus
+                    </button>
+                    <button
+                      onClick={() => handlePlanChange(userItem.id, 'premium')}
+                      disabled={updating === userItem.id || userItem.plan === 'premium'}
+                      className="px-3 py-2 bg-purple-950 hover:bg-purple-900 text-purple-300 rounded-lg text-xs font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Premium
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>
-
-      {previewFile && (
-        <FilePreview file={previewFile} onClose={() => setPreviewFile(null)} />
-      )}
     </div>
   );
 }
