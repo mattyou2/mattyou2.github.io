@@ -29,11 +29,13 @@
     <iframe src="https://mcpvptiers.bolt.host" width="100%" height="100%" style="border: none;" allowfullscreen="">
     </iframe>
 
-    <!-- Watermerk Knop (Dunner font en minder fel) -->
+    <!-- Watermerk Knop -->
     <div id="watermarkBtn" style="
         position: absolute; 
+        
+        /* Positie: 4 mm naar rechts verplaatst (van 31px naar 16px) */
         bottom: 20px; 
-        right: 31px; 
+        right: 16px; 
         
         /* Galaxy Achtergrond */
         background: radial-gradient(circle at center, #1b2735 0%, #090a0f 100%);
@@ -42,12 +44,12 @@
             linear-gradient(135deg, #020111 0%, #191621 25%, #20202c 50%, #191621 75%, #020111 100%);
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6), 0 0 8px rgba(100, 149, 237, 0.3);
         
-        /* Tekst en Formaat (Nu veel dunner, zachter en minder fel) */
+        /* Tekst en Formaat (Padding boven/onder met 1px verhoogd naar 9px voor extra hoogte) */
         color: rgba(255, 255, 255, 0.55); 
-        padding: 8px 14px; 
+        padding: 9px 14px; 
         font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
         font-size: 13px; 
-        font-weight: 500; /* Niet meer dik gedrukt */
+        font-weight: 500; 
         letter-spacing: 0.3px;
         text-decoration: none;
         
@@ -66,7 +68,7 @@
         Made by Mattyou Studios™
     </div>
 
-    <!-- Het Menu Overlay (Blokkeert interactie met de achtergrond) -->
+    <!-- Het Menu Overlay -->
     <div id="menuOverlay" style="
         display: none;
         position: absolute;
