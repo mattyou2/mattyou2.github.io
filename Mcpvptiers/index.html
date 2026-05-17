@@ -1,5 +1,5 @@
 <style>
-    /* Fullscreen reset om witruimtes en scrollbars te voorkomen */
+    /* Fullscreen reset zodat de pagina strak aansluit zonder scrollbars */
     html, body {
         margin: 0;
         padding: 0;
@@ -8,7 +8,7 @@
         overflow: hidden;
     }
 
-    /* Hover effect voor de watermerk knop (licht elegant op) */
+    /* Hover effect voor het watermerk (licht elegant op) */
     #watermarkBtn:hover {
         transform: scale(1.03);
         color: rgba(255, 255, 255, 0.95);
@@ -16,13 +16,13 @@
         border-color: rgba(255, 255, 255, 0.4);
     }
     
-    /* Hover voor het sluitkruisje */
+    /* Hover voor het sluitkruisje van het menu */
     #closeMenuBtn:hover {
         color: white;
     }
 </style>
 
-<!-- Fullscreen container -->
+<!-- Fullscreen container voor de hele pagina -->
 <div style="position: relative; width: 100vw; height: 100vh; overflow: hidden; background: #000;">
     
     <!-- Het Iframe (Volledig scherm) -->
@@ -32,14 +32,15 @@
     <!-- Watermerk Knop -->
     <div id="watermarkBtn" style="
         position: absolute; 
+        
+        /* Positie: 1-2 mm lager (bottom: 14px) en 4 mm naar rechts (right: 16px) */
         bottom: 14px; 
         right: 16px; 
         
-        /* Flexbox + vertical alignment voor gegarandeerd perfecte centrering van de tekst */
+        /* Flexbox zorgt voor een 100% perfecte centrering van de tekst, zowel horizontaal als verticaal */
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        vertical-align: middle;
         line-height: 1;
         
         /* Galaxy Achtergrond */
@@ -49,13 +50,15 @@
             linear-gradient(135deg, #020111 0%, #191621 25%, #20202c 50%, #191621 75%, #020111 100%);
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6), 0 0 8px rgba(100, 149, 237, 0.3);
         
-        /* Formaat & Padding (2mm minder hoog gemaakt door 6px top/bottom, gelijke zijkanten voor centrering) */
+        /* Formaat & Padding: 2mm minder hoog gemaakt (padding boven/onder slechts 6px) */
         color: rgba(255, 255, 255, 0.5); 
         padding: 6px 10px; 
         font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
         font-size: 13px; 
-        font-weight: 400; /* Dunne letters */
-        letter-spacing: -0.2px; /* Smallere knop door letters dichter bij elkaar te zetten */
+        
+        /* Dikte en Spatiëring: letters zijn dun (400) en staan compact op elkaar */
+        font-weight: 400; 
+        letter-spacing: -0.2px; 
         text-decoration: none;
         
         /* Rand en Vorm */
@@ -73,7 +76,7 @@
         Made by Mattyou Studios™
     </div>
 
-    <!-- Het Menu Overlay -->
+    <!-- Het Menu Overlay (Blokkeert interactie met de achtergrond zodra geopend) -->
     <div id="menuOverlay" style="
         display: none;
         position: absolute;
@@ -115,7 +118,7 @@
                 This website is made by Mattyou Studios™
             </h3>
             
-            <!-- Actie Knop -->
+            <!-- Actie Knop naar GitHub Pages -->
             <a href="https://mattyou2.github.io" target="_blank" style="
                 display: inline-block;
                 background: linear-gradient(135deg, #2b5c8f 0%, #163051 100%);
@@ -139,17 +142,17 @@
     const menuOverlay = document.getElementById('menuOverlay');
     const closeMenuBtn = document.getElementById('closeMenuBtn');
 
-    // Menu openen
+    // Menu openen als je op het watermerk klikt
     watermarkBtn.addEventListener('click', () => {
         menuOverlay.style.display = 'flex';
     });
 
-    // Menu sluiten via kruisje
+    // Menu sluiten via het kruisje
     closeMenuBtn.addEventListener('click', () => {
         menuOverlay.style.display = 'none';
     });
 
-    // Menu sluiten als je buiten de kaart klikt
+    // Menu sluiten als je buiten de menu-kaart klikt
     menuOverlay.addEventListener('click', (e) => {
         if (e.target === menuOverlay) {
             menuOverlay.style.display = 'none';
