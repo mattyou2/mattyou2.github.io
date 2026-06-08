@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mattyou Studios™ — Proprietary License</title>
+    <style>
+        :root {
+            --bg-dark: #06070b;
+            --panel-bg: #0d111c;
+            --panel-border: rgba(255, 255, 255, 0.05);
+            --brand-color: #5865f2; /* Premium Royal Blue */
+            --brand-glow: rgba(88, 101, 242, 0.4);
+            --text-main: #f1f5f9;
+            --text-muted: #64748b;
+            
+            --success: #10b981;
+            --success-glow: rgba(16, 185, 129, 0.2);
+            --error: #f43f5e;
+            --error-glow: rgba(244, 63, 94, 0.2);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 60px 20px;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(88, 101, 242, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(244, 63, 94, 0.03) 0%, transparent 40%);
+        }
+
+        .license-wrapper {
+            max-width: 900px;
+            width: 100%;
+            background: linear-gradient(145deg, #0f1322, #090b14);
+            border: 1px solid var(--panel-border);
+            border-radius: 24px;
+            padding: 50px;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6), 0 0 80px rgba(88, 101, 242, 0.03);
+            position: relative;
+        }
+
+        /* Top Accent Bar */
+        .license-wrapper::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--brand-color), transparent);
+            box-shadow: 0 0 20px var(--brand-color);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .brand-badge {
+            display: inline-block;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: var(--brand-color);
+            background: rgba(88, 101, 242, 0.08);
+            padding: 8px 18px;
+            border-radius: 100px;
+            border: 1px solid rgba(88, 101, 242, 0.2);
+            margin-bottom: 20px;
+            box-shadow: 0 0 15px rgba(88, 101, 242, 0.05);
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            font-weight: 800;
+            letter-spacing: -1px;
+            margin-bottom: 12px;
+            background: linear-gradient(180deg, #ffffff 0%, #cbd5e1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+
+        /* Interactive Grid Rule Cards */
+        .rules-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 50px;
+        }
+
+        @media (max-width: 768px) {
+            .rules-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .rule-card {
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            border-radius: 18px;
+            padding: 30px;
+            position: relative;
+            overflow: hidden;
+            cursor: default;
+        }
+
+        /* Hover animation for cards */
+        .rule-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .rule-card.allowed:hover {
+            border-color: rgba(16, 185, 129, 0.3);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4), 0 0 25px var(--success-glow);
+        }
+
+        .rule-card.forbidden:hover {
+            border-color: rgba(244, 63, 94, 0.3);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4), 0 0 25px var(--error-glow);
+        }
+
+        .rule-card h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .allowed h3 { color: var(--success); }
+        .forbidden h3 { color: var(--error); }
+
+        .rule-card ul {
+            list-style: none;
+        }
+
+        .rule-card ul li {
+            font-size: 0.95rem;
+            color: #94a3b8;
+            margin-bottom: 14px;
+            line-height: 1.5;
+            position: relative;
+            padding-left: 24px;
+        }
+
+        .rule-card ul li::before {
+            position: absolute;
+            left: 0;
+            font-weight: 900;
+        }
+
+        .allowed ul li::before { content: "✓"; color: var(--success); }
+        .forbidden ul li::before { content: "✕"; color: var(--error); }
+
+        .rule-card:hover ul li {
+            color: var(--text-main);
+        }
+
+        /* Deep Legal Terms Panel */
+        .legal-panel {
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.02);
+            padding: 40px;
+            border-left: 4px solid var(--brand-color);
+        }
+
+        .legal-panel:hover {
+            border-left-color: #ffffff;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .legal-panel h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 25px;
+            letter-spacing: -0.5px;
+        }
+
+        .legal-clause h4 {
+            font-size: 1.05rem;
+            color: var(--brand-color);
+            margin: 25px 0 10px 0;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .legal-clause p {
+            font-size: 0.95rem;
+            color: #94a3b8;
+            line-height: 1.7;
+            text-align: justify;
+        }
+
+        .legal-panel:hover .legal-clause p {
+            color: #cbd5e1;
+        }
+
+        /* Premium Interactive Footer Button */
+        footer {
+            margin-top: 50px;
+            text-align: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 30px;
+        }
+
+        .copyright {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+        }
+
+        /* Subtle glow animation for the whole page */
+        @keyframes pulseGlow {
+            0% { box-shadow: 0 0 80px rgba(88, 101, 242, 0.03); }
+            50% { box-shadow: 0 0 100px rgba(88, 101, 242, 0.06); }
+            100% { box-shadow: 0 0 80px rgba(88, 101, 242, 0.03); }
+        }
+        
+        .license-wrapper {
+            animation: pulseGlow 6s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body>
+
+<div class="license-wrapper">
+    <header>
+        <div class="brand-badge">Mattyou Studios™</div>
+        <h1>Software License Agreement</h1>
+        <div class="subtitle">Version 1.0 — June 2026</div>
+    </header>
+
+    <div class="rules-grid">
+        <div class="rule-card allowed">
+            <h3>Permitted Actions</h3>
+            <ul>
+                <li>Download, install, and run the mod/skript pack on any public or private Minecraft server.</li>
+                <li>Make minor modifications to the code/configuration to fit your server's style (e.g., changing shop names, messages, or interface colors).</li>
+                <li>Analyze the architecture for personal educational purposes.</li>
+            </ul>
+        </div>
+        
+        <div class="rule-card forbidden">
+            <h3>Strictly Prohibited</h3>
+            <ul>
+                <li>Replicating, cloning, or distributing this project or its code under your own name or brand.</li>
+                <li>Extracting code components to use inside your own publicly released or commercial projects.</li>
+                <li>Claiming development credits. Author credits must strictly remain under Mattyou Studios™.</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="legal-panel">
+        <h2>Terms & Conditions</h2>
+        <div class="legal-clause">
+            <p>This Proprietary Software License is a legally binding agreement between you (the End User) and <strong>Mattyou Studios™</strong>, the sole developer and copyright owner of this software asset package.</p>
+
+            <h4>1. Intellectual Property & Ownership</h4>
+            <p>All source code, systems, configurations, assets, and branding elements included in this project remain the exclusive intellectual property of Mattyou Studios™. You are explicitly forbidden from removing, hiding, or altering copyright notices or attributing construction credits to yourself or any third party.</p>
+
+            <h4>2. Customization Rights</h4>
+            <p>You are granted a non-exclusive license to use and lightly modify the system's aesthetic configuration parameters (such as database keys, store titles, and server-side configurations) strictly to localize the module for your Minecraft community infrastructure.</p>
+
+            <h4>3. Distribution & Exploitation Barriers</h4>
+            <p>You may not republish, mirror, re-upload, or adapt this code within your own public platforms (including but not limited to Modrinth, CurseForge, GitHub, or SpigotMC) without explicit, verified written authorization from Mattyou Studios™.</p>
+
+            <h4>4. Enforcement & Takedown Policy</h4>
+            <p>Any breach of these terms will immediately invalidate your license to use the system and will result in instant DMCA copyright enforcement actions on hosting networks, alongside platform-level reporting.</p>
+        </div>
+    </div>
+
+    <footer>
+        <div class="copyright">&copy; 2026 Mattyou Studios™. All rights reserved.</div>
+    </footer>
+</div>
+
+</body>
+</html>
