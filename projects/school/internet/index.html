@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Internet Simulator - Interactief</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #0b0c10;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+        #info {
+            position: absolute;
+            top: 20px;
+            width: 100%;
+            text-align: center;
+            color: #00ffcc;
+            pointer-events: none;
+            font-size: 16px;
+            font-family: monospace;
+            text-shadow: 0 0 5px #00ffcc;
+            z-index: 10;
+        }
+        #stats-panel {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(10, 10, 15, 0.9);
+            border: 2px solid #00ffcc;
+            border-radius: 5px;
+            padding: 15px;
+            color: white;
+            font-family: monospace;
+            box-shadow: 0 0 15px rgba(0, 255, 204, 0.3);
+            display: none; /* Verbergen tot we uitzoomen */
+        }
+        /* Video knop op het scherm */
+        #video-ui {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 20;
+            text-align: center;
+            color: white;
+            pointer-events: none; /* Zorgt dat we door de div heen kunnen klikken */
+            transition: opacity 0.5s ease;
+        }
+        .video-thumbnail {
+            background: #202020;
+            border: 3px solid #ff0000;
+            padding: 20px 40px;
+            border-radius: 10px;
+            cursor: pointer;
+            pointer-events: auto; /* Maakt de knop zelf wel klikbaar */
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+            font-weight: bold;
+            font-size: 18px;
+            transition: transform 0.2s;
+        }
+        .video-thumbnail:hover {
+            transform: scale(1.05);
+            background: #333;
+        }
+        .video-title {
+            margin-top: 10px;
+            color: #aaa;
+            font-size: 14px;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+
+    <div id="info">Klik op de video om te ontdekken hoe het internet werkt!</div>
+    
+    <div id="video-ui">
+        <div class="video-thumbnail" id="play-btn">
+            ▶ HOE WERKT HET INTERNET?
+        </div>
+        <div class="video-title">Aanbevolen video voor jou</div>
+    </div>
+
+    <div id="stats-panel">
+        <span style="color: #00ffcc;">[SERVER STATUS]</span><br>
+        Locatie: Frankfurt - Rack #12<br>
+        Server Temp: 38°C<br>
+        Uptime: 99.99%<br>
+        <span style="color: #ff3333;">Live Stream: Data Verbinding Actief</span>
+    </div>
+
+    <script>
+        // --- 1. SETUP SCENE, CAMERA & RENDERER ---
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x1a1d24);
+
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        
+        // STARTPOSITIE: Super dicht op het PC scherm (PC staat op X: -4, Y: 2, Z: 0.1)
+        camera.position.set(-4, 2, 1.5); 
+
+        // Doelposities voor het uitzoomen
+        const targetCameraPos = new THREE.Vector3(0, 8, 15);
+        const targetLookAt = new THREE.Vector3(0, 2, 0);
+        let currentLookAt = new THREE.Vector3(-4, 2, 0); // Start met kijken naar het scherm
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        document.body.appendChild(renderer.domElement);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.maxPolarAngle = Math.PI / 2 - 0.05;
+        controls.enabled = false; // Controls uitzetten tijdens de zoom-status
+        controls.target.copy(currentLookAt);
+
+        // Status van de animatie
+        let isZoomedIn = true;
+        let zoomProgress = 0;
+
+        // --- 2. BELICHTING ---
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambientLight);
+
+        const ceilingLight = new THREE.DirectionalLight(0xffffff, 1.2);
+        ceilingLight.position.set(0, 20, 5);
+        ceilingLight.castShadow = true;
+        scene.add(ceilingLight);
+
+        const techLight = new THREE.PointLight(0x00ffff, 2, 20);
+        techLight.position.set(4, 4, 2);
+        scene.add(techLight);
+
+        // --- 3. MATERIALEN ---
+        const floorMat = new THREE.MeshStandardMaterial({ color: 0x2d3238, roughness: 0.2, metalness: 0.5 });
+        const rackMat = new THREE.MeshStandardMaterial({ color: 0x111625, roughness: 0.3, metalness: 0.8 });
+        const serverBladeMat = new THREE.MeshStandardMaterial({ color: 0x4f5d75, roughness: 0.2, metalness: 0.6 });
+        const pcMat = new THREE.MeshStandardMaterial({ color: 0x2d3748, roughness: 0.3, metalness: 0.7 });
+        
+        const ledGreen = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+        const ledRed = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+        const ledBlue = new THREE.MeshBasicMaterial({ color: 0x00aaff });
+
+        // --- 4. DE VLOER ---
+        const floorGeo = new THREE.PlaneGeometry(100, 100);
+        const floor = new THREE.Mesh(floorGeo, floorMat);
+        floor.rotation.x = -Math.PI / 2;
+        floor.receiveShadow = true;
+        scene.add(floor);
+
+        const grid = new THREE.GridHelper(100, 50, 0x00ffcc, 0x4f5d75);
+        grid.position.y = 0.01;
+        scene.add(grid);
+
+        // --- 5. BOUW DE SERVER KAST (X = 4) ---
+        const serverGroup = new THREE.Group();
+        serverGroup.position.set(4, 0, 0);
+
+        const rackFrameGeo = new THREE.BoxGeometry(2.5, 7, 2.5);
+        const rackFrame = new THREE.Mesh(rackFrameGeo, rackMat);
+        rackFrame.position.y = 3.5;
+        rackFrame.castShadow = true;
+        serverGroup.add(rackFrame);
+
+        const ledsArray = [];
+        for (let i = 0; i < 12; i++) {
+            const bladeGeo = new THREE.BoxGeometry(2.3, 0.4, 2.4);
+            const blade = new THREE.Mesh(bladeGeo, serverBladeMat);
+            blade.position.set(0, 0.5 + (i * 0.55), 0.06);
+            blade.castShadow = true;
+            serverGroup.add(blade);
+
+            for (let j = 0; j < 5; j++) {
+                const ledGeo = new THREE.BoxGeometry(0.06, 0.06, 0.06);
+                const rand = Math.random();
+                const mat = rand > 0.6 ? ledGreen : (rand > 0.2 ? ledBlue : ledRed);
+                
+                const led = new THREE.Mesh(ledGeo, mat);
+                led.position.set(-0.8 + (j * 0.4), 0.5 + (i * 0.55), 1.27);
+                serverGroup.add(led);
+                ledsArray.push(led);
+            }
+        }
+        scene.add(serverGroup);
+
+        // --- 6. JOUW COMPUTER SETUP (X = -4) ---
+        const pcGroup = new THREE.Group();
+        pcGroup.position.set(-4, 0, 0);
+
+        const desk = new THREE.Mesh(new THREE.BoxGeometry(3, 1.5, 1.5), rackMat);
+        desk.position.y = 0.75;
+        desk.castShadow = true;
+        pcGroup.add(desk);
+
+        const monitorScreen = new THREE.Mesh(new THREE.BoxGeometry(2, 1.2, 0.1), pcMat);
+        monitorScreen.position.set(0, 2, 0);
+        monitorScreen.castShadow = true;
+        
+        const youtubeScreenMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+        const screenGlow = new THREE.Mesh(new THREE.BoxGeometry(1.9, 1.1, 0.02), youtubeScreenMat);
+        screenGlow.position.set(0, 2, 0.06);
+        pcGroup.add(monitorScreen, screenGlow);
+
+        const caseMesh = new THREE.Mesh(new THREE.BoxGeometry(0.6, 1.2, 1.2), pcMat);
+        caseMesh.position.set(1, 0.6, -0.1);
+        caseMesh.castShadow = true;
+        
+        const pcGlass = new THREE.Mesh(new THREE.BoxGeometry(0.02, 1, 1), new THREE.MeshBasicMaterial({color: 0x00ffff, wireframe: true}));
+        pcGlass.position.set(1.31, 0.6, -0.1);
+        pcGroup.add(caseMesh, pcGlass);
+
+        scene.add(pcGroup);
+
+        // --- 7. DATASTREAM ---
+        const cableGeo = new THREE.BoxGeometry(6, 0.05, 0.15);
+        const cableMat = new THREE.MeshStandardMaterial({ color: 0x00ffcc, roughness: 0.5 });
+        const cable = new THREE.Mesh(cableGeo, cableMat);
+        cable.position.set(0, 0.02, 0);
+        scene.add(cable);
+
+        const particleGeo = new THREE.SphereGeometry(0.1, 16, 16);
+        const particleMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+        const dataParticles = [];
+
+        for(let i = 0; i < 8; i++) {
+            const p = new THREE.Mesh(particleGeo, particleMat);
+            p.position.set(-3 + (i * 0.85), 0.15, 0);
+            scene.add(p);
+            dataParticles.push(p);
+        }
+
+        // --- 8. INTERACTIE (KLIK OM UIT TE ZOOMEN) ---
+        const playBtn = document.getElementById('play-btn');
+        const videoUi = document.getElementById('video-ui');
+        const statsPanel = document.getElementById('stats-panel');
+
+        playBtn.addEventListener('click', () => {
+            isZoomedIn = false;
+            videoUi.style.opacity = '0'; // Verberg de knop vloeiend
+            setTimeout(() => videoUi.style.display = 'none', 500);
+            
+            // Toon het statistiekenpaneel en verander de infotext
+            statsPanel.style.display = 'block';
+            document.getElementById('info').innerText = "Simulatie Actief | Sleep om te draaien, scroll om te zoomen";
+        });
+
+        // --- 9. ANIMATIE LOOP ---
+        let clock = new THREE.Clock();
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            const time = clock.getElapsedTime();
+
+            // Camera-animatie (Uitzoomen met Lerp)
+            if (!isZoomedIn && zoomProgress < 1) {
+                zoomProgress += 0.02; // Snelheid van het uitzoomen
+
+                // Beweeg camera positie naar het overzichtspunt
+                camera.position.lerp(targetCameraPos, zoomProgress);
+                
+                // Beweeg het punt waar de camera naar kijkt naar het midden van de scene
+                currentLookAt.lerp(targetLookAt, zoomProgress);
+                controls.target.copy(currentLookAt);
+                
+                if(zoomProgress >= 0.99) {
+                    controls.enabled = true; // Zet OrbitControls pas aan als het uitzoomen klaar is
+                }
+            }
+
+            // Alleen updaten als controls aanstaan, anders handmatig richten
+            if (controls.enabled) {
+                controls.update();
+            } else {
+                camera.lookAt(currentLookAt);
+            }
+
+            // Serverlampjes laten knipperen
+            ledsArray.forEach(led => {
+                if (Math.random() > 0.97) {
+                    led.visible = !led.visible;
+                }
+            });
+
+            // Data laten stromen (alleen als de video "gestart" is voor extra realisme)
+            if (!isZoomedIn) {
+                dataParticles.forEach((p, index) => {
+                    p.position.x += 0.04;
+                    p.position.y = 0.15 + Math.sin(time * 5 + index) * 0.05;
+
+                    if (p.position.x > 3.8) {
+                        p.position.x = -3.8;
+                    }
+                });
+            }
+
+            // Pulserend YouTube scherm
+            const glowIntensity = (Math.sin(time * 4) + 1) / 2;
+            screenGlow.material.color.setRGB(0.8 + glowIntensity * 0.2, 0, 0);
+
+            renderer.render(scene, camera);
+        }
+        
+        animate();
+
+        // --- 10. RESPONSIVE WINDOW ---
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
