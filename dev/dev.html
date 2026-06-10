@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mattyou Studios™ - Development Lab</title>
+    <title>Mattyou Studios™ - Dev Center & Portfolio</title>
     <style>
-        /* --- High-Tech Core Styles --- */
+        /* --- HIGH-TECH CORE & LAYOUT --- */
         * {
             margin: 0;
             padding: 0;
@@ -22,7 +22,6 @@
             color: #e0e0ff;
         }
 
-        /* 3D Canvas achtergrond */
         #canvas-container {
             position: absolute;
             top: 0;
@@ -32,18 +31,18 @@
             z-index: 1;
         }
 
-        /* Sci-Fi Grid Overlay Effect */
+        /* Scanline & Grid Effect */
         #canvas-container::after {
             content: '';
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.3) 50%), linear-gradient(90deg, rgba(0, 255, 204, 0.05), rgba(0, 0, 0, 0), rgba(255, 0, 127, 0.05));
             background-size: 100% 4px, 6px 100%;
             z-index: 2;
             pointer-events: none;
         }
 
-        /* Main Dashboard UI */
+        /* Dashboard Grid Setup */
         .dashboard {
             position: absolute;
             top: 0;
@@ -52,31 +51,31 @@
             height: 100%;
             z-index: 3;
             display: grid;
-            grid-template-columns: 300px 1fr 350px;
-            grid-template-rows: 70px 1fr 40px;
-            padding: 20px;
+            grid-template-columns: 320px 1fr 360px;
+            grid-template-rows: 75px 1fr 45px;
+            padding: 25px;
             gap: 20px;
             pointer-events: none;
         }
 
-        /* Universele Glassmorphism Kaarten */
+        /* Glassmorphism Panels */
         .panel {
-            background: rgba(5, 5, 15, 0.65);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            background: rgba(4, 4, 12, 0.75);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
             border: 1px solid rgba(0, 255, 204, 0.2);
-            border-radius: 8px;
-            padding: 20px;
+            border-radius: 12px;
+            padding: 25px;
             display: flex;
             flex-direction: column;
             pointer-events: auto;
-            box-shadow: 0 0 20px rgba(0, 255, 204, 0.05), inset 0 0 15px rgba(0, 255, 204, 0.05);
-            transition: border 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 0 30px rgba(0, 255, 204, 0.03), inset 0 0 20px rgba(0, 255, 204, 0.02);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
         
         .panel:hover {
-            border-solid: 1px rgba(0, 255, 204, 0.5);
-            box-shadow: 0 0 25px rgba(0, 255, 204, 0.15);
+            border-color: rgba(0, 255, 204, 0.5);
+            box-shadow: 0 0 40px rgba(0, 255, 204, 0.12);
         }
 
         /* --- HEADER --- */
@@ -86,186 +85,228 @@
             justify-content: space-between;
             align-items: center;
             border-bottom: 2px solid rgba(0, 255, 204, 0.3);
-            padding: 0 10px;
         }
 
         .logo {
-            font-size: 1.1rem;
-            font-weight: 800;
-            letter-spacing: 3px;
+            font-size: 1.3rem;
+            font-weight: 900;
+            letter-spacing: 4px;
             text-transform: uppercase;
             color: #ffffff;
-            display: flex;
-            align-items: center;
-            gap: 10px;
         }
 
         .logo span {
             color: #00ffcc;
-            text-shadow: 0 0 10px #00ffcc;
+            text-shadow: 0 0 15px rgba(0,255,204,0.6);
         }
 
-        .status-indicator {
+        .status-node {
             display: flex;
             align-items: center;
-            gap: 8px;
-            font-size: 0.8rem;
+            gap: 10px;
             font-family: monospace;
+            font-size: 0.85rem;
             color: #00ffcc;
         }
 
-        .blink-dot {
-            width: 8px;
-            height: 8px;
+        .pulse-dot {
+            width: 9px;
+            height: 9px;
             background-color: #00ffcc;
             border-radius: 50%;
-            box-shadow: 0 0 10px #00ffcc;
-            animation: blink 1s infinite alternate;
+            box-shadow: 0 0 12px #00ffcc;
+            animation: blink 1.2s infinite alternate;
         }
 
-        /* --- LINKER PANEL: NAVIGATIE & UTILS --- */
-        .left-panel h3, .right-panel h3 {
-            font-size: 0.9rem;
+        /* --- NAVIGATION PANEL (LEFT) --- */
+        .panel h3 {
+            font-size: 0.95rem;
             text-transform: uppercase;
             letter-spacing: 2px;
             color: #00ffcc;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
             border-left: 3px solid #00ffcc;
-            padding-left: 10px;
+            padding-left: 12px;
         }
 
-        .nav-list {
-            list-style: none;
+        .nav-menu {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 12px;
         }
 
-        .nav-item {
-            padding: 12px;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 4px;
+        .menu-btn {
+            padding: 14px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(0, 255, 204, 0.1);
+            border-radius: 6px;
             cursor: pointer;
             text-transform: uppercase;
             font-size: 0.85rem;
-            letter-spacing: 1px;
-            transition: all 0.2s ease;
-            color: #a0a0c0;
-            text-decoration: none;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            color: #8c8ca3;
+            transition: all 0.3s ease;
+            text-align: left;
         }
 
-        .nav-item:hover, .nav-item.active {
-            background: rgba(0, 255, 204, 0.1);
+        .menu-btn:hover, .menu-btn.active {
+            background: linear-gradient(90deg, rgba(0, 255, 204, 0.15), transparent);
             border-color: #00ffcc;
             color: #ffffff;
-            box-shadow: 0 0 10px rgba(0, 255, 204, 0.2);
-            transform: translateX(5px);
+            box-shadow: 0 0 15px rgba(0, 255, 204, 0.2);
+            transform: translateX(8px);
         }
 
-        /* --- MIDDEN PANEL: HERO / MAIN DISPLAY --- */
-        .center-display {
+        /* --- DYNAMIC VIEWPORT (CENTER) --- */
+        .view-container {
             background: transparent;
             border: none;
             box-shadow: none;
+            position: relative;
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
-            text-align: center;
         }
 
-        .center-display h2 {
-            font-size: 3.5rem;
-            font-weight: 900;
-            letter-spacing: 6px;
-            text-transform: uppercase;
-            color: #ffffff;
-            text-shadow: 0 0 30px rgba(0, 255, 204, 0.3);
-            margin-bottom: 5px;
-        }
-
-        .center-display p {
-            font-family: monospace;
-            color: #8888b0;
-            font-size: 1rem;
-            letter-spacing: 2px;
-        }
-
-        /* --- RECHTER PANEL: SYSTEM STATS & LOGS --- */
-        .sys-stat {
-            margin-bottom: 15px;
-        }
-
-        .stat-label {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.75rem;
-            font-family: monospace;
-            margin-bottom: 5px;
-            color: #a0a0c0;
-        }
-
-        .progress-bar {
+        /* Content Views (Zitten over elkaar, JS switcht ze) */
+        .view-content {
+            position: absolute;
             width: 100%;
-            height: 6px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 3px;
-            overflow: hidden;
+            max-width: 600px;
+            background: rgba(5, 5, 15, 0.85);
+            border: 1px solid rgba(255, 0, 127, 0.2);
+            box-shadow: 0 0 50px rgba(255, 0, 127, 0.1);
+            border-radius: 12px;
+            padding: 35px;
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(0.9) translateY(20px);
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
+        .view-content.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: scale(1) translateY(0);
+            border-color: #ff007f;
+            box-shadow: 0 0 50px rgba(255, 0, 127, 0.25);
+        }
+
+        .view-content h2 {
+            font-size: 2.2rem;
+            font-weight: 900;
+            letter-spacing: 3px;
+            color: #ffffff;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+        }
+
+        .view-content p {
+            color: #a2a2c2;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        /* Projecten Grid binnen de Content Box */
+        .projects-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .project-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 6px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .project-card:hover {
+            background: rgba(255, 0, 127, 0.08);
+            border-color: #ff007f;
+            transform: translateY(-3px);
+        }
+
+        .project-card h4 {
+            color: #00ffcc;
+            font-size: 1rem;
+            margin-bottom: 5px;
+        }
+
+        .project-card p {
+            font-size: 0.8rem;
+            color: #8c8ca3;
+            margin: 0;
+            line-height: 1.3;
+        }
+
+        /* Tech-Stack Tags */
+        .skills-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .skill-tag {
+            background: rgba(0, 255, 204, 0.1);
+            border: 1px solid #00ffcc;
+            color: #00ffcc;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-family: monospace;
+            font-size: 0.8rem;
+        }
+
+        /* --- DIAGNOSTICS PANEL (RIGHT) --- */
+        .sys-stat { margin-bottom: 18px; }
+        .stat-label {
+            display: flex; justify-content: space-between;
+            font-size: 0.75rem; font-family: monospace;
+            margin-bottom: 6px; color: #a0a0c0;
+        }
+        .progress-bar {
+            width: 100%; height: 6px; background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px; overflow: hidden;
+        }
         .progress-fill {
-            height: 100%;
-            background: #00ffcc;
-            box-shadow: 0 0 8px #00ffcc;
-            width: 0%; /* Geanimeerd via JS */
-            transition: width 0.4s ease;
+            height: 100%; background: #00ffcc; box-shadow: 0 0 8px #00ffcc;
+            width: 50%; transition: width 0.4s ease;
         }
 
         .terminal-log {
-            background: rgba(0, 0, 0, 0.4);
-            border: 1px solid rgba(0, 255, 204, 0.1);
-            border-radius: 4px;
-            padding: 10px;
-            font-family: monospace;
-            font-size: 0.75rem;
-            color: #00ffcc;
-            flex-grow: 1;
-            overflow-y: hidden;
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(0, 255, 204, 0.15);
+            border-radius: 6px; padding: 15px;
+            font-family: monospace; font-size: 0.75rem; color: #00ffcc;
+            flex-grow: 1; overflow: hidden;
+            display: flex; flex-direction: column; gap: 6px;
         }
 
         /* --- FOOTER --- */
         footer {
             grid-column: 1 / -1;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-family: monospace;
-            font-size: 0.75rem;
-            color: #444466;
+            display: flex; justify-content: space-between; align-items: center;
+            font-family: monospace; font-size: 0.75rem; color: #444466;
             border-top: 1px solid rgba(255, 255, 255, 0.05);
-            padding-top: 10px;
         }
 
-        /* --- ANIMATIES --- */
-        @keyframes blink {
-            from { opacity: 0.3; }
-            to { opacity: 1; }
-        }
+        @keyframes blink { from { opacity: 0.3; } to { opacity: 1; } }
 
-        /* Responsive */
-        @media (max-width: 900px) {
+        /* Responsive UI overschakeling voor telefoons/tablets */
+        @media (max-width: 1000px) {
             .dashboard {
                 grid-template-columns: 1fr;
-                grid-template-rows: auto auto auto auto auto;
+                grid-template-rows: auto auto auto auto;
                 overflow-y: auto;
                 pointer-events: auto;
             }
-            .panel { pointer-events: auto; }
-            .center-display { order: -1; padding: 40px 0; }
+            .view-container { margin: 20px 0; }
+            .view-content { position: relative; opacity: 1; pointer-events: auto; transform: none; display: none; }
+            .view-content.active { display: block; }
         }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -278,87 +319,137 @@
         
         <header class="panel">
             <div class="logo">Mattyou <span>Studios™</span></div>
-            <div class="status-indicator">
-                <div class="blink-dot"></div>
-                <span>SYS_STATUS: ACTIVE // PORTAL_v2.6</span>
+            <div class="status-node">
+                <div class="pulse-dot"></div>
+                <span id="node-status">MAIN_FRAME: SECURE // SYSTEM_v2.6</span>
             </div>
         </header>
 
         <div class="panel left-panel">
-            <h3>Dev Navigation</h3>
-            <nav class="nav-list">
-                <div class="nav-item active">> CORE_DASHBOARD</div>
-                <div class="nav-item">> GRAPHICS_ENGINE</div>
-                <div class="nav-item">> PROJECT_FILES</div>
-                <a href="index.html" class="nav-item" style="margin-top: 20px; border-color: rgba(255,0,100,0.3); color: #ff0066;"><- EXIT_TO_HOME</a>
-            </nav>
+            <h3>Command Center</h3>
+            <div class="nav-menu">
+                <button class="menu-btn active" onclick="switchView('dashboard', 0)">> HOME_BASE</button>
+                <button class="menu-btn" onclick="switchView('about', 1)">> OVER_MIJ</button>
+                <button class="menu-btn" onclick="switchView('projects', 2)">> RECENTE_PROJECTEN</button>
+                <button class="menu-btn" onclick="switchView('skills', 3)">> TECH_STACK</button>
+                <a href="index.html" class="menu-btn" style="margin-top: 25px; border-color: rgba(255,0,102,0.4); color: #ff0066; text-decoration: none;">&lt;- TERMINATE_SESSION</a>
+            </div>
         </div>
 
-        <div class="panel center-display">
-            <h2>DEVELOPMENT LAB</h2>
-            <p>[ SECURE NODE // UNAUTHORIZED ACCESS PROHIBITED ]</p>
+        <div class="panel view-container">
+            
+            <div class="view-content active" id="view-dashboard">
+                <h2>Welcome Agent</h2>
+                <p>U heeft zich aangemeld bij het centrale data-portaal van Mattyou Studios™. Beweeg uw muis om de hyper-ruimtelijke matrix-structuur op de achtergrond te scannen en navigeer via het linkermenu door de verschillende datablokken.</p>
+                <p style="font-family: monospace; color: #ff007f;">> Selecteer een protocol om te starten...</p>
+            </div>
+
+            <div class="view-content" id="view-about">
+                <h2>Over de Developer</h2>
+                <p>Ik ben een innovatieve ontwikkelaar gespecialiseerd in het bouwen van meeslepende, interactieve digitale ervaringen. Mijn focus ligt op het combineren van rauwe high-tech functionaliteit met futuristische front-end visuele effecten.</p>
+                <p>Met behulp van geavanceerde web-technologieën breek ik door de traditionele platte schermen heen om 3D computeromgevingen direct naar je browser te brengen.</p>
+            </div>
+
+            <div class="view-content" id="view-projects">
+                <h2>Projecten Archief</h2>
+                <p>Hier is een overzicht van recent actieve systemen ontwikkeld in de labs van Mattyou Studios™:</p>
+                <div class="projects-grid">
+                    <div class="project-card" onclick="logAction('Project Alpha geselecteerd')">
+                        <h4>Project Nebula</h4>
+                        <p>Een gesimuleerde melkweg-generator gebouwd op WebGL pipelines.</p>
+                    </div>
+                    <div class="project-card" onclick="logAction('Project Beta geselecteerd')">
+                        <h4>Cyber Dashboard v1</h4>
+                        <p>Real-time data monitoring interfaces voor server-clusters.</p>
+                    </div>
+                    <div class="project-card" onclick="logAction('Project Gamma geselecteerd')">
+                        <h4>Quantum Neural Net</h4>
+                        <p>Algoritmische animatiesets aangedreven door wiskundige audio-input.</p>
+                    </div>
+                    <div class="project-card" onclick="logAction('Project Delta geselecteerd')">
+                        <h4>Hyper-Drive Engine</h4>
+                        <p>Een 3D physics-omgeving geoptimaliseerd voor mobiele webbrowsers.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="view-content" id="view-skills">
+                <h2>Tech Capabilities</h2>
+                <p>De core-architectuur en computertalen die gebruikt worden binnen de dagelijkse ontwikkelcycli:</p>
+                <div class="skills-container">
+                    <div class="skill-tag">HTML5 / CSS3</div>
+                    <div class="skill-tag">JavaScript (ES6+)</div>
+                    <div class="skill-tag">Three.js / WebGL</div>
+                    <div class="skill-tag">Cyber-UI Design</div>
+                    <div class="skill-tag">Node.js</div>
+                    <div class="skill-tag">Git Version Control</div>
+                    <div class="skill-tag">Responsive Core Engine</div>
+                </div>
+            </div>
+
         </div>
 
         <div class="panel right-panel">
-            <h3>System Diagnostics</h3>
+            <h3>Matrix Telemetry</h3>
             
             <div class="sys-stat">
-                <div class="stat-label"><span>CORE CPU LOAD</span><span id="cpu-text">42%</span></div>
-                <div class="progress-bar"><div class="progress-fill" id="cpu-bar" style="width: 42%"></div></div>
+                <div class="stat-label"><span>NEURAL CORES LOAD</span><span id="cpu-text">54%</span></div>
+                <div class="progress-bar"><div class="progress-fill" id="cpu-bar" style="width: 54%"></div></div>
             </div>
 
             <div class="sys-stat">
-                <div class="stat-label"><span>3D ENGINE MEMORY</span><span id="ram-text">78%</span></div>
-                <div class="progress-bar"><div class="progress-fill" id="ram-bar" style="width: 78%; background-color: #ff007f; box-shadow: 0 0 8px #ff007f;"></div></div>
+                <div class="stat-label"><span>3D ENGINE BUFFER</span><span id="ram-text">61%</span></div>
+                <div class="progress-bar"><div class="progress-fill" id="ram-bar" style="width: 61%; background-color: #ff007f; box-shadow: 0 0 8px #ff007f;"></div></div>
             </div>
 
-            <h3 style="margin-top: 15px;">Live Neural Logs</h3>
+            <h3 style="margin-top: 15px;">Live Terminal Logs</h3>
             <div class="terminal-log" id="log-box">
-                <div>> Initializing WebGL Pipeline...</div>
-                <div>> Connected to Mattyou Studios Net</div>
-                <div>> 3D Particle Grid: Stabilized</div>
+                <div>> Initializing Neural WebGL Pipeline...</div>
+                <div>> Secure uplink established.</div>
+                <div>> Ready for user directives.</div>
             </div>
         </div>
 
         <footer>
-            <div>LOC_NODE: 52.0928° N, 4.9510° E</div>
-            <div>&copy; 2026 MATTYOU STUDIOS. ALL RIGHTS RESERVED.</div>
+            <div>SYSTEM_NODE_LOC: [NETHERLANDS // 52.09° N]</div>
+            <div>&copy; 2026 MATTYOU STUDIOS. PIPELINE SECURED.</div>
         </footer>
     </div>
 
     <script>
-        // --- 1. Setup Scene & Renderer ---
+        // --- 1. Three.js Core Setup ---
         const container = document.getElementById('canvas-container');
         const scene = new THREE.Scene();
-        scene.fog = new THREE.FogExp2(0x020208, 0.08); // Realistisch diepte/mist-effect
+        scene.fog = new THREE.FogExp2(0x020208, 0.06);
 
         const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
-        camera.position.set(0, 3, 15);
+        
+        // Startpositie camera
+        let targetCamX = 0, targetCamY = 3, targetCamZ = 16;
+        camera.position.set(targetCamX, targetCamY, targetCamZ);
 
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         container.appendChild(renderer.domElement);
 
-        // --- 2. Het High-Tech 3D Object: Quantum Grid ---
-        const particleCount = 2500;
+        // --- 2. Het High-Tech 3D Object: De Geometrische Golf-Matrix ---
+        const particleCount = 3000;
         const geometry = new THREE.BufferGeometry();
         const positions = new Float32Array(particleCount * 3);
         const colors = new Float32Array(particleCount * 3);
 
-        const color1 = new THREE.Color(0x00ffcc); // Cyan
-        const color2 = new THREE.Color(0xff007f); // Neon Roze
+        const c1 = new THREE.Color(0x00ffcc); // Cyan
+        const c2 = new THREE.Color(0xff007f); // Neon Pink
 
         let index = 0;
-        for (let x = 0; x < 50; x++) {
-            for (let z = 0; z < 50; z++) {
-                // Posities verdelen in een prachtig 3D landschap-grid
-                positions[index] = (x - 25) * 0.7;
+        for (let x = 0; x < 55; x++) {
+            for (let z = 0; z < 55; z++) {
+                positions[index] = (x - 27.5) * 0.75;
                 positions[index + 1] = 0; 
-                positions[index + 2] = (z - 25) * 0.7;
+                positions[index + 2] = (z - 27.5) * 0.75;
 
-                // Verloopkleur berekenen tussen roze en cyaan
-                const mixedColor = color1.clone().lerp(color2, x / 50);
+                const mixedColor = c1.clone().lerp(c2, (x / 55) * (z / 55));
                 colors[index] = mixedColor.r;
                 colors[index + 1] = mixedColor.g;
                 colors[index + 2] = mixedColor.b;
@@ -370,89 +461,116 @@
         geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
         geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
 
-        // Materiaal voor glimmende vierkante high-tech data deeltjes
         const material = new THREE.PointsMaterial({
-            size: 0.08,
+            size: 0.09,
             vertexColors: true,
             transparent: true,
-            opacity: 0.8
+            opacity: 0.85
         });
 
         const particleGrid = new THREE.Points(geometry, material);
         scene.add(particleGrid);
 
-        // --- 3. Muis & Beweging Tracking ---
+        // --- 3. Muis- en Interactie Tracking ---
         let mouseX = 0, mouseY = 0;
         window.addEventListener('mousemove', (e) => {
             mouseX = (e.clientX / window.innerWidth) - 0.5;
             mouseY = (e.clientY / window.innerHeight) - 0.5;
         });
 
-        // --- 4. Animatie Loop & 3D Berekeningen ---
+        // --- 4. Interactieve Pagina Switches & 3D Camera-Animaties ---
+        function switchView(viewId, viewIndex) {
+            // Verander active klasse op de menuknoppen
+            const buttons = document.querySelectorAll('.menu-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Verander active klasse op de inhoudsschermen
+            const views = document.querySelectorAll('.view-content');
+            views.forEach(v => v.classList.remove('active'));
+            document.getElementById('view-' + viewId).classList.add('active');
+
+            // --- DE 3D CAMERA MAGIC TRICK ---
+            // Afhankelijk van de pagina die je kiest, vliegt de camera naar een andere hoek!
+            if (viewIndex === 0) { // Home
+                targetCamX = 0; targetCamY = 3; targetCamZ = 16;
+            } else if (viewIndex === 1) { // Over mij
+                targetCamX = -6; targetCamY = 6; targetCamZ = 12;
+            } else if (viewIndex === 2) { // Projecten
+                targetCamX = 6; targetCamY = 2; targetCamZ = 10;
+            } else if (viewIndex === 3) { // Tech Stack
+                targetCamX = 0; targetCamY = 9; targetCamZ = 8;
+            }
+
+            logAction(`Protocol geactiveerd: ${viewId.toUpperCase()}_VIEW`);
+        }
+
+        // --- 5. Realtime Animatie Loop ---
         const clock = new THREE.Clock();
 
         function animate() {
             requestAnimationFrame(animate);
             const time = clock.getElapsedTime();
 
-            // Beweeg de deeltjes in complexe sinus- en cosinus-golven (Cyber Oceaan)
+            // Berekening van golven op de achtergrond
             const positionAttribute = geometry.getAttribute('position');
             let idx = 0;
-            for (let x = 0; x < 50; x++) {
-                for (let z = 0; z < 50; z++) {
+            for (let x = 0; x < 55; x++) {
+                for (let z = 0; z < 55; z++) {
                     const xPos = positionAttribute.getX(idx);
                     const zPos = positionAttribute.getZ(idx);
 
-                    // De wiskundige 3D-golfformule
-                    const y = Math.sin(xPos * 0.2 + time * 1.5) * Math.cos(zPos * 0.2 + time * 1.2) * 1.2;
+                    // De wiskundige golfformules creëren een organische cyber-oceaan
+                    const y = Math.sin(xPos * 0.2 + time * 1.3) * Math.cos(zPos * 0.15 + time * 1.1) * 1.4;
                     positionAttribute.setY(idx, y);
                     idx++;
                 }
             }
             positionAttribute.needsUpdate = true;
 
-            // Camera reageert vloeiend op de positie van je muis
-            camera.position.x += (mouseX * 10 - camera.position.x) * 0.05;
-            camera.position.y += ((-mouseY * 5 + 4) - camera.position.y) * 0.05;
+            // Camerabeweging interpolatie (Lerping voor vloeiende transities tussen pagina's)
+            camera.position.x += (targetCamX + (mouseX * 5) - camera.position.x) * 0.05;
+            camera.position.y += (targetCamY + (-mouseY * 3) - camera.position.y) * 0.05;
+            camera.position.z += (targetCamZ - camera.position.z) * 0.05;
+            
             camera.lookAt(0, 0, 0);
-
-            // Langzame rotatie van de hele wereld
-            particleGrid.rotation.y = time * 0.02;
+            particleGrid.rotation.y = time * 0.015;
 
             renderer.render(scene, camera);
         }
         animate();
 
-        // --- 5. Live Systeemdata Simulatie (Dashboard Script) ---
+        // --- 6. Live Telemetrie & Terminal Logger Functies ---
+        function logAction(message) {
+            const logBox = document.getElementById('log-box');
+            const logRow = document.createElement('div');
+            logRow.innerText = `> ${message}`;
+            logBox.appendChild(logRow);
+            if(logBox.children.length > 5) logBox.removeChild(logBox.children[0]);
+        }
+
         setInterval(() => {
-            // CPU fluctuatie
-            const cpu = Math.floor(Math.random() * 30) + 35;
+            // Simuleer CPU data
+            const cpu = Math.floor(Math.random() * 25) + 40;
             document.getElementById('cpu-text').innerText = cpu + '%';
             document.getElementById('cpu-bar').style.width = cpu + '%';
 
-            // RAM fluctuatie
-            const ram = Math.floor(Math.random() * 5) + 75;
+            // Simuleer RAM data
+            const ram = Math.floor(Math.random() * 6) + 60;
             document.getElementById('ram-text').innerText = ram + '%';
             document.getElementById('ram-bar').style.width = ram + '%';
 
-            // Willekeurige terminal logs toevoegen
-            const logs = [
-                "> Updating 3D buffer geometries...",
-                "> Ping to node successful: 12ms",
-                "> Cache cleared successfully.",
-                "> Scanning for memory leaks... Clean.",
-                "> Matrix transform matrix4 updated."
+            // Automatische random achtergrondlogs
+            const autoLogs = [
+                "Matrix deeltjes-index gesynchroniseerd.",
+                "Data-pakket versleuteld verzonden.",
+                "Camera matrix opnieuw berekend.",
+                "Uplink stabiliteit: 99.87%"
             ];
-            const logBox = document.getElementById('log-box');
-            const newLog = document.createElement('div');
-            newLog.innerText = logs[Math.floor(Math.random() * logs.length)];
-            logBox.appendChild(newLog);
-            if(logBox.children.length > 5) {
-                logBox.removeChild(logBox.children[0]);
-            }
-        }, 2500);
+            logAction(autoLogs[Math.floor(Math.random() * autoLogs.length)]);
+        }, 3000);
 
-        // --- 6. Responsive Resize ---
+        // --- 7. Responsive Matrix ---
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
