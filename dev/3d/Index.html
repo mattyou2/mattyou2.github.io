@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium 3D Experience</title>
+    <style>
+        /* Basis & Premium Achtergrond */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: radial-gradient(circle at center, #2a0808 0%, #0a0a0a 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            overflow-x: hidden;
+            perspective: 1000px; /* Activeert de 3D-ruimte voor de hele pagina */
+        }
+
+        /* Navigatiebalk met 3D-laag */
+        nav {
+            width: 80%;
+            max-width: 1200px;
+            margin-top: 30px;
+            padding: 20px;
+            background: #141414;
+            border-radius: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.7), 
+                        0 0 0 1px #ff003322,
+                        inset 0 2px 2px rgba(255, 255, 255, 0.1);
+            transform: rotateX(10deg); /* Licht gekanteld voor 3D effect */
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            background: linear-gradient(45deg, #ff0033, #990011);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        /* ULTIEME 3D KNOPPEN */
+        .btn-3d {
+            position: relative;
+            background: #990011;
+            border: none;
+            color: white;
+            padding: 12px 28px;
+            font-size: 16px;
+            font-weight: bold;
+            text-transform: uppercase;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.1s ease;
+            transform-style: preserve-3d;
+            /* De dikke 3D rand aan de onderkant */
+            box-shadow: 0 0 0 1px #66000b,
+                        0 6px 0 0 #66000b,
+                        0 12px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Hover effect: Knop licht op */
+        .btn-3d:hover {
+            background: #ff0033;
+            box-shadow: 0 0 0 1px #990011,
+                        0 6px 0 0 #990011,
+                        0 12px 25px rgba(255, 0, 51, 0.3);
+        }
+
+        /* Active/Click effect: De knop wordt ECHT ingedrukt */
+        .btn-3d:active {
+            transform: translateY(6px); /* Beweegt omlaag */
+            box-shadow: 0 0 0 1px #990011,
+                        0 0 0 0 #990011, /* 3D rand verdwijnt alsof hij is ingedrukt */
+                        0 4px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Grote 3D Header */
+        header {
+            margin: 60px 0;
+            text-align: center;
+            transform: translateZ(50px); /* Zweeft naar voren */
+        }
+
+        header h1 {
+            font-size: 50px;
+            margin-bottom: 10px;
+            text-shadow: 0 5px 0 #333, 
+                         0 10px 0 #222, 
+                         0 15px 20px rgba(0,0,0,0.5);
+        }
+
+        header p {
+            color: #888;
+            font-size: 18px;
+        }
+
+        /* Container voor de 3D Kaarten */
+        .main-container {
+            display: flex;
+            gap: 40px;
+            max-width: 1200px;
+            width: 90%;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 50px;
+        }
+
+        /* 3D ZWEVENDE KAARTEN */
+        .card-3d {
+            background: #111;
+            width: 300px;
+            padding: 30px;
+            border-radius: 20px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.5s;
+            
+            /* Basis schaduw voor diepte */
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            border: 1px solid #222;
+        }
+
+        /* Kaart kantelt en komt naar voren als je eroverheen hovert */
+        .card-3d:hover {
+            transform: rotateX(15deg) rotateY(-10deg) translateZ(30px);
+            border-color: #ff0033;
+            box-shadow: 0 30px 60px rgba(255, 0, 51, 0.15),
+                        0 20px 50px rgba(0, 0, 0, 0.8);
+        }
+
+        /* Content binnen de kaart krijgt extra diepte */
+        .card-3d h3 {
+            font-size: 22px;
+            margin-top: 0;
+            color: #ff0033;
+            transform: translateZ(40px); /* Zweeft NOG verder naar voren */
+            text-shadow: 0 4px 8px rgba(0,0,0,0.5);
+        }
+
+        .card-3d p {
+            color: #aaa;
+            line-height: 1.6;
+            transform: translateZ(30px);
+            margin-bottom: 30px;
+        }
+
+        .card-footer {
+            transform: translateZ(50px);
+            display: flex;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div class="logo">Mattyou Engine</div>
+        <button class="btn-3d">Home</button>
+    </nav>
+
+    <header>
+        <h1>De Ultieme 3D Ervaring</h1>
+        <p>Gebruiksvriendelijk, snel en adembenemend mooi.</p>
+    </header>
+
+    <div class="main-container">
+        
+        <div class="card-3d">
+            <h3>3D Design</h3>
+            <p>Elk element op deze pagina maakt gebruik van echte CSS-perspectieven. Beweeg je muis over de kaart om de diepte te zien!</p>
+            <div class="card-footer">
+                <button class="btn-3d">Ontdek</button>
+            </div>
+        </div>
+
+        <div class="card-3d">
+            <h3>Super Vloeiend</h3>
+            <p>Dankzij hardware-versnelling draait deze website super soepel op elk apparaat. Geen lag, pure snelheid.</p>
+            <div class="card-footer">
+                <button class="btn-3d">Probeer</button>
+            </div>
+        </div>
+
+        <div class="card-3d">
+            <h3>Premium Look</h3>
+            <p>De unieke combinatie van diep zwart met felle rode accenten geeft een futuristische en professionele uitstraling.</p>
+            <div class="card-footer">
+                <button class="btn-3d">Join Nu</button>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>
