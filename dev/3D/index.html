@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Cinematic Experience</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        /* Basis styling & reset */
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow-x: hidden;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: #0a0a0a;
+            color: #ffffff;
+            scroll-behavior: smooth;
+        }
+
+        /* Het 3D Canvas dat achter de website leeft */
+        #webgl-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+            pointer-events: none; /* Zorgt dat je nog op knoppen kunt klikken */
+        }
+
+        /* Normale HTML Content die over de 3D-wereld heen zweeft */
+        .content-layer {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+        }
+
+        /* Filmische Secties */
+        section {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 0 20px;
+            box-sizing: border-box;
+        }
+
+        /* Premium Typografie met bioscoop-vibe */
+        h1 {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            background: linear-gradient(45deg, #ff0033, #ff6688);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            opacity: 0;
+            transform: translateY(50px);
+            animation: fadeInUp 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        p {
+            font-size: 1.3rem;
+            max-width: 600px;
+            color: #cccccc;
+            margin-bottom: 40px;
+            line-height: 1.6;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 1.5s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards;
+        }
+
+        /* SUPER COOLE 3D INTERACTIEVE KNOPPEN */
+        .btn-container {
+            perspective: 800px;
+            opacity: 0;
+            animation: fadeInUp 1.5s cubic-bezier(0.16, 1, 0.3, 1) 0.6s forwards;
+        }
+
+        .cool-btn {
+            background: linear-gradient(135deg, #1a1a1a, #0a0a0a);
+            border: 2px solid #ff0033;
+            color: white;
+            padding: 16px 40px;
+            font-size: 18px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-radius: 50px;
+            cursor: pointer;
+            position: relative;
+            transition: transform 0.3s, box-shadow 0.3s, background 0.3s;
+            transform-style: preserve-3d;
+            box-shadow: 0 10px 30px rgba(255, 0, 51, 0.2);
+        }
+
+        /* 3D Kanteling bij Hover */
+        .cool-btn:hover {
+            transform: rotateX(15deg) translateY(-5px) translateZ(10px);
+            background: #ff0033;
+            box-shadow: 0 20px 40px rgba(255, 0, 51, 0.5);
+        }
+
+        .cool-btn:active {
+            transform: rotateX(5deg) translateY(-1px) translateZ(2px);
+        }
+
+        /* Animaties voor de filmische opkomst van tekst */
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Scroll indicator */
+        .scroll-indicator {
+            position: absolute;
+            bottom: 40px;
+            font-size: 12px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #666;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.3; transform: translateY(0); }
+            50% { opacity: 1; transform: translateY(10px); }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="webgl-canvas"></canvas>
+
+    <div class="content-layer">
+        
+        <section id="home">
+            <h1>Welkom</h1>
+            <p>Dit is een moderne, strakke website gecombineerd met een interactieve 3D-wereld. Scroll naar beneden om de camarabeweging te starten.</p>
+            <div class="btn-container">
+                <button class="cool-btn" onclick="document.getElementById('services').scrollIntoView();">Ontdek Meer</button>
+            </div>
+            <div class="scroll-indicator">Scroll naar beneden</div>
+        </section>
+
+        <section id="services">
+            <h1>Onze Diensten</h1>
+            <p>Wij bouwen high-end digitale producten met de nieuwste technieken. Alles draait soepel, snel en met oog voor detail.</p>
+            <div class="btn-container">
+                <button class="cool-btn">Bekijk Projecten</button>
+            </div>
+        </section>
+
+        <section id="contact">
+            <h1>Contact</h1>
+            <p>Benieuwd naar wat er mogelijk is? Neem vandaag nog contact met ons op en laat je verrassen.</p>
+            <div class="btn-container">
+                <button class="cool-btn">Stuur Bericht</button>
+            </div>
+        </section>
+
+    </div>
+
+    <script>
+        // 1. Initialiseer de 3D Scene, Camera en Renderer
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('webgl-canvas'), antialias: true, alpha: true });
+        
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+        // 2. Maak een filmische 3D omgeving (een tunnel van zwevende deeltjes/sterren)
+        const particlesGeometry = new THREE.BufferGeometry();
+        const particlesCount = 1500;
+        const posArray = new Float32Array(particlesCount * 3);
+
+        // Geef elk deeltje een willekeurige positie in de 3D-ruimte
+        for(let i = 0; i < particlesCount * 3; i++) {
+            posArray[i] = (Math.random() - 0.5) * 10;
+        }
+
+        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+
+        // Materiaal en kleur van de 3D objecten (Premium Rood)
+        const particlesMaterial = new THREE.PointsMaterial({
+            size: 0.015,
+            color: 0xff0033,
+            transparent: true,
+            opacity: 0.8
+        });
+
+        const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+        scene.add(particlesMesh);
+
+        // Voeg wat sfeerverlichting toe
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        scene.add(ambientLight);
+
+        // Zet de camera in de startpositie
+        camera.position.z = 3;
+
+        // 3. De Scroll-Animatie (De "Film-regisseur" code)
+        let targetTimeline = 0;
+        let currentTimeline = 0;
+
+        window.addEventListener('scroll', () => {
+            // Bereken hoe ver de gebruiker heeft gescrold (tussen 0 en 1)
+            const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+            targetTimeline = window.scrollY / maxScroll;
+        });
+
+        // Muisbeweging voor subtiele interactie (Parallax)
+        let mouseX = 0, mouseY = 0;
+        document.addEventListener('mousemove', (e) => {
+            mouseX = (e.clientX / window.innerWidth) - 0.5;
+            mouseY = (e.clientY / window.innerHeight) - 0.5;
+        });
+
+        // 4. De Game Loop / Render Loop (Draait op 60+ FPS)
+        const clock = new THREE.Clock();
+
+        const animate = () => {
+            requestAnimationFrame(animate);
+
+            const elapsedTime = clock.getElapsedTime();
+
+            // Vloeiende overgang van de camerabeweging (Lerp)
+            currentTimeline += (targetTimeline - currentTimeline) * 0.05;
+
+            // --- FILMISCHE BEWEGINGEN OP BASIS VAN SCROLL ---
+            // De camera vliegt naar voren door de tunnel naarmate je scrollt
+            camera.position.z = 3 - (currentTimeline * 4); 
+            // De camera draait langzaam mee om een episch film-shot te simuleren
+            camera.rotation.y = currentTimeline * 2;
+            camera.rotation.x = currentTimeline * 0.5;
+
+            // Subtiele zwevende animatie van de deeltjes zelf, plus muis-reactie
+            particlesMesh.rotation.y = elapsedTime * 0.05 + (mouseX * 0.2);
+            particlesMesh.rotation.x = elapsedTime * 0.02 + (mouseY * 0.2);
+
+            renderer.render(scene, camera);
+        };
+
+        animate();
+
+        // 5. Zorg dat de 3D wereld meeschaalt als je het venster groter/kleiner maakt
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
