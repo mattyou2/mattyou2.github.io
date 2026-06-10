@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="nl">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mattyou Studios™ - Dev Center & Portfolio</title>
+    <title>Mattyou Studios™ - Dev Lab</title>
     <style>
-        /* --- HIGH-TECH CORE & LAYOUT --- */
+        /* --- CORE CYBERPUNK INTERACTION --- */
         * {
             margin: 0;
             padding: 0;
@@ -17,9 +17,9 @@
             width: 100%;
             height: 100%;
             overflow: hidden;
-            background-color: #020208;
-            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
-            color: #e0e0ff;
+            background-color: #020206;
+            font-family: 'Courier New', Courier, monospace;
+            color: #00ffcc;
         }
 
         #canvas-container {
@@ -31,282 +31,197 @@
             z-index: 1;
         }
 
-        /* Scanline & Grid Effect */
+        /* Sci-Fi Grid Overlay */
         #canvas-container::after {
             content: '';
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.3) 50%), linear-gradient(90deg, rgba(0, 255, 204, 0.05), rgba(0, 0, 0, 0), rgba(255, 0, 127, 0.05));
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.4) 50%), linear-gradient(90deg, rgba(0, 255, 204, 0.03), rgba(0, 0, 0, 0), rgba(255, 0, 127, 0.03));
             background-size: 100% 4px, 6px 100%;
             z-index: 2;
             pointer-events: none;
         }
 
-        /* Dashboard Grid Setup */
-        .dashboard {
+        /* --- HOLOGRAPHIC INTERFACE SUPER-STRUCTURE --- */
+        .interface-layer {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             z-index: 3;
-            display: grid;
-            grid-template-columns: 320px 1fr 360px;
-            grid-template-rows: 75px 1fr 45px;
-            padding: 25px;
-            gap: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 40px;
             pointer-events: none;
         }
 
-        /* Glassmorphism Panels */
-        .panel {
-            background: rgba(4, 4, 12, 0.75);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border: 1px solid rgba(0, 255, 204, 0.2);
-            border-radius: 12px;
-            padding: 25px;
-            display: flex;
-            flex-direction: column;
-            pointer-events: auto;
-            box-shadow: 0 0 30px rgba(0, 255, 204, 0.03), inset 0 0 20px rgba(0, 255, 204, 0.02);
-            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        
-        .panel:hover {
-            border-color: rgba(0, 255, 204, 0.5);
-            box-shadow: 0 0 40px rgba(0, 255, 204, 0.12);
-        }
-
-        /* --- HEADER --- */
+        /* Top Bar */
         header {
-            grid-column: 1 / -1;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 2px solid rgba(0, 255, 204, 0.3);
+            width: 100%;
         }
 
-        .logo {
-            font-size: 1.3rem;
-            font-weight: 900;
-            letter-spacing: 4px;
-            text-transform: uppercase;
+        .brand {
+            font-size: 1.1rem;
+            font-weight: bold;
+            letter-spacing: 3px;
             color: #ffffff;
         }
 
-        .logo span {
+        .brand span {
             color: #00ffcc;
-            text-shadow: 0 0 15px rgba(0,255,204,0.6);
+            text-shadow: 0 0 10px #00ffcc;
         }
 
-        .status-node {
+        .sys-status {
+            font-size: 0.8rem;
+            letter-spacing: 1px;
             display: flex;
             align-items: center;
             gap: 10px;
-            font-family: monospace;
-            font-size: 0.85rem;
-            color: #00ffcc;
         }
 
-        .pulse-dot {
-            width: 9px;
-            height: 9px;
-            background-color: #00ffcc;
+        .pulse-node {
+            width: 8px;
+            height: 8px;
+            background-color: #ff007f;
             border-radius: 50%;
-            box-shadow: 0 0 12px #00ffcc;
-            animation: blink 1.2s infinite alternate;
+            box-shadow: 0 0 12px #ff007f;
+            animation: pulse 1s infinite alternate;
         }
 
-        /* --- NAVIGATION PANEL (LEFT) --- */
-        .panel h3 {
-            font-size: 0.95rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            color: #00ffcc;
-            margin-bottom: 20px;
-            border-left: 3px solid #00ffcc;
-            padding-left: 12px;
-        }
-
-        .nav-menu {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .menu-btn {
-            padding: 14px;
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(0, 255, 204, 0.1);
-            border-radius: 6px;
-            cursor: pointer;
-            text-transform: uppercase;
-            font-size: 0.85rem;
-            font-weight: 700;
-            letter-spacing: 1.5px;
-            color: #8c8ca3;
-            transition: all 0.3s ease;
-            text-align: left;
-        }
-
-        .menu-btn:hover, .menu-btn.active {
-            background: linear-gradient(90deg, rgba(0, 255, 204, 0.15), transparent);
-            border-color: #00ffcc;
-            color: #ffffff;
-            box-shadow: 0 0 15px rgba(0, 255, 204, 0.2);
-            transform: translateX(8px);
-        }
-
-        /* --- DYNAMIC VIEWPORT (CENTER) --- */
-        .view-container {
-            background: transparent;
-            border: none;
-            box-shadow: none;
-            position: relative;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        /* Content Views (Zitten over elkaar, JS switcht ze) */
-        .view-content {
-            position: absolute;
+        /* --- THE CENTRIC HOLOGRAM WINDOW --- */
+        .viewport-frame {
+            margin: auto;
             width: 100%;
-            max-width: 600px;
-            background: rgba(5, 5, 15, 0.85);
-            border: 1px solid rgba(255, 0, 127, 0.2);
-            box-shadow: 0 0 50px rgba(255, 0, 127, 0.1);
-            border-radius: 12px;
-            padding: 35px;
-            opacity: 0;
-            pointer-events: none;
-            transform: scale(0.9) translateY(20px);
+            max-width: 650px;
+            background: rgba(2, 2, 8, 0.8);
+            border: 1px solid #00ffcc;
+            box-shadow: 0 0 40px rgba(0, 255, 204, 0.15), inset 0 0 20px rgba(0, 255, 204, 0.1);
+            border-radius: 6px;
+            padding: 40px;
+            pointer-events: auto;
+            position: relative;
             transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .view-content.active {
-            opacity: 1;
-            pointer-events: auto;
-            transform: scale(1) translateY(0);
-            border-color: #ff007f;
-            box-shadow: 0 0 50px rgba(255, 0, 127, 0.25);
+        /* Dynamic Section Switcher */
+        .screen {
+            display: none;
+            animation: glitchFade 0.4s ease-in-out forwards;
         }
 
-        .view-content h2 {
-            font-size: 2.2rem;
-            font-weight: 900;
-            letter-spacing: 3px;
+        .screen.active {
+            display: block;
+        }
+
+        /* Texts & Typography */
+        h2 {
+            font-size: 2rem;
+            letter-spacing: 4px;
             color: #ffffff;
-            margin-bottom: 15px;
-            text-transform: uppercase;
-            text-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
-        }
-
-        .view-content p {
-            color: #a2a2c2;
-            font-size: 0.95rem;
-            line-height: 1.6;
             margin-bottom: 20px;
+            text-transform: uppercase;
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
         }
 
-        /* Projecten Grid binnen de Content Box */
-        .projects-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
+        p {
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: #a0a0c0;
+            margin-bottom: 25px;
         }
 
-        .project-card {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 6px;
-            padding: 15px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .project-card:hover {
-            background: rgba(255, 0, 127, 0.08);
-            border-color: #ff007f;
-            transform: translateY(-3px);
-        }
-
-        .project-card h4 {
-            color: #00ffcc;
-            font-size: 1rem;
-            margin-bottom: 5px;
-        }
-
-        .project-card p {
-            font-size: 0.8rem;
-            color: #8c8ca3;
-            margin: 0;
-            line-height: 1.3;
-        }
-
-        /* Tech-Stack Tags */
-        .skills-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-        .skill-tag {
-            background: rgba(0, 255, 204, 0.1);
+        /* High Tech Buttons */
+        .cyber-btn {
+            display: inline-block;
+            background: transparent;
             border: 1px solid #00ffcc;
             color: #00ffcc;
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-family: monospace;
-            font-size: 0.8rem;
+            padding: 12px 28px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 0 10px rgba(0, 255, 204, 0.1);
+            text-decoration: none;
         }
 
-        /* --- DIAGNOSTICS PANEL (RIGHT) --- */
-        .sys-stat { margin-bottom: 18px; }
-        .stat-label {
-            display: flex; justify-content: space-between;
-            font-size: 0.75rem; font-family: monospace;
-            margin-bottom: 6px; color: #a0a0c0;
-        }
-        .progress-bar {
-            width: 100%; height: 6px; background: rgba(255, 255, 255, 0.05);
-            border-radius: 3px; overflow: hidden;
-        }
-        .progress-fill {
-            height: 100%; background: #00ffcc; box-shadow: 0 0 8px #00ffcc;
-            width: 50%; transition: width 0.4s ease;
+        .cyber-btn:hover {
+            background: #00ffcc;
+            color: #020206;
+            box-shadow: 0 0 25px #00ffcc;
+            transform: translateY(-2px);
         }
 
-        .terminal-log {
-            background: rgba(0, 0, 0, 0.5);
-            border: 1px solid rgba(0, 255, 204, 0.15);
-            border-radius: 6px; padding: 15px;
-            font-family: monospace; font-size: 0.75rem; color: #00ffcc;
-            flex-grow: 1; overflow: hidden;
-            display: flex; flex-direction: column; gap: 6px;
+        .cyber-btn.alt {
+            border-color: #ff007f;
+            color: #ff007f;
+            box-shadow: 0 0 10px rgba(255, 0, 127, 0.1);
         }
 
-        /* --- FOOTER --- */
+        .cyber-btn.alt:hover {
+            background: #ff007f;
+            color: #ffffff;
+            box-shadow: 0 0 25px #ff007f;
+        }
+
+        /* --- ESOSY PROJECT SPECIFIC DISPLAY --- */
+        .project-display {
+            border-left: 2px dashed #ff007f;
+            padding-left: 20px;
+            margin: 20px 0;
+        }
+
+        .project-title {
+            font-size: 1.4rem;
+            color: #ff007f;
+            font-weight: bold;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(255, 0, 127, 0.4);
+        }
+
+        .badge {
+            display: inline-block;
+            font-size: 0.7rem;
+            background: rgba(255, 0, 127, 0.15);
+            border: 1px solid #ff007f;
+            padding: 3px 8px;
+            margin-bottom: 15px;
+            color: #ffffff;
+        }
+
+        /* Footer Matrix */
         footer {
-            grid-column: 1 / -1;
-            display: flex; justify-content: space-between; align-items: center;
-            font-family: monospace; font-size: 0.75rem; color: #444466;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            font-size: 0.75rem;
+            color: #444466;
+            letter-spacing: 1px;
         }
 
-        @keyframes blink { from { opacity: 0.3; } to { opacity: 1; } }
+        /* --- SCIFI ANIMATIONS --- */
+        @keyframes pulse { from { opacity: 0.4; } to { opacity: 1; } }
+        
+        @keyframes glitchFade {
+            0% { opacity: 0; transform: scale(0.95); filter: hue-rotate(90deg); }
+            50% { opacity: 0.5; transform: scale(1.02); filter: hue-rotate(-40deg); }
+            100% { opacity: 1; transform: scale(1); filter: hue-rotate(0deg); }
+        }
 
-        /* Responsive UI overschakeling voor telefoons/tablets */
-        @media (max-width: 1000px) {
-            .dashboard {
-                grid-template-columns: 1fr;
-                grid-template-rows: auto auto auto auto;
-                overflow-y: auto;
-                pointer-events: auto;
-            }
-            .view-container { margin: 20px 0; }
-            .view-content { position: relative; opacity: 1; pointer-events: auto; transform: none; display: none; }
-            .view-content.active { display: block; }
+        /* Responsive design patch */
+        @media (max-width: 700px) {
+            .interface-layer { padding: 20px; }
+            .viewport-frame { padding: 25px; }
+            h2 { font-size: 1.5rem; }
         }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -315,146 +230,87 @@
 
     <div id="canvas-container"></div>
 
-    <div class="dashboard">
+    <div class="interface-layer">
         
-        <header class="panel">
-            <div class="logo">Mattyou <span>Studios™</span></div>
-            <div class="status-node">
-                <div class="pulse-dot"></div>
-                <span id="node-status">MAIN_FRAME: SECURE // SYSTEM_v2.6</span>
+        <header>
+            <div class="brand">MATTYOU <span>STUDIOS™</span></div>
+            <div class="sys-status">
+                <div class="pulse-node"></div>
+                <span>NODE // LAB_ACCESS_GRANTED</span>
             </div>
         </header>
 
-        <div class="panel left-panel">
-            <h3>Command Center</h3>
-            <div class="nav-menu">
-                <button class="menu-btn active" onclick="switchView('dashboard', 0)">> HOME_BASE</button>
-                <button class="menu-btn" onclick="switchView('about', 1)">> OVER_MIJ</button>
-                <button class="menu-btn" onclick="switchView('projects', 2)">> RECENTE_PROJECTEN</button>
-                <button class="menu-btn" onclick="switchView('skills', 3)">> TECH_STACK</button>
-                <a href="index.html" class="menu-btn" style="margin-top: 25px; border-color: rgba(255,0,102,0.4); color: #ff0066; text-decoration: none;">&lt;- TERMINATE_SESSION</a>
-            </div>
-        </div>
-
-        <div class="panel view-container">
+        <div class="viewport-frame" id="terminal-window">
             
-            <div class="view-content active" id="view-dashboard">
-                <h2>Welcome Agent</h2>
-                <p>U heeft zich aangemeld bij het centrale data-portaal van Mattyou Studios™. Beweeg uw muis om de hyper-ruimtelijke matrix-structuur op de achtergrond te scannen en navigeer via het linkermenu door de verschillende datablokken.</p>
-                <p style="font-family: monospace; color: #ff007f;">> Selecteer een protocol om te starten...</p>
+            <div class="screen active" id="screen-home">
+                <h2>Development Lab</h2>
+                <p>> Status: ONLINE<br>> Systems: STABLE<br><br>Welcome to the central deployment hub. This matrix environment processes experimental designs, gameplay modules, and web configurations built by Mattyou Studios™.</p>
+                <button class="cyber-btn" onclick="navigateTo('projects', 1)">Initialize Projects</button>
             </div>
 
-            <div class="view-content" id="view-about">
-                <h2>Over de Developer</h2>
-                <p>Ik ben een innovatieve ontwikkelaar gespecialiseerd in het bouwen van meeslepende, interactieve digitale ervaringen. Mijn focus ligt op het combineren van rauwe high-tech functionaliteit met futuristische front-end visuele effecten.</p>
-                <p>Met behulp van geavanceerde web-technologieën breek ik door de traditionele platte schermen heen om 3D computeromgevingen direct naar je browser te brengen.</p>
-            </div>
+            <div class="screen" id="screen-projects">
+                <h2>Active Repositories</h2>
+                
+                <div class="project-display">
+                    <div class="project-title">Esosy System</div>
+                    <span class="badge">MINECRAFT // SKRIPT PLUGIN</span>
+                    <p>A comprehensive, high-tier economy and administration framework engineered inside Minecraft via the Skript engine. Esosy optimizes server management, logs transactional physics, and automates server-wide financial ecosystems seamlessly.</p>
+                </div>
 
-            <div class="view-content" id="view-projects">
-                <h2>Projecten Archief</h2>
-                <p>Hier is een overzicht van recent actieve systemen ontwikkeld in de labs van Mattyou Studios™:</p>
-                <div class="projects-grid">
-                    <div class="project-card" onclick="logAction('Project Alpha geselecteerd')">
-                        <h4>Project Nebula</h4>
-                        <p>Een gesimuleerde melkweg-generator gebouwd op WebGL pipelines.</p>
-                    </div>
-                    <div class="project-card" onclick="logAction('Project Beta geselecteerd')">
-                        <h4>Cyber Dashboard v1</h4>
-                        <p>Real-time data monitoring interfaces voor server-clusters.</p>
-                    </div>
-                    <div class="project-card" onclick="logAction('Project Gamma geselecteerd')">
-                        <h4>Quantum Neural Net</h4>
-                        <p>Algoritmische animatiesets aangedreven door wiskundige audio-input.</p>
-                    </div>
-                    <div class="project-card" onclick="logAction('Project Delta geselecteerd')">
-                        <h4>Hyper-Drive Engine</h4>
-                        <p>Een 3D physics-omgeving geoptimaliseerd voor mobiele webbrowsers.</p>
-                    </div>
+                <div style="display: flex; gap: 15px;">
+                    <button class="cyber-btn alt" onclick="navigateTo('home', 0)"><- Back to Base</button>
+                    <a href="index.html" class="cyber-btn">Exit Core</a>
                 </div>
             </div>
 
-            <div class="view-content" id="view-skills">
-                <h2>Tech Capabilities</h2>
-                <p>De core-architectuur en computertalen die gebruikt worden binnen de dagelijkse ontwikkelcycli:</p>
-                <div class="skills-container">
-                    <div class="skill-tag">HTML5 / CSS3</div>
-                    <div class="skill-tag">JavaScript (ES6+)</div>
-                    <div class="skill-tag">Three.js / WebGL</div>
-                    <div class="skill-tag">Cyber-UI Design</div>
-                    <div class="skill-tag">Node.js</div>
-                    <div class="skill-tag">Git Version Control</div>
-                    <div class="skill-tag">Responsive Core Engine</div>
-                </div>
-            </div>
-
-        </div>
-
-        <div class="panel right-panel">
-            <h3>Matrix Telemetry</h3>
-            
-            <div class="sys-stat">
-                <div class="stat-label"><span>NEURAL CORES LOAD</span><span id="cpu-text">54%</span></div>
-                <div class="progress-bar"><div class="progress-fill" id="cpu-bar" style="width: 54%"></div></div>
-            </div>
-
-            <div class="sys-stat">
-                <div class="stat-label"><span>3D ENGINE BUFFER</span><span id="ram-text">61%</span></div>
-                <div class="progress-bar"><div class="progress-fill" id="ram-bar" style="width: 61%; background-color: #ff007f; box-shadow: 0 0 8px #ff007f;"></div></div>
-            </div>
-
-            <h3 style="margin-top: 15px;">Live Terminal Logs</h3>
-            <div class="terminal-log" id="log-box">
-                <div>> Initializing Neural WebGL Pipeline...</div>
-                <div>> Secure uplink established.</div>
-                <div>> Ready for user directives.</div>
-            </div>
         </div>
 
         <footer>
-            <div>SYSTEM_NODE_LOC: [NETHERLANDS // 52.09° N]</div>
-            <div>&copy; 2026 MATTYOU STUDIOS. PIPELINE SECURED.</div>
+            <div>SYS_LOC // [DEPTH_PROBE]</div>
+            <div>&copy; 2026 MATTYOU STUDIOS // CORE_TERMINAL</div>
         </footer>
     </div>
 
     <script>
-        // --- 1. Three.js Core Setup ---
+        // --- 1. Scene & Depth Fog Configurations ---
         const container = document.getElementById('canvas-container');
         const scene = new THREE.Scene();
-        scene.fog = new THREE.FogExp2(0x020208, 0.06);
+        scene.fog = new THREE.FogExp2(0x020206, 0.07);
 
         const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
         
-        // Startpositie camera
-        let targetCamX = 0, targetCamY = 3, targetCamZ = 16;
-        camera.position.set(targetCamX, targetCamY, targetCamZ);
+        // Initial 3D Camera coordinates
+        let targetX = 0, targetY = 4, targetZ = 14;
+        camera.position.set(targetX, targetY, targetZ);
 
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         container.appendChild(renderer.domElement);
 
-        // --- 2. Het High-Tech 3D Object: De Geometrische Golf-Matrix ---
-        const particleCount = 3000;
+        // --- 2. Generation of the 3D Cyber-Ocean Mesh ---
+        const totalParticles = 3500;
         const geometry = new THREE.BufferGeometry();
-        const positions = new Float32Array(particleCount * 3);
-        const colors = new Float32Array(particleCount * 3);
+        const positions = new Float32Array(totalParticles * 3);
+        const colors = new Float32Array(totalParticles * 3);
 
-        const c1 = new THREE.Color(0x00ffcc); // Cyan
-        const c2 = new THREE.Color(0xff007f); // Neon Pink
+        const neonCyan = new THREE.Color(0x00ffcc);
+        const neonPink = new THREE.Color(0xff007f);
 
-        let index = 0;
-        for (let x = 0; x < 55; x++) {
-            for (let z = 0; z < 55; z++) {
-                positions[index] = (x - 27.5) * 0.75;
-                positions[index + 1] = 0; 
-                positions[index + 2] = (z - 27.5) * 0.75;
+        let pIdx = 0;
+        for (let x = 0; x < 60; x++) {
+            for (let z = 0; z < 60; z++) {
+                positions[pIdx] = (x - 30) * 0.75;
+                positions[pIdx + 1] = 0; // Will step to life inside wave algorithms
+                positions[pIdx + 2] = (z - 30) * 0.75;
 
-                const mixedColor = c1.clone().lerp(c2, (x / 55) * (z / 55));
-                colors[index] = mixedColor.r;
-                colors[index + 1] = mixedColor.g;
-                colors[index + 2] = mixedColor.b;
+                // Color interpolation across coordinate data nodes
+                const partialColor = neonCyan.clone().lerp(neonPink, (x / 60) * (z / 60));
+                colors[pIdx] = partialColor.r;
+                colors[pIdx + 1] = partialColor.g;
+                colors[pIdx + 2] = partialColor.b;
 
-                index += 3;
+                pIdx += 3;
             }
         }
 
@@ -462,115 +318,76 @@
         geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
 
         const material = new THREE.PointsMaterial({
-            size: 0.09,
+            size: 0.08,
             vertexColors: true,
             transparent: true,
-            opacity: 0.85
+            opacity: 0.9
         });
 
-        const particleGrid = new THREE.Points(geometry, material);
-        scene.add(particleGrid);
+        const quantumGrid = new THREE.Points(geometry, material);
+        scene.add(quantumGrid);
 
-        // --- 3. Muis- en Interactie Tracking ---
+        // --- 3. Mouse Coordinate Matrix Scanner ---
         let mouseX = 0, mouseY = 0;
         window.addEventListener('mousemove', (e) => {
             mouseX = (e.clientX / window.innerWidth) - 0.5;
             mouseY = (e.clientY / window.innerHeight) - 0.5;
         });
 
-        // --- 4. Interactieve Pagina Switches & 3D Camera-Animaties ---
-        function switchView(viewId, viewIndex) {
-            // Verander active klasse op de menuknoppen
-            const buttons = document.querySelectorAll('.menu-btn');
-            buttons.forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
+        // --- 4. Hologram Screen Transitions & Camera Jumps ---
+        function navigateTo(screenId, index) {
+            // Screen elements switch
+            document.querySelectorAll('.screen').forEach(scr => scr.classList.remove('active'));
+            document.getElementById('screen-' + screenId).classList.add('active');
 
-            // Verander active klasse op de inhoudsschermen
-            const views = document.querySelectorAll('.view-content');
-            views.forEach(v => v.classList.remove('active'));
-            document.getElementById('view-' + viewId).classList.add('active');
-
-            // --- DE 3D CAMERA MAGIC TRICK ---
-            // Afhankelijk van de pagina die je kiest, vliegt de camera naar een andere hoek!
-            if (viewIndex === 0) { // Home
-                targetCamX = 0; targetCamY = 3; targetCamZ = 16;
-            } else if (viewIndex === 1) { // Over mij
-                targetCamX = -6; targetCamY = 6; targetCamZ = 12;
-            } else if (viewIndex === 2) { // Projecten
-                targetCamX = 6; targetCamY = 2; targetCamZ = 10;
-            } else if (viewIndex === 3) { // Tech Stack
-                targetCamX = 0; targetCamY = 9; targetCamZ = 8;
+            // 3D Camera shifts angle depending on screen parameters
+            if (index === 0) { // Home Base Screen
+                targetX = 0; targetY = 4; targetZ = 14;
+                document.getElementById('terminal-window').style.borderColor = "#00ffcc";
+                document.getElementById('terminal-window').style.boxShadow = "0 0 40px rgba(0, 255, 204, 0.15)";
+            } else if (index === 1) { // Projects Screen (Deep scan view)
+                targetX = -7; targetY = 7; targetZ = 10;
+                document.getElementById('terminal-window').style.borderColor = "#ff007f";
+                document.getElementById('terminal-window').style.boxShadow = "0 0 40px rgba(255, 0, 127, 0.25)";
             }
-
-            logAction(`Protocol geactiveerd: ${viewId.toUpperCase()}_VIEW`);
         }
 
-        // --- 5. Realtime Animatie Loop ---
-        const clock = new THREE.Clock();
+        // --- 5. Pure 3D Frame Calculation Loop ---
+        const timer = new THREE.Clock();
 
-        function animate() {
-            requestAnimationFrame(animate);
-            const time = clock.getElapsedTime();
+        function renderFrame() {
+            requestAnimationFrame(renderFrame);
+            const delta = timer.getElapsedTime();
 
-            // Berekening van golven op de achtergrond
-            const positionAttribute = geometry.getAttribute('position');
-            let idx = 0;
-            for (let x = 0; x < 55; x++) {
-                for (let z = 0; z < 55; z++) {
-                    const xPos = positionAttribute.getX(idx);
-                    const zPos = positionAttribute.getZ(idx);
+            // Transform vertices into mathematical hyper-waves
+            const posAttr = geometry.getAttribute('position');
+            let itemIndex = 0;
+            for (let x = 0; x < 60; x++) {
+                for (let z = 0; z < 60; z++) {
+                    const xCoord = posAttr.getX(itemIndex);
+                    const zCoord = posAttr.getZ(itemIndex);
 
-                    // De wiskundige golfformules creëren een organische cyber-oceaan
-                    const y = Math.sin(xPos * 0.2 + time * 1.3) * Math.cos(zPos * 0.15 + time * 1.1) * 1.4;
-                    positionAttribute.setY(idx, y);
-                    idx++;
+                    // Multi-sine logic for complex fluid 3D data grid motion
+                    const waveY = Math.sin(xCoord * 0.18 + delta * 1.4) * Math.cos(zCoord * 0.15 + delta * 1.1) * 1.5;
+                    posAttr.setY(itemIndex, waveY);
+                    itemIndex++;
                 }
             }
-            positionAttribute.needsUpdate = true;
+            posAttr.needsUpdate = true;
 
-            // Camerabeweging interpolatie (Lerping voor vloeiende transities tussen pagina's)
-            camera.position.x += (targetCamX + (mouseX * 5) - camera.position.x) * 0.05;
-            camera.position.y += (targetCamY + (-mouseY * 3) - camera.position.y) * 0.05;
-            camera.position.z += (targetCamZ - camera.position.z) * 0.05;
+            // Smooth camera tracking via mouse mapping & destination interpolations
+            camera.position.x += (targetX + (mouseX * 4) - camera.position.x) * 0.05;
+            camera.position.y += (targetY + (-mouseY * 2) - camera.position.y) * 0.05;
+            camera.position.z += (targetZ - camera.position.z) * 0.05;
             
             camera.lookAt(0, 0, 0);
-            particleGrid.rotation.y = time * 0.015;
+            quantumGrid.rotation.y = delta * 0.01;
 
             renderer.render(scene, camera);
         }
-        animate();
+        renderFrame();
 
-        // --- 6. Live Telemetrie & Terminal Logger Functies ---
-        function logAction(message) {
-            const logBox = document.getElementById('log-box');
-            const logRow = document.createElement('div');
-            logRow.innerText = `> ${message}`;
-            logBox.appendChild(logRow);
-            if(logBox.children.length > 5) logBox.removeChild(logBox.children[0]);
-        }
-
-        setInterval(() => {
-            // Simuleer CPU data
-            const cpu = Math.floor(Math.random() * 25) + 40;
-            document.getElementById('cpu-text').innerText = cpu + '%';
-            document.getElementById('cpu-bar').style.width = cpu + '%';
-
-            // Simuleer RAM data
-            const ram = Math.floor(Math.random() * 6) + 60;
-            document.getElementById('ram-text').innerText = ram + '%';
-            document.getElementById('ram-bar').style.width = ram + '%';
-
-            // Automatische random achtergrondlogs
-            const autoLogs = [
-                "Matrix deeltjes-index gesynchroniseerd.",
-                "Data-pakket versleuteld verzonden.",
-                "Camera matrix opnieuw berekend.",
-                "Uplink stabiliteit: 99.87%"
-            ];
-            logAction(autoLogs[Math.floor(Math.random() * autoLogs.length)]);
-        }, 3000);
-
-        // --- 7. Responsive Matrix ---
+        // --- 6. Adaptive Aspect Ratio Control ---
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
