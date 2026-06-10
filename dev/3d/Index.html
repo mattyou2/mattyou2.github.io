@@ -3,286 +3,259 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hyper-Tech 3D Simulator OS</title>
+    <title>3D Cinematic Experience</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
-        :root {
-            --neon-red: #ff0033;
-            --neon-glow: rgba(255, 0, 51, 0.4);
-            --bg-dark: #050508;
-            --panel-bg: rgba(16, 16, 20, 0.85);
-        }
-
-        /* Tech Achtergrond & Grid Simulator */
-        body {
+        /* Basis styling & reset */
+        body, html {
             margin: 0;
             padding: 0;
-            background-color: var(--bg-dark);
-            background-image: 
-                linear-gradient(rgba(255, 0, 51, 0.05) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 0, 51, 0.05) 1px, transparent 1px);
-            background-size: 30px 30px;
-            color: #ffffff;
-            font-family: 'Courier New', Courier, monospace; /* Hardcore tech font */
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            perspective: 1200px; /* Diepe 3D ruimte */
-        }
-
-        /* De 3D Simulator Container (wordt door JS bewogen) */
-        #simulator-viewport {
-            width: 90vw;
-            height: 85vh;
-            max-width: 1400px;
-            transform-style: preserve-3d;
-            transition: transform 0.1s ease-out;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        /* HUD Header */
-        .hud-header {
-            background: var(--panel-bg);
-            border: 2px solid var(--neon-red);
-            border-radius: 8px;
-            padding: 15px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 0 20px var(--neon-glow), inset 0 0 15px rgba(255,0,51,0.2);
-            transform: translateZ(50px); /* Zweeft ver naar voren */
-        }
-
-        .system-status {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: var(--neon-red);
-            font-weight: bold;
-            animation: blink 1.5s infinite;
-        }
-
-        /* HOLOGRAFISCHE 3D MATRIX KNOPPEN */
-        .cube-btn {
-            position: relative;
-            background: transparent;
-            border: none;
-            cursor: pointer;
-            width: 140px;
-            height: 45px;
-            transform-style: preserve-3d;
-            transition: transform 0.2s ease;
-            transform: translateZ(20px);
-        }
-
-        /* De voorkant van de knop */
-        .cube-btn-face {
-            position: absolute;
             width: 100%;
             height: 100%;
-            background: rgba(255, 0, 51, 0.15);
-            border: 2px solid var(--neon-red);
-            border-radius: 4px;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            box-shadow: 0 0 10px var(--neon-glow);
-            transform: translateZ(10px); /* Creëert fysieke dikte */
-            transition: all 0.2s;
+            overflow-x: hidden;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: #0a0a0a;
+            color: #ffffff;
+            scroll-behavior: smooth;
         }
 
-        /* De 3D 'zijkanten' gesimuleerd via schaduw-extrusie */
-        .cube-btn::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: #66000b;
-            border-radius: 4px;
-            transform: translateZ(0px);
-            box-shadow: 0 8px 0 #330005, 0 15px 25px rgba(0,0,0,0.7);
-            transition: transform 0.2s, box-shadow 0.2s;
+        /* Het 3D Canvas dat achter de website leeft */
+        #webgl-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+            pointer-events: none; /* Zorgt dat je nog op knoppen kunt klikken */
         }
 
-        .cube-btn:hover .cube-btn-face {
-            background: var(--neon-red);
-            box-shadow: 0 0 25px var(--neon-red);
-            color: black;
-        }
-
-        /* Volledige mechanische indruk-animatie in 3D-ruimte */
-        .cube-btn:active {
-            transform: translateZ(5px);
-        }
-        .cube-btn:active::before {
-            box-shadow: 0 2px 0 #330005, 0 5px 10px rgba(0,0,0,0.7);
-        }
-
-        /* Main Workspace splitst op in 3D panelen */
-        .workspace {
-            display: grid;
-            grid-template-columns: 1fr 2fr;
-            gap: 20px;
-            flex-grow: 1;
-            transform-style: preserve-3d;
-        }
-
-        /* Hyper-Tech Terminal Venster */
-        .panel {
-            background: var(--panel-bg);
-            border: 1px solid rgba(255, 0, 51, 0.3);
-            border-radius: 12px;
-            padding: 25px;
+        /* Normale HTML Content die over de 3D-wereld heen zweeft */
+        .content-layer {
             position: relative;
-            transform-style: preserve-3d;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.8);
-            transition: border-color 0.3s, box-shadow 0.3s;
+            z-index: 2;
+            width: 100%;
         }
 
-        .panel:hover {
-            border-color: var(--neon-red);
-            box-shadow: 0 0 30px rgba(255, 0, 51, 0.2), 0 15px 35px rgba(0,0,0,0.8);
-        }
-
-        /* Geef elk paneel een andere diepte-laag voor parallax effect */
-        .left-panel { transform: translateZ(30px) rotateY(5deg); }
-        .right-panel { transform: translateZ(60px) rotateY(-5deg); }
-
-        .panel-header {
-            border-bottom: 1px solid rgba(255, 0, 51, 0.3);
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-            font-size: 14px;
-            color: #888;
+        /* Filmische Secties */
+        section {
+            height: 100vh;
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 0 20px;
+            box-sizing: border-box;
         }
 
-        .glitch-text {
-            font-size: 28px;
-            color: white;
-            text-shadow: 2px 2px var(--neon-red), -2px -2px #00ffff;
+        /* Premium Typografie met bioscoop-vibe */
+        h1 {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            letter-spacing: 4px;
             text-transform: uppercase;
-            margin: 0 0 15px 0;
+            background: linear-gradient(45deg, #ff0033, #ff6688);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            opacity: 0;
+            transform: translateY(50px);
+            animation: fadeInUp 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
-        /* Data Analyzer Grid */
-        .stat-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-top: 20px;
+        p {
+            font-size: 1.3rem;
+            max-width: 600px;
+            color: #cccccc;
+            margin-bottom: 40px;
+            line-height: 1.6;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 1.5s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards;
         }
 
-        .stat-box {
-            background: rgba(0,0,0,0.4);
-            border-left: 3px solid var(--neon-red);
-            padding: 15px;
-            border-radius: 4px;
-            transform: translateZ(15px);
+        /* SUPER COOLE 3D INTERACTIEVE KNOPPEN */
+        .btn-container {
+            perspective: 800px;
+            opacity: 0;
+            animation: fadeInUp 1.5s cubic-bezier(0.16, 1, 0.3, 1) 0.6s forwards;
         }
 
-        .stat-box span {
-            display: block;
+        .cool-btn {
+            background: linear-gradient(135deg, #1a1a1a, #0a0a0a);
+            border: 2px solid #ff0033;
+            color: white;
+            padding: 16px 40px;
+            font-size: 18px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-radius: 50px;
+            cursor: pointer;
+            position: relative;
+            transition: transform 0.3s, box-shadow 0.3s, background 0.3s;
+            transform-style: preserve-3d;
+            box-shadow: 0 10px 30px rgba(255, 0, 51, 0.2);
+        }
+
+        /* 3D Kanteling bij Hover */
+        .cool-btn:hover {
+            transform: rotateX(15deg) translateY(-5px) translateZ(10px);
+            background: #ff0033;
+            box-shadow: 0 20px 40px rgba(255, 0, 51, 0.5);
+        }
+
+        .cool-btn:active {
+            transform: rotateX(5deg) translateY(-1px) translateZ(2px);
+        }
+
+        /* Animaties voor de filmische opkomst van tekst */
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Scroll indicator */
+        .scroll-indicator {
+            position: absolute;
+            bottom: 40px;
             font-size: 12px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
             color: #666;
+            animation: pulse 2s infinite;
         }
 
-        .stat-box div {
-            font-size: 20px;
-            font-weight: bold;
-            color: #fff;
-            margin-top: 5px;
-        }
-
-        /* Systeem animatie */
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.4; }
+        @keyframes pulse {
+            0%, 100% { opacity: 0.3; transform: translateY(0); }
+            50% { opacity: 1; transform: translateY(10px); }
         }
     </style>
 </head>
 <body>
 
-    <div id="simulator-viewport">
+    <canvas id="webgl-canvas"></canvas>
+
+    <div class="content-layer">
         
-        <div class="hud-header">
-            <div style="font-size: 22px; font-weight: bold; letter-spacing: 3px;">MATTYOU // CORE_OS</div>
-            <div style="display: flex; gap: 15px;">
-                <button class="cube-btn"><div class="cube-btn-face">OVERRIDE</div></button>
-                <button class="cube-btn"><div class="cube-btn-face">NET_MAP</div></button>
+        <section id="home">
+            <h1>Welkom</h1>
+            <p>Dit is een moderne, strakke website gecombineerd met een interactieve 3D-wereld. Scroll naar beneden om de camarabeweging te starten.</p>
+            <div class="btn-container">
+                <button class="cool-btn" onclick="document.getElementById('services').scrollIntoView();">Ontdek Meer</button>
             </div>
-            <div class="system-status">
-                <span style="width: 10px; height: 10px; background: var(--neon-red); border-radius: 50%; display:inline-block;"></span>
-                SIMULATOR_ACTIVE [100%]
+            <div class="scroll-indicator">Scroll naar beneden</div>
+        </section>
+
+        <section id="services">
+            <h1>Onze Diensten</h1>
+            <p>Wij bouwen high-end digitale producten met de nieuwste technieken. Alles draait soepel, snel en met oog voor detail.</p>
+            <div class="btn-container">
+                <button class="cool-btn">Bekijk Projecten</button>
             </div>
-        </div>
+        </section>
 
-        <div class="workspace">
-            
-            <div class="panel left-panel">
-                <div class="panel-header"><span>SEC_LEVEL: ALPHA</span><span>ID: 333</span></div>
-                <h2 class="glitch-text">SYS_CONTROL</h2>
-                <p style="color: #aaa; font-size: 14px; line-height: 1.6;">De gehele interface reageert op de gyroscoop van je muis. Dit simuleert een zwevend holografisch display binnen een live engine.</p>
-                
-                <div style="margin-top: 40px; display: flex; flex-direction: column; gap: 15px;">
-                    <button class="cube-btn" style="width: 100%;"><div class="cube-btn-face">INITIALISEER MATRIX</div></button>
-                    <button class="cube-btn" style="width: 100%;"><div class="cube-btn-face">CLEAR LOGS</div></button>
-                </div>
+        <section id="contact">
+            <h1>Contact</h1>
+            <p>Benieuwd naar wat er mogelijk is? Neem vandaag nog contact met ons op en laat je verrassen.</p>
+            <div class="btn-container">
+                <button class="cool-btn">Stuur Bericht</button>
             </div>
+        </section>
 
-            <div class="panel right-panel">
-                <div class="panel-header"><span>LIVE_DATA_FEED</span><span>FPS: 60.00</span></div>
-                <h2 class="glitch-text" style="text-shadow: 2px 2px #00ff66, -2px -2px var(--neon-red);">DIAGNOSTICS</h2>
-                
-                <div class="stat-grid">
-                    <div class="stat-box">
-                        <span>ENGINE_SPEED</span>
-                        <div>4.8 GHz</div>
-                    </div>
-                    <div class="stat-box">
-                        <span>3D_RENDER_LOAD</span>
-                        <div>12.4%</div>
-                    </div>
-                    <div class="stat-box">
-                        <span>CYBER_SHIELD</span>
-                        <div>SECURE</div>
-                    </div>
-                    <div class="stat-box">
-                        <span>LATENCY</span>
-                        <div>1.2ms</div>
-                    </div>
-                </div>
-
-                <p style="margin-top: 25px; color: #666; font-size: 12px;">WARNING: Do not modify core scripts while the 3D grid simulation is engaged. Doing so might cause visual displacement errors inside the browser viewport.</p>
-            </div>
-
-        </div>
     </div>
 
     <script>
-        const viewport = document.getElementById('simulator-viewport');
+        // 1. Initialiseer de 3D Scene, Camera en Renderer
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('webgl-canvas'), antialias: true, alpha: true });
         
-        document.addEventListener('mousemove', (e) => {
-            // Bereken de muispositie ten opzichte van het midden van het scherm
-            const xAxis = (window.innerWidth / 2 - e.pageX) / 25;
-            const yAxis = (window.innerHeight / 2 - e.pageY) / 25;
-            
-            // Kantel de HELE website dynamisch in 3D op basis van de muis
-            viewport.style.transform = `rotateY(${xAxis}deg) rotateX(${-yAxis}deg)`;
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+        // 2. Maak een filmische 3D omgeving (een tunnel van zwevende deeltjes/sterren)
+        const particlesGeometry = new THREE.BufferGeometry();
+        const particlesCount = 1500;
+        const posArray = new Float32Array(particlesCount * 3);
+
+        // Geef elk deeltje een willekeurige positie in de 3D-ruimte
+        for(let i = 0; i < particlesCount * 3; i++) {
+            posArray[i] = (Math.random() - 0.5) * 10;
+        }
+
+        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+
+        // Materiaal en kleur van de 3D objecten (Premium Rood)
+        const particlesMaterial = new THREE.PointsMaterial({
+            size: 0.015,
+            color: 0xff0033,
+            transparent: true,
+            opacity: 0.8
         });
 
-        // Reset de positie vloeiend als de muis het scherm verlaat
-        document.addEventListener('mouseleave', () => {
-            viewport.style.transform = `rotateY(0deg) rotateX(0deg)`;
+        const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+        scene.add(particlesMesh);
+
+        // Voeg wat sfeerverlichting toe
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        scene.add(ambientLight);
+
+        // Zet de camera in de startpositie
+        camera.position.z = 3;
+
+        // 3. De Scroll-Animatie (De "Film-regisseur" code)
+        let targetTimeline = 0;
+        let currentTimeline = 0;
+
+        window.addEventListener('scroll', () => {
+            // Bereken hoe ver de gebruiker heeft gescrold (tussen 0 en 1)
+            const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+            targetTimeline = window.scrollY / maxScroll;
+        });
+
+        // Muisbeweging voor subtiele interactie (Parallax)
+        let mouseX = 0, mouseY = 0;
+        document.addEventListener('mousemove', (e) => {
+            mouseX = (e.clientX / window.innerWidth) - 0.5;
+            mouseY = (e.clientY / window.innerHeight) - 0.5;
+        });
+
+        // 4. De Game Loop / Render Loop (Draait op 60+ FPS)
+        const clock = new THREE.Clock();
+
+        const animate = () => {
+            requestAnimationFrame(animate);
+
+            const elapsedTime = clock.getElapsedTime();
+
+            // Vloeiende overgang van de camerabeweging (Lerp)
+            currentTimeline += (targetTimeline - currentTimeline) * 0.05;
+
+            // --- FILMISCHE BEWEGINGEN OP BASIS VAN SCROLL ---
+            // De camera vliegt naar voren door de tunnel naarmate je scrollt
+            camera.position.z = 3 - (currentTimeline * 4); 
+            // De camera draait langzaam mee om een episch film-shot te simuleren
+            camera.rotation.y = currentTimeline * 2;
+            camera.rotation.x = currentTimeline * 0.5;
+
+            // Subtiele zwevende animatie van de deeltjes zelf, plus muis-reactie
+            particlesMesh.rotation.y = elapsedTime * 0.05 + (mouseX * 0.2);
+            particlesMesh.rotation.x = elapsedTime * 0.02 + (mouseY * 0.2);
+
+            renderer.render(scene, camera);
+        };
+
+        animate();
+
+        // 5. Zorg dat de 3D wereld meeschaalt als je het venster groter/kleiner maakt
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
         });
     </script>
-
 </body>
-                  </html>
+</html>
