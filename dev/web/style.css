@@ -14,6 +14,7 @@
     --glass-border: rgba(255, 255, 255, 0.05);
     --text-main: #ffffff;
     --text-muted: #a0a0aa;
+    --discord-blue: #5865F2;
 }
 
 body {
@@ -64,17 +65,25 @@ header {
     text-decoration: none;
 }
 
-nav a {
-    color: var(--text-muted);
-    text-decoration: none;
-    margin-left: 25px;
+/* --- DISCORD KNOP (NAVBAR) --- */
+.btn-discord {
+    background: rgba(88, 101, 242, 0.1);
+    color: var(--text-main);
+    border: 1px solid var(--discord-blue);
+    padding: 10px 20px;
+    border-radius: 30px;
     font-weight: 600;
-    transition: color 0.3s;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
 }
 
-nav a:hover, nav a.active {
-    color: var(--primary-red);
-    text-shadow: 0 0 10px var(--accent-glow);
+.btn-discord:hover {
+    background: var(--discord-blue);
+    box-shadow: 0 0 20px rgba(88, 101, 242, 0.4);
+    transform: translateY(-2px);
 }
 
 /* --- CONTAINER & HERO --- */
@@ -100,7 +109,7 @@ nav a:hover, nav a.active {
     font-size: 1.2rem;
 }
 
-/* --- 3D CARDS GRID (Voor index.html) --- */
+/* --- 3D CARDS GRID --- */
 .project-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
@@ -120,11 +129,9 @@ nav a:hover, nav a.active {
     backdrop-filter: blur(12px);
     transition: transform 0.1s ease, box-shadow 0.3s ease;
     transform-style: preserve-3d;
-    cursor: pointer;
     box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    text-decoration: none;
-    display: block;
-    color: white;
+    display: flex;
+    flex-direction: column;
 }
 
 .project-card:hover {
@@ -134,6 +141,7 @@ nav a:hover, nav a.active {
 
 .card-tag {
     display: inline-block;
+    align-self: flex-start;
     padding: 5px 12px;
     background: rgba(255, 42, 42, 0.15);
     color: var(--primary-red);
@@ -157,6 +165,7 @@ nav a:hover, nav a.active {
     line-height: 1.5;
     margin-bottom: 20px;
     transform: translateZ(25px);
+    flex-grow: 1; /* Zorgt dat de knop altijd netjes onderaan staat */
 }
 
 .project-img {
@@ -175,85 +184,24 @@ nav a:hover, nav a.active {
     transform: translateZ(50px) scale(1.02);
 }
 
-/* --- FORMULIER STYLE (Voor issues.html) --- */
-.issue-section {
-    background: radial-gradient(circle at top right, rgba(255,42,42,0.05), transparent), var(--glass-bg);
-    border: 1px solid var(--glass-border);
-    border-radius: 24px;
-    padding: 40px;
-    backdrop-filter: blur(15px);
-    max-width: 800px;
-    margin: 0 auto;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.6);
-}
-
-.form-group {
-    margin-bottom: 20px;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 8px;
-    font-size: 0.9rem;
-    color: var(--text-muted);
+/* --- CARD BUTTON --- */
+.card-btn {
+    background: transparent;
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 12px;
+    border-radius: 10px;
+    text-align: center;
+    text-decoration: none;
     font-weight: 600;
-}
-
-.form-control {
-    width: 100%;
-    background: rgba(0, 0, 0, 0.4);
-    border: 1px solid var(--glass-border);
-    border-radius: 10px;
-    padding: 15px;
-    color: white;
-    font-size: 1rem;
+    font-size: 0.9rem;
+    transform: translateZ(30px);
     transition: all 0.3s;
+    margin-top: 10px;
 }
 
-.form-control:focus {
-    outline: none;
-    border-color: var(--primary-red);
-    box-shadow: 0 0 15px rgba(255, 42, 42, 0.2);
-}
-
-select.form-control option {
-    background: #121218;
-    color: white;
-}
-
-.btn-submit {
-    width: 100%;
+.project-card:hover .card-btn {
     background: var(--primary-red);
-    color: white;
-    border: none;
-    border-radius: 10px;
-    padding: 16px;
-    font-size: 1rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.3s;
+    border-color: var(--primary-red);
     box-shadow: 0 5px 15px rgba(255, 42, 42, 0.4);
 }
-
-.btn-submit:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(255, 42, 42, 0.6);
-    background: #ff4545;
-}
-
-/* --- TOAST NOTIFICATION --- */
-.toast {
-    position: fixed;
-    bottom: -100px;
-    right: 30px;
-    background: #10b981;
-    color: white;
-    padding: 15px 30px;
-    border-radius: 10px;
-    font-weight: 600;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-    transition: bottom 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    z-index: 1000;
-}
-
-.toast.show { bottom: 30px; }
