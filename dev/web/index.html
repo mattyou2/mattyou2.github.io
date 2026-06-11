@@ -11,12 +11,12 @@
     <div class="grid-bg"></div>
 
     <header>
-        <a href="index.html" class="logo">Mattyou Studios</a>
+        <a href="https://mattyou2.github.io/dev/web/index.html" class="logo">Mattyou Studios</a>
         <nav>
-            <a href="index.html" class="active">Home</a>
-            <a href="mods.html">Mods</a>
-            <a href="websites.html">Websites</a>
-            <a href="JOUW_DISCORD_INVITE_LINK" target="_blank" class="btn-discord" style="display: inline-flex;">Discord Support</a>
+            <a href="https://mattyou2.github.io/dev/web/index.html" class="active">Home</a>
+            <a href="https://mattyou2.github.io/dev/web/mods.html">Mods</a>
+            <a href="https://mattyou2.github.io/dev/web/websites.html">Websites</a>
+            <a href="https://discord.gg/bYb3DbbztF" target="_blank" class="btn-discord">Discord Support</a>
         </nav>
     </header>
 
@@ -31,20 +31,20 @@
             <div class="card-container">
                 <div class="project-card">
                     <span class="card-tag">Minecraft Mods</span>
-                    <div class="project-img" style="background-image: url('https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=500');"></div>
+                    <div class="project-img" style="background-image: url('https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=600');"></div>
                     <h3>Minecraft Mods</h3>
                     <p>Bekijk al mijn custom Minecraft modificaties en geavanceerde server Skripts, waaronder het Ecosy Pack.</p>
-                    <a href="mods.html" class="card-btn">Bekijk Mods</a>
+                    <a href="https://mattyou2.github.io/dev/web/mods.html" class="card-btn">Bekijk Mods</a>
                 </div>
             </div>
 
             <div class="card-container">
                 <div class="project-card">
                     <span class="card-tag">Web & Software</span>
-                    <div class="project-img" style="background-image: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500');"></div>
+                    <div class="project-img" style="background-image: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600');"></div>
                     <h3>Websites & Apps</h3>
                     <p>Ontdek mijn interactieve web-applicaties en softwareprojecten, zoals de Mattyou Engine en Hub OS.</p>
-                    <a href="websites.html" class="card-btn">Bekijk Projecten</a>
+                    <a href="https://mattyou2.github.io/dev/web/websites.html" class="card-btn">Bekijk Projecten</a>
                 </div>
             </div>
 
@@ -52,24 +52,14 @@
     </div>
 
     <script>
-        /* --- 3D INTERACTIEVE MUIS TILT --- */
         const cards = document.querySelectorAll('.project-card');
-        
         cards.forEach(card => {
             card.addEventListener('mousemove', (e) => {
                 const rect = card.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-                
-                const centerX = rect.width / 2;
-                const centerY = rect.height / 2;
-                
-                const rotateX = ((centerY - y) / centerY) * 15;
-                const rotateY = ((x - centerX) / centerX) * 15;
-                
-                card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-5px)`;
+                const rotateX = ((rect.height / 2 - (e.clientY - rect.top)) / (rect.height / 2)) * 12;
+                const rotateY = (((e.clientX - rect.left) - rect.width / 2) / (rect.width / 2)) * 12;
+                card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-4px)`;
             });
-            
             card.addEventListener('mouseleave', () => {
                 card.style.transform = 'rotateX(0deg) rotateY(0deg) translateY(0)';
             });
