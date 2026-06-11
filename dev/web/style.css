@@ -1,19 +1,21 @@
-/* --- MODERN RESET & VARIABLES --- */
+/* --- GOOGLE FONTS IMPORT --- */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=Orbitron:wght@700;900&display=swap');
+
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Segoe UI', Roboto, sans-serif;
+    font-family: 'Inter', sans-serif;
 }
 
 :root {
-    --bg-color: #0a0a0c;
+    --bg-color: #050507;
     --primary-red: #ff2a2a;
-    --accent-glow: rgba(255, 42, 42, 0.2);
-    --glass-bg: rgba(18, 18, 24, 0.65);
-    --glass-border: rgba(255, 255, 255, 0.05);
+    --accent-glow: rgba(255, 42, 42, 0.25);
+    --glass-bg: rgba(13, 13, 18, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.04);
     --text-main: #ffffff;
-    --text-muted: #a0a0aa;
+    --text-muted: #8e8e93;
     --discord-blue: #5865F2;
 }
 
@@ -24,96 +26,131 @@ body {
     overflow-x: hidden;
     perspective: 1000px;
     background-image: 
-        radial-gradient(circle at 20% 30%, rgba(255, 42, 42, 0.05) 0%, transparent 40%),
-        radial-gradient(circle at 80% 70%, rgba(255, 42, 42, 0.08) 0%, transparent 40%);
+        radial-gradient(circle at 15% 25%, rgba(255, 42, 42, 0.06) 0%, transparent 45%),
+        radial-gradient(circle at 85% 75%, rgba(255, 42, 42, 0.08) 0%, transparent 45%);
 }
 
-/* --- ACHTERGROND GRID --- */
+/* --- INTERACTIEVE ACHTERGROND GRID --- */
 .grid-bg {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-image: linear-gradient(rgba(255,255,255,0.01) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.01) 1px, transparent 1px);
-    background-size: 50px 50px;
+    background-image: 
+        linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px), 
+        linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+    background-size: 60px 60px;
     z-index: -1;
 }
 
-/* --- NAVIGATIE BALK --- */
+/* --- PRO NAVIGATIE BALK --- */
 header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 20px 5%;
-    backdrop-filter: blur(10px);
+    padding: 25px 8%;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     border-bottom: 1px solid var(--glass-border);
     position: sticky;
     top: 0;
     z-index: 100;
-    background: rgba(10, 10, 12, 0.8);
+    background: rgba(5, 5, 7, 0.75);
 }
 
 .logo {
-    font-size: 1.5rem;
-    font-weight: 800;
-    letter-spacing: 2px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 900;
+    letter-spacing: 3px;
     text-transform: uppercase;
-    background: linear-gradient(45deg, #fff, var(--primary-red));
+    background: linear-gradient(45deg, #ffffff 40%, var(--primary-red));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     text-decoration: none;
 }
 
-/* --- DISCORD KNOP (NAVBAR) --- */
-.btn-discord {
-    background: rgba(88, 101, 242, 0.1);
-    color: var(--text-main);
-    border: 1px solid var(--discord-blue);
-    padding: 10px 20px;
-    border-radius: 30px;
-    font-weight: 600;
-    text-decoration: none;
+nav {
     display: flex;
     align-items: center;
-    gap: 8px;
-    transition: all 0.3s ease;
+    gap: 35px; /* Meer ruimte tussen de links */
+}
+
+nav a {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.95rem;
+    letter-spacing: 0.5px;
+    transition: color 0.3s, text-shadow 0.3s;
+}
+
+nav a:hover, nav a.active {
+    color: var(--text-main);
+}
+
+nav a.active {
+    color: var(--primary-red);
+    font-weight: 600;
+}
+
+/* --- PREMIUM DISCORD KNOP --- */
+.btn-discord {
+    background: transparent;
+    color: var(--text-main) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 10px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
 .btn-discord:hover {
-    background: var(--discord-blue);
-    box-shadow: 0 0 20px rgba(88, 101, 242, 0.4);
-    transform: translateY(-2px);
+    background: #ffffff;
+    color: #000000 !important;
+    border-color: #ffffff;
+    box-shadow: 0 0 25px rgba(255, 255, 255, 0.15);
+    transform: translateY(-1px);
 }
 
 /* --- CONTAINER & HERO --- */
 .container {
-    max-width: 1400px;
+    max-width: 1200px; /* Iets compacter voor een betere focus */
     margin: 0 auto;
-    padding: 60px 20px;
+    padding: 80px 20px;
 }
 
 .hero {
     text-align: center;
-    margin-bottom: 60px;
+    margin-bottom: 70px;
 }
 
 .hero h1 {
-    font-size: 3.5rem;
-    margin-bottom: 15px;
+    font-size: 3.8rem;
     font-weight: 900;
+    letter-spacing: -1px;
+    margin-bottom: 20px;
+    background: linear-gradient(to bottom, #ffffff, #a5a5a5);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
 .hero p {
     color: var(--text-muted);
-    font-size: 1.2rem;
+    font-size: 1.15rem;
+    font-weight: 400;
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.6;
 }
 
-/* --- 3D CARDS GRID --- */
+/* --- DETAILED 3D CARDS GRID --- */
 .project-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-    gap: 40px;
+    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+    gap: 45px;
 }
 
 .card-container {
@@ -123,85 +160,104 @@ header {
 .project-card {
     background: var(--glass-bg);
     border: 1px solid var(--glass-border);
-    border-radius: 20px;
-    padding: 25px;
+    border-radius: 16px;
+    padding: 30px;
     height: 100%;
     backdrop-filter: blur(12px);
-    transition: transform 0.1s ease, box-shadow 0.3s ease;
+    -webkit-backdrop-filter: blur(12px);
+    transition: transform 0.1s ease, border-color 0.3s ease, box-shadow 0.3s ease;
     transform-style: preserve-3d;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
     display: flex;
     flex-direction: column;
 }
 
 .project-card:hover {
-    border-color: rgba(255, 42, 42, 0.4);
-    box-shadow: 0 15px 40px var(--accent-glow);
+    border-color: rgba(255, 42, 42, 0.35);
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6), 0 0 40px var(--accent-glow);
 }
 
 .card-tag {
+    font-family: 'Orbitron', sans-serif;
     display: inline-block;
     align-self: flex-start;
-    padding: 5px 12px;
-    background: rgba(255, 42, 42, 0.15);
+    padding: 6px 14px;
+    background: rgba(255, 42, 42, 0.08);
     color: var(--primary-red);
-    border: 1px solid rgba(255, 42, 42, 0.3);
-    border-radius: 30px;
-    font-size: 0.8rem;
+    border: 1px solid rgba(255, 42, 42, 0.2);
+    border-radius: 4px;
+    font-size: 0.7rem;
     font-weight: 700;
-    margin-bottom: 15px;
-    transform: translateZ(30px);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 25px;
+    transform: translateZ(25px);
 }
 
 .project-card h3 {
-    font-size: 1.6rem;
-    margin-bottom: 10px;
-    transform: translateZ(40px);
+    font-size: 1.75rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-bottom: 12px;
+    transform: translateZ(35px);
 }
 
 .project-card p {
     color: var(--text-muted);
     font-size: 0.95rem;
-    line-height: 1.5;
-    margin-bottom: 20px;
-    transform: translateZ(25px);
-    flex-grow: 1; /* Zorgt dat de knop altijd netjes onderaan staat */
+    line-height: 1.6;
+    margin-bottom: 30px;
+    transform: translateZ(20px);
+    flex-grow: 1;
 }
 
 .project-img {
     width: 100%;
-    height: 180px;
-    border-radius: 12px;
+    height: 200px;
+    border-radius: 10px;
     background-size: cover;
     background-position: center;
-    margin-bottom: 15px;
-    transform: translateZ(35px);
-    border: 1px solid rgba(255,255,255,0.05);
-    transition: transform 0.3s;
+    margin-bottom: 25px;
+    transform: translateZ(30px);
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
 .project-card:hover .project-img {
-    transform: translateZ(50px) scale(1.02);
+    transform: translateZ(45px) scale(1.03);
 }
 
-/* --- CARD BUTTON --- */
+/* --- MODERN CTA BUTTONS --- */
 .card-btn {
-    background: transparent;
-    color: white;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 12px;
-    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text-main);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 14px;
+    border-radius: 8px;
     text-align: center;
     text-decoration: none;
     font-weight: 600;
     font-size: 0.9rem;
-    transform: translateZ(30px);
-    transition: all 0.3s;
-    margin-top: 10px;
+    letter-spacing: 0.5px;
+    transform: translateZ(25px);
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
 .project-card:hover .card-btn {
     background: var(--primary-red);
     border-color: var(--primary-red);
-    box-shadow: 0 5px 15px rgba(255, 42, 42, 0.4);
+    box-shadow: 0 8px 20px rgba(255, 42, 42, 0.3);
+}
+
+/* Specifieke secundaire knop styling voor subpagina's */
+.card-btn-secondary {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    margin-top: 10px;
+}
+
+.card-btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+    box-shadow: none !important;
 }
