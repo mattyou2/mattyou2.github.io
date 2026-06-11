@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minecraft Mods | Mattyou Studios</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="grid-bg"></div>
+
+    <header>
+        <a href="index.html" class="logo">Mattyou Studios</a>
+        <nav>
+            <a href="index.html">Home</a>
+            <a href="mods.html" class="active">Mods</a>
+            <a href="websites.html">Websites</a>
+            <a href="JOUW_DISCORD_INVITE_LINK" target="_blank" class="btn-discord" style="display: inline-flex;">Discord Support</a>
+        </nav>
+    </header>
+
+    <div class="container">
+        <section class="hero">
+            <h1>Minecraft Mods & Skripts</h1>
+            <p>Geavanceerde modificaties en systemen voor moderne Minecraft servers.</p>
+        </section>
+
+        <section class="project-grid">
+            
+            <div class="card-container">
+                <div class="project-card">
+                    <span class="card-tag">Modrinth / Skript</span>
+                    <div class="project-img" style="background-image: url('https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=500');"></div>
+                    <h3>Ecosy Economy Pack</h3>
+                    <p>Een compleet en geoptimaliseerd economie- en administratiesysteem. Bevat custom .sk scripts voor servereigenaren die een stabiele economie willen draaien.</p>
+                    <a href="https://modrinth.com" target="_blank" class="card-btn" style="background: rgba(255,255,255,0.05); margin-bottom: 5px;">Download op Modrinth</a>
+                    <a href="JOUW_DISCORD_INVITE_LINK" target="_blank" class="card-btn">Report Issue</a>
+                </div>
+            </div>
+
+            </section>
+    </div>
+
+    <script>
+        /* --- 3D INTERACTIEVE MUIS TILT --- */
+        const cards = document.querySelectorAll('.project-card');
+        cards.forEach(card => {
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const rotateX = ((rect.height / 2 - (e.clientY - rect.top)) / (rect.height / 2)) * 15;
+                const rotateY = (((e.clientX - rect.left) - rect.width / 2) / (rect.width / 2)) * 15;
+                card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-5px)`;
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'rotateX(0deg) rotateY(0deg) translateY(0)';
+            });
+        });
+    </script>
+</body>
+</html>
