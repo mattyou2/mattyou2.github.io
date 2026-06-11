@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mattyou Studios | Project Hub</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="grid-bg"></div>
+
+    <header>
+        <a href="index.html" class="logo">Mattyou Studios</a>
+        <nav>
+            <a href="index.html" class="active">Home</a>
+            <a href="issues.html">Issue Tracker</a>
+        </nav>
+    </header>
+
+    <div class="container">
+        <section class="hero">
+            <h1>Project Dashboard</h1>
+            <p>Ontdek mijn apps, programma's en Minecraft modificaties.</p>
+        </section>
+
+        <section class="project-grid">
+            
+            <div class="card-container">
+                <a href="issues.html?project=Ecosy" class="project-card">
+                    <span class="card-tag">Minecraft Mod / Skript</span>
+                    <div class="project-img" style="background-image: url('https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=500');"></div>
+                    <h3>Ecosy Pack</h3>
+                    <p>Een geavanceerd economie- en administratiesysteem gebouwd voor moderne Minecraft servers.</p>
+                </a>
+            </div>
+
+            <div class="card-container">
+                <a href="issues.html?project=Engine" class="project-card">
+                    <span class="card-tag">Web Application</span>
+                    <div class="project-img" style="background-image: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500');"></div>
+                    <h3>Mattyou Engine</h3>
+                    <p>Een interactieve, AI-gestuurde browseromgeving met een ingebouwde slimme assistent.</p>
+                </a>
+            </div>
+
+            <div class="card-container">
+                <a href="issues.html?project=Hub" class="project-card">
+                    <span class="card-tag">Software / OS</span>
+                    <div class="project-img" style="background-image: url('https://images.unsplash.com/photo-1518770660439-4636190af475?w=500');"></div>
+                    <h3>Mattyou Hub OS</h3>
+                    <p>Custom dashboard software voor Raspberry Pi om pc's en randapparatuur live aan te sturen.</p>
+                </a>
+            </div>
+
+        </section>
+    </div>
+
+    <script>
+        /* --- 3D INTERACTIEVE MUIS TILT --- */
+        const cards = document.querySelectorAll('.project-card');
+        
+        cards.forEach(card => {
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                
+                const rotateX = ((centerY - y) / centerY) * 15;
+                const rotateY = ((x - centerX) / centerX) * 15;
+                
+                card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-5px)`;
+            });
+            
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'rotateX(0deg) rotateY(0deg) translateY(0)';
+            });
+        });
+    </script>
+</body>
+</html>
