@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Websites & Apps | Mattyou Studios</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="grid-bg"></div>
+
+    <header>
+        <a href="index.html" class="logo">Mattyou Studios</a>
+        <nav>
+            <a href="index.html">Home</a>
+            <a href="mods.html">Mods</a>
+            <a href="websites.html" class="active">Websites</a>
+            <a href="JOUW_DISCORD_INVITE_LINK" target="_blank" class="btn-discord" style="display: inline-flex;">Discord Support</a>
+        </nav>
+    </header>
+
+    <div class="container">
+        <section class="hero">
+            <h1>Websites & Applicaties</h1>
+            <p>Interactieve web-omgevingen, geavanceerde software en custom platformen.</p>
+        </section>
+
+        <section class="project-grid">
+            
+            <div class="card-container">
+                <div class="project-card">
+                    <span class="card-tag">Web Application / AI</span>
+                    <div class="project-img" style="background-image: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500');"></div>
+                    <h3>Mattyou Engine AI</h3>
+                    <p>Een unieke, interactieve browseromgeving aangedreven door een slimme ingebouwde assistent.</p>
+                    <a href="#" class="card-btn" style="background: rgba(255,255,255,0.05); margin-bottom: 5px;">Bezoek Website</a>
+                    <a href="JOUW_DISCORD_INVITE_LINK" target="_blank" class="card-btn">Report Issue</a>
+                </div>
+            </div>
+
+            <div class="card-container">
+                <div class="project-card">
+                    <span class="card-tag">Software / Dashboard</span>
+                    <div class="project-img" style="background-image: url('https://images.unsplash.com/photo-1518770660439-4636190af475?w=500');"></div>
+                    <h3>Mattyou Hub OS</h3>
+                    <p>Een high-tech dashboard ontworpen voor Raspberry Pi om computers en hardware live aan te sturen.</p>
+                    <a href="#" class="card-btn" style="background: rgba(255,255,255,0.05); margin-bottom: 5px;">Bekijk Project</a>
+                    <a href="JOUW_DISCORD_INVITE_LINK" target="_blank" class="card-btn">Report Issue</a>
+                </div>
+            </div>
+
+        </section>
+    </div>
+
+    <script>
+        /* --- 3D INTERACTIEVE MUIS TILT --- */
+        const cards = document.querySelectorAll('.project-card');
+        cards.forEach(card => {
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const rotateX = ((rect.height / 2 - (e.clientY - rect.top)) / (rect.height / 2)) * 15;
+                const rotateY = (((e.clientX - rect.left) - rect.width / 2) / (rect.width / 2)) * 15;
+                card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-5px)`;
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'rotateX(0deg) rotateY(0deg) translateY(0)';
+            });
+        });
+    </script>
+</body>
+</html>
