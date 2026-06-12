@@ -1,184 +1,168 @@
-// Centrale OS Object
-const os = {
-    currentUser: null,
-    registeredApps: {},
+// Update os.wm in je os.js bestand:
 
-    init() {
-        this.clock.start();
-        this.wm.initDragHandler();
-        
-        // Check of er al een actieve sessie is
-        const session = localStorage.getItem('myos_session');
-        if (session) {
-            this.currentUser = session;
-            this.loadUserOS();
+os.wm = {
+    zIndexCount: 100,
+    openApps: [], // Bijhouden welke apps open staan voor de taakbalk
+
+    openWindow(appId) {
+        // Als app al open is, focus hem of herstel hem
+        if (document.getElementById(`win-${appId}`)) {
+            this.restoreWindow(appId);
+            return;
         }
-    },
 
-    // --- ACCOUNT EN LOCALSTORAGE BEHEER ---
-    auth: {
-        getUsers() {
-            return JSON.parse(localStorage.getItem('myos_users')) || {};
-        },
-        register() {
-            const u = document.getElementById('username').value.trim();
-            const p = document.getElementById('password').value;
-            const error = document.getElementById('auth-error');
+        const app = os.registeredApps[appId];
+        if (!app) return;
 
-            if (!u || !p) return error.innerText = "Vul alle velden in.";
-            
-            let users = this.getUsers();
-            if (users[u]) return error.innerText = "Gebruiker bestaat al!";
+        const win = document.createElement('div');
+        win.id = `win-${appId}`;
+        win.className = 'window';
+        win.style.left = '100px';
+        win.style.top = '100px';
+        win.style.width = '500px'; // Standaard breedte
+        win.style.height = '350px'; // Standaard hoogte
+        win.style.zIndex = ++this.zIndexCount;
 
-            // Maak nieuwe gebruiker aan met standaard OS instellingen en app data
-            users[u] = {
-                password: p,
-                settings: { wallpaper: '#2b3a42' },
-                notes: [],
-                files: { "Welkom.txt": "Welkom bij My-OS! Dit is je persoonlijke bestandsbeheer." }
-            };
-
-            localStorage.setItem('myos_users', JSON.stringify(users));
-            error.style.color = "lightgreen";
-            error.innerText = "Registratie succesvol! Log nu in.";
-        },
-        login() {
-            const u = document.getElementById('username').value.trim();
-            const p = document.getElementById('password').value;
-            const error = document.getElementById('auth-error');
-
-            let users = this.getUsers();
-            if (users[u] && users[u].password === p) {
-                os.currentUser = u;
-                localStorage.setItem('myos_session', u);
-                os.loadUserOS();
-            } else {
-                error.innerText = "Onjuiste inloggegevens.";
-            }
-        },
-        logout() {
-            localStorage.removeItem('myos_session');
-            location.reload();
-        }
-    },
-
-    // --- DATA OPSLAG EN SYNCHRONISATIE ---
-    data: {
-        get() {
-            let users = JSON.parse(localStorage.getItem('myos_users'));
-            return users[os.currentUser];
-        },
-        save(newData) {
-            let users = JSON.parse(localStorage.getItem('myos_users'));
-            users[os.currentUser] = { ...users[os.currentUser], ...newData };
-            localStorage.setItem('myos_users', JSON.stringify(users));
-        }
-    },
-
-    loadUserOS() {
-        document.getElementById('auth-screen').classList.remove('active');
-        document.getElementById('desktop-screen').classList.add('active');
-        document.getElementById('start-username').innerText = this.currentUser;
-        
-        // Laad gepersonaliseerde instellingen
-        const userData = this.data.get();
-        document.getElementById('desktop-screen').style.backgroundColor = userData.settings.wallpaper;
-    },
-
-    // --- WINDOW MANAGER (WM) ---
-    wm: {
-        zIndexCount: 100,
-
-        openWindow(appId) {
-            if (document.getElementById(`win-${appId}`)) {
-                this.focusWindow(`win-${appId}`);
-                return;
-            }
-
-            const app = os.registeredApps[appId];
-            if (!app) return;
-
-            const win = document.createElement('div');
-            win.id = `win-${appId}`;
-            win.className = 'window';
-            win.style.left = '100px';
-            win.style.top = '100px';
-            win.style.zIndex = ++this.zIndexCount;
-
-            win.innerHTML = `
-                <div class="window-header" onmousedown="os.wm.dragStart(event, '${win.id}')">
-                    <span class="window-title">${app.title}</span>
-                    <div class="window-controls">
-                        <button class="close-btn" onclick="os.wm.closeWindow('${win.id}')">✕</button>
-                    </div>
+        win.innerHTML = `
+            <div class="window-header" onmousedown="os.wm.dragStart(event, '${win.id}')">
+                <span class="window-title">${app.icon || ''} ${app.title}</span>
+                <div class="window-controls">
+                    <button class="min-btn" onclick="os.wm.minimizeWindow('${appId}')">_</button>
+                    <button class="close-btn" onclick="os.wm.closeWindow('${appId}')">✕</button>
                 </div>
-                <div class="window-content" id="content-${appId}"></div>
-            `;
+            </div>
+            <div class="window-content" id="content-${appId}"></div>
+            <div class="resizer" onmousedown="os.wm.resizeStart(event, '${win.id}')"></div>
+        `;
 
-            document.getElementById('window-container').appendChild(win);
-            win.addEventListener('mousedown', () => this.focusWindow(win.id));
+        document.getElementById('window-container').appendChild(win);
+        win.addEventListener('mousedown', () => this.focusWindow(win.id));
 
-            // Voer de specifieke app code uit om de content te vullen
-            app.render(document.getElementById(`content-${appId}`));
-            this.toggleStartMenu(false);
-        },
+        app.render(document.getElementById(`content-${appId}`));
+        
+        // Toevoegen aan taakbalk
+        this.addToTaskbar(appId, app.title);
+        this.toggleStartMenu(false);
+    },
 
-        closeWindow(winId) {
-            document.getElementById(winId).remove();
-        },
+    // --- TAAKBALK LOGICA ---
+    addToTaskbar(appId, title) {
+        const tb = document.getElementById('taskbar-apps');
+        const btn = document.createElement('div');
+        btn.id = `tb-${appId}`;
+        btn.className = 'taskbar-item active';
+        btn.innerText = title;
+        btn.onclick = () => this.toggleWindow(appId);
+        tb.appendChild(btn);
+    },
 
-        focusWindow(winId) {
-            document.getElementById(winId).style.zIndex = ++this.zIndexCount;
-        },
+    removeFromTaskbar(appId) {
+        const btn = document.getElementById(`tb-${appId}`);
+        if (btn) btn.remove();
+    },
 
-        toggleStartMenu(force) {
-            const menu = document.getElementById('start-menu');
-            if (force !== undefined) {
-                force ? menu.classList.add('active') : menu.classList.remove('active');
+    toggleWindow(appId) {
+        const win = document.getElementById(`win-${appId}`);
+        const btn = document.getElementById(`tb-${appId}`);
+
+        if (win.classList.contains('minimized')) {
+            this.restoreWindow(appId);
+        } else {
+            // Als hij al de focus heeft, minimaliseer hem. Anders: geef hem focus.
+            if (parseInt(win.style.zIndex) < this.zIndexCount) {
+                this.focusWindow(win.id);
             } else {
-                menu.classList.toggle('active');
+                this.minimizeWindow(appId);
             }
-        },
-
-        // Sleep functionaliteit voor vensters
-        dragStart(e, winId) {
-            const win = document.getElementById(winId);
-            this.focusWindow(winId);
-            let posX = e.clientX - win.offsetLeft;
-            let posY = e.clientY - win.offsetTop;
-
-            function move(e) {
-                win.style.left = (e.clientX - posX) + 'px';
-                win.style.top = (e.clientY - posY) + 'px';
-            }
-
-            function stop() {
-                document.removeEventListener('mousemove', move);
-                document.removeEventListener('mouseup', stop);
-            }
-
-            document.addEventListener('mousemove', move);
-            document.addEventListener('mouseup', stop);
-        },
-
-        initDragHandler() {
-            // Sluit startmenu als je op desktop klikt
-            document.getElementById('desktop-screen').addEventListener('click', (e) => {
-                if (!e.target.closest('.start-btn') && !e.target.closest('.start-menu')) {
-                    this.toggleStartMenu(false);
-                }
-            });
         }
     },
 
-    // --- SYSTEEM KLOK ---
-    clock: {
-        start() {
-            setInterval(() => {
-                const now = new Date();
-                const time = now.toTimeString().split(' ')[0].substring(0, 5);
-                document.getElementById('taskbar-clock').innerText = time;
-            }, 1000);
+    minimizeWindow(appId) {
+        const win = document.getElementById(`win-${appId}`);
+        const btn = document.getElementById(`tb-${appId}`);
+        win.classList.add('minimized');
+        btn.classList.remove('active');
+    },
+
+    restoreWindow(appId) {
+        const win = document.getElementById(`win-${appId}`);
+        const btn = document.getElementById(`tb-${appId}`);
+        win.classList.remove('minimized');
+        btn.classList.add('active');
+        this.focusWindow(win.id);
+    },
+
+    closeWindow(appId) {
+        document.getElementById(`win-${appId}`).remove();
+        this.removeFromTaskbar(appId);
+    },
+
+    focusWindow(winId) {
+        this.zIndexCount++;
+        document.getElementById(winId).style.zIndex = this.zIndexCount;
+        
+        // Update taakbalk visueel
+        document.querySelectorAll('.taskbar-item').forEach(i => i.classList.remove('active'));
+        const appId = winId.replace('win-', '');
+        const btn = document.getElementById(`tb-${appId}`);
+        if (btn) btn.classList.add('active');
+    },
+
+    // --- RESIZE LOGICA ---
+    resizeStart(e, winId) {
+        e.preventDefault();
+        e.stopPropagation(); // Voorkom dat we ook gaan slepen
+        const win = document.getElementById(winId);
+        let startWidth = parseInt(document.defaultView.getComputedStyle(win).width, 10);
+        let startHeight = parseInt(document.defaultView.getComputedStyle(win).height, 10);
+        let startX = e.clientX;
+        let startY = e.clientY;
+
+        const doResize = (e) => {
+            win.style.width = (startWidth + e.clientX - startX) + 'px';
+            win.style.height = (startHeight + e.clientY - startY) + 'px';
+        };
+
+        const stopResize = () => {
+            document.removeEventListener('mousemove', doResize);
+            document.removeEventListener('mouseup', stopResize);
+        };
+
+        document.addEventListener('mousemove', doResize);
+        document.addEventListener('mouseup', stopResize);
+    },
+
+    // (Sleeplogica blijft hetzelfde als in het vorige voorbeeld)
+    dragStart(e, winId) {
+        const win = document.getElementById(winId);
+        this.focusWindow(winId);
+        if (e.target.closest('.window-controls')) return;
+
+        let posX = e.clientX - win.offsetLeft;
+        let posY = e.clientY - win.offsetTop;
+
+        const move = (e) => {
+            win.style.left = (e.clientX - posX) + 'px';
+            win.style.top = (e.clientY - posY) + 'px';
         }
+
+        const stop = () => {
+            document.removeEventListener('mousemove', move);
+            document.removeEventListener('mouseup', stop);
+        }
+
+        document.addEventListener('mousemove', move);
+        document.addEventListener('mouseup', stop);
+    },
+
+    toggleStartMenu(force) {
+        const menu = document.getElementById('start-menu');
+        force !== undefined ? (force ? menu.classList.add('active') : menu.classList.remove('active')) : menu.classList.toggle('active');
+    },
+
+    initDragHandler() {
+        document.getElementById('desktop-screen').addEventListener('click', (e) => {
+            if (!e.target.closest('.start-btn') && !e.target.closest('.start-menu')) this.toggleStartMenu(false);
+        });
     }
 };
