@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactieve Particle Playground</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            background-color: #0a0a0c;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #fff;
+        }
+
+        #canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* UI Overlay */
+        .ui-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 10;
+            background: rgba(18, 18, 24, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            width: 280px;
+            transition: all 0.3s ease;
+        }
+
+        h1 {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            background: linear-gradient(45deg, #ff3366, #ff00a0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.8rem;
+            color: #aaa;
+            margin-bottom: 5px;
+        }
+
+        /* Premium Buttons & Sliders */
+        .btn {
+            background: linear-gradient(135deg, #ff3366 0%, #a100ff 100%);
+            border: none;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            width: 100%;
+            transition: transform 0.1s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(255, 51, 102, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 51, 102, 0.5);
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .btn.active {
+            background: linear-gradient(135deg, #00ffcc 0%, #00a1ff 100%);
+            box-shadow: 0 4px 15px rgba(0, 255, 204, 0.3);
+        }
+
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: #252530;
+            height: 6px;
+            border-radius: 3px;
+            outline: none;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #ff3366;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        input[type=range]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        .stats {
+            font-size: 0.75rem;
+            color: #666;
+            margin-top: 10px;
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="canvas"></canvas>
+
+    <div class="ui-panel">
+        <h1>Particle Physics</h1>
+        
+        <div class="control-group">
+            <label id="hue-label">Kleur Tint: 0°</label>
+            <input type="range" id="hue-slider" min="0" max="360" value="0">
+        </div>
+
+        <div class="control-group">
+            <label>Natuurkunde Modus</label>
+            <button class="btn" id="gravity-btn">Zwaartekracht: UIT</button>
+        </div>
+
+        <button class="btn" style="background: #252530; box-shadow: none; margin-top: 5px;" id="clear-btn">Scherm Leegmaken</button>
+
+        <div class="stats" id="counter">Deeltjes: 0</div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const hueSlider = document.getElementById('hue-slider');
+        const hueLabel = document.getElementById('hue-label');
+        const gravityBtn = document.getElementById('gravity-btn');
+        const clearBtn = document.getElementById('clear-btn');
+        const counter = document.getElementById('counter');
+
+        let particles = [];
+        let baseHue = 0;
+        let gravityMode = false;
+
+        // Canvas schalen naar volledig scherm
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Muis/Touch coördinaten
+        const mouse = {
+            x: undefined,
+            y: undefined
+        }
+
+        class Particle {
+            constructor(x, y, isExplosion = false) {
+                this.x = x;
+                this.y = y;
+                // Willekeurige grootte
+                this.size = Math.random() * 5 + 2;
+                
+                // Snelheid bepalen (explosies gaan sneller alle kanten op)
+                const speedMultiplier = isExplosion ? 8 : 2;
+                this.speedX = (Math.random() - 0.5) * speedMultiplier;
+                this.speedY = (Math.random() - 0.5) * speedMultiplier;
+                
+                // Kleurvariatie rondom de geselecteerde basiskleur
+                this.hue = (baseHue + Math.floor(Math.random() * 40) - 20) % 360;
+                this.alpha = 1;
+                this.decay = Math.random() * 0.015 + 0.005;
+            }
+
+            update() {
+                if (gravityMode) {
+                    this.speedY += 0.15; // Zwaartekracht effect
+                }
+                
+                this.x += this.speedX;
+                this.y += this.speedY;
+                
+                // Langzaam onzichtbaar worden
+                this.alpha -= this.decay;
+                
+                // Bounce tegen de grond als zwaartekracht aan staat
+                if (gravityMode && this.y + this.size >= canvas.height) {
+                    this.y = canvas.height - this.size;
+                    this.speedY *= -0.6; // Energieverlies bij stuiteren
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = `hsl(${this.hue}, 100%, 60%)`;
+                
+                // Neon glow effect (kan zwaar zijn, dus subtiel gehouden)
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = `hsl(${this.hue}, 100%, 60%)`;
+                
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        // Event Listeners voor interactie
+        window.addEventListener('mousemove', (e) => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+            // Maak deeltjes aan tijdens bewegen
+            for (let i = 0; i < 2; i++) {
+                particles.push(new Particle(mouse.x, mouse.y));
+            }
+        });
+
+        window.addEventListener('click', (e) => {
+            // Voorkom triggeren als je op het UI paneel klikt
+            if (e.target.closest('.ui-panel')) return;
+
+            // Maak een explosie van deeltjes op de kliklocatie
+            for (let i = 0; i < 40; i++) {
+                particles.push(new Particle(e.clientX, e.clientY, true));
+            }
+        });
+
+        // UI Controls logic
+        hueSlider.addEventListener('input', (e) => {
+            baseHue = e.target.value;
+            hueLabel.innerText = `Kleur Tint: ${baseHue}°`;
+            hueSlider.style.background = `linear-gradient(to right, hsl(0,100%,50%), hsl(60,100%,50%), hsl(120,100%,50%), hsl(180,100%,50%), hsl(240,100%,50%), hsl(300,100%,50%), hsl(360,100%,50%))`;
+        });
+
+        gravityBtn.addEventListener('click', () => {
+            gravityMode = !gravityMode;
+            if (gravityMode) {
+                gravityBtn.innerText = "Zwaartekracht: AAN";
+                gravityBtn.classList.add('active');
+            } else {
+                gravityBtn.innerText = "Zwaartekracht: UIT";
+                gravityBtn.classList.remove('active');
+            }
+        });
+
+        clearBtn.addEventListener('click', () => {
+            particles = [];
+        });
+
+        // Animation Loop
+        function animate() {
+            // Licht doorschijnende achtergrond zorgt voor een cool "motion blur" / trail effect
+            ctx.fillStyle = 'rgba(10, 10, 12, 0.2)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+                
+                // Verwijder onzichtbare deeltjes
+                if (particles[i].alpha <= 0) {
+                    particles.splice(i, 1);
+                    i--;
+                }
+            }
+            
+            counter.innerText = `Deeltjes: ${particles.length}`;
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
+</body>
+</html>
