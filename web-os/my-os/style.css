@@ -1,0 +1,210 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    user-select: none;
+}
+
+body, html {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.screen {
+    display: none;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.screen.active {
+    display: block;
+}
+
+/* AUTH SCHERM */
+#auth-screen {
+    background: linear-gradient(135deg, #1f4068, #162447);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#auth-screen.active {
+    display: flex;
+}
+
+.auth-box {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    text-align: center;
+    color: white;
+    width: 320px;
+}
+
+.auth-box h2 { margin-bottom: 20px; }
+.auth-box input {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: none;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+.auth-box input::placeholder { color: #ddd; }
+.auth-box button {
+    padding: 10px 20px;
+    margin: 5px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    background: #e43f5a;
+    color: white;
+    font-weight: bold;
+}
+.error-msg { color: #ff6b6b; font-size: 14px; margin-bottom: 10px; }
+
+/* DESKTOP */
+#desktop-screen {
+    background: #2b3a42;
+    background-size: cover;
+    background-position: center;
+}
+
+.desktop-icons {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.icon {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 80px;
+    cursor: pointer;
+    text-align: center;
+}
+
+.icon-img {
+    font-size: 36px;
+    margin-bottom: 5px;
+    transition: transform 0.2s;
+}
+
+.icon:hover .icon-img { transform: scale(1.1); }
+.icon span { color: white; font-size: 12px; text-shadow: 1px 1px 3px black; }
+
+/* WINDOW MANAGER (VENSTERS) */
+.window {
+    position: absolute;
+    width: 400px;
+    height: 300px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-width: 250px;
+    min-height: 150px;
+}
+
+.window-header {
+    background: #f3f3f3;
+    padding: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: move;
+    border-bottom: 1px solid #ddd;
+}
+
+.window-title { font-weight: bold; font-size: 14px; color: #333; }
+.window-controls button {
+    background: none;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+    margin-left: 10px;
+    width: 20px;
+}
+.window-controls .close-btn:hover { color: red; }
+
+.window-content {
+    padding: 15px;
+    flex-grow: 1;
+    overflow: auto;
+    user-select: text;
+}
+
+/* TAAKBALK */
+.taskbar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 45px;
+    background: rgba(20, 20, 20, 0.85);
+    backdrop-filter: blur(5px);
+    display: flex;
+    align-items: center;
+    padding: 0 15px;
+    z-index: 9999;
+}
+
+.start-btn {
+    background: #0078d7;
+    border: none;
+    color: white;
+    padding: 6px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.taskbar-apps {
+    flex-grow: 1;
+    margin-left: 20px;
+    display: flex;
+    gap: 10px;
+}
+
+.taskbar-clock {
+    color: white;
+    font-size: 14px;
+}
+
+/* START MENU */
+.start-menu {
+    position: absolute;
+    bottom: 50px;
+    left: 10px;
+    width: 250px;
+    background: rgba(30, 30, 30, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+    display: none;
+    flex-direction: column;
+    z-index: 10000;
+    color: white;
+    border: 1px solid #444;
+}
+
+.start-menu.active { display: flex; }
+.start-header { padding: 15px; background: #222; border-radius: 8px 8px 0 0; font-weight: bold; }
+.start-items { padding: 10px; }
+.start-item { padding: 10px; cursor: pointer; border-radius: 4px; }
+.start-item:hover { background: rgba(255,255,255,0.1); }
+.start-item.logout { color: #ff6b6b; }
