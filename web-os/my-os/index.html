@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My-OS - Web Operating System</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="auth-screen" class="screen active">
+        <div class="auth-box">
+            <h2>My-OS Login</h2>
+            <div id="auth-error" class="error-msg"></div>
+            <input type="text" id="username" placeholder="Gebruikersnaam">
+            <input type="password" id="password" placeholder="Wachtwoord">
+            <div class="auth-buttons">
+                <button onclick="os.auth.login()">Log in</button>
+                <button onclick="os.auth.register()">Registreer</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="desktop-screen" class="screen">
+        <div class="desktop-icons">
+            <div class="icon" onclick="os.wm.openWindow('settings')">
+                <div class="icon-img">⚙️</div>
+                <span>Instellingen</span>
+            </div>
+            <div class="icon" onclick="os.wm.openWindow('notes')">
+                <div class="icon-img">📝</div>
+                <span>Notities</span>
+            </div>
+            <div class="icon" onclick="os.wm.openWindow('browser')">
+                <div class="icon-img">🌐</div>
+                <span>Browser</span>
+            </div>
+            <div class="icon" onclick="os.wm.openWindow('files')">
+                <div class="icon-img">📁</div>
+                <span>Bestanden</span>
+            </div>
+        </div>
+
+        <div id="window-container"></div>
+
+        <div class="taskbar">
+            <button class="start-btn" onclick="os.wm.toggleStartMenu()">🔵 Start</button>
+            <div class="taskbar-apps" id="taskbar-apps"></div>
+            <div class="taskbar-clock" id="taskbar-clock">00:00</div>
+        </div>
+
+        <div id="start-menu" class="start-menu">
+            <div class="start-header">
+                <span id="start-username">Gebruiker</span>
+            </div>
+            <div class="start-items">
+                <div class="start-item" onclick="os.wm.openWindow('settings')">⚙️ Instellingen</div>
+                <div class="start-item" onclick="os.wm.openWindow('notes')">📝 Notities</div>
+                <div class="start-item" onclick="os.wm.openWindow('browser')">🌐 Web Browser</div>
+                <div class="start-item" onclick="os.wm.openWindow('files')">📁 Bestandsbeheer</div>
+                <hr>
+                <div class="start-item logout" onclick="os.auth.logout()">🚪 Uitloggen</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="os.js"></script>
+    <script src="apps/settings.js"></script>
+    <script src="apps/notes.js"></script>
+    <script src="apps/browser.js"></script>
+    <script src="apps/files.js"></script>
+    <script>
+        // Start het OS zodra de pagina geladen is
+        window.onload = () => os.init();
+    </script>
+</body>
+</html>
