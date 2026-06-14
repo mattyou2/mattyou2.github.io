@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MineEconomy Tycoon - Het Ultieme Minecraft Economie Systeem</title>
+    <!-- Tailwind CSS voor snelle en mooie styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts voor een Minecraft-achtige pixel font -->
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Ubuntu:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Ubuntu', sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+        }
+        .mc-font {
+            font-family: 'Press Start 2P', cursive;
+        }
+        .mc-border {
+            border: 4px solid #3c3c3c;
+            box-shadow: inset -4px -4px 0px #1a1a1a, inset 4px 4px 0px #8b8b8b;
+        }
+        .mc-button {
+            background-color: #4a4a4a;
+            border: 3px solid #000;
+            box-shadow: inset -3px -3px 0px #2c2c2c, inset 3px 3px 0px #7b7b7b;
+            transition: all 0.1s ease;
+        }
+        .mc-button:active {
+            box-shadow: inset 3px 3px 0px #2c2c2c, inset -3px -3px 0px #7b7b7b;
+            transform: translateY(2px);
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-6xl mx-auto bg-[#1e1e1e] mc-border p-6 rounded-lg">
+        
+        <!-- HEADER -->
+        <header class="border-b-4 border-[#3c3c3c] pb-6 mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div>
+                <h1 class="text-2xl md:text-3xl mc-font text-green-500 flex items-center gap-2">
+                    ⛏️ MineEconomy Tycoon
+                </h1>
+                <p class="text-gray-400 mt-1">Bouw bedrijven, handel in aandelen en word de rijkste Steve op aarde!</p>
+            </div>
+            <div class="flex flex-wrap gap-4 items-center justify-center">
+                <div class="bg-[#2d2d2d] p-3 rounded mc-border text-center min-w-[120px]">
+                    <span class="text-xs text-gray-400 block uppercase">Saldo</span>
+                    <span class="text-xl font-bold text-emerald-400" id="global-balance">$1,000</span>
+                </div>
+                <div class="bg-[#2d2d2d] p-3 rounded mc-border text-center min-w-[120px]">
+                    <span class="text-xs text-gray-400 block uppercase">Schuld</span>
+                    <span class="text-xl font-bold text-red-400" id="global-debt">$0</span>
+                </div>
+                <div class="bg-[#2d2d2d] p-3 rounded mc-border text-center min-w-[100px]">
+                    <span class="text-xs text-gray-400 block uppercase">Rank</span>
+                    <span class="text-md font-bold text-yellow-400 mc-font text-[10px]" id="global-rank">DEFAULT</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- NAVIGATIE TABS -->
+        <nav class="flex flex-wrap gap-2 mb-6">
+            <button onclick="switchTab('dashboard')" class="mc-button px-4 py-2 text-white font-bold rounded hover:bg-gray-600">📊 Dashboard</button>
+            <button onclick="switchTab('jobs')" class="mc-button px-4 py-2 text-white font-bold rounded hover:bg-gray-600">💼 Banen</button>
+            <button onclick="switchTab('shop')" class="mc-button px-4 py-2 text-white font-bold rounded hover:bg-gray-600">🛒 Winkel</button>
+            <button onclick="switchTab('bank')" class="mc-button px-4 py-2 text-white font-bold rounded hover:bg-gray-600">🏦 Bank & Lenen</button>
+            <button onclick="switchTab('companies')" class="mc-button px-4 py-2 text-white font-bold rounded hover:bg-gray-600">🏢 Bedrijven</button>
+            <button onclick="switchTab('stocks')" class="mc-button px-4 py-2 text-white font-bold rounded hover:bg-gray-600">📈 Aandelen</button>
+            <button onclick="switchTab('crates')" class="mc-button px-4 py-2 text-white font-bold rounded hover:bg-gray-600">📦 Crates</button>
+            <button onclick="switchTab('leaderboard')" class="mc-button px-4 py-2 text-white font-bold rounded hover:bg-gray-600">🏆 Toplijst</button>
+            <button onclick="switchTab('admin')" class="mc-button px-4 py-2 text-red-400 font-bold rounded hover:bg-red-950">⚙️ Admin</button>
+        </nav>
+
+        <!-- INHOUD SECTIES -->
+        <main>
+            <!-- DASHBOARD TAB -->
+            <section id="dashboard" class="tab-content active space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Spelers info -->
+                    <div class="bg-[#2d2d2d] p-5 rounded mc-border">
+                        <h2 class="text-xl font-bold mb-4 text-green-400 border-b border-gray-700 pb-2">👤 Spelersprofiel</h2>
+                        <div class="space-y-3">
+                            <p><strong>Gebruikersnaam:</strong> <span id="profiel-naam" class="text-gray-300">Steve</span></p>
+                            <p><strong>Huidige Baan:</strong> <span id="profiel-baan" class="text-blue-400">Geen</span></p>
+                            <p><strong>Multiplier:</strong> <span id="profiel-multiplier" class="text-yellow-400">1.0x</span></p>
+                            <p><strong>Bank Saldo:</strong> <span id="profiel-bank" class="text-emerald-400">$0</span></p>
+                            <p><strong>Passief Inkomen:</strong> <span id="profiel-passive" class="text-cyan-400">+$0/sec</span></p>
+                        </div>
+                    </div>
+                    <!-- Inventaris -->
+                    <div class="bg-[#2d2d2d] p-5 rounded mc-border md:col-span-2">
+                        <h2 class="text-xl font-bold mb-4 text-green-400 border-b border-gray-700 pb-2">🎒 Inventaris (Items te verkopen)</h2>
+                        <div id="inventory-list" class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                            <!-- Dynamisch gevuld via JS -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- JOBS TAB -->
+            <section id="jobs" class="tab-content space-y-6">
+                <h2 class="text-2xl font-bold text-green-400 mc-font text-sm mb-4">Kies een Baan & Werk</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Baan selectie -->
+                    <div class="bg-[#2d2d2d] p-5 rounded mc-border space-y-4">
+                        <h3 class="text-lg font-bold text-yellow-400">Beschikbare Banen</h3>
+                        <div class="space-y-2">
+                            <button onclick="joinJob('miner')" class="w-full text-left p-3 bg-[#1e1e1e] hover:bg-gray-700 rounded border border-gray-600 flex justify-between">
+                                <span>⛏️ Mijnwerker (Miner)</span>
+                                <span class="text-green-400">+$15/klik</span>
+                            </button>
+                            <button onclick="joinJob('woodcutter')" class="w-full text-left p-3 bg-[#1e1e1e] hover:bg-gray-700 rounded border border-gray-600 flex justify-between">
+                                <span>🪓 Houthakker</span>
+                                <span class="text-green-400">+$12/klik</span>
+                            </button>
+                            <button onclick="joinJob('farmer')" class="w-full text-left p-3 bg-[#1e1e1e] hover:bg-gray-700 rounded border border-gray-600 flex justify-between">
+                                <span>🌾 Boer (Farmer)</span>
+                                <span class="text-green-400">+$10/klik</span>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Werkplek -->
+                    <div class="bg-[#2d2d2d] p-5 rounded mc-border md:col-span-2 flex flex-col justify-between items-center text-center min-h-[300px]">
+                        <h3 class="text-lg font-bold text-yellow-400">Klik om te Werken</h3>
+                        <p class="text-gray-400 my-2" id="job-status">Neem eerst een baan aan om te kunnen werken!</p>
+                        
+                        <div class="relative my-6">
+                            <button id="work-btn" onclick="doWork()" disabled class="mc-button bg-green-700 hover:bg-green-600 text-white font-bold py-8 px-12 rounded-lg text-xl disabled:opacity-50 disabled:cursor-not-allowed">
+                                START MET WERKEN!
+                            </button>
+                            <div id="work-cooldown" class="text-red-400 font-bold mt-2 hidden">Wacht op cooldown...</div>
+                        </div>
+
+                        <div class="text-sm text-gray-400">
+                            Tip: Koop een betere Rank in de winkel voor een permanente geld multiplier!
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SHOP TAB -->
+            <section id="shop" class="tab-content space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Item Shop -->
+                    <div class="bg-[#2d2d2d] p-5 rounded mc-border">
+                        <h2 class="text-xl font-bold mb-4 text-green-400 border-b border-gray-700 pb-2">🛒 Blokken & Materialen Shop</h2>
+                        <div class="space-y-4" id="shop-items-container">
+                            <!-- Dynamisch geladen -->
+                        </div>
+                    </div>
+                    <!-- Rank Shop -->
+                    <div class="bg-[#2d2d2d] p-5 rounded mc-border">
+                        <h2 class="text-xl font-bold mb-4 text-yellow-400 border-b border-gray-700 pb-2">👑 Rank Shop (Multipliers)</h2>
+                        <div class="space-y-4">
+                            <div class="p-4 bg-[#1e1e1e] rounded border border-gray-600 flex justify-between items-center">
+                                <div>
+                                    <h4 class="font-bold text-blue-400">VIP Rank</h4>
+                                    <p class="text-xs text-gray-400">Geeft 1.5x verkoop & werk multiplier</p>
+                                    <p class="text-emerald-400 font-bold mt-1">$5,000</p>
+                                </div>
+                                <button onclick="buyRank('VIP', 5000, 1.5)" class="mc-button bg-blue-600 px-4 py-2 rounded text-sm font-bold">Koop</button>
+                            </div>
+                            <div class="p-4 bg-[#1e1e1e] rounded border border-gray-600 flex justify-between items-center">
+                                <div>
+                                    <h4 class="font-bold text-purple-400">MVP Rank</h4>
+                                    <p class="text-xs text-gray-400">Geeft 2.5x verkoop & werk multiplier</p>
+                                    <p class="text-emerald-400 font-bold mt-1">$25,000</p>
+                                </div>
+                                <button onclick="buyRank('MVP', 25000, 2.5)" class="mc-button bg-purple-600 px-4 py-2 rounded text-sm font-bold">Koop</button>
+                            </div>
+                            <div class="p-4 bg-[#1e1e1e] rounded border border-gray-600 flex justify-between items-center">
+                                <div>
+                                    <h4 class="font-bold text-red-500">GOD Rank</h4>
+                                    <p class="text-xs text-gray-400">Geeft 5.0x verkoop & werk multiplier</p>
+                                    <p class="text-emerald-400 font-bold mt-1">$100,000</p>
+                                </div>
+                                <button onclick="buyRank('GOD', 100000, 5.0)" class="mc-button bg-red-600 px-4 py-2 rounded text-sm font-bold">Koop</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- BANK & LOAN TAB -->
+            <section id="bank" class="tab-content space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Bank Spaarsysteem -->
+                    <div class="bg-[#2d2d2d] p-6 rounded mc-border text-center space-y-4">
+                        <h2 class="text-xl font-bold text-emerald-400 mc-font text-xs">🏦 Spaarrekening</h2>
+                        <p class="text-gray-400 text-sm">Verdien elke minuut <strong class="text-green-400">2% rente</strong> over je spaargeld!</p>
+                        
+                        <div class="bg-[#1e1e1e] p-4 rounded border border-gray-600">
+                            <span class="text-xs text-gray-400 block">Op de Bank</span>
+                            <span class="text-2xl font-bold text-blue-400" id="bank-stored">$0</span>
+                        </div>
+
+                        <div class="flex flex-col gap-2">
+                            <input type="number" id="bank-amount" placeholder="Bedrag" class="bg-[#1e1e1e] border border-gray-600 p-2 rounded text-white focus:outline-none text-center">
+                            <div class="grid grid-cols-2 gap-2">
+                                <button onclick="bankDeposit()" class="mc-button bg-emerald-600 py-2 rounded text-sm font-bold">Storten</button>
+                                <button onclick="bankWithdraw()" class="mc-button bg-red-600 py-2 rounded text-sm font-bold">Opnemen</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Leningen Systeem -->
+                    <div class="bg-[#2d2d2d] p-6 rounded mc-border text-center space-y-4">
+                        <h2 class="text-xl font-bold text-red-400 mc-font text-xs">💸 Leningen & Schulden</h2>
+                        <p class="text-gray-400 text-sm">Geld nodig? Leen direct! Let op: je betaalt elke minuut <strong class="text-red-400">5% rente (schuld stijgt)</strong>.</p>
+                        
+                        <div class="grid grid-cols-2 gap-2">
+                            <div class="bg-[#1e1e1e] p-3 rounded border border-gray-600">
+                                <span class="text-xs text-gray-400 block">Huidige Schuld</span>
+                                <span class="text-lg font-bold text-red-400" id="loan-debt">$0</span>
+                            </div>
+                            <div class="bg-[#1e1e1e] p-3 rounded border border-gray-600">
+                                <span class="text-xs text-gray-400 block">Max Lening</span>
+                                <span class="text-lg font-bold text-yellow-400" id="loan-max">$10,000</span>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col gap-2">
+                            <input type="number" id="loan-amount" placeholder="Bedrag" class="bg-[#1e1e1e] border border-gray-600 p-2 rounded text-white focus:outline-none text-center">
+                            <div class="grid grid-cols-2 gap-2">
+                                <button onclick="borrowMoney()" class="mc-button bg-yellow-600 py-2 rounded text-sm font-bold">Geld Lenen</button>
+                                <button onclick="repayDebt()" class="mc-button bg-green-600 py-2 rounded text-sm font-bold">Schuld Afbetalen</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- BEDRIJVEN (COMPANIES) TAB -->
+            <section id="companies" class="tab-content space-y-6">
+                <div class="bg-[#2d2d2d] p-6 rounded mc-border">
+                    <h2 class="text-2xl font-bold text-cyan-400 mc-font text-sm mb-2">🏢 Bedrijven & Vastgoed</h2>
+                    <p class="text-gray-400 mb-6">Koop automatische bedrijven die elke seconde passief geld genereren, zelfs als je niet klikt!</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="companies-container">
+                        <!-- Dynamisch geladen via JS -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- AANDELEN (STOCKS) TAB -->
+            <section id="stocks" class="tab-content space-y-6">
+                <div class="bg-[#2d2d2d] p-6 rounded mc-border">
+                    <div class="flex justify-between items-center border-b border-gray-700 pb-4 mb-4">
+                        <div>
+                            <h2 class="text-2xl font-bold text-yellow-400 mc-font text-sm">📈 Minecraft Stock Exchange</h2>
+                            <p class="text-gray-400 text-xs">Koersen veranderen elke 10 seconden. Koop aandelen en verkoop ze met winst!</p>
+                        </div>
+                        <div class="bg-[#1e1e1e] px-3 py-2 rounded border border-gray-600 text-xs text-gray-400">
+                            Volgende update in: <span id="stock-timer" class="text-yellow-400 font-bold">10s</span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="stocks-container">
+                        <!-- Dynamisch geladen via JS -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- CRATES TAB -->
+            <section id="crates" class="tab-content space-y-6">
+                <h2 class="text-2xl font-bold text-purple-400 mc-font text-sm mb-4">📦 Mystery Crates</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Common Crate -->
+                    <div class="bg-[#2d2d2d] p-5 rounded mc-border text-center space-y-4">
+                        <h3 class="text-xl font-bold text-gray-300">Common Crate</h3>
+                        <p class="text-xs text-gray-400">Bevat basis blokken of een kleine geldprijs.</p>
+                        <div class="text-2xl">📦</div>
+                        <p class="text-emerald-400 font-bold">$250 per sleutel</p>
+                        <button onclick="openCrate('common', 250)" class="mc-button bg-gray-600 hover:bg-gray-500 px-6 py-2 rounded font-bold w-full">Open Crate</button>
+                    </div>
+                    <!-- Legendary Crate -->
+                    <div class="bg-[#2d2d2d] p-5 rounded mc-border text-center space-y-4">
+                        <h3 class="text-xl font-bold text-yellow-400">Legendary Crate</h3>
+                        <p class="text-xs text-gray-400">Bevat zeldzame ertsen, diamanten of gigantische geldprijzen!</p>
+                        <div class="text-2xl">✨📦✨</div>
+                        <p class="text-emerald-400 font-bold">$1,500 per sleutel</p>
+                        <button onclick="openCrate('legendary', 1500)" class="mc-button bg-yellow-600 hover:bg-yellow-500 px-6 py-2 rounded font-bold w-full">Open Crate</button>
+                    </div>
+                </div>
+                <!-- Crate Resultaat -->
+                <div id="crate-result" class="hidden bg-[#1e1e1e] p-4 rounded mc-border text-center text-lg font-bold text-yellow-400 animate-bounce">
+                    <!-- Resultaat tekst -->
+                </div>
+            </section>
+
+            <!-- LEADERBOARD TAB -->
+            <section id="leaderboard" class="tab-content space-y-6">
+                <div class="bg-[#2d2d2d] p-6 rounded mc-border max-w-xl mx-auto">
+                    <h2 class="text-xl font-bold mb-4 text-yellow-400 mc-font text-sm text-center">🏆 Server Rijkste Spelers</h2>
+                    <div class="divide-y divide-gray-700" id="leaderboard-list">
+                        <!-- Dynamisch geladen -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- ADMIN TAB -->
+            <section id="admin" class="tab-content space-y-6">
+                <div class="bg-[#2d2d2d] p-6 rounded mc-border max-w-md mx-auto space-y-4">
+                    <h2 class="text-xl font-bold text-red-500 border-b border-gray-700 pb-2">⚙️ Admin Paneel (Cheats)</h2>
+                    <div class="space-y-2">
+                        <button onclick="adminGiveMoney(10000)" class="w-full mc-button bg-green-800 p-2 rounded font-bold text-white">+ $10,000 Cash</button>
+                        <button onclick="adminGiveMoney(100000)" class="w-full mc-button bg-yellow-700 p-2 rounded font-bold text-white">+ $100,000 Cash</button>
+                        <button onclick="adminGiveItems()" class="w-full mc-button bg-blue-800 p-2 rounded font-bold text-white">+ Geef 10x van Elk Item</button>
+                        <button onclick="resetGame()" class="w-full mc-button bg-red-700 p-2 rounded font-bold text-white">Reset Alle Data ⚠️</button>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- FOOTER -->
+        <footer class="mt-8 pt-4 border-t border-gray-800 text-center text-xs text-gray-500">
+            MineEconomy Tycoon v3.0 - Gemaakt met HTML5, CSS3 & Vanilla JavaScript.
+        </footer>
+    </div>
+
+    <!-- JAVASCRIPT LOGICA -->
+    <script>
+        // --- SPEL DATA & CONFIGURATIE ---
+        const ITEMS = {
+            dirt: { name: "Dirt", emoji: "🟫", buyPrice: 5, sellPrice: 2 },
+            cobble: { name: "Cobblestone", emoji: "🧱", buyPrice: 15, sellPrice: 7 },
+            iron: { name: "Iron Ore", emoji: "🪙", buyPrice: 100, sellPrice: 50 },
+            diamond: { name: "Diamond", emoji: "💎", buyPrice: 500, sellPrice: 250 },
+            netherite: { name: "Netherite Scrap", emoji: "🔥", buyPrice: 2000, sellPrice: 1000 }
+        };
+
+        const JOBS = {
+            miner: { name: "Mijnwerker", payout: 15, actionText: "Hakken in de mijnen...", cooldown: 2000 },
+            woodcutter: { name: "Houthakker", payout: 12, actionText: "Bomen omhakken...", cooldown: 1500 },
+            farmer: { name: "Boer", payout: 10, actionText: "Gewassen oogsten...", cooldown: 1000 }
+        };
+
+        const BUSINESSES = {
+            cobbleGen: { name: "Cobble Generator Fabriek", cost: 1500, income: 5, emoji: "🧱" },
+            wheatFarm: { name: "Automatische Tarwe Farm", cost: 6000, income: 25, emoji: "🌾" },
+            ironMine: { name: "IJzermijn Groep", cost: 25000, income: 150, emoji: "⚙️" },
+            diamondCorp: { name: "Diamant Kartel", cost: 120000, income: 900, emoji: "💎" }
+        };
+
+        const STOCKS = {
+            redstone: { name: "Redstone Inc. (RST)", price: 100, lastPrice: 100, volatility: 0.15, emoji: "🔴" },
+            ender: { name: "EnderTech (END)", price: 450, lastPrice: 450, volatility: 0.25, emoji: "👁️" },
+            creeper: { name: "CreeperCorp (CRP)", price: 50, lastPrice: 50, volatility: 0.45, emoji: "🧨" },
+            steve: { name: "Steve & Co (STV)", price: 1200, lastPrice: 1200, volatility: 0.08, emoji: "👤" }
+        };
+
+        const RANK_LIMITS = {
+            "DEFAULT": { maxLoan: 10000 },
+            "VIP": { maxLoan: 50000 },
+            "MVP": { maxLoan: 250000 },
+            "GOD": { maxLoan: 1000000 }
+        };
+
+        // Standaard Speler State
+        let player = {
+            username: "Steve",
+            balance: 1000,
+            bank: 0,
+            debt: 0,
+            rank: "DEFAULT",
+            multiplier: 1.0,
+            job: null,
+            inventory: { dirt: 0, cobble: 0, iron: 0, diamond: 0, netherite: 0 },
+            businesses: { cobbleGen: 0, wheatFarm: 0, ironMine: 0, diamondCorp: 0 },
+            stocks: { redstone: 0, ender: 0, creeper: 0, steve: 0 }
+        };
+
+        let stockTimerCount = 10;
+
+        // --- INITIALISATIE ---
+        window.onload = function() {
+            loadGame();
+            updateUI();
+            buildShop();
+            buildCompanies();
+            buildStocks();
+            
+            // Start Timers
+            startBankAndDebtTimers();
+            startPassiveIncomeTimer();
+            startStockMarketTimer();
+        };
+
+        // --- SYSTEMEN ---
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        // Update de gehele UI met de nieuwste data
+        function updateUI() {
+            // Saldi & Schuld in Header
+            document.getElementById('global-balance').innerText = `$${formatNumber(player.balance)}`;
+            document.getElementById('global-debt').innerText = `$${formatNumber(player.debt)}`;
+            document.getElementById('global-rank').innerText = player.rank;
+            
+            // Dashboard Profiel
+            document.getElementById('profiel-naam').innerText = player.username;
+            document.getElementById('profiel-baan').innerText = player.job ? JOBS[player.job].name : "Geen";
+            document.getElementById('profiel-multiplier').innerText = `${player.multiplier}x`;
+            document.getElementById('profiel-bank').innerText = `$${formatNumber(player.bank)}`;
+            document.getElementById('profiel-passive').innerText = `+$${formatNumber(calculatePassiveIncome())}/sec`;
+            
+            // Bank & Leningen UI
+            document.getElementById('bank-stored').innerText = `$${formatNumber(player.bank)}`;
+            document.getElementById('loan-debt').innerText = `$${formatNumber(player.debt)}`;
+            
+            const maxLoan = RANK_LIMITS[player.rank] ? RANK_LIMITS[player.rank].maxLoan : 10000;
+            document.getElementById('loan-max').innerText = `$${formatNumber(maxLoan)}`;
+
+            // Inventarisatie Renderen
+            const invContainer = document.getElementById('inventory-list');
+            invContainer.innerHTML = '';
+            for (let key in player.inventory) {
+                const item = ITEMS[key];
+                const count = player.inventory[key];
+                invContainer.innerHTML += `
+                    <div class="bg-[#1e1e1e] p-3 rounded border border-gray-700 flex flex-col justify-between items-center">
+                        <span class="text-2xl">${item.emoji}</span>
+                        <span class="font-bold text-sm">${item.name}</span>
+                        <span class="text-xs text-gray-400">Aantal: ${count}</span>
+                        <button onclick="sellItem('${key}')" class="mt-2 w-full mc-button bg-green-800 text-xs py-1 rounded">Verkoop ($${item.sellPrice})</button>
+                    </div>
+                `;
+            }
+
+            // Job Status Update
+            const workBtn = document.getElementById('work-btn');
+            const statusText = document.getElementById('job-status');
+            if (player.job) {
+                workBtn.disabled = false;
+                statusText.innerText = `Huidige baan: ${JOBS[player.job].name}. Klik op de knop om te werken!`;
+            } else {
+                workBtn.disabled = true;
+                statusText.innerText = "Neem eerst een baan aan in het linker menu!";
+            }
+
+            renderLeaderboard();
+            saveGame();
+        }
+
+        // Shop Bouwen
+        function buildShop() {
+            const container = document.getElementById('shop-items-container');
+            container.innerHTML = '';
+            for (let key in ITEMS) {
+                const item = ITEMS[key];
+                container.innerHTML += `
+                    <div class="p-3 bg-[#1e1e1e] rounded border border-gray-600 flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">${item.emoji}</span>
+                            <div>
+                                <h4 class="font-bold">${item.name}</h4>
+                                <p class="text-xs text-gray-400">Koop: $${item.buyPrice} | Verkoop: $${item.sellPrice}</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="buyItem('${key}')" class="mc-button bg-green-700 px-3 py-1 rounded text-xs font-bold">Koop 1</button>
+                            <button onclick="sellItem('${key}')" class="mc-button bg-red-700 px-3 py-1 rounded text-xs font-bold">Verkoop 1</button>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // --- BEDRIJVEN LOGICA ---
+        function buildCompanies() {
+            const container = document.getElementById('companies-container');
+            container.innerHTML = '';
+            for (let key in BUSINESSES) {
+                const comp = BUSINESSES[key];
+                const owned = player.businesses[key] || 0;
+                container.innerHTML += `
+                    <div class="p-4 bg-[#1e1e1e] rounded border border-gray-600 flex flex-col justify-between gap-4">
+                        <div class="flex justify-between items-start">
+                            <div class="flex items-center gap-3">
+                                <span class="text-3xl">${comp.emoji}</span>
+                                <div>
+                                    <h4 class="font-bold text-cyan-400">${comp.name}</h4>
+                                    <p class="text-xs text-gray-400">Genereert: +$${comp.income}/sec per stuk</p>
+                                    <p class="text-xs text-emerald-400 mt-1">Huidig inkomen: +$${owned * comp.income}/sec</p>
+                                </div>
+                            </div>
+                            <span class="bg-[#2d2d2d] px-3 py-1 rounded text-xs font-bold border border-gray-600">Bezit: ${owned}</span>
+                        </div>
+                        <div class="flex justify-between items-center border-t border-gray-700 pt-3">
+                            <span class="text-yellow-400 font-bold">$${formatNumber(comp.cost)}</span>
+                            <button onclick="buyBusiness('${key}')" class="mc-button bg-cyan-700 px-4 py-2 rounded text-xs font-bold">Koop Bedrijf</button>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function buyBusiness(key) {
+            const comp = BUSINESSES[key];
+            if (player.balance >= comp.cost) {
+                player.balance -= comp.cost;
+                player.businesses[key] = (player.businesses[key] || 0) + 1;
+                buildCompanies();
+                updateUI();
+                alert(`Gefeliciteerd! Je hebt een ${comp.name} gekocht!`);
+            } else {
+                alert("Je hebt niet genoeg contant geld!");
+            }
+        }
+
+        function calculatePassiveIncome() {
+            let total = 0;
+            for (let key in BUSINESSES) {
+                const owned = player.businesses[key] || 0;
+                total += owned * BUSINESSES[key].income;
+            }
+            return total;
+        }
+
+        function startPassiveIncomeTimer() {
+            setInterval(() => {
+                const income = calculatePassiveIncome();
+                if (income > 0) {
+                    player.balance += income;
+                    updateUI();
+                }
+            }, 1000); // Elke seconde geld erbij!
+        }
+
+        // --- AANDELEN LOGICA ---
+        function buildStocks() {
+            const container = document.getElementById('stocks-container');
+            container.innerHTML = '';
+            for (let key in STOCKS) {
+                const stock = STOCKS[key];
+                const owned = player.stocks[key] || 0;
+                const change = stock.price - stock.lastPrice;
+                const changeClass = change >= 0 ? 'text-green-400' : 'text-red-400';
+                const changeSign = change >= 0 ? '▲' : '▼';
+
+                container.innerHTML += `
+                    <div class="p-4 bg-[#1e1e1e] rounded border border-gray-600 flex flex-col justify-between gap-4">
+                        <div class="flex justify-between items-start">
+                            <div class="flex items-center gap-3">
+                                <span class="text-3xl">${stock.emoji}</span>
+                                <div>
+                                    <h4 class="font-bold text-yellow-400">${stock.name}</h4>
+                                    <p class="text-xs text-gray-400">In bezit: <strong class="text-white">${owned}</strong></p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-lg font-bold block">$${formatNumber(stock.price)}</span>
+                                <span class="text-xs ${changeClass} font-bold">${changeSign} $${formatNumber(Math.abs(change))}</span>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 border-t border-gray-700 pt-3">
+                            <button onclick="buyStock('${key}')" class="mc-button bg-green-700 py-2 rounded text-xs font-bold">Koop 1 Aandeel</button>
+                            <button onclick="sellStock('${key}')" class="mc-button bg-red-700 py-2 rounded text-xs font-bold">Verkoop 1 Aandeel</button>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function buyStock(key) {
+            const stock = STOCKS[key];
+            if (player.balance >= stock.price) {
+                player.balance -= stock.price;
+                player.stocks[key] = (player.stocks[key] || 0) + 1;
+                buildStocks();
+                updateUI();
+            } else {
+                alert("Je hebt niet genoeg contant geld!");
+            }
+        }
+
+        function sellStock(key) {
+            const stock = STOCKS[key];
+            const owned = player.stocks[key] || 0;
+            if (owned > 0) {
+                player.balance += stock.price;
+                player.stocks[key] = owned - 1;
+                buildStocks();
+                updateUI();
+            } else {
+                alert("Je bezit geen aandelen van dit bedrijf!");
+            }
+        }
+
+        function startStockMarketTimer() {
+            setInterval(() => {
+                stockTimerCount--;
+                document.getElementById('stock-timer').innerText = `${stockTimerCount}s`;
+
+                if (stockTimerCount <= 0) {
+                    stockTimerCount = 10;
+                    // Update koersen
+                    for (let key in STOCKS) {
+                        const stock = STOCKS[key];
+                        stock.lastPrice = stock.price;
+                        
+                        // Random walk prijsverandering
+                        const changePercent = (Math.random() - 0.48) * stock.volatility; // Licht positieve bias
+                        stock.price = Math.max(5, Math.round(stock.price * (1 + changePercent)));
+                    }
+                    buildStocks();
+                }
+            }, 1000);
+        }
+
+        // --- BANEN SYSTEEM ---
+        function joinJob(jobKey) {
+            player.job = jobKey;
+            alert(`Je bent nu aangenomen als ${JOBS[jobKey].name}!`);
+            updateUI();
+        }
+
+        let isWorking = false;
+        function doWork() {
+            if (!player.job || isWorking) return;
+            
+            const job = JOBS[player.job];
+            isWorking = true;
+            
+            const workBtn = document.getElementById('work-btn');
+            const cooldownText = document.getElementById('work-cooldown');
+            
+            workBtn.disabled = true;
+            workBtn.innerText = job.actionText;
+            cooldownText.classList.remove('hidden');
+
+            setTimeout(() => {
+                const baseEarnings = job.payout;
+                const totalEarnings = Math.round(baseEarnings * player.multiplier);
+                player.balance += totalEarnings;
+
+                let dropMessage = "";
+                if (Math.random() < 0.4) {
+                    const itemsKeys = Object.keys(ITEMS);
+                    const randomItem = itemsKeys[Math.floor(Math.random() * (itemsKeys.length - 1))];
+                    player.inventory[randomItem] += 1;
+                    dropMessage = ` en vond 1x ${ITEMS[randomItem].name}!`;
+                }
+
+                alert(`Je hebt gewerkt en verdiende $${totalEarnings}${dropMessage}`);
+                
+                isWorking = false;
+                workBtn.disabled = false;
+                workBtn.innerText = "START MET WERKEN!";
+                cooldownText.classList.add('hidden');
+                updateUI();
+            }, job.cooldown);
+        }
+
+        // --- SHOP ACTIES ---
+        function buyItem(itemKey) {
+            const item = ITEMS[itemKey];
+            if (player.balance >= item.buyPrice) {
+                player.balance -= item.buyPrice;
+                player.inventory[itemKey] += 1;
+                updateUI();
+            } else {
+                alert("Je hebt niet genoeg geld contant!");
+            }
+        }
+
+        function sellItem(itemKey) {
+            const item = ITEMS[itemKey];
+            if (player.inventory[itemKey] > 0) {
+                const earnings = Math.round(item.sellPrice * player.multiplier);
+                player.inventory[itemKey] -= 1;
+                player.balance += earnings;
+                updateUI();
+            } else {
+                alert("Je hebt dit item niet in je inventaris!");
+            }
+        }
+
+        // Rank Kopen
+        function buyRank(rankName, cost, multiplier) {
+            if (player.balance >= cost) {
+                player.balance -= cost;
+                player.rank = rankName;
+                player.multiplier = multiplier;
+                alert(`Gefeliciteerd! Je bent nu ${rankName}! Je verdient nu ${multiplier}x meer geld.`);
+                updateUI();
+            } else {
+                alert("Je hebt niet genoeg geld voor deze rank!");
+            }
+        }
+
+        // --- BANK & LENEN LOGICA ---
+        function bankDeposit() {
+            const amountInput = document.getElementById('bank-amount');
+            const amount = parseInt(amountInput.value);
+            if (isNaN(amount) || amount <= 0) return alert("Voer een geldig bedrag in.");
+
+            if (player.balance >= amount) {
+                player.balance -= amount;
+                player.bank += amount;
+                amountInput.value = '';
+                updateUI();
+            } else {
+                alert("Je hebt niet genoeg contant geld!");
+            }
+        }
+
+        function bankWithdraw() {
+            const amountInput = document.getElementById('bank-amount');
+            const amount = parseInt(amountInput.value);
+            if (isNaN(amount) || amount <= 0) return alert("Voer een geldig bedrag in.");
+
+            if (player.bank >= amount) {
+                player.bank -= amount;
+                player.balance += amount;
+                amountInput.value = '';
+                updateUI();
+            } else {
+                alert("Je hebt niet zoveel geld op de bank staan!");
+            }
+        }
+
+        function borrowMoney() {
+            const amountInput = document.getElementById('loan-amount');
+            const amount = parseInt(amountInput.value);
+            if (isNaN(amount) || amount <= 0) return alert("Voer een geldig bedrag in.");
+
+            const maxLoan = RANK_LIMITS[player.rank] ? RANK_LIMITS[player.rank].maxLoan : 10000;
+            if (player.debt + amount <= maxLoan) {
+                player.debt += amount;
+                player.balance += amount;
+                amountInput.value = '';
+                updateUI();
+                alert(`Je hebt met succes $${amount} geleend bij de bank!`);
+            } else {
+                alert(`Je kunt niet meer lenen! Je maximale schuldlimiet is $${maxLoan}.`);
+            }
+        }
+
+        function repayDebt() {
+            const amountInput = document.getElementById('loan-amount');
+            const amount = parseInt(amountInput.value);
+            if (isNaN(amount) || amount <= 0) return alert("Voer een geldig bedrag in.");
+
+            if (player.balance >= amount) {
+                if (player.debt >= amount) {
+                    player.balance -= amount;
+                    player.debt -= amount;
+                    amountInput.value = '';
+                    updateUI();
+                    alert(`Je hebt $${amount} van je schuld afbetaald.`);
+                } else {
+                    alert("Je kunt niet meer afbetalen dan je schuld is!");
+                }
+            } else {
+                alert("Je hebt niet genoeg contant geld om dit af te betalen!");
+            }
+        }
+
+        // Rente & Schuld-rente Timers (Elke 60 seconden)
+        function startBankAndDebtTimers() {
+            setInterval(() => {
+                // 1. Spaarrente (2%)
+                if (player.bank > 0) {
+                    const interest = Math.round(player.bank * 0.02);
+                    player.bank += interest;
+                    console.log(`Spaarrente ontvangen: +$${interest}`);
+                }
+                // 2. Schuldrente (5%)
+                if (player.debt > 0) {
+                    const debtInterest = Math.round(player.debt * 0.05);
+                    player.debt += debtInterest;
+                    console.log(`Schuldrente toegepast: +$${debtInterest}`);
+                }
+                updateUI();
+            }, 60000);
+        }
+
+        // --- CRATES ---
+        function openCrate(crateType, cost) {
+            if (player.balance < cost) {
+                return alert("Je hebt niet genoeg geld voor deze sleutel!");
+            }
+
+            player.balance -= cost;
+            const resultDiv = document.getElementById('crate-result');
+            resultDiv.classList.remove('hidden');
+            resultDiv.innerText = "Crate aan het openen... 📦";
+
+            setTimeout(() => {
+                let rewardText = "";
+                if (crateType === 'common') {
+                    const rand = Math.random();
+                    if (rand < 0.5) {
+                        player.balance += 350;
+                        rewardText = "Geldprijs van $350 gewonnen!";
+                    } else if (rand < 0.8) {
+                        player.inventory.cobble += 5;
+                        rewardText = "5x Cobblestone gewonnen!";
+                    } else {
+                        player.inventory.iron += 2;
+                        rewardText = "2x Iron Ore gewonnen!";
+                    }
+                } else if (crateType === 'legendary') {
+                    const rand = Math.random();
+                    if (rand < 0.4) {
+                        player.balance += 3000;
+                        rewardText = "GIGANTISCHE geldprijs van $3,000 gewonnen!";
+                    } else if (rand < 0.8) {
+                        player.inventory.diamond += 4;
+                        rewardText = "4x Diamanten gewonnen! 💎";
+                    } else {
+                        player.inventory.netherite += 2;
+                        rewardText = "Zeldzame 2x Netherite Scrap gewonnen! 🔥";
+                    }
+                }
+                resultDiv.innerText = `🎉 REWARD: ${rewardText}`;
+                updateUI();
+            }, 1500);
+        }
+
+        // --- LEADERBOARD ---
+        function renderLeaderboard() {
+            const fakePlayers = [
+                { username: "Notch", total: 1500000 },
+                { username: "Herobrine", total: 500000 },
+                { username: "Dream", total: 120000 },
+                { username: "Grian", total: 45000 },
+                { username: player.username + " (Jij)", total: (player.balance + player.bank - player.debt) }
+            ];
+
+            fakePlayers.sort((a, b) => b.total - a.total);
+
+            const container = document.getElementById('leaderboard-list');
+            container.innerHTML = '';
+            fakePlayers.forEach((p, index) => {
+                const isPlayer = p.username.includes("(Jij)");
+                container.innerHTML += `
+                    <div class="flex justify-between items-center py-3 ${isPlayer ? 'bg-green-950/40 px-2 rounded' : ''}">
+                        <span class="font-bold ${index === 0 ? 'text-yellow-400' : 'text-gray-300'}">
+                            #${index + 1} ${p.username}
+                        </span>
+                        <span class="text-emerald-400 font-bold">$${formatNumber(p.total)}</span>
+                    </div>
+                `;
+            });
+        }
+
+        // --- ADMIN CHEATS ---
+        function adminGiveMoney(amount) {
+            player.balance += amount;
+            updateUI();
+        }
+
+        function adminGiveItems() {
+            for (let key in player.inventory) {
+                player.inventory[key] += 10;
+            }
+            updateUI();
+        }
+
+        // --- DATA OPSLAG ---
+        function saveGame() {
+            localStorage.setItem('mine_economy_save_v3', JSON.stringify(player));
+        }
+
+        function loadGame() {
+            const saved = localStorage.getItem('mine_economy_save_v3');
+            if (saved) {
+                const loadedData = JSON.parse(saved);
+                // Zorg voor achterwaartse compatibiliteit met nieuwe velden
+                player = { ...player, ...loadedData };
+                player.inventory = { ...player.inventory, ...loadedData.inventory };
+                player.businesses = { ...player.businesses, ...loadedData.businesses };
+                player.stocks = { ...player.stocks, ...loadedData.stocks };
+            }
+        }
+
+        function resetGame() {
+            if (confirm("Weet je zeker dat je alle data wilt wissen? Dit kan niet ongedaan gemaakt worden!")) {
+                localStorage.removeItem('mine_economy_save_v3');
+                location.reload();
+            }
+        }
+
+        function formatNumber(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\repeat))/g, ".");
+        }
+    </script>
+</body>
+</html>
