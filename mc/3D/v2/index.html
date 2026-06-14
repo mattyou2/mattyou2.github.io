@@ -1,0 +1,1344 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mattyou Craft - Infinite Edition | Mattyou Studios™</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+            background-color: #0a0a10;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
+        }
+
+        #canvas-container {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        /* HUD Overlay */
+        #hud {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            pointer-events: none;
+            box-sizing: border-box;
+        }
+
+        /* Crosshair */
+        #crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 16px;
+            height: 16px;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 11;
+        }
+        #crosshair::before, #crosshair::after {
+            content: '';
+            position: absolute;
+            background: rgba(255, 255, 255, 0.8);
+        }
+        #crosshair::before { top: 7px; left: 0; width: 16px; height: 2px; }
+        #crosshair::after { left: 7px; top: 0; width: 2px; height: 16px; }
+
+        /* Branding Watermark */
+        .branding {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: rgba(0, 255, 255, 0.9);
+            font-size: 16px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+            z-index: 12;
+        }
+
+        /* Hotbar */
+        #hotbar {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            background: rgba(0, 0, 0, 0.75);
+            border: 3px solid #00ffff;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+            border-radius: 5px;
+            padding: 5px;
+            pointer-events: auto;
+        }
+
+        .hotbar-slot {
+            width: 50px;
+            height: 50px;
+            border: 2px solid #555;
+            margin: 0 4px;
+            background-size: cover;
+            position: relative;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .hotbar-slot.active {
+            border-color: #ff00ff;
+            box-shadow: 0 0 10px #ff00ff;
+        }
+
+        .slot-count {
+            position: absolute;
+            bottom: 2px;
+            right: 4px;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px black;
+        }
+
+        /* Mining Progress Bar */
+        #mining-bar-container {
+            position: absolute;
+            top: 60%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            height: 15px;
+            background: rgba(0,0,0,0.6);
+            border: 2px solid #00ffff;
+            border-radius: 5px;
+            display: none;
+            overflow: hidden;
+        }
+
+        #mining-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: #00ffff;
+            box-shadow: 0 0 10px #00ffff;
+        }
+
+        /* Screens: Menu, Inventory, World Creation */
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 10, 15, 0.95);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+
+        h1 {
+            font-size: 48px;
+            margin-bottom: 5px;
+            color: #00ffff;
+            text-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+            letter-spacing: 2px;
+        }
+
+        .subtitle {
+            font-size: 18px;
+            color: #ff00ff;
+            margin-bottom: 40px;
+            font-weight: bold;
+            letter-spacing: 4px;
+        }
+
+        .btn {
+            background: #111;
+            border: 2px solid #00ffff;
+            color: #00ffff;
+            padding: 12px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            width: 280px;
+            text-align: center;
+        }
+
+        .btn:hover {
+            background: #00ffff;
+            color: #111;
+            box-shadow: 0 0 15px #00ffff;
+        }
+
+        /* World Creation Form */
+        .form-group {
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            width: 300px;
+        }
+
+        .form-group label {
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #ccc;
+        }
+
+        .form-group input, .form-group select {
+            padding: 10px;
+            background: #222;
+            border: 2px solid #555;
+            color: white;
+            font-size: 16px;
+            border-radius: 4px;
+        }
+
+        /* Inventory & Crafting Screen */
+        #inventory-screen {
+            display: none;
+            background: rgba(5, 5, 10, 0.95);
+        }
+
+        .inv-container {
+            display: flex;
+            gap: 40px;
+            background: #1a1a24;
+            border: 3px solid #00ffff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.2);
+        }
+
+        .inv-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .inv-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .inv-slot {
+            width: 60px;
+            height: 60px;
+            border: 2px solid #444;
+            background: #222;
+            position: relative;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .inv-slot:hover {
+            border-color: #00ffff;
+        }
+
+        .crafting-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 320px;
+            max-height: 300px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .craft-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #2a2a3a;
+            padding: 10px;
+            border: 1px solid #555;
+            border-radius: 4px;
+        }
+
+        .craft-item button {
+            background: #ff00ff;
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 3px;
+            text-shadow: 0 0 5px black;
+        }
+
+        .craft-item button:disabled {
+            background: #444;
+            color: #888;
+            cursor: not-allowed;
+        }
+
+        #world-list {
+            width: 320px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            border: 1px solid #333;
+            background: #111;
+            padding: 10px;
+        }
+
+        .world-item {
+            padding: 10px;
+            border: 1px solid #444;
+            margin-bottom: 8px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            background: #222;
+        }
+
+        .world-item:hover {
+            border-color: #00ffff;
+            background: #1a2a2a;
+        }
+    </style>
+    <!-- Three.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+
+    <div id="canvas-container"></div>
+
+    <!-- HUD -->
+    <div id="hud" style="display: none;">
+        <div id="crosshair"></div>
+        <div class="branding">MATTYOU STUDIOS™</div>
+
+        <!-- Mining Progress -->
+        <div id="mining-bar-container">
+            <div id="mining-bar-fill"></div>
+        </div>
+
+        <!-- Hotbar -->
+        <div id="hotbar"></div>
+    </div>
+
+    <!-- Main Menu Screen -->
+    <div id="menu-screen" class="screen">
+        <h1>MATTYOU CRAFT</h1>
+        <div class="subtitle">INFINITE EDITION - BY MATTYOU STUDIOS™</div>
+        
+        <div id="world-list-container" style="display: none; flex-direction: column; align-items: center;">
+            <h3>Selecteer een Wereld</h3>
+            <div id="world-list"></div>
+            <button class="btn" onclick="showCreateWorld()">Nieuwe Wereld</button>
+        </div>
+
+        <div id="main-menu-buttons">
+            <button class="btn" onclick="showWorldSelection()">Speel Mattyou Craft</button>
+        </div>
+    </div>
+
+    <!-- World Creation Screen -->
+    <div id="create-world-screen" class="screen" style="display: none;">
+        <h1>CREËER WERELD</h1>
+        <div class="subtitle">MATTYOU STUDIOS™</div>
+
+        <div class="form-group">
+            <label for="world-name">Wereld Naam</label>
+            <input type="text" id="world-name" value="Mijn Oneindige Wereld">
+        </div>
+
+        <div class="form-group">
+            <label for="world-mode">Spelmodus</label>
+            <select id="world-mode">
+                <option value="survival">Survival (Overleven & Verzamelen)</option>
+                <option value="creative">Creative (Oneindig bouwen & Vliegen)</option>
+            </select>
+        </div>
+
+        <button class="btn" onclick="createAndStartWorld()">INITIALISEER WERELD</button>
+        <button class="btn" style="border-color: #ff0055; color: #ff0055;" onclick="cancelWorldCreation()">Annuleer</button>
+    </div>
+
+    <!-- Inventory & Crafting Screen -->
+    <div id="inventory-screen" class="screen">
+        <div class="inv-container">
+            <!-- Inventaris Grid -->
+            <div class="inv-section">
+                <h2 style="color: #00ffff; margin-top: 0;" id="inv-title">INVENTARIS</h2>
+                <div class="inv-grid" id="inv-grid"></div>
+            </div>
+
+            <!-- Crafting Recepten -->
+            <div class="inv-section" style="border-left: 2px solid #333; padding-left: 40px;">
+                <h2 style="color: #ff00ff; margin-top: 0;" id="crafting-title">BASIS CRAFTING</h2>
+                <div class="crafting-list" id="crafting-list"></div>
+            </div>
+        </div>
+        <p style="color: #888; margin-top: 20px;">Druk op <b style="color: white;">'E'</b> of klik buiten het menu om terug te keren naar de game.</p>
+    </div>
+
+    <script>
+        // ============================================================================
+        // PROCEDURAL TEXTURE GENERATOR (Pixel-art blocks & tools)
+        // ============================================================================
+        class TextureGenerator {
+            static createBlockTexture(type) {
+                const canvas = document.createElement('canvas');
+                canvas.width = 16;
+                canvas.height = 16;
+                const ctx = canvas.getContext('2d');
+
+                const drawPixel = (x, y, color) => {
+                    ctx.fillStyle = color;
+                    ctx.fillRect(x, y, 1, 1);
+                };
+
+                if (type === 'grass') {
+                    ctx.fillStyle = '#557a2b';
+                    ctx.fillRect(0, 0, 16, 4);
+                    ctx.fillStyle = '#866043';
+                    ctx.fillRect(0, 4, 16, 12);
+                    for(let i=0; i<20; i++) {
+                        drawPixel(Math.floor(Math.random()*16), Math.floor(Math.random()*4), '#4d6e27');
+                        drawPixel(Math.floor(Math.random()*16), 4 + Math.floor(Math.random()*12), '#5c402c');
+                    }
+                } else if (type === 'dirt') {
+                    ctx.fillStyle = '#866043';
+                    ctx.fillRect(0, 0, 16, 16);
+                    for(let i=0; i<30; i++) {
+                        drawPixel(Math.floor(Math.random()*16), Math.floor(Math.random()*16), '#5c402c');
+                    }
+                } else if (type === 'stone') {
+                    ctx.fillStyle = '#737373';
+                    ctx.fillRect(0, 0, 16, 16);
+                    for(let i=0; i<30; i++) {
+                        drawPixel(Math.floor(Math.random()*16), Math.floor(Math.random()*16), '#525252');
+                    }
+                } else if (type === 'wood') {
+                    ctx.fillStyle = '#5c402c';
+                    ctx.fillRect(0, 0, 16, 16);
+                    ctx.fillStyle = '#3d2a1d';
+                    ctx.fillRect(4, 0, 8, 16);
+                } else if (type === 'leaves') {
+                    ctx.fillStyle = '#2e5c1e';
+                    ctx.fillRect(0, 0, 16, 16);
+                    for(let i=0; i<20; i++) {
+                        drawPixel(Math.floor(Math.random()*16), Math.floor(Math.random()*16), '#1f3d14');
+                    }
+                } else if (type === 'planks') {
+                    ctx.fillStyle = '#b08854';
+                    ctx.fillRect(0, 0, 16, 16);
+                    ctx.strokeStyle = '#7a5a31';
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(0, 0, 16, 16);
+                } else if (type === 'crafting_table') {
+                    ctx.fillStyle = '#7a5a31';
+                    ctx.fillRect(0, 0, 16, 16);
+                    ctx.fillStyle = '#b08854';
+                    ctx.fillRect(2, 2, 12, 12);
+                    ctx.fillStyle = '#333';
+                    ctx.fillRect(4, 4, 2, 6);
+                }
+
+                const texture = new THREE.CanvasTexture(canvas);
+                texture.magFilter = THREE.NearestFilter;
+                texture.minFilter = THREE.NearestFilter;
+                return texture;
+            }
+        }
+
+        // ============================================================================
+        // GAME CONFIG & DATA
+        // ============================================================================
+        const BLOCK_TYPES = {
+            1: { name: 'Gras', key: 'grass', color: '#557a2b', hardness: 0.6 },
+            2: { name: 'Aarde', key: 'dirt', color: '#866043', hardness: 0.5 },
+            3: { name: 'Steen', key: 'stone', color: '#737373', hardness: 3.0 }, // Steen duurt lang met de hand!
+            4: { name: 'Hout Stam', key: 'wood', color: '#5c402c', hardness: 1.5 },
+            5: { name: 'Bladeren', key: 'leaves', color: '#2e5c1e', hardness: 0.2 },
+            6: { name: 'Houten Planken', key: 'planks', color: '#b08854', hardness: 1.0 },
+            7: { name: 'Crafting Table', key: 'crafting_table', color: '#7a5a31', hardness: 1.5 },
+            // Items (Geen blokken)
+            8: { name: 'Stok (Stick)', key: 'stick', color: '#8b5a2b', isItem: true },
+            9: { name: 'Houten Pickaxe', key: 'wood_pickaxe', color: '#00ffff', isItem: true, speedMultiplier: 3.0 },
+            10: { name: 'Steen Pickaxe', key: 'stone_pickaxe', color: '#ff00ff', isItem: true, speedMultiplier: 6.0 }
+        };
+
+        // Recepten die je ALTIJD kunt maken
+        const BASE_RECIPES = [
+            { result: 6, resultCount: 4, ingredients: { 4: 1 }, name: 'Planken (4x)' },
+            { result: 8, resultCount: 4, ingredients: { 6: 2 }, name: 'Stokken (4x)' },
+            { result: 7, resultCount: 1, ingredients: { 6: 4 }, name: 'Crafting Table' }
+        ];
+
+        // Recepten die je ALLEEN bij een geplaatste Crafting Table kunt maken
+        const ADVANCED_RECIPES = [
+            ...BASE_RECIPES,
+            { result: 9, resultCount: 1, ingredients: { 6: 3, 8: 2 }, name: 'Houten Pickaxe' },
+            { result: 10, resultCount: 1, ingredients: { 3: 3, 8: 2 }, name: 'Steen Pickaxe' }
+        ];
+
+        // ============================================================================
+        // INPUT MANAGER
+        // ============================================================================
+        class InputManager {
+            constructor() {
+                this.keys = {};
+                this.mouse = { x: 0, y: 0, left: false, right: false };
+                this.locked = false;
+
+                window.addEventListener('keydown', (e) => {
+                    this.keys[e.code] = true;
+                    if (e.code === 'KeyE') game.toggleInventory();
+                });
+                window.addEventListener('keyup', (e) => {
+                    this.keys[e.code] = false;
+                });
+                
+                const container = document.getElementById('canvas-container');
+                container.addEventListener('click', () => {
+                    if (!this.locked && game.state === 'playing') {
+                        container.requestPointerLock();
+                    }
+                });
+
+                document.addEventListener('pointerlockchange', () => {
+                    this.locked = document.pointerLockElement === container;
+                    if (!this.locked && game.state === 'playing' && !game.inventoryOpen) {
+                        game.toggleInventory(true);
+                    }
+                });
+
+                document.addEventListener('mousemove', (e) => {
+                    if (this.locked) {
+                        this.mouse.x = e.movementX;
+                        this.mouse.y = e.movementY;
+                    }
+                });
+
+                window.addEventListener('mousedown', (e) => {
+                    if (!this.locked) return;
+                    if (e.button === 0) this.mouse.left = true;
+                    if (e.button === 2) this.mouse.right = true;
+                });
+
+                window.addEventListener('mouseup', (e) => {
+                    if (e.button === 0) this.mouse.left = false;
+                    if (e.button === 2) this.mouse.right = false;
+                });
+            }
+
+            isKeyDown(code) {
+                return !!this.keys[code];
+            }
+
+            consumeMouseMove() {
+                const m = { x: this.mouse.x, y: this.mouse.y };
+                this.mouse.x = 0;
+                this.mouse.y = 0;
+                return m;
+            }
+        }
+
+        // ============================================================================
+        // GAME CLASS
+        // ============================================================================
+        class Game {
+            constructor() {
+                this.state = 'menu';
+                this.inventoryOpen = false;
+                this.isNearCraftingTable = false; // Checkt of speler bij een crafting table staat
+                
+                this.scene = null;
+                this.camera = null;
+                this.renderer = null;
+                this.clock = new THREE.Clock();
+                
+                this.input = new InputManager();
+                this.worlds = JSON.parse(localStorage.getItem('mattyou_craft_worlds')) || [];
+                
+                this.activeWorld = null;
+                
+                // Chunk-gebaseerde oneindige wereld data
+                this.chunkSize = 16;
+                this.worldHeight = 16;
+                this.chunks = {}; // "cx,cz" -> { "x,y,z": blockId }
+                this.blockMeshes = {}; // "x,y,z" -> THREE.Mesh
+                this.loadedChunks = new Set();
+
+                // Player Physics & Stats
+                this.player = {
+                    position: new THREE.Vector3(8, 12, 8),
+                    velocity: new THREE.Vector3(),
+                    yaw: 0,
+                    pitch: 0, // Wordt nu geforceerd op 0 (geen schuin kijken!)
+                    onGround: false,
+                    inventory: {
+                        1: 10, // Gras
+                        2: 10, // Aarde
+                        3: 5   // Steen
+                    },
+                    hotbar: [1, 2, 3, 7, 9, null, null, null, null],
+                    activeHotbarIdx: 0
+                };
+
+                // Mining progress tracker
+                this.mining = {
+                    active: false,
+                    x: null, y: null, z: null,
+                    progress: 0,
+                    targetTime: 0
+                };
+
+                this.materials = {};
+                this.initEngine();
+                this.loadBlockMaterials();
+            }
+
+            initEngine() {
+                this.scene = new THREE.Scene();
+                this.scene.background = new THREE.Color(0x80a0ff);
+                this.scene.fog = new THREE.FogExp2(0x80a0ff, 0.03);
+
+                this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+                
+                this.renderer = new THREE.WebGLRenderer({ antialias: false });
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+                document.getElementById('canvas-container').appendChild(this.renderer.domElement);
+
+                const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+                this.scene.add(ambientLight);
+
+                const dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
+                dirLight.position.set(10, 20, 10);
+                this.scene.add(dirLight);
+
+                window.addEventListener('resize', () => {
+                    this.camera.aspect = window.innerWidth / window.innerHeight;
+                    this.camera.updateProjectionMatrix();
+                    this.renderer.setSize(window.innerWidth, window.innerHeight);
+                });
+            }
+
+            loadBlockMaterials() {
+                Object.keys(BLOCK_TYPES).forEach(id => {
+                    const type = BLOCK_TYPES[id];
+                    if (!type.isItem) {
+                        this.materials[id] = new THREE.MeshLambertMaterial({
+                            map: TextureGenerator.createBlockTexture(type.key)
+                        });
+                    }
+                });
+            }
+
+            // ============================================================================
+            // INFINITE WORLD GENERATION (Chunks)
+            // ============================================================================
+            getChunkCoords(x, z) {
+                const cx = Math.floor(x / this.chunkSize);
+                const cz = Math.floor(z / this.chunkSize);
+                return { cx, cz };
+            }
+
+            generateChunk(cx, cz) {
+                const chunkKey = `${cx},${cz}`;
+                if (this.chunks[chunkKey]) return; // Al gegenereerd
+
+                this.chunks[chunkKey] = {};
+                const geom = new THREE.BoxGeometry(1, 1, 1);
+
+                for (let x = 0; x < this.chunkSize; x++) {
+                    for (let z = 0; z < this.chunkSize; z++) {
+                        const worldX = cx * this.chunkSize + x;
+                        const worldZ = cz * this.chunkSize + z;
+
+                        // Procedurale heuvels met sinusgolven
+                        const height = Math.floor(Math.sin(worldX / 10) * Math.cos(worldZ / 10) * 4 + 7);
+
+                        for (let y = 0; y < this.worldHeight; y++) {
+                            let blockType = 0;
+
+                            if (y < height - 3) {
+                                blockType = 3; // Steen
+                            } else if (y < height - 1) {
+                                blockType = 2; // Aarde
+                            } else if (y === height - 1) {
+                                blockType = 1; // Gras
+                            }
+
+                            if (blockType !== 0) {
+                                this.setBlockInChunk(worldX, y, worldZ, blockType, chunkKey, geom);
+                            }
+                        }
+
+                        // Kans op bomen op het gras
+                        if (Math.random() < 0.02) {
+                            const treeY = height;
+                            this.spawnTree(worldX, treeY, worldZ, chunkKey, geom);
+                        }
+                    }
+                }
+            }
+
+            spawnTree(tx, ty, tz, chunkKey, geom) {
+                // Stam
+                for (let h = 0; h < 3; h++) {
+                    this.setBlockInChunk(tx, ty + h, tz, 4, chunkKey, geom);
+                }
+                // Bladeren
+                for (let x = -1; x <= 1; x++) {
+                    for (let z = -1; z <= 1; z++) {
+                        this.setBlockInChunk(tx + x, ty + 3, tz + z, 5, chunkKey, geom);
+                    }
+                }
+            }
+
+            setBlockInChunk(x, y, z, typeId, chunkKey, sharedGeom) {
+                const blockKey = `${x},${y},${z}`;
+                this.chunks[chunkKey][blockKey] = typeId;
+
+                if (typeId !== 0) {
+                    const geom = sharedGeom || new THREE.BoxGeometry(1, 1, 1);
+                    const mesh = new THREE.Mesh(geom, this.materials[typeId]);
+                    mesh.position.set(x + 0.5, y + 0.5, z + 0.5);
+                    this.scene.add(mesh);
+                    this.blockMeshes[blockKey] = mesh;
+                }
+            }
+
+            getBlock(x, y, z) {
+                const { cx, cz } = this.getChunkCoords(x, z);
+                const chunkKey = `${cx},${cz}`;
+                if (!this.chunks[chunkKey]) return 0;
+                return this.chunks[chunkKey][`${Math.floor(x)},${Math.floor(y)},${Math.floor(z)}`] || 0;
+            }
+
+            setBlock(x, y, z, typeId) {
+                const { cx, cz } = this.getChunkCoords(x, z);
+                const chunkKey = `${cx},${cz}`;
+                const blockKey = `${Math.floor(x)},${Math.floor(y)},${Math.floor(z)}`;
+
+                if (!this.chunks[chunkKey]) {
+                    this.chunks[chunkKey] = {};
+                }
+
+                // Verwijder oude mesh
+                if (this.blockMeshes[blockKey]) {
+                    this.scene.remove(this.blockMeshes[blockKey]);
+                    delete this.blockMeshes[blockKey];
+                }
+
+                if (typeId === 0) {
+                    delete this.chunks[chunkKey][blockKey];
+                } else {
+                    this.chunks[chunkKey][blockKey] = typeId;
+                    const geom = new THREE.BoxGeometry(1, 1, 1);
+                    const mesh = new THREE.Mesh(geom, this.materials[typeId]);
+                    mesh.position.set(Math.floor(x) + 0.5, Math.floor(y) + 0.5, Math.floor(z) + 0.5);
+                    this.scene.add(mesh);
+                    this.blockMeshes[blockKey] = mesh;
+                }
+            }
+
+            updateChunksAroundPlayer() {
+                const { cx, cz } = this.getChunkCoords(this.player.position.x, this.player.position.z);
+                const radius = 2; // Laad chunks in een straal van 2 om de speler heen
+                const activeKeys = new Set();
+
+                for (let x = -radius; x <= radius; x++) {
+                    for (let z = -radius; z <= radius; z++) {
+                        const nCX = cx + x;
+                        const nCZ = cz + z;
+                        const key = `${nCX},${nCZ}`;
+                        activeKeys.add(key);
+
+                        if (!this.loadedChunks.has(key)) {
+                            this.generateChunk(nCX, nCZ);
+                            this.loadedChunks.add(key);
+                        }
+                    }
+                }
+
+                // Ruim verre chunks op om lag te voorkomen
+                this.loadedChunks.forEach(key => {
+                    if (!activeKeys.has(key)) {
+                        const [ccx, ccz] = key.split(',').map(Number);
+                        // Verwijder meshes van deze chunk
+                        const chunkData = this.chunks[key];
+                        if (chunkData) {
+                            Object.keys(chunkData).forEach(blockKey => {
+                                if (this.blockMeshes[blockKey]) {
+                                    this.scene.remove(this.blockMeshes[blockKey]);
+                                    delete this.blockMeshes[blockKey];
+                                }
+                            });
+                        }
+                        this.loadedChunks.delete(key);
+                    }
+                });
+            }
+
+            // ============================================================================
+            // GAMEPLAY LOOP & PHYSICS
+            // ============================================================================
+            animate() {
+                if (this.state !== 'playing') return;
+                requestAnimationFrame(() => this.animate());
+
+                const dt = Math.min(this.clock.getDelta(), 0.1);
+
+                if (!this.inventoryOpen) {
+                    this.updatePlayerPhysics(dt);
+                    this.handleInteractions(dt);
+                    this.updateChunksAroundPlayer();
+                }
+
+                this.renderer.render(this.scene, this.camera);
+            }
+
+            updatePlayerPhysics(dt) {
+                // Muis Kijken
+                const mouse = this.input.consumeMouseMove();
+                this.player.yaw -= mouse.x * 0.0025;
+                
+                // FORCEER PITCH OP 0 -> Je kunt niet meer schuin/omhoog/omlaag kijken!
+                this.player.pitch = 0; 
+
+                this.camera.rotation.set(0, 0, 0);
+                this.camera.rotation.y = this.player.yaw;
+
+                // Beweging
+                const moveSpeed = 6.0;
+                const moveVector = new THREE.Vector3();
+
+                if (this.input.isKeyDown('KeyW')) moveVector.z -= 1;
+                if (this.input.isKeyDown('KeyS')) moveVector.z += 1;
+                if (this.input.isKeyDown('KeyA')) moveVector.x -= 1;
+                if (this.input.isKeyDown('KeyD')) moveVector.x += 1;
+
+                moveVector.normalize();
+                moveVector.applyAxisAngle(new THREE.Vector3(0, 1, 0), this.player.yaw);
+
+                this.player.velocity.x = moveVector.x * moveSpeed;
+                this.player.velocity.z = moveVector.z * moveSpeed;
+
+                // Zwaartekracht
+                if (this.activeWorld.mode === 'creative') {
+                    this.player.velocity.y = 0;
+                    if (this.input.isKeyDown('Space')) this.player.velocity.y = moveSpeed;
+                    if (this.input.isKeyDown('ShiftLeft')) this.player.velocity.y = -moveSpeed;
+                } else {
+                    if (!this.player.onGround) {
+                        this.player.velocity.y -= 22 * dt;
+                    } else {
+                        this.player.velocity.y = 0;
+                        if (this.input.isKeyDown('Space')) {
+                            this.player.velocity.y = 7.5;
+                            this.player.onGround = false;
+                        }
+                    }
+                }
+
+                const nextPos = this.player.position.clone().addScaledVector(this.player.velocity, dt);
+                this.resolveCollisions(nextPos);
+
+                this.camera.position.copy(this.player.position).y += 0.8;
+
+                // Hotbar selectie
+                for (let i = 1; i <= 9; i++) {
+                    if (this.input.isKeyDown(`Digit${i}`)) {
+                        this.player.activeHotbarIdx = i - 1;
+                        this.updateHotbarUI();
+                        this.resetMining();
+                    }
+                }
+            }
+
+            resolveCollisions(nextPos) {
+                if (this.activeWorld.mode === 'creative') {
+                    this.player.position.copy(nextPos);
+                    return;
+                }
+
+                const pSize = { x: 0.6, y: 1.8, z: 0.6 };
+                
+                if (!this.checkCollisionAt(nextPos.x, this.player.position.y, this.player.position.z, pSize)) {
+                    this.player.position.x = nextPos.x;
+                } else {
+                    this.player.velocity.x = 0;
+                }
+
+                if (!this.checkCollisionAt(this.player.position.x, this.player.position.y, nextPos.z, pSize)) {
+                    this.player.position.z = nextPos.z;
+                } else {
+                    this.player.velocity.z = 0;
+                }
+
+                this.player.position.y += this.player.velocity.y * 0.016;
+                if (this.checkCollisionAt(this.player.position.x, this.player.position.y, this.player.position.z, pSize)) {
+                    if (this.player.velocity.y < 0) {
+                        this.player.onGround = true;
+                    }
+                    this.player.position.y = Math.round(this.player.position.y);
+                    this.player.velocity.y = 0;
+                } else {
+                    this.player.onGround = false;
+                }
+            }
+
+            checkCollisionAt(px, py, pz, size) {
+                const minX = Math.floor(px - size.x / 2);
+                const maxX = Math.floor(px + size.x / 2);
+                const minY = Math.floor(py);
+                const maxY = Math.floor(py + size.y);
+                const minZ = Math.floor(pz - size.z / 2);
+                const maxZ = Math.floor(pz + size.z / 2);
+
+                for (let x = minX; x <= maxX; x++) {
+                    for (let y = minY; y <= maxY; y++) {
+                        for (let z = minZ; z <= maxZ; z++) {
+                            if (this.getBlock(x, y, z) !== 0) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+                return false;
+            }
+
+            // ============================================================================
+            // MINING SYSTEM (WITH PROGRESS & TOOL SPEED MULTIPLIERS)
+            // ============================================================================
+            handleInteractions(dt) {
+                // Check of we dichtbij een Crafting Table staan
+                this.checkCraftingTableProximity();
+
+                if (this.input.mouse.left) {
+                    this.performMining(dt);
+                } else {
+                    this.resetMining();
+                }
+
+                if (this.input.mouse.right) {
+                    this.input.mouse.right = false;
+                    this.performPlacingOrInteraction();
+                }
+            }
+
+            performMining(dt) {
+                const raycaster = new THREE.Raycaster();
+                raycaster.setFromCamera(new THREE.Vector2(0, 0), this.camera);
+
+                const meshes = Object.values(this.blockMeshes);
+                const intersects = raycaster.intersectObjects(meshes);
+
+                if (intersects.length > 0 && intersects[0].distance < 5.0) {
+                    const hit = intersects[0];
+                    const point = hit.point;
+                    const normal = hit.face.normal;
+
+                    const vx = Math.floor(point.x - normal.x * 0.5);
+                    const vy = Math.floor(point.y - normal.y * 0.5);
+                    const vz = Math.floor(point.z - normal.z * 0.5);
+
+                    const blockId = this.getBlock(vx, vy, vz);
+
+                    if (blockId !== 0) {
+                        if (this.activeWorld.mode === 'creative') {
+                            // Creative is instant breken
+                            this.breakBlock(vx, vy, vz, blockId);
+                            return;
+                        }
+
+                        // Survival: Bereken mining tijd
+                        if (this.mining.x !== vx || this.mining.y !== vy || this.mining.z !== vz) {
+                            // Start nieuw mine-proces
+                            this.mining.x = vx;
+                            this.mining.y = vy;
+                            this.mining.z = vz;
+                            this.mining.progress = 0;
+                            
+                            // Bepaal basishardheid van het blok
+                            let baseHardness = BLOCK_TYPES[blockId].hardness || 1.0;
+                            
+                            // Check of we een Pickaxe vasthebben en wat de multiplier is
+                            const activeItemId = this.player.hotbar[this.player.activeHotbarIdx];
+                            let speedMultiplier = 1.0;
+
+                            if (activeItemId && BLOCK_TYPES[activeItemId].isItem && BLOCK_TYPES[activeItemId].speedMultiplier) {
+                                // Pickaxes werken heel goed op Steen (3) en redelijk op andere blokken
+                                if (blockId === 3) {
+                                    speedMultiplier = BLOCK_TYPES[activeItemId].speedMultiplier;
+                                } else {
+                                    speedMultiplier = BLOCK_TYPES[activeItemId].speedMultiplier * 0.5; // Iets minder effectief op aarde/hout
+                                }
+                            }
+
+                            this.mining.targetTime = baseHardness / speedMultiplier;
+                            this.mining.active = true;
+                            document.getElementById('mining-bar-container').style.display = 'block';
+                        }
+
+                        // Update progressie
+                        this.mining.progress += dt;
+                        const percent = Math.min(100, (this.mining.progress / this.mining.targetTime) * 100);
+                        document.getElementById('mining-bar-fill').style.width = `${percent}%`;
+
+                        if (this.mining.progress >= this.mining.targetTime) {
+                            this.breakBlock(vx, vy, vz, blockId);
+                            this.resetMining();
+                        }
+                    } else {
+                        this.resetMining();
+                    }
+                } else {
+                    this.resetMining();
+                }
+            }
+
+            breakBlock(x, y, z, blockId) {
+                this.setBlock(x, y, z, 0);
+                if (this.activeWorld.mode === 'survival') {
+                    this.player.inventory[blockId] = (this.player.inventory[blockId] || 0) + 1;
+                }
+                this.updateHotbarUI();
+            }
+
+            resetMining() {
+                this.mining.active = false;
+                this.mining.x = null;
+                this.mining.y = null;
+                this.mining.z = null;
+                this.mining.progress = 0;
+                document.getElementById('mining-bar-container').style.display = 'none';
+            }
+
+            performPlacingOrInteraction() {
+                const raycaster = new THREE.Raycaster();
+                raycaster.setFromCamera(new THREE.Vector2(0, 0), this.camera);
+
+                const meshes = Object.values(this.blockMeshes);
+                const intersects = raycaster.intersectObjects(meshes);
+
+                if (intersects.length > 0 && intersects[0].distance < 5.0) {
+                    const hit = intersects[0];
+                    const point = hit.point;
+                    const normal = hit.face.normal;
+
+                    // Positie van het geraakte blok
+                    const rx = Math.floor(point.x - normal.x * 0.5);
+                    const ry = Math.floor(point.y - normal.y * 0.5);
+                    const rz = Math.floor(point.z - normal.z * 0.5);
+
+                    const clickedBlockId = this.getBlock(rx, ry, rz);
+
+                    // INTERACTIE: Klikken op een Crafting Table (ID: 7)
+                    if (clickedBlockId === 7) {
+                        this.toggleInventory(false, true); // Open geavanceerde crafting
+                        return;
+                    }
+
+                    // BLOK PLAATSEN
+                    const vx = Math.floor(point.x + normal.x * 0.5);
+                    const vy = Math.floor(point.y + normal.y * 0.5);
+                    const vz = Math.floor(point.z + normal.z * 0.5);
+
+                    const activeItemId = this.player.hotbar[this.player.activeHotbarIdx];
+                    
+                    if (activeItemId && !BLOCK_TYPES[activeItemId].isItem) {
+                        if (this.activeWorld.mode === 'creative' || (this.player.inventory[activeItemId] || 0) > 0) {
+                            this.setBlock(vx, vy, vz, activeItemId);
+
+                            if (this.activeWorld.mode === 'survival') {
+                                this.player.inventory[activeItemId]--;
+                            }
+                        }
+                    }
+
+                    this.updateHotbarUI();
+                }
+            }
+
+            checkCraftingTableProximity() {
+                // Zoek in een kleine straal om de speler heen naar een Crafting Table
+                const px = Math.floor(this.player.position.x);
+                const py = Math.floor(this.player.position.y);
+                const pz = Math.floor(this.player.position.z);
+                
+                let found = false;
+                for (let x = -2; x <= 2; x++) {
+                    for (let y = -2; y <= 2; y++) {
+                        for (let z = -2; z <= 2; z++) {
+                            if (this.getBlock(px + x, py + y, pz + z) === 7) {
+                                found = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+                this.isNearCraftingTable = found;
+            }
+
+            // ============================================================================
+            // UI, INVENTORY & CRAFTING
+            // ============================================================================
+            toggleInventory(forceClose = false, openAdvancedCrafting = false) {
+                if (this.state !== 'playing') return;
+
+                if (this.inventoryOpen || forceClose) {
+                    this.inventoryOpen = false;
+                    document.getElementById('inventory-screen').style.display = 'none';
+                    document.getElementById('canvas-container').requestPointerLock();
+                } else {
+                    this.inventoryOpen = true;
+                    document.getElementById('inventory-screen').style.display = 'flex';
+                    document.exitPointerLock();
+                    this.drawInventory(openAdvancedCrafting);
+                }
+            }
+
+            drawInventory(useAdvanced = false) {
+                const grid = document.getElementById('inv-grid');
+                grid.innerHTML = '';
+
+                // Titels aanpassen op basis van Crafting Table nabijheid
+                const isCrafting = useAdvanced || this.isNearCraftingTable;
+                document.getElementById('crafting-title').innerText = isCrafting ? "CRAFTING TABLE (GEAVANCEERD)" : "BASIS CRAFTING";
+                document.getElementById('inv-title').innerText = "INVENTARIS";
+
+                // Teken alle items/blokken in de inventaris
+                Object.keys(BLOCK_TYPES).forEach(id => {
+                    const count = this.player.inventory[id] || 0;
+                    const type = BLOCK_TYPES[id];
+
+                    const slot = document.createElement('div');
+                    slot.className = 'inv-slot';
+                    slot.style.backgroundColor = type.color;
+                    slot.title = type.name;
+
+                    // Toon tool-naam of blok-naam
+                    if (type.isItem) {
+                        slot.innerHTML = `<span style="font-size: 9px; text-align: center; color: white; font-weight: bold;">${type.name.split(' ')[0]}</span>`;
+                    }
+
+                    if (this.activeWorld.mode === 'creative' || count > 0) {
+                        const countEl = document.createElement('span');
+                        countEl.className = 'slot-count';
+                        countEl.innerText = this.activeWorld.mode === 'creative' ? '∞' : count;
+                        slot.appendChild(countEl);
+                    } else {
+                        slot.style.opacity = '0.25';
+                    }
+
+                    // Klik om in actieve hotbar te zetten
+                    slot.addEventListener('click', () => {
+                        this.player.hotbar[this.player.activeHotbarIdx] = parseInt(id);
+                        this.updateHotbarUI();
+                        this.toggleInventory(true);
+                    });
+
+                    grid.appendChild(slot);
+                });
+
+                // Teken Crafting Recepten
+                const craftList = document.getElementById('crafting-list');
+                craftList.innerHTML = '';
+
+                const activeRecipes = isCrafting ? ADVANCED_RECIPES : BASE_RECIPES;
+
+                activeRecipes.forEach(recipe => {
+                    const item = document.createElement('div');
+                    item.className = 'craft-item';
+                    
+                    let canCraft = true;
+                    let ingredientsText = "";
+
+                    Object.keys(recipe.ingredients).forEach(ingId => {
+                        const reqCount = recipe.ingredients[ingId];
+                        const hasCount = this.player.inventory[ingId] || 0;
+                        ingredientsText += `${BLOCK_TYPES[ingId].name} (${hasCount}/${reqCount}) `;
+                        if (hasCount < reqCount) canCraft = false;
+                    });
+
+                    item.innerHTML = `
+                        <div>
+                            <div style="font-weight:bold; color: #00ffff;">${recipe.name}</div>
+                            <div style="font-size:11px; color:#aaa;">${ingredientsText}</div>
+                        </div>
+                    `;
+
+                    const btn = document.createElement('button');
+                    btn.innerText = 'CRAFT';
+                    btn.disabled = !canCraft && this.activeWorld.mode !== 'creative';
+                    btn.addEventListener('click', () => this.craftItem(recipe, isCrafting));
+                    item.appendChild(btn);
+
+                    craftList.appendChild(item);
+                });
+            }
+
+            craftItem(recipe, isAdvanced) {
+                if (this.activeWorld.mode === 'survival') {
+                    Object.keys(recipe.ingredients).forEach(ingId => {
+                        this.player.inventory[ingId] -= recipe.ingredients[ingId];
+                    });
+                    this.player.inventory[recipe.result] = (this.player.inventory[recipe.result] || 0) + recipe.resultCount;
+                } else {
+                    this.player.hotbar[this.player.activeHotbarIdx] = recipe.result;
+                }
+
+                this.drawInventory(isAdvanced);
+                this.updateHotbarUI();
+            }
+
+            updateHotbarUI() {
+                const hotbar = document.getElementById('hotbar');
+                hotbar.innerHTML = '';
+
+                for (let i = 0; i < 9; i++) {
+                    const slot = document.createElement('div');
+                    slot.className = `hotbar-slot ${i === this.player.activeHotbarIdx ? 'active' : ''}`;
+                    
+                    const itemId = this.player.hotbar[i];
+                    if (itemId) {
+                        const type = BLOCK_TYPES[itemId];
+                        slot.style.backgroundColor = type.color;
+
+                        if (type.isItem) {
+                            slot.innerHTML = `<span style="font-size: 8px; text-align: center; color: white; font-weight: bold; text-shadow: 1px 1px 2px black;">${type.name}</span>`;
+                        }
+
+                        const count = this.player.inventory[itemId] || 0;
+                        if (!type.isItem) {
+                            const countEl = document.createElement('span');
+                            countEl.className = 'slot-count';
+                            countEl.innerText = this.activeWorld.mode === 'creative' ? '∞' : count;
+                            slot.appendChild(countEl);
+                        }
+                    }
+
+                    slot.addEventListener('click', () => {
+                        this.player.activeHotbarIdx = i;
+                        this.updateHotbarUI();
+                        this.resetMining();
+                    });
+
+                    hotbar.appendChild(slot);
+                }
+            }
+
+            // ============================================================================
+            // WORLD SELECTION & CREATION
+            // ============================================================================
+            showWorldSelection() {
+                document.getElementById('main-menu-buttons').style.display = 'none';
+                document.getElementById('world-list-container').style.display = 'flex';
+                this.renderWorldList();
+            }
+
+            renderWorldList() {
+                const list = document.getElementById('world-list');
+                list.innerHTML = '';
+
+                if (this.worlds.length === 0) {
+                    list.innerHTML = '<p style="color:#888; text-align:center;">Geen werelden gevonden.</p>';
+                    return;
+                }
+
+                this.worlds.forEach((w, idx) => {
+                    const el = document.createElement('div');
+                    el.className = 'world-item';
+                    el.innerHTML = `
+                        <span><b>${w.name}</b> (${w.mode.toUpperCase()})</span>
+                        <span style="color:#ff0055; font-weight:bold;" onclick="event.stopPropagation(); game.deleteWorld(${idx})">X</span>
+                    `;
+                    el.addEventListener('click', () => this.loadWorld(w));
+                    list.appendChild(el);
+                });
+            }
+
+            showCreateWorld() {
+                document.getElementById('menu-screen').style.display = 'none';
+                document.getElementById('create-world-screen').style.display = 'flex';
+            }
+
+            cancelWorldCreation() {
+                document.getElementById('create-world-screen').style.display = 'none';
+                document.getElementById('menu-screen').style.display = 'flex';
+                this.showWorldSelection();
+            }
+
+            createAndStartWorld() {
+                const name = document.getElementById('world-name').value.trim() || 'Nieuwe Wereld';
+                const mode = document.getElementById('world-mode').value;
+
+                const newWorld = {
+                    name: name,
+                    mode: mode,
+                    created: Date.now()
+                };
+
+                this.worlds.push(newWorld);
+                localStorage.setItem('mattyou_craft_worlds', JSON.stringify(this.worlds));
+
+                this.loadWorld(newWorld);
+            }
+
+            deleteWorld(idx) {
+                this.worlds.splice(idx, 1);
+                localStorage.setItem('mattyou_craft_worlds', JSON.stringify(this.worlds));
+                this.renderWorldList();
+            }
+
+            loadWorld(world) {
+                this.activeWorld = world;
+                this.state = 'playing';
+
+                document.getElementById('menu-screen').style.display = 'none';
+                document.getElementById('create-world-screen').style.display = 'none';
+                document.getElementById('hud').style.display = 'block';
+
+                // Reset chunks en meshes
+                Object.values(this.blockMeshes).forEach(mesh => this.scene.remove(mesh));
+                this.blockMeshes = {};
+                this.chunks = {};
+                this.loadedChunks.clear();
+
+                this.player.position.set(8, 12, 8);
+                this.updateChunksAroundPlayer();
+                this.updateHotbarUI();
+
+                document.getElementById('canvas-container').requestPointerLock();
+                this.clock.getDelta();
+                this.animate();
+            }
+        }
+
+        // Start de game engine
+        const game = new Game();
+
+        // Helpers voor HTML Onclicks
+        function showCreateWorld() { game.showCreateWorld(); }
+        function showWorldSelection() { game.showWorldSelection(); }
+        function createAndStartWorld() { game.createAndStartWorld(); }
+        function cancelWorldCreation() { game.cancelWorldCreation(); }
+    </script>
+</body>
+</html>
