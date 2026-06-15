@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <title>My-OS</title>
+    <style>
+        body { background: #000; color: #ff0000; font-family: sans-serif; text-align: center; padding-top: 100px; }
+    </style>
+</head>
+<body>
+
+    <h1>Systeem Verifiëren...</h1>
+
+    <script>
+        // 1. VUL HIER JOUW GITHUB URL IN (Zonder / aan het einde)
+        const TOEGESTANE_URL = "https://mattyou2.github.io/web-os/os/index.html"; 
+
+        // 2. Dit is de 2e code (het geheime recept) om de boel te starten
+        const RECHTEN_SLEUTEL = "kfdszg2436nasfjhgdhfgjhfljkdghflh23463w475lfdldgfflkdhzgfsZGhszf2725364hgshzadfgzsdhfgdfds2346hgzdfhzdfh";
+
+        // Controleer of we op de echte website staan
+        if (window.location.origin === TOEGESTANE_URL) {
+            // Stuur door naar os.html en geef de 2e code mee via de URL
+            window.location.href = "os.html?key=" + btoa(RECHTEN_SLEUTEL);
+        } else {
+            document.body.innerHTML = "<h1>[ TOEGANG GEWEIGERD ]</h1><p>Dit systeem mag hier niet draaien.</p>";
+        }
+    </script>
+
+</body>
+</html>
