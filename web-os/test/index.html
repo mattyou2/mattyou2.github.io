@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <title>Mijn Web OS Portaal</title>
+    <style>
+        html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; }
+        iframe { width: 100%; height: 100%; border: none; }
+    </style>
+</head>
+<body>
+
+    <iframe id="os-frame" src="https://mattyou2.github.io/web-os/test/secure.html"></iframe>
+
+    <script>
+        const iframe = document.getElementById("os-frame");
+        // Vul hier exact dezelfde URL in van de Host (Script 1)
+        const HOST_URL = "https://geheime-os-host.repl.co"; 
+
+        // Wacht tot de iframe is geladen, stuur dan de verificatie-vraag
+        iframe.onload = function() {
+            iframe.contentWindow.postMessage("vraag_toegang_tot_os", HOST_URL);
+        };
+
+        // Luister of de Host akkoord geeft
+        window.addEventListener("message", function(event) {
+            if (event.origin !== HOST_URL) return;
+
+            if (event.data === "toegang_goedgekeurd") {
+                console.log("Web OS succesvol geladen en geverifieerd!");
+            }
+        }, false);
+    </script>
+
+</body>
+</html>
