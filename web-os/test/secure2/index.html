@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <title>My-OS</title>
+    <style>
+        body { background: #000; color: #ff0000; font-family: 'Courier New', monospace; text-align: center; padding-top: 100px; }
+        #error-scherm { display: none; }
+        #os-content { display: none; }
+    </style>
+</head>
+<body>
+
+    <div id="error-scherm">
+        <h1>[ TOEGANG GEWEIGERD ]</h1>
+        <p>Dit script is beveiligd en mag niet lokaal of op deze URL draaien.</p>
+    </div>
+
+    <div id="os-content">
+        <h1>Welkom in My-OS</h1>
+        <p>Je code draait hier veilig.</p>
+        </div>
+
+    <script>
+        (function() {
+            // 1. Vul hier de URL in waar je website MAG draaien (zonder / aan het eind)
+            const toegestaneWebsite = "https://mattyou2.github.io/web-os/test/index.html";
+
+            // 2. Anti-Tamper check: We veranderen functies zodat ze niet nagemaakt kunnen worden
+            const checkURL = window.location.origin;
+
+            // Als de URL NIET klopt, blokkeer alles en maak de pagina leeg
+            if (checkURL !== toegestaneWebsite) {
+                document.getElementById("error-scherm").style.display = "block";
+                // Zelfvernietiging: gooi de rest van de pagina weg
+                document.getElementById("os-content").remove();
+                return;
+            }
+
+            // 3. Als alles klopt, laat het OS zien
+            document.getElementById("os-content").style.display = "block";
+        })();
+    </script>
+</body>
+</html>
