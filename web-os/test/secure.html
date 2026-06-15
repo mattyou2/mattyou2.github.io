@@ -8,24 +8,20 @@
         const TOEGESTANE_WEBSITE = "https://mattyou2.github.io/web-os/test/index.html"; 
 
         window.addEventListener("message", function(event) {
-            // 1. Controleer of het verzoek wel echt van jouw toegestane website komt
             if (event.origin !== TOEGESTANE_WEBSITE) {
                 console.error("Toegang geweigerd! Onbekende bron: " + event.origin);
-                return; // Stop direct, doe niks
+                return; 
             }
 
-            // 2. Als de website klopt en om de app vraagt, activeer het Web OS
             if (event.data === "vraag_toegang_tot_os") {
                 document.getElementById("status").style.display = "none";
                 document.getElementById("web-os-content").style.display = "block";
                 
-                // Stuur een seintje terug dat het is goedgekeurd
                 event.source.postMessage("toegang_goedgekeurd", event.origin);
             }
         }, false);
     </script>
     <style>
-        /* Zorg dat de content standaard onzichtbaar is */
         #web-os-content { display: none; }
         body { font-family: sans-serif; background: #111; color: #fff; text-align: center; padding-top: 50px; }
     </style>
