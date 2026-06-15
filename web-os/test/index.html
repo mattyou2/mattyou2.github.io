@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <title>Web OS - Secure Host</title>
+    <script>
+        // Vul hier de URL in van de website die jouw Web OS MAG laden!
+        const TOEGESTANE_WEBSITE = "https://jouw-hoofdsite.github.io"; 
+
+        window.addEventListener("message", function(event) {
+            // 1. Controleer of het verzoek wel echt van jouw toegestane website komt
+            if (event.origin !== TOEGESTANE_WEBSITE) {
+                console.error("Toegang geweigerd! Onbekende bron: " + event.origin);
+                return; // Stop direct, doe niks
+            }
+
+            // 2. Als de website klopt en om de app vraagt, activeer het Web OS
+            if (event.data === "vraag_toegang_tot_os") {
+                document.getElementById("status").style.display = "none";
+                document.getElementById("web-os-content").style.display = "block";
+                
+                // Stuur een seintje terug dat het is goedgekeurd
+                event.source.postMessage("toegang_goedgekeurd", event.origin);
+            }
+        }, false);
+    </script>
+    <style>
+        /* Zorg dat de content standaard onzichtbaar is */
+        #web-os-content { display: none; }
+        body { font-family: sans-serif; background: #111; color: #fff; text-align: center; padding-top: 50px; }
+    </style>
+</head>
+<body>
+
+    <div id="status">
+        <h1>Verifiëren...</h1>
+        <p>Je hebt geen directe toegang tot deze applicatie.</p>
+    </div>
+
+    <div id="web-os-content">
+        <h1>Mijn Web OS</h1>
+        <p>Welkom! Dit is de beveiligde content van jouw OS.</p>
+        </div>
+
+</body>
+</html>
