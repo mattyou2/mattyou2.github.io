@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <title>My-OS Desktop</title>
+    <style>
+        body { background: #111; color: #fff; font-family: sans-serif; }
+        #error { color: red; text-align: center; padding-top: 100px; display: none; }
+    </style>
+</head>
+<body>
+
+    <div id="loading" style="text-align:center; padding-top:100px;">OS Laden...</div>
+    <div id="error"><h1>[ BOOT FAILED ]</h1><p>De verplichte 2e code ontbreekt of is onjuist.</p></div>
+    
+    <div id="os-container"></div>
+
+    <script>
+        // 1. Dit is de sleutel die we moeten matchen
+        const RECHTEN_SLEUTEL = "kfdszg2436nasfjhgdhfgjhfljkdghflh23463w475lfdldgfflkdhzgfsZGhszf2725364hgshzadfgzsdhfgdfds2346hgzdfhzdfh";
+
+        // 2. Haal de sleutel uit de URL-balk
+        const urlParams = new URLSearchParams(window.location.search);
+        const meegegevenSleutelB64 = urlParams.get('key');
+
+        // ===================================================
+        // 3. JOUW WEB OS CODE ALS WARTAAL (STAP 3 LEGT UIT HOE JE DIT MAAKT)
+        // ===================================================
+        const GECODEERDE_WEB_OS = "UExBSyBISUVSIEpPVVcgV0FSVEFBTCBJTg=="; 
+        // ===================================================
+
+        try {
+            // Probeer de 2e code te controleren
+            if (meegegevenSleutelB64 && atob(meegegevenSleutelB64) === RECHTEN_SLEUTEL) {
+                
+                // De code klopt! We zetten de wartaal nu weer om in jouw echte HTML
+                const echteHTML = decodeURIComponent(escape(atob(GECODEERDE_WEB_OS)));
+                
+                document.getElementById("loading").style.display = "none";
+                document.getElementById("os-container").innerHTML = echteHTML;
+
+                // Haal direct de sleutel uit de URL-balk zodat niemand hem ziet
+                const schoneURL = window.location.protocol + "//" + window.location.host + window.location.pathname;
+                window.history.replaceState({ path: schoneURL }, '', schoneURL);
+
+            } else {
+                throw new Error();
+            }
+        } catch(e) {
+            // Als de sleutel ontbreekt, fout is, of er is mee gerommeld:
+            document.getElementById("loading").style.display = "none";
+            document.getElementById("error").style.display = "block";
+            document.getElementById("os-container").remove(); // Vernietig eventuele resten
+        }
+    </script>
+
+</body>
+</html>
