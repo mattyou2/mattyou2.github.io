@@ -12,19 +12,28 @@
     <h1>BEVEILIGINGSLINK CONTROLEREN...</h1>
 
     <script>
-        // 1. VUL HIER JOUW EXACTE GITHUB PAGES URL IN (Zonder / aan het einde)
-        const TOEGESTANE_URL = "mattyou2.github.io/web-os/os/index.html"; 
+       // 1. Vul hier je GitHub URL in (zonder / aan het einde)
+const TOEGESTANE_URL = "https://mattyou2.github.io/web-os/os/index.html"; 
 
-        // 2. Dit moet EXACT dezelfde sleutel zijn als in os.html
-        const RECHTEN_SLEUTEL = "kfdszg2436nasfjhgdhfgjhfljkdghflh23463w475lfdldgfflkdhzgfsZGhszf2725364hgshzadfgzsdhfgdfds2346hgzdfhzdfh";
+// 2. Dit moet EXACT dezelfde sleutel zijn als in os.html
+const RECHTEN_SLEUTEL = "kfdszg2436nasfjhgdhfgjhfljkdghflh23463w475lfdldgfflkdhzgfsZGhszf2725364hgshzadfgzsdhfgdfds2346hgzdfhzdfh";
 
-        // Check of we wel echt op jouw GitHub Pages URL staan en niet lokaal/gestolen
-        if (window.location.origin === TOEGESTANE_URL) {
-            // Stuur door naar os.html met de gecodeerde sleutel
-            window.location.href = "os.html?key=" + btoa(RECHTEN_SLEUTEL);
-        } else {
-            document.body.innerHTML = "<h1>[ TOEGANG GEWEIGERD ]</h1><p>Dit systeem draait op een illegale URL of locatie.</p>";
-        }
+// We halen hier automatisch een eventuele schuine streep aan het einde weg
+const huidigeLocatie = window.location.origin.replace(/\/$/, "");
+
+// Check of de URLs matchen
+if (huidigeLocatie === TOEGESTANE_URL.replace(/\/$/, "")) {
+    // Succes! Stuur door naar os.html met de gecodeerde sleutel
+    window.location.href = "os.html?key=" + btoa(RECHTEN_SLEUTEL);
+} else {
+    // Als het nu nog fout gaat, laat de browser je exact zien waarom!
+    document.body.innerHTML = `
+        <h1>[ TOEGANG GEWEIGERD ]</h1>
+        <p>Ingevuld bij TOEGESTANE_URL: <b>${TOEGESTANE_URL}</b></p>
+        <p>Jouw browser bevindt zich op: <b>${huidigeLocatie}</b></p>
+        <p>Zorg dat deze twee hierboven exact hetzelfde zijn!</p>
+    `;
+}
     </script>
 
 </body>
