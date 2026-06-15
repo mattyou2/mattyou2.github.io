@@ -5,8 +5,12 @@
     <textarea id="output" style="width:100%; height:300px;"></textarea>
 
     <script>
-        // HIER PLAK JIJ JOUW EIGEN WEB OS HTML CODE (ALLES!)
-        const mijnEchteCode = `<!DOCTYPE html>
+        // ========================================================
+        // HIERONDER BEGINT JOUW CODE (NA DE SCHUINE APOS_TROPHE `)
+        // ========================================================
+        const mijnEchteCode = `
+
+        <!DOCTYPE html>
 <html lang="nl">
 <head>
 <meta charset="UTF-8">
@@ -2060,7 +2064,12 @@ document.getElementById('reg-pass').addEventListener('keydown', e => { if (e.key
 document.getElementById('reg-pass2').addEventListener('keydown', e => { if (e.key === 'Enter') doRegister(); });
 </script>
 </body>
-</html>`;
+</html>
+
+        `;
+        // ========================================================
+        // HIERBOVEN EINDIGT JOUW CODE (VOOR DE SCHUINE APOS_TROPHE `)
+        // ========================================================
 
         // Dit script verandert jouw code automatisch in wartaal voor de browser
         const wartaal = btoa(unescape(encodeURIComponent(mijnEchteCode)));
