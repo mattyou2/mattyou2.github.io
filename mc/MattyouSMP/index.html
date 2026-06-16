@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ecosy PvP | Ultimate Minecraft Economy & PvP Experience</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom Tailwind Config for Theme Colors -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            dark: '#0f172a', /* Slate 900 */
+                            card: '#1e293b', /* Slate 800 */
+                            economy: '#10b981', /* Emerald 500 */
+                            pvp: '#ef4444', /* Red 500 */
+                            accent: '#f59e0b' /* Amber 500 */
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Smooth glow effects */
+        .glow-economy:hover {
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+        }
+        .glow-pvp:hover {
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+        }
+    </style>
+</head>
+<body class="bg-brand-dark text-slate-100 font-sans antialiased">
+
+    <!-- NAVIGATION BAR -->
+    <nav class="sticky top-0 z-50 bg-brand-dark/90 backdrop-blur-md border-b border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-3">
+                    <!-- Server Logo Placeholder -->
+                    <div class="bg-gradient-to-br from-brand-economy to-brand-pvp p-2 rounded-lg text-white font-bold text-xl tracking-wider">
+                        ES
+                    </div>
+                    <span class="text-xl font-extrabold tracking-tight bg-gradient-to-r from-brand-economy to-brand-pvp bg-clip-text text-transparent">
+                        ECOSY <span class="text-white">PvP</span>
+                    </span>
+                </div>
+                <!-- Desktop Menu -->
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="#home" class="hover:text-brand-economy transition duration-300 font-medium">Home</a>
+                    <a href="#features" class="hover:text-brand-economy transition duration-300 font-medium">Features</a>
+                    <a href="#ecosy" class="hover:text-brand-economy transition duration-300 font-medium">Ecosy Skript</a>
+                    <a href="#media" class="hover:text-brand-economy transition duration-300 font-medium">Media</a>
+                    <button onclick="copyIP()" class="bg-gradient-to-r from-brand-economy to-brand-pvp hover:from-brand-pvp hover:to-brand-economy text-white px-5 py-2 rounded-full font-bold shadow-lg transition duration-500 transform hover:-translate-y-1">
+                        Play Now
+                    </button>
+                </div>
+                <!-- Mobile Menu Button -->
+                <div class="md:hidden">
+                    <button id="mobile-menu-btn" class="text-slate-400 hover:text-white focus:outline-none">
+                        <i class="fa-solid fa-bars text-2xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Mobile Menu Dropdown -->
+        <div id="mobile-menu" class="hidden md:hidden bg-brand-card border-b border-slate-800 px-4 pt-2 pb-4 space-y-2">
+            <a href="#home" class="block py-2 text-slate-300 hover:text-brand-economy">Home</a>
+            <a href="#features" class="block py-2 text-slate-300 hover:text-brand-economy">Features</a>
+            <a href="#ecosy" class="block py-2 text-slate-300 hover:text-brand-economy">Ecosy Skript</a>
+            <a href="#media" class="block py-2 text-slate-300 hover:text-brand-economy">Media</a>
+            <button onclick="copyIP()" class="w-full text-center bg-gradient-to-r from-brand-economy to-brand-pvp text-white py-2 rounded-lg font-bold">
+                Copy IP & Play
+            </button>
+        </div>
+    </nav>
+
+    <!-- HERO SECTION -->
+    <header id="home" class="relative py-24 md:py-32 overflow-hidden bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-800 via-brand-dark to-brand-dark">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+            <!-- Server Status Badge -->
+            <div class="inline-flex items-center gap-2 bg-brand-economy/10 border border-brand-economy/30 text-brand-economy px-4 py-1.5 rounded-full text-sm font-semibold mb-6 animate-pulse">
+                <span class="w-2.5 h-2.5 rounded-full bg-brand-economy"></span>
+                Server is Online! Join 142+ players
+            </div>
+            
+            <h1 class="text-5xl md:text-7xl font-black tracking-tight mb-6">
+                The Ultimate <br class="hidden md:inline">
+                <span class="bg-gradient-to-r from-brand-economy via-brand-accent to-brand-pvp bg-clip-text text-transparent">
+                    Economy & PvP
+                </span> Experience
+            </h1>
+            
+            <p class="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto mb-10">
+                Dominate the market, build your financial empire using our custom <span class="text-brand-economy font-semibold">ecosy</span> system, and defend your wealth in high-stakes PvP combat!
+            </p>
+
+            <!-- IP Copy Widget -->
+            <div class="max-w-md mx-auto bg-brand-card p-4 rounded-2xl border border-slate-700/50 shadow-2xl mb-8">
+                <p class="text-xs text-slate-500 uppercase tracking-wider font-bold mb-2">Click below to copy Server IP</p>
+                <div class="flex items-center justify-between bg-brand-dark p-3 rounded-xl border border-slate-800 cursor-pointer group" onclick="copyIP()">
+                    <span id="server-ip" class="font-mono text-lg md:text-xl text-brand-economy font-bold tracking-wider group-hover:text-white transition duration-300">
+                        play.ecosypvp.com
+                    </span>
+                    <button class="bg-brand-card hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition duration-300">
+                        <i id="copy-icon" class="fa-regular fa-copy"></i>
+                        <span id="copy-text">Copy</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- CTA Buttons -->
+            <div class="flex flex-col sm:flex-row justify-center items-center gap-4">
+                <a href="#ecosy" class="w-full sm:w-auto px-8 py-4 bg-brand-economy hover:bg-emerald-600 text-brand-dark font-extrabold rounded-xl shadow-lg shadow-brand-economy/20 transition duration-300 transform hover:-translate-y-1 text-center">
+                    <i class="fa-solid fa-code mr-2"></i> Explore Ecosy Skript
+                </a>
+                <a href="https://discord.gg/yourinvite" target="_blank" class="w-full sm:w-auto px-8 py-4 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl border border-slate-700 transition duration-300 transform hover:-translate-y-1 text-center">
+                    <i class="fa-brands fa-discord mr-2 text-indigo-400"></i> Join Our Discord
+                </a>
+            </div>
+        </div>
+
+        <!-- Decorative background glow -->
+        <div class="absolute top-1/2 left-1/4 -translate-y-1/2 -translate-x-1/2 w-96 h-96 bg-brand-economy/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute top-1/2 right-1/4 -translate-y-1/2 translate-x-1/2 w-96 h-96 bg-brand-pvp/10 rounded-full blur-3xl pointer-events-none"></div>
+    </header>
+
+    <!-- SERVER FEATURES -->
+    <section id="features" class="py-20 bg-brand-dark border-t border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-5xl font-extrabold mb-4">Why Play On <span class="text-brand-economy">Ecosy PvP</span>?</h2>
+                <p class="text-slate-400 max-w-xl mx-auto">We offer unique mechanics that you won't find anywhere else. Built by players, for players.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Feature 1: Economy -->
+                <div class="bg-brand-card p-8 rounded-2xl border border-slate-800 hover:border-brand-economy/50 transition duration-300 glow-economy">
+                    <div class="w-14 h-14 bg-brand-economy/10 text-brand-economy rounded-xl flex items-center justify-center text-2xl mb-6">
+                        <i class="fa-solid fa-coins"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-3">Ecosy Economy</h3>
+                    <p class="text-slate-400 leading-relaxed">
+                        Powered by our custom-made, public Skript pack. Experience dynamic shop prices, player-driven markets, interest rates, and secure bank vaults.
+                    </p>
+                </div>
+
+                <!-- Feature 2: Hardcore PvP -->
+                <div class="bg-brand-card p-8 rounded-2xl border border-slate-800 hover:border-brand-pvp/50 transition duration-300 glow-pvp">
+                    <div class="w-14 h-14 bg-brand-pvp/10 text-brand-pvp rounded-xl flex items-center justify-center text-2xl mb-6">
+                        <i class="fa-solid fa-swords"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-3">High-Stakes PvP</h3>
+                    <p class="text-slate-400 leading-relaxed">
+                        Fight in custom arenas, participate in hourly KOTH (King of the Hill) events, and claim bounties placed on your worst enemies. High risk, high reward!
+                    </p>
+                </div>
+
+                <!-- Feature 3: Custom Events -->
+                <div class="bg-brand-card p-8 rounded-2xl border border-slate-800 hover:border-brand-accent/50 transition duration-300">
+                    <div class="w-14 h-14 bg-brand-accent/10 text-brand-accent rounded-xl flex items-center justify-center text-2xl mb-6">
+                        <i class="fa-solid fa-trophy"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-3">Weekly Tournaments</h3>
+                    <p class="text-slate-400 leading-relaxed">
+                        Compete in weekly clan wars and economy challenges to win real store vouchers, custom tags, and legendary weapons.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ECOSY SKRIPT SPOTLIGHT -->
+    <section id="ecosy" class="py-20 bg-slate-900 border-t border-slate-800 relative overflow-hidden">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+                
+                <!-- Left: Text content -->
+                <div class="lg:col-span-5 space-y-6">
+                    <div class="inline-block bg-brand-economy/10 text-brand-economy px-3 py-1 rounded-md text-xs font-bold uppercase tracking-wider">
+                        Our Open-Source Skript Pack
+                    </div>
+                    <h2 class="text-3xl md:text-5xl font-black leading-tight">
+                        Powering the Server with <span class="text-brand-economy">ecosy</span>
+                    </h2>
+                    <p class="text-slate-400 leading-relaxed">
+                        <strong>ecosy</strong> is a custom-coded Minecraft Skript economy system developed by us and shared publicly with the Minecraft community. It provides a lightweight, robust, and highly customizable economy framework.
+                    </p>
+                    <ul class="space-y-3 text-slate-300">
+                        <li class="flex items-center gap-3">
+                            <i class="fa-solid fa-circle-check text-brand-economy"></i> Ultra-optimized database storage
+                        </li>
+                        <li class="flex items-center gap-3">
+                            <i class="fa-solid fa-circle-check text-brand-economy"></i> Built-in physical & virtual currency
+                        </li>
+                        <li class="flex items-center gap-3">
+                            <i class="fa-solid fa-circle-check text-brand-economy"></i> Easy-to-use API for developers
+                        </li>
+                    </ul>
+                    <div class="pt-4">
+                        <a href="https://github.com/yourusername/ecosy" target="_blank" class="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white px-6 py-3 rounded-xl font-bold transition duration-300 border border-slate-700">
+                            <i class="fa-brands fa-github text-xl"></i> View on GitHub / Download
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Right: Code Preview / Visual Mockup -->
+                <div class="lg:col-span-7">
+                    <div class="bg-brand-dark rounded-2xl border border-slate-700 shadow-2xl overflow-hidden">
+                        <!-- Window Header -->
+                        <div class="bg-slate-800 px-4 py-3 flex items-center justify-between border-b border-slate-700">
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full bg-red-500"></span>
+                                <span class="w-3 h-3 rounded-full bg-yellow-500"></span>
+                                <span class="w-3 h-3 rounded-full bg-green-500"></span>
+                            </div>
+                            <span class="text-xs font-mono text-slate-400">ecosy-economy.sk</span>
+                            <span class="text-xs text-brand-economy font-bold">Skript v2.6+</span>
+                        </div>
+                        <!-- Code Area -->
+                        <pre class="p-6 overflow-x-auto text-sm font-mono text-emerald-400 leading-relaxed bg-brand-dark/50"><code><span class="text-slate-500"># Ecosy Custom Economy Trigger</span>
+<span class="text-purple-400">options:</span>
+    <span class="text-blue-400">prefix:</span> <span class="text-amber-300">"&8[&aEcosy&8]"</span>
+
+<span class="text-purple-400">command /balance [&lt;player&gt;]:</span>
+    <span class="text-blue-400">aliases:</span> bal, money
+    <span class="text-blue-400">trigger:</span>
+        <span class="text-pink-400">set</span> {_p} <span class="text-pink-400">to</span> player
+        <span class="text-pink-400">if</span> arg-1 is set:
+            <span class="text-pink-400">set</span> {_p} <span class="text-pink-400">to</span> arg-1
+        <span class="text-pink-400">send</span> <span class="text-amber-300">"{@prefix} &7%{_p}%'s Balance: &a$%{ecosy::bal::%{_p}'s uuid}%"</span> <span class="text-pink-400">to</span> player</code></pre>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- MEDIA / VIDEOS SECTION -->
+    <section id="media" class="py-20 bg-brand-dark border-t border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-5xl font-extrabold mb-4">Server Media & Trailers</h2>
+                <p class="text-slate-400 max-w-xl mx-auto">Watch our latest server trailers, PvP montages, and tutorials on how to master the Ecosy economy.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Video 1 (Main Trailer) -->
+                <div class="bg-brand-card p-4 rounded-2xl border border-slate-800 shadow-xl">
+                    <div class="relative pb-[56.25%] h-0 rounded-xl overflow-hidden mb-4">
+                        <!-- Replace 'dQw4w9WgXcQ' with your YouTube Video ID -->
+                        <iframe class="absolute top-0 left-0 w-full h-full" src="https://www.youtube.com/embed/dQw4w9WgXcQ" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                    </div>
+                    <h3 class="text-xl font-bold mb-1">Official Server Trailer</h3>
+                    <p class="text-sm text-slate-400">Get a quick overview of our custom features, spawn, and warzones.</p>
+                </div>
+
+                <!-- Video 2 (Gameplay / Tutorial) -->
+                <div class="bg-brand-card p-4 rounded-2xl border border-slate-800 shadow-xl">
+                    <div class="relative pb-[56.25%] h-0 rounded-xl overflow-hidden mb-4">
+                        <!-- Replace 'dQw4w9WgXcQ' with your YouTube Video ID -->
+                        <iframe class="absolute top-0 left-0 w-full h-full" src="https://www.youtube.com/embed/dQw4w9WgXcQ" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                    </div>
+                    <h3 class="text-xl font-bold mb-1">How to Start: Ecosy Guide</h3>
+                    <p class="text-sm text-slate-400">A complete beginner's guide on how to make your first million coins.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="bg-slate-950 text-slate-400 py-12 border-t border-slate-900">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+                <div class="flex items-center gap-3">
+                    <div class="bg-gradient-to-br from-brand-economy to-brand-pvp p-2 rounded-lg text-white font-bold text-sm">
+                        ES
+                    </div>
+                    <span class="text-lg font-bold text-white">ECOSY PvP</span>
+                </div>
+                <p class="text-sm text-center md:text-left">
+                    &copy; 2023 Ecosy PvP. All rights reserved. We are not affiliated with Mojang Studios or Microsoft.
+                </p>
+                <!-- Social Icons -->
+                <div class="flex space-x-4">
+                    <a href="#" class="hover:text-brand-economy text-xl transition duration-300"><i class="fa-brands fa-discord"></i></a>
+                    <a href="#" class="hover:text-brand-pvp text-xl transition duration-300"><i class="fa-brands fa-youtube"></i></a>
+                    <a href="#" class="hover:text-brand-accent text-xl transition duration-300"><i class="fa-brands fa-tiktok"></i></a>
+                    <a href="#" class="hover:text-white text-xl transition duration-300"><i class="fa-solid fa-envelope"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JAVASCRIPT FOR INTERACTIVE FEATURES -->
+    <script>
+        // Mobile Menu Toggle
+        const btn = document.getElementById('mobile-menu-btn');
+        const menu = document.getElementById('mobile-menu');
+
+        btn.addEventListener('click', () => {
+            menu.classList.toggle('hidden');
+        });
+
+        // Click to Copy Server IP Function
+        function copyIP() {
+            const ipText = document.getElementById('server-ip').innerText.trim();
+            const copyText = document.getElementById('copy-text');
+            const copyIcon = document.getElementById('copy-icon');
+
+            navigator.clipboard.writeText(ipText).then(() => {
+                // Change text and icon to show success
+                copyText.innerText = "Copied!";
+                copyText.classList.add("text-brand-economy");
+                copyIcon.className = "fa-solid fa-check text-brand-economy";
+
+                // Reset after 2.5 seconds
+                setTimeout(() => {
+                    copyText.innerText = "Copy";
+                    copyText.classList.remove("text-brand-economy");
+                    copyIcon.className = "fa-regular fa-copy";
+                }, 2500);
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+            });
+        }
+    </script>
+</body>
+</html>
