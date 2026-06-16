@@ -4,11 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ecosy PvP | Ultimate Minecraft Economy & PvP Experience</title>
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Custom Tailwind Config for Theme Colors -->
     <script>
         tailwind.config = {
             theme: {
@@ -38,12 +35,10 @@
 </head>
 <body class="bg-brand-dark text-slate-100 font-sans antialiased">
 
-    <!-- NAVIGATION BAR -->
     <nav class="sticky top-0 z-50 bg-brand-dark/90 backdrop-blur-md border-b border-slate-800">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
                 <div class="flex items-center gap-3">
-                    <!-- Server Logo Placeholder -->
                     <div class="bg-gradient-to-br from-brand-economy to-brand-pvp p-2 rounded-lg text-white font-bold text-xl tracking-wider">
                         ES
                     </div>
@@ -51,7 +46,6 @@
                         ECOSY <span class="text-white">PvP</span>
                     </span>
                 </div>
-                <!-- Desktop Menu -->
                 <div class="hidden md:flex items-center space-x-8">
                     <a href="#home" class="hover:text-brand-economy transition duration-300 font-medium">Home</a>
                     <a href="#features" class="hover:text-brand-economy transition duration-300 font-medium">Features</a>
@@ -61,7 +55,6 @@
                         Play Now
                     </button>
                 </div>
-                <!-- Mobile Menu Button -->
                 <div class="md:hidden">
                     <button id="mobile-menu-btn" class="text-slate-400 hover:text-white focus:outline-none">
                         <i class="fa-solid fa-bars text-2xl"></i>
@@ -69,7 +62,6 @@
                 </div>
             </div>
         </div>
-        <!-- Mobile Menu Dropdown -->
         <div id="mobile-menu" class="hidden md:hidden bg-brand-card border-b border-slate-800 px-4 pt-2 pb-4 space-y-2">
             <a href="#home" class="block py-2 text-slate-300 hover:text-brand-economy">Home</a>
             <a href="#features" class="block py-2 text-slate-300 hover:text-brand-economy">Features</a>
@@ -81,10 +73,8 @@
         </div>
     </nav>
 
-    <!-- HERO SECTION -->
     <header id="home" class="relative py-24 md:py-32 overflow-hidden bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-800 via-brand-dark to-brand-dark">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-            <!-- Server Status Badge -->
             <div class="inline-flex items-center gap-2 bg-brand-economy/10 border border-brand-economy/30 text-brand-economy px-4 py-1.5 rounded-full text-sm font-semibold mb-6 animate-pulse">
                 <span class="w-2.5 h-2.5 rounded-full bg-brand-economy"></span>
                 Server is Online! Join 142+ players
@@ -101,7 +91,6 @@
                 Dominate the market, build your financial empire using our custom <span class="text-brand-economy font-semibold">ecosy</span> system, and defend your wealth in high-stakes PvP combat!
             </p>
 
-            <!-- IP Copy Widget -->
             <div class="max-w-md mx-auto bg-brand-card p-4 rounded-2xl border border-slate-700/50 shadow-2xl mb-8">
                 <p class="text-xs text-slate-500 uppercase tracking-wider font-bold mb-2">Click below to copy Server IP</p>
                 <div class="flex items-center justify-between bg-brand-dark p-3 rounded-xl border border-slate-800 cursor-pointer group" onclick="copyIP()">
@@ -115,7 +104,6 @@
                 </div>
             </div>
 
-            <!-- CTA Buttons -->
             <div class="flex flex-col sm:flex-row justify-center items-center gap-4">
                 <a href="#ecosy" class="w-full sm:w-auto px-8 py-4 bg-brand-economy hover:bg-emerald-600 text-brand-dark font-extrabold rounded-xl shadow-lg shadow-brand-economy/20 transition duration-300 transform hover:-translate-y-1 text-center">
                     <i class="fa-solid fa-code mr-2"></i> Explore Ecosy Skript
@@ -126,12 +114,10 @@
             </div>
         </div>
 
-        <!-- Decorative background glow -->
         <div class="absolute top-1/2 left-1/4 -translate-y-1/2 -translate-x-1/2 w-96 h-96 bg-brand-economy/10 rounded-full blur-3xl pointer-events-none"></div>
         <div class="absolute top-1/2 right-1/4 -translate-y-1/2 translate-x-1/2 w-96 h-96 bg-brand-pvp/10 rounded-full blur-3xl pointer-events-none"></div>
     </header>
 
-    <!-- SERVER FEATURES -->
     <section id="features" class="py-20 bg-brand-dark border-t border-slate-800">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-16">
@@ -140,7 +126,6 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <!-- Feature 1: Economy -->
                 <div class="bg-brand-card p-8 rounded-2xl border border-slate-800 hover:border-brand-economy/50 transition duration-300 glow-economy">
                     <div class="w-14 h-14 bg-brand-economy/10 text-brand-economy rounded-xl flex items-center justify-center text-2xl mb-6">
                         <i class="fa-solid fa-coins"></i>
@@ -151,7 +136,6 @@
                     </p>
                 </div>
 
-                <!-- Feature 2: Hardcore PvP -->
                 <div class="bg-brand-card p-8 rounded-2xl border border-slate-800 hover:border-brand-pvp/50 transition duration-300 glow-pvp">
                     <div class="w-14 h-14 bg-brand-pvp/10 text-brand-pvp rounded-xl flex items-center justify-center text-2xl mb-6">
                         <i class="fa-solid fa-swords"></i>
@@ -162,7 +146,6 @@
                     </p>
                 </div>
 
-                <!-- Feature 3: Custom Events -->
                 <div class="bg-brand-card p-8 rounded-2xl border border-slate-800 hover:border-brand-accent/50 transition duration-300">
                     <div class="w-14 h-14 bg-brand-accent/10 text-brand-accent rounded-xl flex items-center justify-center text-2xl mb-6">
                         <i class="fa-solid fa-trophy"></i>
@@ -176,12 +159,10 @@
         </div>
     </section>
 
-    <!-- ECOSY SKRIPT SPOTLIGHT -->
     <section id="ecosy" class="py-20 bg-slate-900 border-t border-slate-800 relative overflow-hidden">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
                 
-                <!-- Left: Text content -->
                 <div class="lg:col-span-5 space-y-6">
                     <div class="inline-block bg-brand-economy/10 text-brand-economy px-3 py-1 rounded-md text-xs font-bold uppercase tracking-wider">
                         Our Open-Source Skript Pack
@@ -210,31 +191,113 @@
                     </div>
                 </div>
 
-                <!-- Right: Code Preview / Visual Mockup -->
                 <div class="lg:col-span-7">
-                    <div class="bg-brand-dark rounded-2xl border border-slate-700 shadow-2xl overflow-hidden">
-                        <!-- Window Header -->
-                        <div class="bg-slate-800 px-4 py-3 flex items-center justify-between border-b border-slate-700">
+                    <div class="bg-brand-dark rounded-2xl border border-slate-700 shadow-2xl overflow-hidden relative flex flex-col">
+                        <div class="bg-slate-800 px-4 py-3 flex items-center justify-between border-b border-slate-700 z-10">
                             <div class="flex items-center gap-2">
                                 <span class="w-3 h-3 rounded-full bg-red-500"></span>
                                 <span class="w-3 h-3 rounded-full bg-yellow-500"></span>
                                 <span class="w-3 h-3 rounded-full bg-green-500"></span>
                             </div>
-                            <span class="text-xs font-mono text-slate-400">ecosy-economy.sk</span>
+                            <span class="text-xs font-mono text-slate-400">mattyou-economy.sk</span>
                             <span class="text-xs text-brand-economy font-bold">Skript v2.6+</span>
                         </div>
-                        <!-- Code Area -->
-                        <pre class="p-6 overflow-x-auto text-sm font-mono text-emerald-400 leading-relaxed bg-brand-dark/50"><code><span class="text-slate-500"># Ecosy Custom Economy Trigger</span>
-<span class="text-purple-400">options:</span>
-    <span class="text-blue-400">prefix:</span> <span class="text-amber-300">"&8[&aEcosy&8]"</span>
+                        
+                        <div id="code-wrapper" class="relative max-h-64 overflow-hidden transition-all duration-500 ease-in-out bg-brand-dark/50">
+                            <div id="code-fade" class="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-brand-dark via-brand-dark/50 to-transparent pointer-events-none z-10"></div>
+                            
+                            <pre class="p-6 overflow-x-auto text-sm font-mono text-emerald-400 leading-relaxed"><code><span class="text-slate-500"># -------------------------------------------------------------------
+# MattyouSMP Economy System
+# -------------------------------------------------------------------</span>
 
-<span class="text-purple-400">command /balance [&lt;player&gt;]:</span>
-    <span class="text-blue-400">aliases:</span> bal, money
+<span class="text-slate-500"># Ensures new players start with €0 (change 0 to any starting amount)</span>
+<span class="text-purple-400">on join:</span>
+    <span class="text-pink-400">if</span> {money::%player's uuid%} is not set:
+        <span class="text-pink-400">set</span> {money::%player's uuid%} <span class="text-pink-400">to</span> 0
+
+<span class="text-slate-500"># The Actionbar at the bottom of the screen (updates every second)</span>
+<span class="text-purple-400">every 1 second:</span>
+    <span class="text-pink-400">loop</span> all players:
+        <span class="text-pink-400">set</span> {_m} <span class="text-pink-400">to</span> {money::%loop-player's uuid%} <span class="text-pink-400">if</span> {money::%loop-player's uuid%} is set <span class="text-pink-400">else</span> 0
+        <span class="text-pink-400">send</span> action bar <span class="text-amber-300">"&6&lMattyouSMP Money: &e€%{_m}%"</span> <span class="text-pink-400">to</span> loop-player
+
+<span class="text-slate-500"># -------------------------------------------------------------------
+# Player Command: /pay
+# -------------------------------------------------------------------</span>
+<span class="text-purple-400">command /pay [&lt;player&gt;] [&lt;number&gt;]:</span>
     <span class="text-blue-400">trigger:</span>
-        <span class="text-pink-400">set</span> {_p} <span class="text-pink-400">to</span> player
-        <span class="text-pink-400">if</span> arg-1 is set:
-            <span class="text-pink-400">set</span> {_p} <span class="text-pink-400">to</span> arg-1
-        <span class="text-pink-400">send</span> <span class="text-amber-300">"{@prefix} &7%{_p}%'s Balance: &a$%{ecosy::bal::%{_p}'s uuid}%"</span> <span class="text-pink-400">to</span> player</code></pre>
+        <span class="text-pink-400">if</span> arg 1 is not set:
+            <span class="text-pink-400">send</span> <span class="text-amber-300">"&cUsage: /pay &lt;player&gt; &lt;amount&gt;"</span> <span class="text-pink-400">to</span> player
+            <span class="text-pink-400">stop</span>
+        <span class="text-pink-400">if</span> arg 2 is not set:
+            <span class="text-pink-400">send</span> <span class="text-amber-300">"&cUsage: /pay &lt;player&gt; &lt;amount&gt;"</span> <span class="text-pink-400">to</span> player
+            <span class="text-pink-400">stop</span>
+        <span class="text-pink-400">if</span> arg 2 &lt;= 0:
+            <span class="text-pink-400">send</span> <span class="text-amber-300">"&cAmount must be greater than 0!"</span> <span class="text-pink-400">to</span> player
+            <span class="text-pink-400">stop</span>
+        
+        <span class="text-slate-500"># Check if the player has enough money</span>
+        <span class="text-pink-400">if</span> {money::%player's uuid%} &lt; arg 2:
+            <span class="text-pink-400">send</span> <span class="text-amber-300">"&cYou don't have enough money! You currently have &e€%{money::%player's uuid%}%&c."</span> <span class="text-pink-400">to</span> player
+            <span class="text-pink-400">stop</span>
+            
+        <span class="text-slate-500"># Execute the transaction</span>
+        <span class="text-pink-400">subtract</span> arg 2 <span class="text-pink-400">from</span> {money::%player's uuid%}
+        <span class="text-pink-400">add</span> arg 2 <span class="text-pink-400">to</span> {money::%arg 1's uuid%}
+        
+        <span class="text-pink-400">send</span> <span class="text-amber-300">"&aYou sent &e€%arg 2% &ato &7%arg 1%&a."</span> <span class="text-pink-400">to</span> player
+        <span class="text-pink-400">send</span> <span class="text-amber-300">"&aYou received &e€%arg 2% &afrom &7%player%&a."</span> <span class="text-pink-400">to</span> arg 1
+
+<span class="text-slate-500"># -------------------------------------------------------------------
+# Admin Command: /money (set/add/remove)
+# -------------------------------------------------------------------</span>
+<span class="text-purple-400">command /money [&lt;text&gt;] [&lt;player&gt;] [&lt;number&gt;]:</span>
+    <span class="text-blue-400">permission:</span> op
+    <span class="text-blue-400">permission message:</span> <span class="text-amber-300">&cYou do not have permission to execute this command!</span>
+    <span class="text-blue-400">trigger:</span>
+        <span class="text-pink-400">if</span> arg 1 is not set:
+            <span class="text-pink-400">send</span> <span class="text-amber-300">"&cUsage: /money (set/add/remove) &lt;player&gt; &lt;amount&gt;"</span> <span class="text-pink-400">to</span> player
+            <span class="text-pink-400">stop</span>
+            
+        <span class="text-slate-500"># If an admin types just /money &lt;player&gt; to check balance</span>
+        <span class="text-pink-400">if</span> arg 1 is set:
+            <span class="text-pink-400">if</span> arg 1 is not "set" or "add" or "remove":
+                <span class="text-slate-500"># Display balance if the first argument is a valid player name</span>
+                <span class="text-pink-400">set</span> {_p} <span class="text-pink-400">to</span> arg 1 parsed as player
+                <span class="text-pink-400">if</span> {_p} is set:
+                    <span class="text-pink-400">send</span> <span class="text-amber-300">"&eBalance of %{_p}%: &a€%{money::%{_p}'s uuid%}%"</span> <span class="text-pink-400">to</span> player
+                    <span class="text-pink-400">stop</span>
+                <span class="text-pink-400">else:</span>
+                    <span class="text-pink-400">send</span> <span class="text-amber-300">"&cUsage: /money (set/add/remove) &lt;player&gt; &lt;amount&gt;"</span> <span class="text-pink-400">to</span> player
+                    <span class="text-pink-400">stop</span>
+
+        <span class="text-pink-400">if</span> arg 2 is not set:
+            <span class="text-pink-400">send</span> <span class="text-amber-300">"&cPlease specify a player."</span> <span class="text-pink-400">to</span> player
+            <span class="text-pink-400">stop</span>
+        <span class="text-pink-400">if</span> arg 3 is not set:
+            <span class="text-pink-400">send</span> <span class="text-amber-300">"&cPlease specify an amount."</span> <span class="text-pink-400">to</span> player
+            <span class="text-pink-400">stop</span>
+
+        <span class="text-slate-500"># Admin Actions</span>
+        <span class="text-pink-400">if</span> arg 1 is "set":
+            <span class="text-pink-400">set</span> {money::%arg 2's uuid%} <span class="text-pink-400">to</span> arg 3
+            <span class="text-pink-400">send</span> <span class="text-amber-300">"&aBalance of &7%arg 2% &aset to &e€%arg 3%&a."</span> <span class="text-pink-400">to</span> player
+            <span class="text-pink-400">send</span> <span class="text-amber-300">"&aAn admin has set your balance to &e€%arg 3%&a."</span> <span class="text-pink-400">to</span> arg 2
+
+        <span class="text-pink-400">else if</span> arg 1 is "add":
+            <span class="text-pink-400">add</span> arg 3 <span class="text-pink-400">to</span> {money::%arg 2's uuid%}
+            <span class="text-pink-400">send</span> <span class="text-amber-300">"&e€%arg 3% &ahass been added to &7%arg 2%&a."</span> <span class="text-pink-400">to</span> player
+            <span class="text-pink-400">send</span> <span class="text-amber-300">"&a&e€%arg 3% &ahas been added to your balance."</span> <span class="text-pink-400">to</span> arg 2
+
+        <span class="text-pink-400">else if</span> arg 1 is "remove":
+            <span class="text-pink-400">subtract</span> arg 3 <span class="text-pink-400">from</span> {money::%arg 2's uuid%}
+            <span class="text-pink-400">send</span> <span class="text-amber-300">"&e€%arg 3% &chas been deducted from &7%arg 2%&a."</span> <span class="text-pink-400">to</span> player
+            <span class="text-pink-400">send</span> <span class="text-amber-300">"&c&e€%arg 3% &chas been deducted from your balance."</span> <span class="text-pink-400">to</span> arg 2</code></pre>
+                        </div>
+
+                        <button onclick="toggleCode()" id="code-btn" class="bg-slate-800 hover:bg-slate-700 text-brand-economy border-t border-slate-700 py-3 font-bold text-sm transition duration-300 flex items-center justify-center gap-2 z-20">
+                            <i id="code-btn-icon" class="fa-solid fa-chevron-down"></i> <span id="code-btn-text">Show More</span>
+                        </button>
                     </div>
                 </div>
 
@@ -242,7 +305,6 @@
         </div>
     </section>
 
-    <!-- MEDIA / VIDEOS SECTION -->
     <section id="media" class="py-20 bg-brand-dark border-t border-slate-800">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-16">
@@ -251,20 +313,16 @@
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <!-- Video 1 (Main Trailer) -->
                 <div class="bg-brand-card p-4 rounded-2xl border border-slate-800 shadow-xl">
                     <div class="relative pb-[56.25%] h-0 rounded-xl overflow-hidden mb-4">
-                        <!-- Replace 'dQw4w9WgXcQ' with your YouTube Video ID -->
                         <iframe class="absolute top-0 left-0 w-full h-full" src="https://www.youtube.com/embed/" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
                     </div>
                     <h3 class="text-xl font-bold mb-1">Official Server Trailer</h3>
                     <p class="text-sm text-slate-400">Get a quick overview of our custom features, spawn, and warzones.</p>
                 </div>
 
-                <!-- Video 2 (Gameplay / Tutorial) -->
                 <div class="bg-brand-card p-4 rounded-2xl border border-slate-800 shadow-xl">
                     <div class="relative pb-[56.25%] h-0 rounded-xl overflow-hidden mb-4">
-                        <!-- Replace 'dQw4w9WgXcQ' with your YouTube Video ID -->
                         <iframe class="absolute top-0 left-0 w-full h-full" src="https://www.youtube.com/embed/" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
                     </div>
                     <h3 class="text-xl font-bold mb-1">How to Start: Ecosy Guide</h3>
@@ -274,7 +332,6 @@
         </div>
     </section>
 
-    <!-- FOOTER -->
     <footer class="bg-slate-950 text-slate-400 py-12 border-t border-slate-900">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex flex-col md:flex-row items-center justify-between gap-6">
@@ -287,7 +344,6 @@
                 <p class="text-sm text-center md:text-left">
                     &copy; 2023 Ecosy PvP. All rights reserved. We are not affiliated with Mojang Studios or Microsoft.
                 </p>
-                <!-- Social Icons -->
                 <div class="flex space-x-4">
                     <a href="#" class="hover:text-brand-economy text-xl transition duration-300"><i class="fa-brands fa-discord"></i></a>
                     <a href="#" class="hover:text-brand-pvp text-xl transition duration-300"><i class="fa-brands fa-youtube"></i></a>
@@ -298,7 +354,6 @@
         </div>
     </footer>
 
-    <!-- JAVASCRIPT FOR INTERACTIVE FEATURES -->
     <script>
         // Mobile Menu Toggle
         const btn = document.getElementById('mobile-menu-btn');
@@ -308,6 +363,32 @@
             menu.classList.toggle('hidden');
         });
 
+        // Show More / Show Less Toggle for Skript
+        function toggleCode() {
+            const wrapper = document.getElementById('code-wrapper');
+            const fade = document.getElementById('code-fade');
+            const btnText = document.getElementById('code-btn-text');
+            const btnIcon = document.getElementById('code-btn-icon');
+
+            // Toggle height classes
+            if (wrapper.classList.contains('max-h-64')) {
+                wrapper.classList.remove('max-h-64');
+                wrapper.classList.add('max-h-[2000px]'); // Safe large height for full code
+                fade.classList.add('hidden'); // Hide the dark blend
+                btnText.innerText = "Show Less";
+                btnIcon.className = "fa-solid fa-chevron-up";
+            } else {
+                wrapper.classList.remove('max-h-[2000px]');
+                wrapper.classList.add('max-h-64');
+                fade.classList.remove('hidden'); // Show the dark blend again
+                btnText.innerText = "Show More";
+                btnIcon.className = "fa-solid fa-chevron-down";
+                
+                // Smooth scroll back to section view if needed
+                document.getElementById('ecosy').scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
         // Click to Copy Server IP Function
         function copyIP() {
             const ipText = document.getElementById('server-ip').innerText.trim();
@@ -315,12 +396,10 @@
             const copyIcon = document.getElementById('copy-icon');
 
             navigator.clipboard.writeText(ipText).then(() => {
-                // Change text and icon to show success
                 copyText.innerText = "Copied!";
                 copyText.classList.add("text-brand-economy");
                 copyIcon.className = "fa-solid fa-check text-brand-economy";
 
-                // Reset after 2.5 seconds
                 setTimeout(() => {
                     copyText.innerText = "Copy";
                     copyText.classList.remove("text-brand-economy");
