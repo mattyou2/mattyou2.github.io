@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mattyou Craft - Java Scroll & Craft Edition | Mattyou Studios™</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+            background-color: #0a0a10;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
+        }
+
+        #canvas-container {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        /* HUD Overlay */
+        #hud {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            pointer-events: none;
+            box-sizing: border-box;
+        }
+
+        /* Crosshair */
+        #crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 16px;
+            height: 16px;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 11;
+        }
+        #crosshair::before, #crosshair::after {
+            content: '';
+            position: absolute;
+            background: rgba(255, 255, 255, 0.8);
+        }
+        #crosshair::before { top: 7px; left: 0; width: 16px; height: 2px; }
+        #crosshair::after { left: 7px; top: 0; width: 2px; height: 16px; }
+
+        /* Branding Watermark */
+        .branding {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: rgba(0, 255, 255, 0.9);
+            font-size: 16px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+            z-index: 12;
+        }
+
+        /* Hotbar */
+        #hotbar {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            background: rgba(0, 0, 0, 0.8);
+            border: 3px solid #00ffff;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+            border-radius: 5px;
+            padding: 5px;
+            pointer-events: auto;
+        }
+
+        .hotbar-slot {
+            width: 50px;
+            height: 50px;
+            border: 2px solid #555;
+            margin: 0 4px;
+            background-size: cover;
+            position: relative;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .hotbar-slot.active {
+            border-color: #ff00ff;
+            box-shadow: 0 0 10px #ff00ff;
+        }
+
+        .slot-count {
+            position: absolute;
+            bottom: 2px;
+            right: 4px;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px black;
+        }
+
+        /* Hotbar Selection Text Popup */
+        #hotbar-text {
+            position: absolute;
+            bottom: 90px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            pointer-events: none;
+            z-index: 11;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 4px 12px;
+            border-radius: 4px;
+        }
+
+        /* Mining Progress Bar */
+        #mining-bar-container {
+            position: absolute;
+            top: 60%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            height: 15px;
+            background: rgba(0,0,0,0.6);
+            border: 2px solid #00ffff;
+            border-radius: 5px;
+            display: none;
+            overflow: hidden;
+        }
+
+        #mining-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: #00ffff;
+            box-shadow: 0 0 10px #00ffff;
+        }
+
+        /* Screens: Menu, Inventory, World Creation */
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 10, 15, 0.95);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+
+        h1 {
+            font-size: 48px;
+            margin-bottom: 5px;
+            color: #00ffff;
+            text-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+            letter-spacing: 2px;
+        }
+
+        .subtitle {
+            font-size: 18px;
+            color: #ff00ff;
+            margin-bottom: 40px;
+            font-weight: bold;
+            letter-spacing: 4px;
+        }
+
+        .btn {
+            background: #111;
+            border: 2px solid #00ffff;
+            color: #00ffff;
+            padding: 12px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            width: 280px;
+            text-align: center;
+        }
+
+        .btn:hover {
+            background: #00ffff;
+            color: #111;
+            box-shadow: 0 0 15px #00ffff;
+        }
+
+        /* World Creation Form */
+        .form-group {
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            width: 300px;
+        }
+
+        .form-group label {
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #ccc;
+        }
+
+        .form-group input, .form-group select {
+            padding: 10px;
+            background: #222;
+            border: 2px solid #555;
+            color: white;
+            font-size: 16px;
+            border-radius: 4px;
+        }
+
+        /* Inventory & Crafting Screen */
+        #inventory-screen {
+            display: none;
+            background: rgba(5, 5, 10, 0.9);
+            cursor: default;
+        }
+
+        .inv-container {
+            display: flex;
+            background: #1a1a24;
+            border: 3px solid #00ffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.2);
+            pointer-events: auto;
+            position: relative;
+            gap: 20px;
+        }
+
+        /* Recipe Book Panel (Left) */
+        #recipe-book {
+            width: 260px;
+            background: #11111a;
+            border: 2px solid #2e7d32;
+            border-radius: 6px;
+            padding: 15px;
+            display: none;
+            flex-direction: column;
+            max-height: 480px;
+            overflow-y: auto;
+        }
+
+        .recipe-item {
+            background: #1e1e2a;
+            border: 1px solid #444;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .recipe-item:hover {
+            border-color: #4caf50;
+            background: #252535;
+            box-shadow: 0 0 8px rgba(76, 175, 80, 0.4);
+        }
+
+        /* Main Inventory Layout (Center) */
+        .inv-main-layout {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Crafting Section (Top) */
+        .crafting-section {
+            display: flex;
+            align-items: center;
+            background: #11111a;
+            padding: 15px;
+            border-radius: 6px;
+            border: 2px solid #ff00ff;
+            margin-bottom: 20px;
+            gap: 20px;
+            position: relative;
+        }
+
+        .recipe-book-btn {
+            background: #2e7d32;
+            border: 2px solid #4caf50;
+            color: white;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-weight: bold;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .recipe-book-btn:hover {
+            background: #388e3c;
+            box-shadow: 0 0 8px #4caf50;
+        }
+
+        .crafting-grid-2x2 {
+            display: grid;
+            grid-template-columns: repeat(2, 52px);
+            gap: 6px;
+        }
+
+        .crafting-grid-3x3 {
+            display: grid;
+            grid-template-columns: repeat(3, 52px);
+            gap: 6px;
+        }
+
+        .crafting-arrow {
+            font-size: 32px;
+            color: #00ffff;
+            font-weight: bold;
+            text-shadow: 0 0 10px #00ffff;
+        }
+
+        /* Inventory Section (Bottom) */
+        .inventory-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .inv-grid {
+            display: grid;
+            grid-template-columns: repeat(9, 52px);
+            gap: 6px;
+        }
+
+        .inv-slot {
+            width: 52px;
+            height: 52px;
+            border: 2px solid #444;
+            background: #222;
+            position: relative;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .inv-slot:hover {
+            border-color: #00ffff;
+            background: #2a2a35;
+        }
+
+        .item-draggable {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+        }
+
+        .item-draggable span {
+            font-size: 10px;
+            text-align: center;
+            color: white;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px black;
+            pointer-events: none;
+        }
+
+        /* Floating Held Item Cursor */
+        #held-item-cursor {
+            position: fixed;
+            pointer-events: none;
+            z-index: 1000;
+            display: none;
+            width: 52px;
+            height: 52px;
+            border: 2px solid #ff00ff;
+            box-shadow: 0 0 10px rgba(255, 0, 255, 0.5);
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px black;
+            color: white;
+        }
+
+        /* Minecraft Tooltip */
+        #tooltip {
+            position: fixed;
+            background: rgba(16, 16, 24, 0.95);
+            border: 2px solid #555;
+            padding: 8px 12px;
+            border-radius: 4px;
+            color: white;
+            font-size: 12px;
+            pointer-events: none;
+            z-index: 2000;
+            display: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+
+        .tooltip-title {
+            font-weight: bold;
+            color: #00ffff;
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+
+        .tooltip-desc {
+            color: #ccc;
+            font-style: italic;
+        }
+
+        #world-list {
+            width: 320px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            border: 1px solid #333;
+            background: #111;
+            padding: 10px;
+        }
+
+        .world-item {
+            padding: 10px;
+            border: 1px solid #444;
+            margin-bottom: 8px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            background: #222;
+        }
+
+        .world-item:hover {
+            border-color: #00ffff;
+            background: #1a2a2a;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="canvas-container"></div>
+
+    <!-- Floating Held Item Element -->
+    <div id="held-item-cursor"></div>
+
+    <!-- Minecraft Tooltip -->
+    <div id="tooltip"></div>
+
+    <!-- HUD -->
+    <div id="hud" style="display: none;">
+        <div id="crosshair"></div>
+        <div class="branding">MATTYOU STUDIOS™</div>
+
+        <!-- Hotbar Item Name Popup -->
+        <div id="hotbar-text"></div>
+
+        <!-- Mining Progress -->
+        <div id="mining-bar-container">
+            <div id="mining-bar-fill"></div>
+        </div>
+
+        <!-- Hotbar -->
+        <div id="hotbar"></div>
+    </div>
+
+    <!-- Main Menu Screen -->
+    <div id="menu-screen" class="screen">
+        <h1>MATTYOU CRAFT</h1>
+        <div class="subtitle">JAVA SCROLL & CRAFT EDITION | MATTYOU STUDIOS™</div>
+        
+        <div id="world-list-container" style="display: none; flex-direction: column; align-items: center;">
+            <h3>Selecteer een Wereld</h3>
+            <div id="world-list"></div>
+            <button class="btn" onclick="showCreateWorld()">Nieuwe Wereld</button>
+        </div>
+
+        <div id="main-menu-buttons">
+            <button class="btn" onclick="showWorldSelection()">Speel Mattyou Craft</button>
+        </div>
+    </div>
+
+    <!-- World Creation Screen -->
+    <div id="create-world-screen" class="screen" style="display: none;">
+        <h1>CREËER WERELD</h1>
+        <div class="subtitle">MATTYOU STUDIOS™</div>
+
+        <div class="form-group">
+            <label for="world-name">Wereld Naam</label>
+            <input type="text" id="world-name" value="Mijn Craft Wereld">
+        </div>
+
+        <div class="form-group">
+            <label for="world-mode">Spelmodus</label>
+            <select id="world-mode">
+                <option value="survival">Survival (Overleven & Verzamelen)</option>
+                <option value="creative">Creative (Oneindig bouwen & Vliegen)</option>
+            </select>
+        </div>
+
+        <button class="btn" onclick="createAndStartWorld()">INITIALISEER WERELD</button>
+        <button class="btn" style="border-color: #ff0055; color: #ff0055;" onclick="cancelWorldCreation()">Annuleer</button>
+    </div>
+
+    <!-- Inventory & Crafting Screen -->
+    <div id="inventory-screen" class="screen">
+        <div class="inv-container" id="inv-container">
+            
+            <!-- RECIPE BOOK PANEL (Left) -->
+            <div id="recipe-book">
+                <h3 style="color: #4caf50; margin-top: 0; margin-bottom: 10px; text-align: center;">📖 RECEPTEN</h3>
+                <div id="recipe-list-container"></div>
+            </div>
+
+            <!-- MAIN INVENTORY LAYOUT (Center) -->
+            <div class="inv-main-layout">
+                
+                <!-- TOP SECTION: Crafting Grid (2x2 of 3x3) -->
+                <div class="crafting-section">
+                    <button class="recipe-book-btn" onclick="game.toggleRecipeBook()">📖 Recepten</button>
+                    
+                    <div id="crafting-layout-container" style="display: flex; align-items: center; gap: 15px;">
+                        <!-- Wordt dynamisch gegenereerd (2x2 of 3x3) -->
+                    </div>
+                </div>
+
+                <!-- BOTTOM SECTION: Inventaris & Hotbar -->
+                <div class="inventory-section">
+                    <h3 style="color: #00ffff; margin-top: 0; margin-bottom: 8px;">INVENTARIS</h3>
+                    <div class="inv-grid" id="inv-grid"></div>
+                    
+                    <h3 style="color: #ff00ff; margin-top: 15px; margin-bottom: 8px;">HOTBAR</h3>
+                    <div class="inv-grid" id="inv-hotbar-grid"></div>
+                </div>
+
+            </div>
+
+        </div>
+        <p style="color: #888; margin-top: 15px;">Druk op <b style="color: white;">'E'</b> of klik buiten het menu om terug te keren naar de game.</p>
+    </div>
+
+    <!-- ============================================================================
+         MATTYOU CRAFT - MODULAIRE SCRIPTS (Laden in de juiste volgorde)
+         ============================================================================ -->
+    <!-- 1. Externe 3D Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <!-- 2. Texturen & Blok Configuraties -->
+    <script src="textures.js"></script>
+
+    <!-- 3. Toetsenbord & Muis Input Manager -->
+    <script src="input.js"></script>
+
+    <!-- 4. Speler Physics & Inventaris Logica -->
+    <script src="player.js"></script>
+
+    <!-- 5. Wereld & Chunk Generatie -->
+    <script src="world.js"></script>
+
+    <!-- 6. Hoofd Game Engine & UI (Start de game) -->
+    <script src="game.js"></script>
+
+</body>
+</html>
