@@ -68,7 +68,7 @@ class Game {
         this.scene.add(ambientLight);
 
         const dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
-        dirLight.position.set(10, 20, 10);
+        dirLight.position.set(10, 40, 10);
         this.scene.add(dirLight);
 
         // Resize handler
@@ -118,7 +118,7 @@ class Game {
         });
     }
 
-    // API Wrappers voor WorldManager (zodat player.js en game.js makkelijk communiceren)
+    // API Wrappers voor WorldManager
     getBlock(x, y, z) { return this.worldManager.getBlock(x, y, z); }
     setBlock(x, y, z, id) { this.worldManager.setBlock(x, y, z, id); }
     updateChunksAroundPlayer() { this.worldManager.updateChunksAroundPlayer(this.player.position); }
@@ -177,6 +177,12 @@ class Game {
 
             const blockId = this.getBlock(vx, vy, vz);
 
+            // Bedrock (ID 45) is onbreekbaar!
+            if (blockId === 45) {
+                this.resetMining();
+                return;
+            }
+
             if (blockId !== 0) {
                 if (this.activeWorld.mode === 'creative') {
                     this.breakBlock(vx, vy, vz, blockId);
@@ -193,11 +199,13 @@ class Game {
                     const activeSlot = this.player.hotbar[this.player.activeHotbarIdx];
                     let speedMultiplier = 1.0;
 
+                    // Check of de speler een pickaxe vasthoudt en hoe snel die is
                     if (activeSlot && activeSlot.id && BLOCK_TYPES[activeSlot.id].isItem && BLOCK_TYPES[activeSlot.id].speedMultiplier) {
-                        if (blockId === 3) { // Steen sneller hakken met pickaxe
+                        const isStoneOrOre = [3, 17, 18, 19, 20, 41, 43, 44, 83, 84].includes(blockId);
+                        if (isStoneOrOre) {
                             speedMultiplier = BLOCK_TYPES[activeSlot.id].speedMultiplier;
                         } else {
-                            speedMultiplier = BLOCK_TYPES[activeSlot.id].speedMultiplier * 0.5;
+                            speedMultiplier = BLOCK_TYPES[activeSlot.id].speedMultiplier * 0.3;
                         }
                     }
 
@@ -225,7 +233,13 @@ class Game {
     breakBlock(x, y, z, blockId) {
         this.setBlock(x, y, z, 0);
         if (this.activeWorld.mode === 'survival') {
-            this.player.addItemToInventory(blockId, 1);
+            // Drop specifieke items bij het slopen van bepaalde blokken (bijv. Cobblestone van Steen)
+            let dropId = blockId;
+            if (blockId === 3) dropId = 41; // Steen geeft Cobblestone
+            if (blockId === 17) dropId = 24; // Steenkoolerts geeft Coal item
+            if (blockId === 20 || blockId === 83) dropId = 27; // Diamanterts geeft Diamant item
+
+            this.player.addItemToInventory(dropId, 1);
         }
         this.updateHotbarUI();
     }
@@ -371,7 +385,8 @@ class Game {
         const container = document.getElementById('recipe-list-container');
         container.innerHTML = '';
 
-        const recipesToUse = this.isAdvancedCrafting ? ADVANCED_RECIPES : BASE_RECIPES;
+        // Filter recepten op basis van de grootte van de actieve grid (2x2 of 3x3)
+        const recipesToUse = RECIPES.filter(r => this.isAdvancedCrafting ? true : !r.is3x3);
 
         recipesToUse.forEach(recipe => {
             const el = document.createElement('div');
@@ -410,7 +425,6 @@ class Game {
             return;
         }
 
-        // Vul de grid op basis van 2x2 of 3x3 recepten uit textures.js
         const pattern = this.isAdvancedCrafting ? recipe.pattern3x3 : recipe.pattern2x2;
         if (!pattern) return;
 
@@ -587,9 +601,9 @@ class Game {
             }
         }
 
-        // 4. PATROON RECEPTEN (Gereedschap)
+        // 4. PATROON RECEPTEN uit recipes.js
         if (!matched) {
-            const recipesToUse = this.isAdvancedCrafting ? ADVANCED_RECIPES : BASE_RECIPES;
+            const recipesToUse = RECIPES.filter(r => this.isAdvancedCrafting ? true : !r.is3x3);
             for (let recipe of recipesToUse) {
                 if (recipe.result === 6 || recipe.result === 8 || recipe.result === 7) continue;
 
@@ -800,13 +814,17 @@ class Game {
             this.player.inventory = Array(27).fill(null).map(() => ({ id: null, count: 0 }));
             this.player.hotbar = Array(9).fill(null).map(() => ({ id: null, count: 0 }));
             
-            // In creative krijgt de speler direct alle blokken
-            for (let i = 1; i <= 12; i++) {
-                this.player.inventory[i - 1] = { id: i, count: 99 };
-            }
+            // In creative krijgt de speler direct alle coole blokken en tools!
+            const creativeItems = [1, 2, 3, 4, 5, 6, 7, 17, 18, 19, 20, 41, 43, 44, 77, 8, 24, 25, 26, 27, 9, 10, 48, 50, 11, 12, 51, 53, 74, 76];
+            creativeItems.forEach((id, idx) => {
+                if (idx < 27) {
+                    this.player.inventory[idx] = { id: id, count: 99 };
+                }
+            });
         }
 
-        this.player.position.set(8, 12, 8);
+        // Spawn de speler veilig bovenop de nieuwe heuvels (y = 58)
+        this.player.position.set(8, 58, 8);
         this.updateChunksAroundPlayer();
         this.updateHotbarUI();
 
