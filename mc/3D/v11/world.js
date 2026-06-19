@@ -1,5 +1,5 @@
 // ============================================================================
-// MATTYOU CRAFT - WORLD & CHUNK GENERATION SYSTEM (world.js)
+// MATTYOU CRAFT - ADVANCED DEEP WORLD & CAVE GENERATION (world.js)
 // ============================================================================
 
 class WorldManager {
@@ -10,19 +10,15 @@ class WorldManager {
         this.game = game;
         
         this.chunkSize = 16;
-        this.worldHeight = 16;
+        this.worldHeight = 64; // Verhoogd naar 64 voor diepe grotten en ertslagen!
         this.chunks = {};
         this.blockMeshes = {};
         this.loadedChunks = new Set();
         
-        // De actieve wereld-instellingen (naam, modus)
-        this.name = "Mijn Wereld";
+        this.name = "Mijn Diepe Wereld";
         this.mode = "survival"; 
     }
 
-    /**
-     * Reset de complete wereld (handig bij het wisselen van werelden).
-     */
     clearWorld() {
         Object.keys(this.blockMeshes).forEach(blockKey => {
             this.game.scene.remove(this.blockMeshes[blockKey]);
@@ -32,9 +28,6 @@ class WorldManager {
         this.loadedChunks.clear();
     }
 
-    /**
-     * Berekent in welke chunk een specifieke X- en Z-coördinaat ligt.
-     */
     getChunkCoords(x, z) {
         const cx = Math.floor(x / this.chunkSize);
         const cz = Math.floor(z / this.chunkSize);
@@ -42,11 +35,11 @@ class WorldManager {
     }
 
     /**
-     * Genereert een nieuwe chunk (16x16x16 blokken) op basis van chunk-coördinaten.
+     * Genereert een diepe 3D chunk met grotten en ertslagen.
      */
     generateChunk(cx, cz) {
         const chunkKey = `${cx},${cz}`;
-        if (this.chunks[chunkKey]) return; // Al gegenereerd!
+        if (this.chunks[chunkKey]) return;
 
         this.chunks[chunkKey] = {};
         const geom = new THREE.BoxGeometry(1, 1, 1);
@@ -56,53 +49,110 @@ class WorldManager {
                 const worldX = cx * this.chunkSize + x;
                 const worldZ = cz * this.chunkSize + z;
 
-                // Formule voor heuvelachtig terrein
-                const height = Math.floor(Math.sin(worldX / 10) * Math.cos(worldZ / 10) * 4 + 7);
+                // Bepaal de hoogte van het oppervlak (tussen laag 48 en 56)
+                const surfaceHeight = Math.floor(
+                    Math.sin(worldX / 12) * Math.cos(worldZ / 12) * 4 + 50
+                );
 
                 for (let y = 0; y < this.worldHeight; y++) {
-                    let blockType = 0; // Lucht
+                    let blockType = 0; // Standaard lucht
 
-                    if (y < height - 3) {
-                        blockType = 3; // Steen (Stone)
-                    } else if (y < height - 1) {
-                        blockType = 2; // Aarde (Dirt)
-                    } else if (y === height - 1) {
-                        blockType = 1; // Gras (Grass)
+                    // 1. BEPALING VAN DE BLOK-LAGEN (Van onder naar boven)
+                    if (y === 0) {
+                        blockType = 45; // Onbreekbare Bedrock bodem
+                    } 
+                    else if (y < 5) {
+                        // Bedrock overgangslaag (mix van bedrock en deepslate)
+                        blockType = Math.random() < 0.45 ? 45 : 43;
+                    } 
+                    else if (y < 20) {
+                        blockType = 43; // Deepslate laag
+                    } 
+                    else if (y < surfaceHeight - 3) {
+                        blockType = 3;  // Steen (Stone) laag
+                    } 
+                    else if (y < surfaceHeight) {
+                        blockType = 2;  // Aarde (Dirt) onder de grasmat
+                    } 
+                    else if (y === surfaceHeight) {
+                        blockType = 1;  // Gras (Grass) toplaag
                     }
 
+                    // 2. 3D GROTTEN GENERATOR (Graaft tunnels in steen en deepslate)
+                    if (blockType !== 0 && blockType !== 45 && y < surfaceHeight - 4) {
+                        // Wiskundige 3D sinus-ruis om grottunnels te maken
+                        const caveNoise = Math.sin(worldX * 0.25) * Math.cos(y * 0.2) * Math.sin(worldZ * 0.25);
+                        if (caveNoise > 0.42) {
+                            blockType = 0; // Graaf grot (maak lucht)
+                        }
+                    }
+
+                    // 3. ERTS GENERATOR (Alleen als het blok niet is weggegraven door een grot)
+                    if (blockType === 3) { // In de gewone stenen laag
+                        const rand = Math.random();
+                        if (rand < 0.015 && y < 40) {
+                            blockType = 17; // Steenkool Erts
+                        } else if (rand < 0.025 && rand >= 0.015 && y < 35) {
+                            blockType = 18; // IJzer Erts
+                        } else if (rand < 0.029 && rand >= 0.025 && y < 25) {
+                            blockType = 19; // Goud Erts
+                        } else if (rand < 0.031 && rand >= 0.029 && y < 15) {
+                            blockType = 20; // Diamant Erts (Zeldzaam in steen)
+                        }
+                    } 
+                    else if (blockType === 43) { // In de Deepslate laag
+                        const rand = Math.random();
+                        if (rand < 0.015) {
+                            blockType = 84; // Deepslate IJzer Erts
+                        } else if (rand < 0.020 && rand >= 0.015) {
+                            blockType = 83; // Deepslate Diamant Erts (Meer kans diep onder de grond!)
+                        } else if (rand < 0.022 && rand >= 0.020) {
+                            blockType = 44; // Obsidian pockets
+                        }
+                    }
+
+                    // Plaats het blok in de 3D wereld
                     if (blockType !== 0) {
                         this.setBlockInChunk(worldX, y, worldZ, blockType, chunkKey, geom);
                     }
                 }
 
-                // Kans op het spawnen van een boom op het gras
+                // 4. BOMEN SPAWNER (Alleen op gras en als er geen grot direct onder zit)
                 if (Math.random() < 0.02) {
-                    const treeY = height;
-                    this.spawnTree(worldX, treeY, worldZ, chunkKey, geom);
+                    const treeY = surfaceHeight + 1;
+                    // Check of er gras onder de boom ligt
+                    if (this.getBlock(worldX, surfaceHeight, worldZ) === 1) {
+                        this.spawnTree(worldX, treeY, worldZ, chunkKey, geom);
+                    }
                 }
             }
         }
     }
 
-    /**
-     * Spawnt een boom (stam van hout en bladerdak).
-     */
     spawnTree(tx, ty, tz, chunkKey, geom) {
-        // Stam van 3 blokken hoog (ID 4 = Wood)
-        for (let h = 0; h < 3; h++) {
+        // Stam van 4 blokken hoog (ID 4 = Wood)
+        for (let h = 0; h < 4; h++) {
             this.setBlockInChunk(tx, ty + h, tz, 4, chunkKey, geom);
         }
-        // Bladerdak (ID 5 = Leaves)
-        for (let x = -1; x <= 1; x++) {
-            for (let z = -1; z <= 1; z++) {
-                this.setBlockInChunk(tx + x, ty + 3, tz + z, 5, chunkKey, geom);
+        // Bladerdak (ID 5 = Leaves) rondom de top van de stam
+        for (let x = -2; x <= 2; x++) {
+            for (let z = -2; z <= 2; z++) {
+                for (let y = 2; y <= 4; y++) {
+                    // Maak een mooie ronde boomtop in plaats van een vierkant blok
+                    if (Math.abs(x) + Math.abs(z) < 3) {
+                        const leafX = tx + x;
+                        const leafY = ty + y;
+                        const leafZ = tz + z;
+                        // Plaats alleen bladeren als er nog niks staat (voorkomt overschrijven stam)
+                        if (this.getBlock(leafX, leafY, leafZ) === 0) {
+                            this.setBlockInChunk(leafX, leafY, leafZ, 5, chunkKey, geom);
+                        }
+                    }
+                }
             }
         }
     }
 
-    /**
-     * Interne helper om een blok direct in de chunk-data en 3D-scene te zetten tijdens generatie.
-     */
     setBlockInChunk(x, y, z, typeId, chunkKey, sharedGeom) {
         const blockKey = `${x},${y},${z}`;
         this.chunks[chunkKey][blockKey] = typeId;
@@ -116,10 +166,6 @@ class WorldManager {
         }
     }
 
-    /**
-     * Vraagt op welk bloktype er op een specifieke 3D-positie staat.
-     * @returns {number} ID van het blok (0 = lucht)
-     */
     getBlock(x, y, z) {
         const { cx, cz } = this.getChunkCoords(x, z);
         const chunkKey = `${cx},${cz}`;
@@ -127,9 +173,6 @@ class WorldManager {
         return this.chunks[chunkKey][`${Math.floor(x)},${Math.floor(y)},${Math.floor(z)}`] || 0;
     }
 
-    /**
-     * Plaatst of verwijdert een blok in de wereld (door speler of game-events).
-     */
     setBlock(x, y, z, typeId) {
         const { cx, cz } = this.getChunkCoords(x, z);
         const chunkKey = `${cx},${cz}`;
@@ -139,7 +182,6 @@ class WorldManager {
             this.chunks[chunkKey] = {};
         }
 
-        // Verwijder oude mesh als die er al stond
         if (this.blockMeshes[blockKey]) {
             this.game.scene.remove(this.blockMeshes[blockKey]);
             delete this.blockMeshes[blockKey];
@@ -157,15 +199,11 @@ class WorldManager {
         }
     }
 
-    /**
-     * Laadt chunks rondom de speler in en verwijdert chunks die te ver weg zijn (render distance).
-     */
     updateChunksAroundPlayer(playerPosition) {
         const { cx, cz } = this.getChunkCoords(playerPosition.x, playerPosition.z);
-        const radius = 2; // Render distance (2 chunks in elke richting)
+        const radius = 2; // Render distance (2 chunks rondom de speler)
         const activeKeys = new Set();
 
-        // Genereer nieuwe chunks binnen de radius
         for (let x = -radius; x <= radius; x++) {
             for (let z = -radius; z <= radius; z++) {
                 const nCX = cx + x;
@@ -180,7 +218,6 @@ class WorldManager {
             }
         }
 
-        // Verwijder chunks die buiten de render distance vallen om lag te voorkomen
         this.loadedChunks.forEach(key => {
             if (!activeKeys.has(key)) {
                 const chunkData = this.chunks[key];
