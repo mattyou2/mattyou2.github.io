@@ -29,6 +29,12 @@ class Player {
      * @param {number} dt - Delta time
      */
     update(dt) {
+        // FIX: Void rescue! Als de speler toch door de wereld valt (Y < -10), zet hem terug op veilige hoogte.
+        if (this.position.y < -10) {
+            this.position.set(8, 58, 8);
+            this.velocity.set(0, 0, 0);
+        }
+
         // 1. Camera rotatie via muisbeweging (Gevoeligheid toegepast!)
         const mouse = this.game.input.consumeMouseMove();
         const sensMultiplier = (this.game.settings.sensitivity / 100) * 0.0025;
@@ -144,6 +150,10 @@ class Player {
         for (let x = minX; x <= maxX; x++) {
             for (let y = minY; y <= maxY; y++) {
                 for (let z = minZ; z <= maxZ; z++) {
+                    // FIX: Als de chunk nog niet geladen is, behandel het als een onzichtbare muur!
+                    if (!this.game.worldManager.isChunkLoaded(x, z)) {
+                        return true; 
+                    }
                     if (this.game.getBlock(x, y, z) !== 0) {
                         return true;
                     }
