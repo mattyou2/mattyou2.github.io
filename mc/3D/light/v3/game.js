@@ -957,6 +957,19 @@ class Game {
         this.camera.fov = this.settings.fov;
         this.camera.updateProjectionMatrix();
 
+        // FIX: Genereer de directe chunks rondom de spawnpositie direct synchroon in!
+        // Dit voorkomt dat je bij het inladen direct door de grond valt.
+        const spawnX = this.player.position.x;
+        const spawnZ = this.player.position.z;
+        const { cx, cz } = this.worldManager.getChunkCoords(spawnX, spawnZ);
+        for (let x = -1; x <= 1; x++) {
+            for (let z = -1; z <= 1; z++) {
+                const key = `${cx + x},${cz + z}`;
+                this.worldManager.generateChunk(cx + x, cz + z);
+                this.worldManager.loadedChunks.add(key);
+            }
+        }
+
         this.updateChunksAroundPlayer();
         this.updateHotbarUI();
 
