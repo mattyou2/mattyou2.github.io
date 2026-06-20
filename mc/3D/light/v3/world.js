@@ -36,6 +36,14 @@ class WorldManager {
         return { cx, cz };
     }
 
+    /**
+     * FIX: Controleert of een specifieke chunk al volledig is gegenereerd en geladen.
+     */
+    isChunkLoaded(x, z) {
+        const { cx, cz } = this.getChunkCoords(x, z);
+        return this.loadedChunks.has(`${cx},${cz}`);
+    }
+
     shouldRenderBlock(x, y, z) {
         const type = this.getBlock(x, y, z);
         if (type === 0) return false;
