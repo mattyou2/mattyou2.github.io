@@ -9,20 +9,16 @@ let gameState = {
     }
 };
 
-// Plant configuratie (groeitijd in seconden, verkoopprijs, zaadprijs)
 const PLANT_TYPES = {
-    carrot: { name: 'Wortel', seedPrice: 10, sellPrice: 25, growthTime: 8, color: 0xffa500 },
-    tomato: { name: 'Tomaat', seedPrice: 25, sellPrice: 65, growthTime: 15, color: 0xff0000 },
-    sunflower: { name: 'Zonnebloem', seedPrice: 50, sellPrice: 150, growthTime: 25, color: 0xffd700 }
+    carrot: { name: 'Wortel', seedPrice: 10, sellPrice: 25, growthTime: 8 },
+    tomato: { name: 'Tomaat', seedPrice: 25, sellPrice: 65, growthTime: 15 },
+    sunflower: { name: 'Zonnebloem', seedPrice: 50, sellPrice: 150, growthTime: 25 }
 };
 
 // --- GELUIDSEFFECTEN (Web Audio API) ---
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
 function playSound(type) {
-    if (audioCtx.state === 'suspended') {
-        audioCtx.resume();
-    }
+    if (audioCtx.state === 'suspended') audioCtx.resume();
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
     osc.connect(gain);
@@ -34,125 +30,167 @@ function playSound(type) {
         osc.frequency.exponentialRampToValueAtTime(400, audioCtx.currentTime + 0.15);
         gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.15);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.15);
     } else if (type === 'harvest') {
         osc.type = 'triangle';
         osc.frequency.setValueAtTime(300, audioCtx.currentTime);
         osc.frequency.exponentialRampToValueAtTime(600, audioCtx.currentTime + 0.2);
         gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.2);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.2);
     } else if (type === 'sell') {
-        // Kassa geluidje!
         osc.type = 'sine';
         osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
         osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.08); // E5
         osc.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.16); // G5
         gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.3);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.3);
     }
 }
 
 // --- THREE.JS SETUP ---
 const container = document.getElementById('canvas-container');
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x7ec0ee); // Mooie blauwe lucht
+scene.background = new THREE.Color(0x7ec0ee); // Blauwe lucht
 
 // Camera
 const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.set(0, 10, 12);
 
-// Renderer met schaduwen
+// Renderer
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 container.appendChild(renderer.domElement);
 
-// Controls (Orbit)
-const controls = new THREE.OrbitControls(camera, renderer.domElement);
-controls.enableDamping = true;
-controls.dampingFactor = 0.05;
-controls.maxPolarAngle = Math.PI / 2.1; // Voorkom dat de camera onder de grond gaat
-controls.minDistance = 5;
-controls.maxDistance = 25;
-
-// --- BELICHTING ---
+// Belichting
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
 scene.add(ambientLight);
 
 const sunLight = new THREE.DirectionalLight(0xffffff, 0.8);
-sunLight.position.set(10, 20, 10);
+sunLight.position.set(15, 30, 15);
 sunLight.castShadow = true;
 sunLight.shadow.mapSize.width = 2048;
 sunLight.shadow.mapSize.height = 2048;
-sunLight.shadow.bias = -0.001;
+sunLight.shadow.bias = -0.0005;
 scene.add(sunLight);
 
 // --- WERELD OPBOUWEN ---
-// Grasveld (Ondergrond)
-const grassGeo = new THREE.BoxGeometry(20, 0.5, 20);
-const grassMat = new THREE.MeshStandardMaterial({ color: 0x557a2b, roughness: 0.8 });
+// Grasveld (Groter gemaakt om lekker rond te rennen)
+const grassGeo = new THREE.BoxGeometry(40, 0.5, 40);
+const grassMat = new THREE.MeshStandardMaterial({ color: 0x557a2b, roughness: 0.9 });
 const grass = new THREE.Mesh(grassGeo, grassMat);
 grass.position.y = -0.25;
 grass.receiveShadow = true;
 scene.add(grass);
 
-// Decoratieve hekken rondom de tuin
-function createFence() {
-    const fenceGroup = new THREE.Group();
-    const woodMat = new THREE.MeshStandardMaterial({ color: 0x8B5A2B, roughness: 0.9 });
-    
-    // Horizontale balken
-    const barGeo = new THREE.BoxGeometry(18, 0.15, 0.15);
-    const bar1 = new THREE.Mesh(barGeo, woodMat);
-    bar1.position.set(0, 0.5, 0);
-    const bar2 = new THREE.Mesh(barGeo, woodMat);
-    bar2.position.set(0, 1.0, 0);
-    fenceGroup.add(bar1, bar2);
+// --- SPELER AANMAKEN (Cute 3D Robot/Karakter) ---
+const playerGroup = new THREE.Group();
 
-    // Verticale paaltjes
-    for(let i = -9; i <= 9; i += 2) {
-        const postGeo = new THREE.BoxGeometry(0.2, 1.4, 0.2);
-        const post = new THREE.Mesh(postGeo, woodMat);
-        post.position.set(i, 0.7, 0);
-        post.castShadow = true;
-        fenceGroup.add(post);
-    }
-    return fenceGroup;
+// Lichaam (Blauwe capsule)
+const bodyGeo = new THREE.CylinderGeometry(0.4, 0.4, 1.0, 16);
+const bodyMat = new THREE.MeshStandardMaterial({ color: 0x2980b9, roughness: 0.5 });
+const body = new THREE.Mesh(bodyGeo, bodyMat);
+body.position.y = 0.7;
+body.castShadow = true;
+playerGroup.add(body);
+
+// Hoofd (Gele bol)
+const headGeo = new THREE.SphereGeometry(0.35, 16, 16);
+const headMat = new THREE.MeshStandardMaterial({ color: 0xf1c40f, roughness: 0.5 });
+const head = new THREE.Mesh(headGeo, headMat);
+head.position.y = 1.35;
+head.castShadow = true;
+playerGroup.add(head);
+
+// Oogjes (Zwart)
+const eyeGeo = new THREE.SphereGeometry(0.06, 8, 8);
+const eyeMat = new THREE.MeshStandardMaterial({ color: 0x2c3e50 });
+const leftEye = new THREE.Mesh(eyeGeo, eyeMat);
+leftEye.position.set(0.12, 1.4, 0.3);
+const rightEye = new THREE.Mesh(eyeGeo, eyeMat);
+rightEye.position.set(-0.12, 1.4, 0.3);
+playerGroup.add(leftEye, rightEye);
+
+// Schattig hoedje (Rood)
+const hatGeo = new THREE.ConeGeometry(0.25, 0.4, 16);
+const hatMat = new THREE.MeshStandardMaterial({ color: 0xe74c3c });
+const hat = new THREE.Mesh(hatGeo, hatMat);
+hat.position.y = 1.7;
+hat.rotation.x = 0.1;
+hat.castShadow = true;
+playerGroup.add(hat);
+
+playerGroup.position.set(0, 0, 5); // Startpositie
+scene.add(playerGroup);
+
+// --- 3D KRAAMPJES BOUWEN (Shop & Sell) ---
+function createStall(roofColor) {
+    const stallGroup = new THREE.Group();
+    const woodMat = new THREE.MeshStandardMaterial({ color: 0x5c4033, roughness: 0.9 });
+    
+    // Toonbank (Tafel)
+    const tableGeo = new THREE.BoxGeometry(2.5, 0.8, 1.2);
+    const table = new THREE.Mesh(tableGeo, woodMat);
+    table.position.y = 0.4;
+    table.castShadow = true;
+    table.receiveShadow = true;
+    stallGroup.add(table);
+
+    // 4 Palen voor het dak
+    const poleGeo = new THREE.CylinderGeometry(0.05, 0.05, 1.8, 8);
+    const polePositions = [
+        [-1.1, 0.5], [1.1, 0.5], [-1.1, -0.5], [1.1, -0.5]
+    ];
+    polePositions.forEach(pos => {
+        const pole = new THREE.Mesh(poleGeo, woodMat);
+        pole.position.set(pos[0], 0.9, pos[1]);
+        pole.castShadow = true;
+        stallGroup.add(pole);
+    });
+
+    // Het Dak (Gekleurd)
+    const roofGeo = new THREE.BoxGeometry(2.8, 0.2, 1.5);
+    const roofMat = new THREE.MeshStandardMaterial({ color: roofColor, roughness: 0.5 });
+    const roof = new THREE.Mesh(roofGeo, roofMat);
+    roof.position.y = 1.8;
+    roof.castShadow = true;
+    stallGroup.add(roof);
+
+    return stallGroup;
 }
 
-const fenceBack = createFence();
-fenceBack.position.set(0, 0, -9.5);
-scene.add(fenceBack);
+// Shop Kraam (Rood dak) links achteren
+const shopStall = createStall(0xe74c3c);
+shopStall.position.set(-7, 0, -6);
+shopStall.rotation.y = Math.PI / 4;
+scene.add(shopStall);
 
-// --- AKKER PLOTS (3x3 Grid) ---
+// Sell Kraam (Groen dak) rechts achteren
+const sellStall = createStall(0x2ecc71);
+sellStall.position.set(7, 0, -6);
+sellStall.rotation.y = -Math.PI / 4;
+scene.add(sellStall);
+
+// --- AKKER PLOTS (3x3 Grid in het midden) ---
 const plots = [];
-const plotGroup = new THREE.Group();
-const plotSpacing = 3.0;
-
-const dirtGeo = new THREE.BoxGeometry(2.2, 0.15, 2.2);
+const plotSpacing = 3.5;
+const dirtGeo = new THREE.BoxGeometry(2.4, 0.1, 2.4);
 const dirtMat = new THREE.MeshStandardMaterial({ color: 0x4a2f13, roughness: 0.9 });
 
 for (let x = -1; x <= 1; x++) {
     for (let z = -1; z <= 1; z++) {
         const plotMesh = new THREE.Mesh(dirtGeo, dirtMat);
-        plotMesh.position.set(x * plotSpacing, 0.08, z * plotSpacing);
+        plotMesh.position.set(x * plotSpacing, 0.05, z * plotSpacing);
         plotMesh.receiveShadow = true;
-        plotMesh.castShadow = true;
         
-        // Custom data koppelen aan de mesh
         plotMesh.userData = {
             isPlot: true,
             planted: false,
             plantType: null,
-            growth: 0, // 0 tot 1
-            plantMesh: null,
-            growthIndicator: null
+            growth: 0,
+            plantMesh: null
         };
         
         scene.add(plotMesh);
@@ -166,24 +204,20 @@ function createPlant3D(type, growthStage) {
     const greenMat = new THREE.MeshStandardMaterial({ color: 0x2e7d32, roughness: 0.6 });
 
     if (type === 'carrot') {
-        // Wortel model
         if (growthStage < 0.4) {
-            // Klein groen sprietje
             const stemGeo = new THREE.ConeGeometry(0.05, 0.4, 4);
             const stem = new THREE.Mesh(stemGeo, greenMat);
             stem.position.y = 0.2;
             plantGroup.add(stem);
         } else {
-            // Oranje wortel die in de grond zit + groen loof
             const orangeMat = new THREE.MeshStandardMaterial({ color: 0xff6f00, roughness: 0.5 });
             const bodyGeo = new THREE.ConeGeometry(0.15, 0.6, 8);
             const body = new THREE.Mesh(bodyGeo, orangeMat);
-            body.rotation.x = Math.PI; // Punt naar beneden
+            body.rotation.x = Math.PI;
             body.position.y = 0.1;
             body.castShadow = true;
             plantGroup.add(body);
 
-            // Groene bladeren bovenop
             for (let i = 0; i < 3; i++) {
                 const leafGeo = new THREE.ConeGeometry(0.08, 0.5, 4);
                 const leaf = new THREE.Mesh(leafGeo, greenMat);
@@ -195,7 +229,6 @@ function createPlant3D(type, growthStage) {
         }
     } 
     else if (type === 'tomato') {
-        // Tomaat model
         const stemGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.8 * growthStage, 5);
         const stem = new THREE.Mesh(stemGeo, greenMat);
         stem.position.y = (0.8 * growthStage) / 2;
@@ -203,23 +236,18 @@ function createPlant3D(type, growthStage) {
         plantGroup.add(stem);
 
         if (growthStage >= 0.7) {
-            // Rode tomaten ballen
             const redMat = new THREE.MeshStandardMaterial({ color: 0xd32f2f, roughness: 0.3 });
             const tomatoGeo = new THREE.SphereGeometry(0.15, 8, 8);
-            
             const t1 = new THREE.Mesh(tomatoGeo, redMat);
             t1.position.set(0.15, 0.4, 0.1);
             t1.castShadow = true;
-            
             const t2 = new THREE.Mesh(tomatoGeo, redMat);
             t2.position.set(-0.15, 0.6, -0.1);
             t2.castShadow = true;
-
             plantGroup.add(t1, t2);
         }
     } 
     else if (type === 'sunflower') {
-        // Zonnebloem model
         const height = 1.5 * growthStage;
         const stemGeo = new THREE.CylinderGeometry(0.05, 0.05, height, 6);
         const stem = new THREE.Mesh(stemGeo, greenMat);
@@ -228,18 +256,15 @@ function createPlant3D(type, growthStage) {
         plantGroup.add(stem);
 
         if (growthStage >= 0.8) {
-            // Bloemhoofd
             const flowerGroup = new THREE.Group();
             flowerGroup.position.y = height;
 
-            // Gele blaadjes (schijf)
             const yellowMat = new THREE.MeshStandardMaterial({ color: 0xfbc02d, roughness: 0.5 });
             const petalGeo = new THREE.CylinderGeometry(0.4, 0.4, 0.08, 12);
             const petals = new THREE.Mesh(petalGeo, yellowMat);
             petals.rotation.x = Math.PI / 2;
             flowerGroup.add(petals);
 
-            // Bruine kern
             const brownMat = new THREE.MeshStandardMaterial({ color: 0x3e2723, roughness: 0.9 });
             const centerGeo = new THREE.CylinderGeometry(0.2, 0.2, 0.1, 10);
             const center = new THREE.Mesh(centerGeo, brownMat);
@@ -251,71 +276,108 @@ function createPlant3D(type, growthStage) {
         }
     }
 
-    // Schaal de plant op basis van de groei (zacht effect)
     const scale = Math.max(0.2, growthStage);
     plantGroup.scale.set(scale, scale, scale);
-
     return plantGroup;
 }
 
-// --- INTERACTIE (Raycasting) ---
-const raycaster = new THREE.Raycaster();
-const mouse = new THREE.Vector2();
+// --- CONTROLS & INPUTS ---
+const keys = { w: false, a: false, s: false, d: false, ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false };
+let keyEPressed = false;
+let holdETimer = 0;
+const requiredHoldTime = 4000; // 4 seconden in milliseconden
+let lastTime = performance.now();
 
-window.addEventListener('click', onDocumentMouseDown, false);
+window.addEventListener('keydown', (e) => {
+    const key = e.key.toLowerCase();
+    if (key === 'w' || key === 'a' || key === 's' || key === 'd') keys[key] = true;
+    if (e.key.startsWith('Arrow')) keys[e.key] = true;
 
-function onDocumentMouseDown(event) {
-    // Voorkom klikken op 3D als je op UI klikt
-    if (event.target.tagName === 'BUTTON' || event.target.closest('.card')) return;
+    // 'E' Toets logica
+    if (e.key.toLowerCase() === 'e' && !keyEPressed) {
+        keyEPressed = true;
+        holdETimer = 0; // Reset timer bij indrukken
+    }
 
-    // Bereken muispositie in genormaliseerde apparaatcoördinaten
-    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    // Spatiebalk voor planten/oogsten bij akker
+    if (e.key === ' ') {
+        e.preventDefault();
+        tryInteractWithNearbyPlot();
+    }
+});
 
-    raycaster.setFromCamera(mouse, camera);
-    const intersects = raycaster.intersectObjects(plots);
+window.addEventListener('keyup', (e) => {
+    const key = e.key.toLowerCase();
+    if (key === 'w' || key === 'a' || key === 's' || key === 'd') keys[key] = false;
+    if (e.key.startsWith('Arrow')) keys[e.key] = false;
 
-    if (intersects.length > 0) {
-        const clickedPlot = intersects[0].object;
-        handlePlotClick(clickedPlot);
+    if (e.key.toLowerCase() === 'e') {
+        keyEPressed = false;
+        // Als de speler E kort heeft ingedrukt (minder dan 500ms) en NIET bij een kraampje staat, open inventaris
+        if (holdETimer < 500 && !isNearStall()) {
+            toggleInventory();
+        }
+        holdETimer = 0;
+        document.getElementById('progress-bar').style.width = '0%';
+    }
+});
+
+// --- AFSTANDSBEREKENINGEN (Proximity) ---
+function getDistance(obj1, obj2) {
+    return obj1.position.distanceTo(obj2.position);
+}
+
+function isNearStall() {
+    const distToShop = getDistance(playerGroup, shopStall);
+    const distToSell = getDistance(playerGroup, sellStall);
+    return (distToShop < 2.5 || distToSell < 2.5);
+}
+
+function tryInteractWithNearbyPlot() {
+    // Zoek dichtstbijzijnde akker
+    let closestPlot = null;
+    let minDist = 2.0; // Moet binnen 2 meter zijn
+
+    plots.forEach(plot => {
+        const dist = getDistance(playerGroup, plot);
+        if (dist < minDist) {
+            minDist = dist;
+            closestPlot = plot;
+        }
+    });
+
+    if (closestPlot) {
+        handlePlotInteraction(closestPlot);
     }
 }
 
-function handlePlotClick(plot) {
+function handlePlotInteraction(plot) {
     const data = plot.userData;
 
     if (!data.planted) {
-        // Planten!
+        // Planten
         if (!gameState.selectedSeed) {
-            alert("Selecteer eerst een zaadje in de winkel!");
+            alert("Je hebt geen zaadje geselecteerd! Open de winkel bij het rode kraampje.");
             return;
         }
-
         data.planted = true;
         data.plantType = gameState.selectedSeed;
         data.growth = 0;
         
-        // Maak 3D plant model aan
         data.plantMesh = createPlant3D(data.plantType, 0.1);
         data.plantMesh.position.copy(plot.position);
-        data.plantMesh.position.y += 0.1; // Net boven de grond
+        data.plantMesh.position.y += 0.1;
         scene.add(data.plantMesh);
 
         playSound('plant');
-        
-        // Reset selectie zodat je niet per ongeluk alles vol plant
-        gameState.selectedSeed = null;
+        gameState.selectedSeed = null; // Reset selectie
         updateUI();
     } else {
-        // Oogsten!
+        // Oogsten
         if (data.growth >= 1.0) {
-            // Oogst succesvol
             gameState.inventory[data.plantType]++;
-            
-            // Verwijder 3D model
             scene.remove(data.plantMesh);
             data.plantMesh = null;
-            
             data.planted = false;
             data.plantType = null;
             data.growth = 0;
@@ -323,26 +385,26 @@ function handlePlotClick(plot) {
             playSound('harvest');
             updateUI();
         } else {
-            // Nog niet klaar
             const perc = Math.floor(data.growth * 100);
-            alert(`Deze plant groeit nog! (${perc}% klaar)`);
+            alert(`Dit gewas groeit nog! (${perc}% klaar)`);
         }
     }
 }
 
-// --- WINKEL & ECONOMIE LOGICA ---
+// --- WINKEL & VERKOOP LOGICA ---
 window.buySeed = function(type, price) {
     if (gameState.money >= price) {
         gameState.money -= price;
         gameState.selectedSeed = type;
-        playSound('plant'); // Koopgeluidje
+        playSound('plant');
+        closeShop();
         updateUI();
     } else {
         alert("Je hebt niet genoeg goud!");
     }
 };
 
-window.sellAllCrops = function() {
+function sellAllCrops() {
     let totalEarnings = 0;
     for (let crop in gameState.inventory) {
         const count = gameState.inventory[crop];
@@ -356,51 +418,148 @@ window.sellAllCrops = function() {
         gameState.money += totalEarnings;
         playSound('sell');
         updateUI();
-        alert(`Je hebt je oogst verkocht voor $${totalEarnings} goud! 💰`);
+        alert(`💰 Alles verkocht! Je verdiende $${totalEarnings} goud!`);
     } else {
-        alert("Je hebt geen gewassen in je schuur om te verkopen!");
+        alert("Je rugzak is leeg! Oogst eerst wat volgroeide planten.");
     }
+}
+
+// --- UI MODALS OPENEN/SLUITEN ---
+function openShop() {
+    document.getElementById('shop-modal').classList.remove('hidden');
+}
+window.closeShop = function() {
+    document.getElementById('shop-modal').classList.add('hidden');
+};
+
+window.toggleInventory = function() {
+    const inv = document.getElementById('inventory-modal');
+    inv.classList.toggle('hidden');
 };
 
 function updateUI() {
-    // Update geld
     document.getElementById('money-display').innerText = `💰 Goud: $${gameState.money}`;
     
-    // Update actieve selectie
     const activeDisplay = document.getElementById('active-seed-display');
     if (gameState.selectedSeed) {
         const name = PLANT_TYPES[gameState.selectedSeed].name;
         activeDisplay.innerText = `🌱 ${name} Zaad`;
         activeDisplay.style.borderColor = "#4caf50";
     } else {
-        activeDisplay.innerText = "Geen (Selecteer in de winkel)";
+        activeDisplay.innerText = "Geen (Koop in de winkel)";
         activeDisplay.style.borderColor = "#81c784";
     }
 
-    // Update inventaris
     document.getElementById('inv-carrot').innerText = gameState.inventory.carrot;
     document.getElementById('inv-tomato').innerText = gameState.inventory.tomato;
     document.getElementById('inv-sunflower').innerText = gameState.inventory.sunflower;
 }
 
 // --- GAME LOOP & ANIMATIE ---
-const clock = new THREE.Clock();
-
 function animate() {
     requestAnimationFrame(animate);
     
-    const delta = clock.getDelta();
+    const currentTime = performance.now();
+    const delta = (currentTime - lastTime) / 1000;
+    lastTime = currentTime;
 
-    // Update groei van alle geplante gewassen
+    // 1. SPELER BEWEGING (WASD / Pijltjes)
+    const moveSpeed = 6.0;
+    let moveX = 0;
+    let moveZ = 0;
+
+    if (keys.w || keys.ArrowUp) moveZ -= 1;
+    if (keys.s || keys.ArrowDown) moveZ += 1;
+    if (keys.a || keys.ArrowLeft) moveX -= 1;
+    if (keys.d || keys.ArrowRight) moveX += 1;
+
+    if (moveX !== 0 || moveZ !== 0) {
+        // Normaliseer vector zodat diagonaal lopen niet sneller gaat
+        const length = Math.sqrt(moveX * moveX + moveZ * moveZ);
+        const dx = (moveX / length) * moveSpeed * delta;
+        const dz = (moveZ / length) * moveSpeed * delta;
+
+        // Update positie met grenzen (binnen de 40x40 grasmat)
+        playerGroup.position.x = Math.max(-19, Math.min(19, playerGroup.position.x + dx));
+        playerGroup.position.z = Math.max(-19, Math.min(19, playerGroup.position.z + dz));
+
+        // Draai karakter naar looprichting
+        const angle = Math.atan2(dx, dz);
+        playerGroup.rotation.y = angle;
+
+        // Loop-animatie (subtiel op en neer bouncen)
+        playerGroup.position.y = Math.abs(Math.sin(currentTime * 0.01)) * 0.15;
+    } else {
+        playerGroup.position.y = 0; // Ruststand
+    }
+
+    // 2. CAMERA VOLGING (Derde persoon perspectief)
+    camera.position.set(
+        playerGroup.position.x,
+        playerGroup.position.y + 8,
+        playerGroup.position.z + 10
+    );
+    camera.lookAt(playerGroup.position);
+
+    // 3. INTERACTIE DETECTIE (Shop & Sell Kraampjes)
+    const distToShop = getDistance(playerGroup, shopStall);
+    const distToSell = getDistance(playerGroup, sellStall);
+    const prompt = document.getElementById('interaction-prompt');
+    const promptText = document.getElementById('prompt-text');
+    const progressBar = document.getElementById('progress-bar');
+
+    let nearStall = false;
+    let currentStallAction = null;
+
+    if (distToShop < 2.5) {
+        nearStall = true;
+        currentStallAction = 'shop';
+        promptText.innerText = "Houd [E] ingedrukt voor de Winkel";
+    } else if (distToSell < 2.5) {
+        nearStall = true;
+        currentStallAction = 'sell';
+        promptText.innerText = "Houd [E] ingedrukt om Oogst te Verkopen";
+    }
+
+    // Toon/Verberg prompt
+    if (nearStall) {
+        prompt.classList.remove('hidden');
+    } else {
+        prompt.classList.add('hidden');
+        holdETimer = 0;
+        progressBar.style.width = '0%';
+    }
+
+    // E-toets vasthouden logica
+    if (nearStall && keyEPressed) {
+        holdETimer += delta * 1000; // Omrekenen naar milliseconden
+        const progress = Math.min(100, (holdETimer / requiredHoldTime) * 100);
+        progressBar.style.width = `${progress}%`;
+
+        if (holdETimer >= requiredHoldTime) {
+            // Actie voltooien!
+            if (currentStallAction === 'shop') {
+                openShop();
+            } else if (currentStallAction === 'sell') {
+                sellAllCrops();
+            }
+            keyEPressed = false; // Reset zodat het niet blijft triggeren
+            holdETimer = 0;
+            progressBar.style.width = '0%';
+        }
+    } else if (!keyEPressed) {
+        progressBar.style.width = '0%';
+    }
+
+    // 4. PLANTEN GROEI UPDATE
     plots.forEach(plot => {
         const data = plot.userData;
         if (data.planted && data.growth < 1.0) {
             const config = PLANT_TYPES[data.plantType];
-            // Groei verhogen op basis van tijd
             data.growth += delta / config.growthTime;
             if (data.growth > 1.0) data.growth = 1.0;
 
-            // Update het 3D model visueel
+            // Update 3D model visueel
             scene.remove(data.plantMesh);
             data.plantMesh = createPlant3D(data.plantType, data.growth);
             data.plantMesh.position.copy(plot.position);
@@ -408,14 +567,13 @@ function animate() {
             scene.add(data.plantMesh);
         }
 
-        // Subtiel zweef-effect voor volgroeide planten om te laten zien dat ze klaar zijn
+        // Zweef- en draai-effect voor oogstbare planten
         if (data.planted && data.growth >= 1.0 && data.plantMesh) {
-            data.plantMesh.position.y = 0.1 + Math.sin(Date.now() * 0.005) * 0.05;
-            data.plantMesh.rotation.y += 0.01; // Langzaam ronddraaien
+            data.plantMesh.position.y = 0.1 + Math.sin(currentTime * 0.005) * 0.05;
+            data.plantMesh.rotation.y += 0.01;
         }
     });
 
-    controls.update();
     renderer.render(scene, camera);
 }
 
@@ -426,6 +584,6 @@ window.addEventListener('resize', () => {
     renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-// Start de game loop en update UI
+// Start de game
 updateUI();
 animate();
