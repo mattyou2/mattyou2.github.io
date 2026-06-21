@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Grow a Garden!</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Three.js en OrbitControls voor een interactieve 3D camera -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+    <!-- 3D Canvas -->
+    <div id="canvas-container"></div>
+
+    <!-- UI Overlay -->
+    <div id="ui-container">
+        <!-- Status / Portemonnee -->
+        <div class="card header-card">
+            <h1>🌻 Mijn 3D Tuin</h1>
+            <div class="stats">
+                <span id="money-display">💰 Goud: $50</span>
+            </div>
+        </div>
+
+        <!-- Actieve selectie -->
+        <div class="card selection-card">
+            <h3>Geselecteerd Zaad:</h3>
+            <div id="active-seed-display" class="active-seed">Geen (Selecteer in de winkel)</div>
+            <p class="instruction">Klik op een bruine akker om te planten!</p>
+        </div>
+
+        <!-- De Winkel (Shop) -->
+        <div class="card shop-card">
+            <h2>🛒 De Zaadwinkel</h2>
+            <div class="shop-items">
+                <div class="shop-item" onclick="buySeed('carrot', 10)">
+                    <span class="icon">🥕</span>
+                    <span class="name">Wortel Zaad</span>
+                    <span class="price">Prijs: $10</span>
+                </div>
+                <div class="shop-item" onclick="buySeed('tomato', 25)">
+                    <span class="icon">🍅</span>
+                    <span class="name">Tomaat Zaad</span>
+                    <span class="price">Prijs: $25</span>
+                </div>
+                <div class="shop-item" onclick="buySeed('sunflower', 50)">
+                    <span class="icon">🌻</span>
+                    <span class="name">Zonnebloem Zaad</span>
+                    <span class="price">Prijs: $50</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Inventaris & Verkoop (Inventory & Sell) -->
+        <div class="card inventory-card">
+            <h2>🎒 Je Schuur (Oogst)</h2>
+            <div class="inventory-items">
+                <div class="inv-item">🥕 Wortels: <span id="inv-carrot">0</span></div>
+                <div class="inv-item">🍅 Tomaten: <span id="inv-tomato">0</span></div>
+                <div class="inv-item">🌻 Zonnebloemen: <span id="inv-sunflower">0</span></div>
+            </div>
+            <button id="sell-btn" onclick="sellAllCrops()">💰 Verkoop Alles voor Goud!</button>
+        </div>
+    </div>
+
+    <!-- Instructies onderin -->
+    <div id="controls-hint">
+        Slepen met links = Camera draaien | Slepen met rechts = Camera bewegen | Scrollen = Zoomen
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
