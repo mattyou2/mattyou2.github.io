@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <title>2D Minecraft: Mattyou Studios Edition</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #75a7ff; font-family: 'Segoe UI', sans-serif; transition: background 0.5s; }
+        canvas { display: block; image-rendering: pixelated; }
+        
+        #hud { position: absolute; top: 10px; left: 10px; color: white; text-shadow: 2px 2px #000; pointer-events: none; z-index: 5; }
+        
+        /* Watermerk op hoofdscherm */
+        #watermark { position: absolute; bottom: 10px; right: 10px; color: rgba(255,255,255,0.5); font-size: 14px; pointer-events: none; z-index: 5; }
+
+        #hotbar { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); display: flex; background: rgba(0,0,0,0.6); padding: 5px; border: 4px solid #333; }
+        .slot { width: 45px; height: 45px; border: 3px solid #8b8b8b; margin: 2px; display: flex; align-items: center; justify-content: center; background: #c6c6c6; position: relative; }
+        .slot.selected { border-color: white; box-shadow: 0 0 10px white; }
+        .slot span { position: absolute; bottom: 1px; right: 2px; font-size: 11px; color: #000; font-weight: bold; }
+
+        .overlay { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #c6c6c6; border: 4px solid #333; padding: 20px; z-index: 10; width: 420px; box-shadow: 10px 10px 0px rgba(0,0,0,0.3); }
+        button { width: 100%; margin: 5px 0; padding: 10px; cursor: pointer; background: #4CAF50; border: 2px solid #2e7d32; color: white; font-weight: bold; }
+        
+        .studio-tag { display: block; text-align: right; font-size: 10px; color: #555; margin-top: 10px; font-style: italic; }
+
+        #dragon-bar { display: none; position: absolute; top: 50px; left: 50%; transform: translateX(-50%); width: 300px; height: 20px; background: #333; border: 2px solid white; z-index: 5; }
+        #dragon-health { width: 100%; height: 100%; background: #a300a3; transition: width 0.2s; }
+        #win-screen { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); color: gold; text-align: center; justify-content: center; align-items: center; flex-direction: column; z-index: 100; font-size: 30px; }
+    </style>
+</head>
+<body>
+
+<div id="hud">
+    <b>WASD:</b> Bewegen | <b>L-Klik:</b> Mine | <b>R-Klik:</b> Bouw<br>
+    <span id="dim-text" style="color: yellow;">Dimensie: Overworld</span>
+</div>
+
+<div id="watermark">Made by Mattyou Studios</div>
+
+<div id="dragon-bar"><div id="dragon-health"></div><div style="position:absolute; width:100%; text-align:center; top:0; color:white; font-size:12px; font-weight:bold;">ENDER DRAGON</div></div>
+
+<div id="win-screen">
+    <h1>GEFELICITEERD!</h1>
+    <p>Je hebt Minecraft Mattyou 2D Edition uitgespeeld!</p>
+    <span style="font-size: 18px;">Productie: Mattyou Studios</span><br>
+    <button onclick="location.reload()" style="width:200px;">Speel Opnieuw</button>
+</div>
+
+<div id="hotbar">
+    <div class="slot selected" id="slot0"></div>
+    <div class="slot" id="slot1"></div>
+    <div class="slot" id="slot2"></div>
+    <div class="slot" id="slot3"></div>
+    <div class="slot" id="slot4"></div>
+    <div class="slot" id="slot5"></div>
+    <div class="slot" id="slot6"></div>
+    <div class="slot" id="slot7"></div>
+    <div class="slot" id="slot8"></div>
+</div>
+
+<div id="inventory-menu" class="overlay">
+    <h2>🎒 Inventory</h2>
+    <div id="inv-display" style="background:#a9a9a9; padding:10px; border:2px inset #555; margin-bottom:10px;"></div>
+    <button onclick="quickCraft('planks')">Hout -> Planken</button>
+    <button onclick="quickCraft('crafting_table')">Maak Crafting Table</button>
+    <button onclick="closeAll()">Sluiten [E]</button>
+    <span class="studio-tag">Made by Mattyou Studios</span>
+</div>
+
+<div id="dim-menu" class="overlay">
+    <h2>🌌 Dimensies</h2>
+    <button onclick="travel('overworld')">Overworld</button>
+    <button onclick="travel('nether')">Nether</button>
+    <button id="end-btn" onclick="travel('the_end')" disabled>The End (Bezoek eerst Nether)</button>
+    <button onclick="closeAll()">Sluiten [F]</button>
+    <span class="studio-tag">Made by Mattyou Studios</span>
+</div>
+
+<div id="table-menu" class="overlay">
+    <h2>🛠️ Crafting Table</h2>
+    <button onclick="complexCraft('iron_pickaxe')">Iron Pickaxe (3 Iron)</button>
+    <button onclick="complexCraft('sword')">Diamond Sword (2 Diamond)</button>
+    <button onclick="closeAll()">Sluiten [C]</button>
+    <span class="studio-tag">Made by Mattyou Studios</span>
+</div>
+
+<canvas id="gameCanvas"></canvas>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+const tileSize = 40;
+let world = {}; 
+let currentDim = 'overworld';
+let hasVisitedNether = false;
+let dragonHP = 100;
+let dragonDefeated = false;
+
+// Mining
+let miningTile = null;
+let mineTimer = 0;
+const BASE_MINE_TIME = 40;
+
+const inventory = { log: 4, dirt: 0, grass: 0, stone: 0, iron: 0, diamond: 0, netherite: 0, planks: 0, crafting_table: 1, has_sword: false, has_pickaxe: false };
+const hotbarOrder = ['log', 'planks', 'grass', 'dirt', 'stone', 'iron', 'diamond', 'netherite', 'crafting_table'];
+let selectedSlot = 0;
+
+const player = { x: 400, y: 100, w: 26, h: 38, vx: 0, vy: 0, speed: 5, jump: -11, grounded: false };
+const keys = {};
+
+const colors = {
+    grass: '#5d9948', dirt: '#866043', stone: '#7a7a7a', iron: '#d4b49d', diamond: '#33ebff',
+    netherrack: '#722626', netherite: '#312323', end_stone: '#d8d89a', bedrock: '#111',
+    log: '#6b4e31', leaf: '#3eb03e', planks: '#a0764c', crafting_table: '#dfb36e', air: 'transparent'
+};
+
+function generateColumn(x, dim) {
+    if (!world[dim]) world[dim] = {};
+    if (world[dim][x]) return;
+    world[dim][x] = {};
+    const groundLevel = 12;
+
+    if (dim === 'overworld') {
+        for (let y = 0; y < 60; y++) {
+            let type = 'air';
+            if (y === 59) type = 'bedrock';
+            else if (y > groundLevel + 4) { 
+                type = 'stone'; 
+                if (Math.random() < 0.05) type = 'diamond'; 
+                else if (Math.random() < 0.08) type = 'iron'; 
+            }
+            else if (y > groundLevel) type = 'dirt';
+            else if (y === groundLevel) type = 'grass';
+            world[dim][x][y] = type;
+        }
+        if (Math.random() < 0.15) createTree(x, groundLevel - 1, dim);
+    } else if (dim === 'nether') {
+        for (let y = 0; y < 40; y++) {
+            let type = (y === 0 || y === 39) ? 'bedrock' : 'netherrack';
+            if (Math.random() < 0.03) type = 'netherite';
+            if (Math.random() < 0.1) type = 'air';
+            world[dim][x][y] = type;
+        }
+    } else if (dim === 'the_end') {
+        for (let y = 0; y < 40; y++) {
+            world[dim][x][y] = (y > 20 && y < 25 && x > -15 && x < 15) ? 'end_stone' : 'air';
+        }
+    }
+}
+
+function createTree(x, y, dim) {
+    for(let i=0; i<3; i++) {
+        if(!world[dim][x]) world[dim][x] = {};
+        world[dim][x][y-i] = 'log';
+    }
+}
+
+function travel(dim) {
+    currentDim = dim;
+    if (dim === 'nether') { hasVisitedNether = true; document.getElementById('end-btn').disabled = false; document.body.style.background = "#3d0b0b"; }
+    else if (dim === 'the_end') { 
+        document.body.style.background = "#1a0a2a"; 
+        player.x = 0; player.y = 15 * tileSize;
+        document.getElementById('dragon-bar').style.display = 'block';
+    } else { document.body.style.background = "#75a7ff"; document.getElementById('dragon-bar').style.display = 'none'; }
+    document.getElementById('dim-text').innerText = "Dimensie: " + dim.toUpperCase();
+    closeAll();
+}
+
+function update() {
+    if (keys['a']) player.vx = -player.speed;
+    else if (keys['d']) player.vx = player.speed;
+    else player.vx = 0;
+
+    const currentTX = Math.floor(player.x / tileSize);
+    for(let i = -20; i < 20; i++) generateColumn(currentTX + i, currentDim);
+
+    player.vy += 0.6;
+    const tx = Math.floor((player.x + player.w/2) / tileSize);
+    const ty = Math.floor((player.y + player.h + player.vy) / tileSize);
+    
+    if (world[currentDim][tx] && world[currentDim][tx][ty] && world[currentDim][tx][ty] !== 'air') {
+        player.y = ty * tileSize - player.h;
+        player.vy = 0;
+        player.grounded = true;
+    } else { player.y += player.vy; player.grounded = false; }
+    
+    player.x += player.vx;
+    if (keys['w'] && player.grounded) { player.vy = player.jump; player.grounded = false; }
+
+    if (miningTile) {
+        let speedMult = inventory.has_pickaxe ? 3 : 1;
+        mineTimer += speedMult;
+        if (mineTimer >= BASE_MINE_TIME) {
+            const type = world[currentDim][miningTile.x][miningTile.y];
+            if (type !== 'bedrock') {
+                inventory[type]++;
+                world[currentDim][miningTile.x][miningTile.y] = 'air';
+                updateUI();
+            }
+            miningTile = null;
+            mineTimer = 0;
+        }
+    }
+    draw();
+    requestAnimationFrame(update);
+}
+
+function draw() {
+    ctx.save();
+    ctx.translate(-player.x + canvas.width/2, -player.y + canvas.height/2);
+    ctx.clearRect(player.x - canvas.width, player.y - canvas.height, canvas.width*2, canvas.height*2);
+    
+    const startX = Math.floor((player.x - canvas.width/2) / tileSize);
+    const endX = Math.ceil((player.x + canvas.width/2) / tileSize);
+
+    for (let x = startX; x <= endX; x++) {
+        if (world[currentDim][x]) {
+            for (let y in world[currentDim][x]) {
+                const type = world[currentDim][x][y];
+                if (type === 'air') continue;
+                ctx.fillStyle = colors[type];
+                ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
+                if (miningTile && miningTile.x === x && miningTile.y === parseInt(y)) {
+                    ctx.fillStyle = 'white';
+                    ctx.fillRect(x * tileSize, y * tileSize + 35, tileSize * (mineTimer / BASE_MINE_TIME), 5);
+                }
+            }
+        }
+    }
+
+    if (currentDim === 'the_end' && !dragonDefeated) {
+        ctx.fillStyle = 'black';
+        ctx.fillRect(-100, 10 * tileSize, 200, 80);
+    }
+
+    ctx.fillStyle = '#ffcc00';
+    ctx.fillRect(player.x, player.y, player.w, player.h);
+    ctx.restore();
+}
+
+canvas.onmousedown = (e) => {
+    const rx = e.clientX + (player.x - canvas.width/2);
+    const ry = e.clientY + (player.y - canvas.height/2);
+    const tx = Math.floor(rx / tileSize);
+    const ty = Math.floor(ry / tileSize);
+
+    if (e.button === 0) {
+        if (currentDim === 'the_end' && !dragonDefeated && rx > -100 && rx < 100 && ry > 10 * tileSize && ry < 10 * tileSize + 80) {
+            dragonHP -= inventory.has_sword ? 10 : 2;
+            document.getElementById('dragon-health').style.width = dragonHP + "%";
+            if (dragonHP <= 0) { dragonDefeated = true; document.getElementById('win-screen').style.display = 'flex'; }
+        } else if (world[currentDim][tx] && world[currentDim][tx][ty] !== 'air') {
+            miningTile = { x: tx, y: ty };
+            mineTimer = 0;
+        }
+    } else if (e.button === 2) {
+        const item = hotbarOrder[selectedSlot];
+        if (inventory[item] > 0) {
+            if (!world[currentDim][tx]) world[currentDim][tx] = {};
+            world[currentDim][tx][ty] = item;
+            inventory[item]--;
+            updateUI();
+        }
+    }
+};
+
+window.onmouseup = () => { miningTile = null; mineTimer = 0; };
+canvas.oncontextmenu = (e) => e.preventDefault();
+
+window.onkeydown = (e) => {
+    const k = e.key.toLowerCase();
+    keys[k] = true;
+    if (k === 'e') toggleMenu('inventory-menu');
+    if (k === 'f') toggleMenu('dim-menu');
+    if (k === 'c' && inventory.crafting_table > 0) toggleMenu('table-menu');
+    if (k >= '1' && k <= '9') { selectedSlot = parseInt(k) - 1; updateUI(); }
+};
+window.onkeyup = (e) => keys[e.key.toLowerCase()] = false;
+
+function toggleMenu(id) {
+    const m = document.getElementById(id);
+    const open = m.style.display === 'block';
+    closeAll();
+    if (!open) { m.style.display = 'block'; updateUI(); }
+}
+
+function updateUI() {
+    for (let i = 0; i < 9; i++) {
+        const slot = document.getElementById('slot' + i);
+        slot.classList.toggle('selected', i === selectedSlot);
+        const item = hotbarOrder[i];
+        if (item && inventory[item] > 0) {
+            slot.style.backgroundColor = colors[item];
+            slot.innerHTML = `<span>${inventory[item]}</span>`;
+        } else { slot.style.backgroundColor = '#c6c6c6'; slot.innerHTML = ''; }
+    }
+    document.getElementById('inv-display').innerHTML = `Hout: ${inventory.log} | Diamond: ${inventory.diamond} | IJzer: ${inventory.iron}`;
+}
+
+function quickCraft(item) {
+    if (item === 'planks' && inventory.log > 0) { inventory.log--; inventory.planks += 4; }
+    if (item === 'crafting_table' && inventory.planks >= 4) { inventory.planks -= 4; inventory.crafting_table++; }
+    updateUI();
+}
+
+function complexCraft(item) {
+    if (item === 'iron_pickaxe' && inventory.iron >= 3) { inventory.iron -= 3; inventory.has_pickaxe = true; alert("Pickaxe gemaakt!"); }
+    if (item === 'sword' && inventory.diamond >= 2) { inventory.diamond -= 2; inventory.has_sword = true; alert("Sword gemaakt!"); }
+    updateUI();
+}
+
+function closeAll() { document.querySelectorAll('.overlay').forEach(o => o.style.display = 'none'); }
+
+updateUI();
+update();
+</script>
+</body>
+</html>
