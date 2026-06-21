@@ -8,12 +8,20 @@
     <!-- Three.js CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
-<body>
+<body class="theme-neon-rainbow">
 
     <div id="canvas-container"></div>
 
     <nav>
         <div class="logo">DEVABLE<span>by Mattyou Studios™</span></div>
+        
+        <!-- Thema Selector -->
+        <div class="theme-selector" title="Kies een design">
+            <div class="theme-btn active" data-theme="neon-rainbow" style="background: linear-gradient(45deg, #ff007f, #7000ff);" onclick="changeTheme('neon-rainbow')"></div>
+            <div class="theme-btn" data-theme="cyber-blue" style="background: linear-gradient(45deg, #00f0ff, #0044ff);" onclick="changeTheme('cyber-blue')"></div>
+            <div class="theme-btn" data-theme="retro-gold" style="background: linear-gradient(45deg, #ffaa00, #ff3c00);" onclick="changeTheme('retro-gold')"></div>
+        </div>
+
         <ul class="nav-links">
             <li><a href="index.html" class="active">Home</a></li>
             <li><a href="games.html">Games</a></li>
@@ -23,7 +31,7 @@
 
     <main>
         <section class="hero">
-            <h1>Devable</h1>
+            <h1>De Toekomst van Interactieve Web Ervaringen</h1>
             <p>Wij bouwen high-performance 3D web applicaties, geavanceerde game-engines voor browsers en professionele cloud systemen. Ontdek de grenzen van de browser.</p>
             <a href="games.html" class="btn">Ontdek Games</a>
             <a href="webapps.html" class="btn btn-secondary">Bekijk Web Apps</a>
@@ -47,7 +55,7 @@
     </main>
 
     <footer>
-        <p>&copy; 2026 Devable. All rights reserved. Powered by Mattyou Studios™</p>
+        <p>&copy; 2024 Devable. All rights reserved. Powered by Mattyou Studios™</p>
     </footer>
 
     <script src="three-bg.js"></script>
