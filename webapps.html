@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Devable Web Apps | Mattyou Studios™</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        /* Extra styling voor de live simulatie */
+        .live-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.8rem;
+            color: #00f0ff;
+            background: rgba(0, 240, 255, 0.1);
+            padding: 4px 12px;
+            border-radius: 20px;
+            margin-bottom: 15px;
+        }
+        .pulse {
+            width: 8px;
+            height: 8px;
+            background: #00f0ff;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #00f0ff;
+            animation: pulse-anim 1.5s infinite;
+        }
+        @keyframes pulse-anim {
+            0% { transform: scale(0.8); opacity: 0.5; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(0.8); opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="canvas-container"></div>
+
+    <nav>
+        <div class="logo">DEVABLE<span>by Mattyou Studios™</span></div>
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="games.html">Games</a></li>
+            <li><a href="webapps.html" class="active">Web Apps</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <section class="hero">
+            <h1>Professionele Web Applicaties</h1>
+            <p>Ontdek onze cloud-oplossingen, databases en realtime economische systemen ontworpen voor ultieme efficiëntie.</p>
+        </section>
+
+        <div class="grid">
+            <!-- Mattyou Cloud -->
+            <div class="card">
+                <div class="live-indicator"><span class="pulse"></span>Mattyou Cloud v2.1</div>
+                <div class="card-icon">☁️</div>
+                <h3>Mattyou Cloud</h3>
+                <p>De ultieme gedecentraliseerde cloud-opslag. Sleep bestanden rechtstreeks in de browser met end-to-end encryptie en razendsnelle downloads.</p>
+                <a href="#" class="btn" onclick="alert('Mattyou Cloud Simulatie: Sleep uw bestanden hierheen om te uploaden!')">Open Cloud Console</a>
+            </div>
+
+            <!-- Minecraft Wiki -->
+            <div class="card">
+                <div class="live-indicator" style="color: #55ff55; background: rgba(85, 255, 85, 0.1);"><span class="pulse" style="background: #55ff55; box-shadow: 0 0 8px #55ff55;"></span>Database Live</div>
+                <div class="card-icon">📖</div>
+                <h3>Minecraft Wiki</h3>
+                <p>Een interactieve, 3D-geoptimaliseerde encyclopedie voor alle Minecraft items, blocks en crafting recepten. Volledig doorzoekbaar.</p>
+                <a href="#" class="btn" onclick="alert('Wiki Database laadt... Zoek naar blokken in de 3D viewer!')">Start Wiki</a>
+            </div>
+
+            <!-- Ecosy -->
+            <div class="card">
+                <div class="live-indicator" style="color: #ffaa00; background: rgba(255, 170, 0, 0.1);"><span class="pulse" style="background: #ffaa00; box-shadow: 0 0 8px #ffaa00;"></span>Ecosy API Connected</div>
+                <div class="card-icon">📈</div>
+                <h3>Ecosy</h3>
+                <p>Het meest geavanceerde Minecraft economie-systeem. Monitor realtime in-game transacties, inflatie, speler-shops en marktfluctuaties.</p>
+                <a href="#" class="btn" onclick="alert('Ecosy Dashboard verbinding maken... Realtime grafieken worden geladen.')">Bekijk Statistieken</a>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Devable. All rights reserved. Powered by Mattyou Studios™</p>
+    </footer>
+
+    <script src="three-bg.js"></script>
+</body>
+</html>
