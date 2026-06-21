@@ -135,7 +135,7 @@ function init3D() {
     const gamesData = [
         { title: "MINECRAFT 3D", sub: "(Mattyou edition)", color: "#ff007f", x: -250, y: 120 },
         { title: "MINECRAFT 2D", sub: "(Mattyou edition)", color: "#00f0ff", x: 250, y: 100 },
-        { title: "survive on a island", sub: "(Mattyou edition)", color: "#ffaa00", x: -180, y: -120 },
+        { title: "survive world", sub: "(Mattyou edition)", color: "#ffaa00", x: -180, y: -120 },
         { title: "GRAVITY SANDBOX", sub: "PHYSICS SIMULATOR", color: "#7000ff", x: 180, y: -140 },
         { title: "NEON RIDER 3D", sub: "SYNTHWAVE RACER", color: "#00ff66", x: 0, y: 0 }
     ];
