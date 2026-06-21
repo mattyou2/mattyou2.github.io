@@ -1,0 +1,153 @@
+filename="dashboard.html" language="html"]
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Devable - Dashboard</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Iconen -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Supabase JS Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-slate-950 text-slate-100 font-['Poppins'] min-h-screen flex flex-col">
+
+    <!-- Navigatiebalk -->
+    <nav class="sticky top-0 z-40 backdrop-blur-md bg-slate-950/70 border-b border-slate-900">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="index.html" class="text-2xl font-extrabold bg-gradient-to-r from-purple-400 via-pink-500 to-blue-400 bg-clip-text text-transparent flex items-center gap-2">
+                <i class="fa-solid fa-cubes-stacked text-purple-500"></i>My Devable
+            </a>
+            <div class="flex items-center space-x-4">
+                <span class="text-sm text-slate-400 hidden sm:inline">Ingelogd als: <strong id="nav-user-name" class="text-white">Laden...</strong></span>
+                <button onclick="handleLogout()" class="px-4 py-2 bg-red-600/20 hover:bg-red-600/40 border border-red-500/30 rounded-full text-sm font-semibold text-red-400 transition-all">
+                    Uitloggen
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Dashboard Content -->
+    <main class="max-w-7xl mx-auto px-6 py-10 w-full flex-grow">
+        <!-- Welkomst Banner -->
+        <div class="glass-card p-8 rounded-3xl border border-slate-800 mb-8 relative overflow-hidden">
+            <div class="absolute -right-10 -top-10 w-40 h-40 bg-purple-500/10 rounded-full blur-2xl pointer-events-none"></div>
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                <div>
+                    <span class="text-xs font-bold text-purple-400 uppercase tracking-widest">Gebruikersportaal</span>
+                    <h1 class="text-3xl font-extrabold mt-1">Welkom terug, <span id="user-display-name" class="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500">Gebruiker</span>!</h1>
+                    <p class="text-slate-400 text-sm mt-2">
+                        Rol: <span id="user-display-role" class="capitalize font-semibold text-blue-400">Laden...</span> 
+                        | School: <span id="user-display-school" class="text-pink-400 font-semibold">Geen</span>
+                    </p>
+                </div>
+                <div class="flex gap-3">
+                    <button id="teacher-action-btn" class="hidden px-5 py-3 bg-purple-600 hover:bg-purple-500 rounded-xl text-sm font-bold transition-all shadow-lg shadow-purple-500/20" onclick="openClassModal()">
+                        <i class="fa-solid fa-users-gear mr-2"></i>Klas Beheren
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Docent Sectie (Alleen zichtbaar voor docenten) -->
+        <section id="teacher-section" class="hidden space-y-8 mb-8">
+            <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+                <i class="fa-solid fa-chalkboard-user text-purple-400"></i> Docenten Dashboard
+            </h2>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Klas Toevoegen -->
+                <div class="glass-card p-6 rounded-2xl border border-slate-800">
+                    <h3 class="text-lg font-bold mb-4 text-purple-400"><i class="fa-solid fa-plus mr-2"></i>Nieuwe Klas</h3>
+                    <form onsubmit="handleCreateClass(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 uppercase mb-2">Klas Naam</label>
+                            <input type="text" id="class-name-input" required class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 text-sm" placeholder="Bijv. Klas 4A of WebDev 101">
+                        </div>
+                        <button type="submit" class="w-full py-3 bg-purple-600 hover:bg-purple-500 rounded-xl text-sm font-bold transition-all">Klas Aanmaken</button>
+                    </form>
+                </div>
+
+                <!-- Leerling Toevoegen -->
+                <div class="glass-card p-6 rounded-2xl border border-slate-800">
+                    <h3 class="text-lg font-bold mb-4 text-blue-400"><i class="fa-solid fa-user-plus mr-2"></i>Leerling Toevoegen</h3>
+                    <form onsubmit="handleAddStudent(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 uppercase mb-2">Selecteer Klas</label>
+                            <select id="student-class-select" required class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 text-sm">
+                                <option value="">Selecteer een klas...</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 uppercase mb-2">E-mail van Leerling</label>
+                            <input type="email" id="student-email-input" required class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 text-sm" placeholder="leerling@school.nl">
+                        </div>
+                        <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-500 rounded-xl text-sm font-bold transition-all">Toevoegen aan Klas</button>
+                    </form>
+                </div>
+
+                <!-- Klassenlijst -->
+                <div class="glass-card p-6 rounded-2xl border border-slate-800 flex flex-col">
+                    <h3 class="text-lg font-bold mb-4 text-pink-400"><i class="fa-solid fa-list mr-2"></i>Jouw Klassen</h3>
+                    <div id="classes-list" class="space-y-3 overflow-y-auto max-h-60 flex-grow">
+                        <p class="text-slate-500 text-sm italic">Nog geen klassen aangemaakt.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Algemene Gebruikers Sectie -->
+        <section class="space-y-6">
+            <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+                <i class="fa-solid fa-rocket text-purple-400"></i> Jouw Exclusieve Apps & Tools
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Exclusieve Card 1 -->
+                <div class="glass-card rounded-2xl overflow-hidden border border-slate-800 p-6 hover:border-purple-500/30 transition-all">
+                    <div class="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400 text-xl mb-4">
+                        <i class="fa-solid fa-code"></i>
+                    </div>
+                    <h3 class="text-lg font-bold mb-2">Devable Code Editor</h3>
+                    <p class="text-slate-400 text-sm mb-4">Schrijf en test HTML/CSS/JS direct in je browser met onze ingebouwde sandbox.</p>
+                    <button class="px-4 py-2 bg-purple-600/20 hover:bg-purple-600 text-purple-300 hover:text-white rounded-lg text-xs font-bold transition-all">Start Editor</button>
+                </div>
+                <!-- Exclusieve Card 2 -->
+                <div class="glass-card rounded-2xl overflow-hidden border border-slate-800 p-6 hover:border-blue-500/30 transition-all">
+                    <div class="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400 text-xl mb-4">
+                        <i class="fa-solid fa-chart-line"></i>
+                    </div>
+                    <h3 class="text-lg font-bold mb-2">Voortgang Tracker</h3>
+                    <p class="text-slate-400 text-sm mb-4">Bekijk je ingeleverde opdrachten, feedback van docenten en behaalde badges.</p>
+                    <button class="px-4 py-2 bg-blue-600/20 hover:bg-blue-600 text-blue-300 hover:text-white rounded-lg text-xs font-bold transition-all">Bekijk Statistieken</button>
+                </div>
+                <!-- Exclusieve Card 3 -->
+                <div class="glass-card rounded-2xl overflow-hidden border border-slate-800 p-6 hover:border-pink-500/30 transition-all">
+                    <div class="w-12 h-12 rounded-xl bg-pink-500/10 flex items-center justify-center text-pink-400 text-xl mb-4">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                    </div>
+                    <h3 class="text-lg font-bold mb-2">My Devable Academy</h3>
+                    <p class="text-slate-400 text-sm mb-4">Krijg toegang tot premium tutorials over Minecraft Skript, Python en JavaScript.</p>
+                    <button class="px-4 py-2 bg-pink-600/20 hover:bg-pink-600 text-pink-300 hover:text-white rounded-lg text-xs font-bold transition-all">Naar Academy</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-900 bg-slate-950 py-8 mt-auto">
+        <div class="max-w-7xl mx-auto px-6 text-center text-slate-500 text-sm">
+            <p>&copy; 2024 My Devable. Alle rechten voorbehouden.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="config.js"></script>
+    <script src="auth.js"></script>
+    <script src="dashboard.js"></script>
+</body>
+</html>
