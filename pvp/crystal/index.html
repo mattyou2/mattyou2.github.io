@@ -348,10 +348,10 @@
     <script>
         // --- GAME CONFIG & STATE ---
         const CONFIG = {
-            gravity: 0.015,
-            playerSpeed: 0.07,
-            sprintMultiplier: 1.5,
-            jumpForce: 0.25,
+            gravity: 0.012,
+            playerSpeed: 0.08,
+            sprintMultiplier: 1.4,
+            jumpForce: 0.22,
             friction: 0.85,
             botSpeed: 0.05,
             gridSize: 32,
@@ -381,7 +381,7 @@
         document.getElementById('canvas-container').appendChild(renderer.domElement);
 
         // Lights
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
         scene.add(ambientLight);
 
         const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
@@ -399,13 +399,10 @@
         };
 
         const voxelGrid = {}; // Key: "x,y,z" -> { type, mesh, charge }
+        const blockMeshes = []; // Array of meshes for raycasting
         const blockGeometries = {};
         const blockMaterials = {};
 
-        // Materials setup
-        const loader = new THREE.TextureLoader();
-        
-        // Helper to create solid color textures with borders (low-poly style)
         function createBlockMaterial(color, emissive = 0x000000) {
             return new THREE.MeshStandardMaterial({
                 color: color,
@@ -424,7 +421,6 @@
         blockGeometries[BLOCK_TYPES.GLOWSTONE] = new THREE.BoxGeometry(CONFIG.blockSize, CONFIG.blockSize, CONFIG.blockSize);
         blockMaterials[BLOCK_TYPES.GLOWSTONE] = createBlockMaterial(0xffcc44, 0x553300);
 
-        // Anchor is custom (we will build it dynamically to show charge)
         blockGeometries[BLOCK_TYPES.ANCHOR] = new THREE.BoxGeometry(CONFIG.blockSize, CONFIG.blockSize, CONFIG.blockSize);
 
         function getGridKey(x, y, z) {
@@ -437,6 +433,8 @@
             // Remove old block if exists
             if (voxelGrid[key]) {
                 scene.remove(voxelGrid[key].mesh);
+                const index = blockMeshes.indexOf(voxelGrid[key].mesh);
+                if (index !== -1) blockMeshes.splice(index, 1);
                 delete voxelGrid[key];
             }
 
@@ -444,7 +442,6 @@
 
             let material;
             if (type === BLOCK_TYPES.ANCHOR) {
-                // Custom material based on charge
                 material = new THREE.MeshStandardMaterial({
                     color: 0x220033,
                     emissive: new THREE.Color(0x00ffff).multiplyScalar(charge * 0.25),
@@ -465,6 +462,7 @@
             scene.add(mesh);
 
             voxelGrid[key] = { type, mesh, charge, x, y, z };
+            blockMeshes.push(mesh);
         }
 
         function getBlock(x, y, z) {
@@ -476,7 +474,6 @@
         for (let x = -15; x < 15; x++) {
             for (let z = -15; z < 15; z++) {
                 setBlock(x, -1, z, BLOCK_TYPES.BEDROCK);
-                // Outer walls
                 if (x === -15 || x === 14 || z === -15 || z === 14) {
                     setBlock(x, 0, z, BLOCK_TYPES.BEDROCK);
                     setBlock(x, 1, z, BLOCK_TYPES.BEDROCK);
@@ -494,7 +491,7 @@
             constructor(color, isPlayer = false) {
                 this.isPlayer = isPlayer;
                 this.width = 1.2;
-                this.height = 3.6;
+                this.height = 3.4;
                 this.depth = 1.2;
                 
                 // Physics
@@ -508,7 +505,42 @@
                 const material = new THREE.MeshStandardMaterial({ color: color });
                 this.mesh = new THREE.Mesh(geometry, material);
                 this.mesh.castShadow = true;
+                
+                // Hide player mesh from first person camera to prevent blocking raycasts
+                if (this.isPlayer) {
+                    this.mesh.visible = false;
+                }
+                
                 scene.add(this.mesh);
+            }
+
+            // Robust 3D AABB Collision Detection
+            checkCollision(pos) {
+                const minX = pos.x - this.width / 2;
+                const maxX = pos.x + this.width / 2;
+                const minY = pos.y - this.height / 2;
+                const maxY = pos.y + this.height / 2;
+                const minZ = pos.z - this.depth / 2;
+                const maxZ = pos.z + this.depth / 2;
+
+                const gMinX = Math.floor(minX / CONFIG.blockSize);
+                const gMaxX = Math.floor(maxX / CONFIG.blockSize);
+                const gMinY = Math.floor(minY / CONFIG.blockSize);
+                const gMaxY = Math.floor(maxY / CONFIG.blockSize);
+                const gMinZ = Math.floor(minZ / CONFIG.blockSize);
+                const gMaxZ = Math.floor(maxZ / CONFIG.blockSize);
+
+                for (let x = gMinX; x <= gMaxX; x++) {
+                    for (let y = gMinY; y <= gMaxY; y++) {
+                        for (let z = gMinZ; z <= gMaxZ; z++) {
+                            const block = getBlock(x, y, z);
+                            if (block && block.type !== BLOCK_TYPES.AIR) {
+                                return true; // Collision!
+                            }
+                        }
+                    }
+                }
+                return false;
             }
 
             updatePhysics() {
@@ -521,25 +553,29 @@
                 this.velocity.x *= CONFIG.friction;
                 this.velocity.z *= CONFIG.friction;
 
-                // Move Entity
-                this.position.add(this.velocity);
+                // X movement & collision
+                this.position.x += this.velocity.x;
+                if (this.checkCollision(this.position)) {
+                    this.position.x -= this.velocity.x;
+                    this.velocity.x = 0;
+                }
 
-                // Collision Detection against Voxel Grid (Simple AABB)
+                // Y movement & collision
                 this.onGround = false;
-                const feetY = this.position.y - this.height / 2;
-                const gridX = Math.floor(this.position.x / CONFIG.blockSize);
-                const gridY = Math.floor(feetY / CONFIG.blockSize);
-                const gridZ = Math.floor(this.position.z / CONFIG.blockSize);
-
-                // Check block directly underneath
-                const blockUnder = getBlock(gridX, gridY, gridZ);
-                if (blockUnder && blockUnder.type !== BLOCK_TYPES.AIR) {
-                    const blockTop = (gridY + 1) * CONFIG.blockSize;
-                    if (feetY <= blockTop && this.velocity.y <= 0) {
-                        this.position.y = blockTop + this.height / 2;
-                        this.velocity.y = 0;
+                this.position.y += this.velocity.y;
+                if (this.checkCollision(this.position)) {
+                    if (this.velocity.y < 0) {
                         this.onGround = true;
                     }
+                    this.position.y -= this.velocity.y;
+                    this.velocity.y = 0;
+                }
+
+                // Z movement & collision
+                this.position.z += this.velocity.z;
+                if (this.checkCollision(this.position)) {
+                    this.position.z -= this.velocity.z;
+                    this.velocity.z = 0;
                 }
 
                 // Keep within arena bounds
@@ -557,8 +593,6 @@
                 
                 if (this.isPlayer) {
                     updateHUD();
-                    // Screen shake
-                    camera.position.x += (Math.random() - 0.5) * 0.5;
                 } else {
                     document.getElementById('bot-hp').innerText = Math.round(this.health);
                 }
@@ -698,23 +732,20 @@
             [player, bot].forEach(entity => {
                 const dist = entity.position.distanceTo(pos);
                 if (dist < radius) {
-                    // Calculate raw damage factor
                     let damageFactor = (radius - dist) / radius;
 
                     // FEET PROTECTION MECHANIC:
-                    // Check if the target's lower half (feet) is protected by a solid block
                     const feetPos = entity.position.clone().sub(new THREE.Vector3(0, entity.height/2, 0));
                     const raycaster = new THREE.Raycaster(pos, feetPos.clone().sub(pos).normalize());
-                    const intersects = raycaster.intersectObjects(scene.children, true);
+                    
+                    // Only raycast against blocks to check for cover
+                    const intersects = raycaster.intersectObjects(blockMeshes, true);
                     
                     let protectedByBlock = false;
                     for (let hit of intersects) {
                         if (hit.distance < dist) {
-                            // If hit object is not the entity itself and is a solid block
-                            if (hit.object !== entity.mesh && hit.object !== expMesh) {
-                                protectedByBlock = true;
-                                break;
-                            }
+                            protectedByBlock = true;
+                            break;
                         }
                     }
 
@@ -747,7 +778,6 @@
         });
 
         function handleLeftClick() {
-            // Raycast to find crystals or entities
             const raycaster = new THREE.Raycaster();
             raycaster.setFromCamera(new THREE.Vector2(0,0), camera);
 
@@ -755,8 +785,7 @@
             const crystalMeshes = crystals.map(c => c.mesh);
             const intersects = raycaster.intersectObjects(crystalMeshes, true);
 
-            if (intersects.length > 0) {
-                // Find which crystal was hit
+            if (intersects.length > 0 && intersects[0].distance < 6) {
                 let hitGroup = intersects[0].object;
                 while (hitGroup.parent && hitGroup.parent !== scene) {
                     hitGroup = hitGroup.parent;
@@ -772,7 +801,7 @@
                 }
             }
 
-            // Sword Attack
+            // Sword Attack against Bot
             const botHit = raycaster.intersectObject(bot.mesh);
             if (botHit.length > 0 && botHit[0].distance < 4) {
                 const kb = bot.position.clone().sub(player.position).normalize().multiplyScalar(0.3);
@@ -785,16 +814,18 @@
             const raycaster = new THREE.Raycaster();
             raycaster.setFromCamera(new THREE.Vector2(0,0), camera);
 
-            // Find block we are looking at
-            const intersects = raycaster.intersectObjects(scene.children, true);
+            // Find block we are looking at (only raycast against blocks!)
+            const intersects = raycaster.intersectObjects(blockMeshes, true);
             if (intersects.length === 0) return;
 
             const hit = intersects[0];
             if (hit.distance > 6) return; // Reach distance limit
 
+            if (!hit.face) return;
+
             // Determine grid position of hit block
             const normal = hit.face.normal.clone();
-            const point = hit.point.clone().sub(normal.clone().multiplyScalar(CONFIG.blockSize / 2));
+            const point = hit.point.clone().add(normal.clone().multiplyScalar(-0.1));
             const gx = Math.floor(point.x / CONFIG.blockSize);
             const gy = Math.floor(point.y / CONFIG.blockSize);
             const gz = Math.floor(point.z / CONFIG.blockSize);
@@ -806,7 +837,6 @@
                 if (activeSlot === 5) { // Glowstone in hand -> Charge Anchor
                     if (targetBlock.charge < 4) {
                         targetBlock.charge++;
-                        // Update visual glow
                         targetBlock.mesh.material.emissive.setHex(0x00ffff).multiplyScalar(targetBlock.charge * 0.25);
                     }
                 } else { // Any other item -> Explode!
@@ -819,15 +849,26 @@
             }
 
             // Place Block Logic
-            const px = gx + normal.x;
-            const py = gy + normal.y;
-            const pz = gz + normal.z;
+            const px = gx + Math.round(normal.x);
+            const py = gy + Math.round(normal.y);
+            const pz = gz + Math.round(normal.z);
+
+            // Prevent placing blocks inside the player or bot
+            const tempPos = new THREE.Vector3(
+                px * CONFIG.blockSize + CONFIG.blockSize/2,
+                py * CONFIG.blockSize + CONFIG.blockSize/2,
+                pz * CONFIG.blockSize + CONFIG.blockSize/2
+            );
+            
+            if (player.position.distanceTo(tempPos) < 1.8 || bot.position.distanceTo(tempPos) < 1.8) {
+                return; // Block would collide with entity
+            }
 
             if (activeSlot === 2) { // Obsidian
                 setBlock(px, py, pz, BLOCK_TYPES.OBSIDIAN);
             } else if (activeSlot === 3) { // Crystal
                 spawnCrystal(px, py, pz);
-            } else if (activeSlot === 4) { // Respawn Anchor (Can be placed on any block)
+            } else if (activeSlot === 4) { // Respawn Anchor
                 setBlock(px, py, pz, BLOCK_TYPES.ANCHOR, 0);
             }
         }
@@ -850,7 +891,11 @@
             const distToPlayer = bot.position.distanceTo(player.position);
             document.getElementById('bot-state-txt').innerText = botState;
 
-            // Simple State Machine
+            // Jump if stuck or trying to climb
+            if (bot.onGround && bot.velocity.lengthSq() < 0.001 && distToPlayer > 2 && Math.random() < 0.05) {
+                bot.velocity.y = CONFIG.jumpForce;
+            }
+
             switch (botState) {
                 case BOT_STATES.IDLE:
                     if (distToPlayer < 20) {
@@ -859,22 +904,18 @@
                     break;
 
                 case BOT_STATES.CHASE:
-                    // Move towards player
                     const dir = player.position.clone().sub(bot.position).normalize();
                     bot.velocity.x = dir.x * CONFIG.botSpeed;
                     bot.velocity.z = dir.z * CONFIG.botSpeed;
 
-                    // Look at player
                     bot.mesh.lookAt(player.position.x, bot.position.y, player.position.z);
 
-                    // If close enough, prepare crystal setup
                     if (distToPlayer < 5 && botTimer % 30 === 0) {
                         botState = BOT_STATES.PLACE_OBSIDIAN;
                     }
                     break;
 
                 case BOT_STATES.PLACE_OBSIDIAN:
-                    // Place Obsidian near player's feet
                     const ox = Math.floor(player.position.x / CONFIG.blockSize);
                     const oy = Math.floor(player.position.y / CONFIG.blockSize) - 1;
                     const oz = Math.floor(player.position.z / CONFIG.blockSize);
@@ -894,7 +935,6 @@
                     break;
 
                 case BOT_STATES.DETONATE:
-                    // Find and detonate the placed crystal
                     if (botTargetPos) {
                         const crystalIndex = crystals.findIndex(c => 
                             c.gridPos.x === botTargetPos.x && 
@@ -912,9 +952,7 @@
                     break;
 
                 case BOT_STATES.RETREAT:
-                    // Strafe away to avoid blast / recharge
                     const retreatDir = bot.position.clone().sub(player.position).normalize();
-                    // Add some strafe
                     const strafe = new THREE.Vector3(-retreatDir.z, 0, retreatDir.x).multiplyScalar(0.5);
                     bot.velocity.add(retreatDir.multiplyScalar(CONFIG.botSpeed * 1.5).add(strafe));
                     
@@ -933,18 +971,25 @@
 
             const speed = CONFIG.playerSpeed * (keys['shift'] ? CONFIG.sprintMultiplier : 1);
 
-            if (keys['w']) {
-                controls.moveForward(speed);
-            }
-            if (keys['s']) {
-                controls.moveForward(-speed);
-            }
-            if (keys['a']) {
-                controls.moveRight(-speed);
-            }
-            if (keys['d']) {
-                controls.moveRight(speed);
-            }
+            // Calculate movement relative to camera look direction
+            const camDir = new THREE.Vector3();
+            camera.getWorldDirection(camDir);
+            camDir.y = 0;
+            camDir.normalize();
+
+            const camRight = new THREE.Vector3(-camDir.z, 0, camDir.x);
+
+            const moveVec = new THREE.Vector3();
+
+            if (keys['w']) moveVec.add(camDir);
+            if (keys['s']) moveVec.sub(camDir);
+            if (keys['a']) moveVec.sub(camRight);
+            if (keys['d']) moveVec.add(camRight);
+
+            moveVec.normalize().multiplyScalar(speed);
+
+            player.velocity.x = moveVec.x;
+            player.velocity.z = moveVec.z;
 
             // Jump
             if (keys[' '] && player.onGround) {
@@ -952,18 +997,11 @@
                 player.onGround = false;
             }
 
-            // Sync player entity position with camera
-            player.position.x = camera.position.x;
-            player.position.z = camera.position.z;
-            // Camera is at eye level
-            player.position.y = camera.position.y - 1.8;
-
             player.updatePhysics();
 
-            // Re-sync camera back to player eye level
-            camera.position.y = player.position.y + 1.8;
-            camera.position.x = player.position.x;
-            camera.position.z = player.position.z;
+            // Sync camera to player eye level
+            camera.position.copy(player.position);
+            camera.position.y += 1.6; // Eye height
         }
 
         // --- UI & SETTINGS SYSTEM ---
@@ -971,6 +1009,9 @@
             document.getElementById('health-bar').style.width = `${player.health}%`;
             document.getElementById('health-text').innerText = `HP: ${Math.round(player.health)} / 100`;
         }
+
+        // Initialize HUD
+        updateHUD();
 
         // Settings Menu Interactions
         const settingsBtn = document.getElementById('settings-btn');
@@ -996,7 +1037,6 @@
 
         sensSlider.addEventListener('input', (e) => {
             mouseSensitivity = parseFloat(e.target.value) * 0.0004;
-            // Update PointerLockControls sensitivity internally
             controls.pointerSpeed = parseFloat(e.target.value) * 0.2;
         });
 
@@ -1019,12 +1059,11 @@
                 document.getElementById(`key-slot-${slotNum}`).innerText = newKey.toUpperCase();
                 
                 activeRebindBtn = null;
+                e.preventDefault();
             }
         });
 
         // --- MAIN GAME LOOP ---
-        const clock = new THREE.Clock();
-
         function animate() {
             requestAnimationFrame(animate);
 
