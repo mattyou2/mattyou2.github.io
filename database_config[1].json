@@ -1,0 +1,6 @@
+{
+  "provider": "supabase",
+  "url": "https://gscqsdztghjvlrvfhdjv.supabase.co/rest/v1/",
+  "anonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdzY3FzZHp0Z2hqdmxydmZoZGp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwMzE5NTksImV4cCI6MjA5NzYwNzk1OX0.qcltg43WR05AElvagteN6DicUuQc6rP3frX7Jv0AgBA",
+  "tableName": "Supabase"
+}

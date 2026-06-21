@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="nl" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mattheo's Game & App Hub</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Iconen -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Supabase JS Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-slate-950 text-slate-100 font-['Poppins'] overflow-x-hidden min-h-screen flex flex-col">
+
+    <!-- 3D Geanimeerde Achtergrond -->
+    <div class="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+        <div class="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-purple-900/20 blur-[120px] animate-pulse"></div>
+        <div class="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-blue-900/20 blur-[120px] animate-pulse" style="animation-delay: 2s;"></div>
+    </div>
+
+    <!-- Navigatiebalk -->
+    <nav class="sticky top-0 z-40 backdrop-blur-md bg-slate-950/70 border-b border-slate-800 transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="#" class="text-2xl font-extrabold bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 bg-clip-text text-transparent hover:scale-105 transition-transform">
+                <i class="fa-solid fa-cubes-stacked mr-2"></i>MattheoHub
+            </a>
+            
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="#projects" class="hover:text-purple-400 transition-colors">Projecten</a>
+                <a href="#about" class="hover:text-purple-400 transition-colors">Over Mij</a>
+                <div id="auth-nav-buttons" class="flex items-center space-x-4">
+                    <!-- Dynamisch gevuld door JS -->
+                    <button onclick="openAuthModal('login')" class="px-4 py-2 rounded-full border border-purple-500/30 hover:bg-purple-500/10 transition-all">Inloggen</button>
+                    <button onclick="openAuthModal('register')" class="px-5 py-2 rounded-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 shadow-lg shadow-purple-500/20 transition-all">Registreren</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Dashboard Sectie (Verborgen tot ingelogd) -->
+    <section id="dashboard-section" class="hidden max-w-7xl mx-auto px-6 py-8 w-full">
+        <div class="glass-card p-6 rounded-2xl border border-slate-800 mb-8">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold">Welkom terug, <span id="user-display-name" class="text-purple-400">Gebruiker</span>!</h2>
+                    <p class="text-slate-400 text-sm">Rol: <span id="user-display-role" class="capitalize font-semibold text-blue-400">Laden...</span> | School: <span id="user-display-school" class="text-pink-400">Geen</span></p>
+                </div>
+                <div class="flex gap-3">
+                    <button id="teacher-action-btn" class="hidden px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-sm font-semibold transition-all" onclick="openClassModal()">
+                        <i class="fa-solid fa-users-gear mr-2"></i>Klas Beheren
+                    </button>
+                    <button onclick="handleLogout()" class="px-4 py-2 bg-red-600/20 hover:bg-red-600/40 border border-red-500/30 rounded-lg text-sm font-semibold transition-all">
+                        Uitloggen
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Hero Sectie -->
+    <header class="relative max-w-7xl mx-auto px-6 py-20 md:py-32 flex flex-col items-center text-center">
+        <div class="absolute -top-10 left-1/2 -translate-x-1/2 w-72 h-72 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight mb-6">
+            Ontdek Mijn <span class="bg-gradient-to-r from-purple-400 via-pink-500 to-blue-500 bg-clip-text text-transparent">Digitale Wereld</span>
+        </h1>
+        <p class="text-lg md:text-xl text-slate-400 max-w-2xl mb-10 leading-relaxed">
+            Welkom op mijn interactieve hub! Hier vind je al mijn games, web-apps en geavanceerde programma's. Maak een account aan om je voortgang op te slaan en klassen te joinen!
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4">
+            <a href="#projects" class="px-8 py-4 rounded-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 font-bold text-lg shadow-xl shadow-purple-500/20 transition-all hover:-translate-y-1">
+                Bekijk Projecten <i class="fa-solid fa-arrow-down ml-2"></i>
+            </a>
+            <button onclick="openAuthModal('register')" class="px-8 py-4 rounded-full border border-slate-700 hover:border-purple-500/50 hover:bg-purple-500/5 font-bold text-lg transition-all hover:-translate-y-1">
+                Account Aanmaken
+            </button>
+        </div>
+    </header>
+
+    <!-- Projecten Filter & Grid -->
+    <main id="projects" class="max-w-7xl mx-auto px-6 py-16 w-full flex-grow">
+        <div class="flex flex-col md:flex-row justify-between items-center mb-12 gap-6">
+            <div>
+                <h2 class="text-3xl font-bold mb-2">Mijn Creaties</h2>
+                <p class="text-slate-400">Beweeg je muis over de kaarten voor een 3D-effect!</p>
+            </div>
+            <!-- Filter Knoppen -->
+            <div class="flex gap-2 bg-slate-900/80 p-1.5 rounded-xl border border-slate-800">
+                <button onclick="filterProjects('all')" class="filter-btn active px-4 py-2 rounded-lg text-sm font-semibold transition-all">Alles</button>
+                <button onclick="filterProjects('game')" class="filter-btn px-4 py-2 rounded-lg text-sm font-semibold transition-all">Games</button>
+                <button onclick="filterProjects('web-app')" class="filter-btn px-4 py-2 rounded-lg text-sm font-semibold transition-all">Web Apps</button>
+                <button onclick="filterProjects('program')" class="filter-btn px-4 py-2 rounded-lg text-sm font-semibold transition-all">Programma's</button>
+            </div>
+        </div>
+
+        <!-- Het 3D Projecten Grid -->
+        <div id="projects-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Projecten worden dynamisch ingeladen door app.js -->
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-900 bg-slate-950/80 py-8 mt-auto">
+        <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4 text-slate-500 text-sm">
+            <p>&copy; 2024 MattheoHub. Alle rechten voorbehouden.</p>
+            <div class="flex gap-6">
+                <a href="#" class="hover:text-slate-300 transition-colors">Privacybeleid</a>
+                <a href="#" class="hover:text-slate-300 transition-colors">Voorwaarden</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- AUTH MODAL (Login / Register) -->
+    <div id="auth-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300">
+        <div class="glass-card w-full max-w-md p-8 rounded-2xl border border-slate-800 relative mx-4 transform scale-95 transition-transform duration-300">
+            <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-xl">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            
+            <div class="flex justify-center mb-6">
+                <div class="bg-slate-900 p-1 rounded-lg border border-slate-800">
+                    <button id="tab-login" onclick="switchAuthTab('login')" class="px-4 py-2 rounded-md font-semibold text-sm transition-all">Inloggen</button>
+                    <button id="tab-register" onclick="switchAuthTab('register')" class="px-4 py-2 rounded-md font-semibold text-sm transition-all">Registreren</button>
+                </div>
+            </div>
+
+            <!-- Login Formulier -->
+            <form id="login-form" onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">E-mailadres</label>
+                    <input type="email" required id="login-email" class="w-full bg-slate-900/50 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 transition-colors" placeholder="je@email.nl">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Wachtwoord</label>
+                    <input type="password" required id="login-password" class="w-full bg-slate-900/50 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 transition-colors" placeholder="••••••••">
+                </div>
+                <button type="submit" class="w-full py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 rounded-xl font-bold shadow-lg shadow-purple-500/10 transition-all">
+                    Inloggen
+                </button>
+            </form>
+
+            <!-- Registreer Formulier -->
+            <form id="register-form" onsubmit="handleRegister(event)" class="space-y-4 hidden">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Volledige Naam</label>
+                    <input type="text" required id="reg-name" class="w-full bg-slate-900/50 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 transition-colors" placeholder="Mattheo de Bouwer">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">E-mailadres</label>
+                    <input type="email" required id="reg-email" class="w-full bg-slate-900/50 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 transition-colors" placeholder="je@email.nl">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Wachtwoord</label>
+                    <input type="password" required id="reg-password" class="w-full bg-slate-900/50 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 transition-colors" placeholder="Minimaal 6 tekens">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Ik ben een...</label>
+                    <select id="reg-role" onchange="toggleRegFields()" class="w-full bg-slate-900/50 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 transition-colors">
+                        <option value="student">Leerling / Gebruiker</option>
+                        <option value="teacher">Docent / Begeleider</option>
+                    </select>
+                </div>
+                <!-- School Selectie -->
+                <div id="school-select-container">
+                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Selecteer School (Optioneel)</label>
+                    <div class="flex gap-2">
+                        <select id="reg-school" class="flex-grow bg-slate-900/50 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 transition-colors">
+                            <option value="">Geen school selecteren</option>
+                            <option value="new">+ Voeg nieuwe school toe...</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- Nieuwe School Toevoegen Veld -->
+                <div id="new-school-container" class="hidden">
+                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Nieuwe School Naam</label>
+                    <input type="text" id="reg-new-school" class="w-full bg-slate-900/50 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 transition-colors" placeholder="Naam van jouw school">
+                </div>
+
+                <button type="submit" class="w-full py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 rounded-xl font-bold shadow-lg shadow-purple-500/10 transition-all">
+                    Account Aanmaken
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- DOCENT KLAS BEHEER MODAL -->
+    <div id="class-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300">
+        <div class="glass-card w-full max-w-2xl p-8 rounded-2xl border border-slate-800 relative mx-4 max-h-[90vh] overflow-y-auto">
+            <button onclick="closeClassModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-xl">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <h3 class="text-2xl font-bold mb-6 text-purple-400"><i class="fa-solid fa-graduation-cap mr-2"></i>Klas & Leerlingen Beheer</h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Klas Aanmaken -->
+                <div class="p-4 bg-slate-900/50 border border-slate-800 rounded-xl">
+                    <h4 class="font-bold mb-3 text-sm uppercase tracking-wider text-slate-300">Nieuwe Klas Aanmaken</h4>
+                    <form onsubmit="handleCreateClass(event)" class="space-y-3">
+                        <input type="text" id="class-name-input" required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500" placeholder="Bijv. Klas 4A of WebDev 101">
+                        <button type="submit" class="w-full py-2 bg-purple-600 hover:bg-purple-500 rounded-lg text-sm font-bold transition-all">Klas Aanmaken</button>
+                    </form>
+                </div>
+
+                <!-- Leerling Toevoegen -->
+                <div class="p-4 bg-slate-900/50 border border-slate-800 rounded-xl">
+                    <h4 class="font-bold mb-3 text-sm uppercase tracking-wider text-slate-300">Leerling Toevoegen</h4>
+                    <form onsubmit="handleAddStudent(event)" class="space-y-3">
+                        <select id="student-class-select" required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500">
+                            <option value="">Selecteer een klas...</option>
+                        </select>
+                        <input type="email" id="student-email-input" required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500" placeholder="E-mail van de leerling">
+                        <button type="submit" class="w-full py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-sm font-bold transition-all">Toevoegen aan Klas</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Klassen & Leerlingen Overzicht -->
+            <div class="mt-6">
+                <h4 class="font-bold mb-3 text-sm uppercase tracking-wider text-slate-300">Jouw Klassen & Actieve Leerlingen</h4>
+                <div id="classes-list" class="space-y-3">
+                    <!-- Dynamisch geladen klassen -->
+                    <p class="text-slate-500 text-sm italic">Nog geen klassen aangemaakt.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- COOKIE BANNER -->
+    <div id="cookie-banner" class="fixed bottom-6 left-6 right-6 md:left-auto md:right-6 md:w-96 z-50 glass-card p-6 rounded-2xl border border-slate-800 shadow-2xl transform translate-y-20 opacity-0 transition-all duration-500">
+        <div class="flex items-start gap-4">
+            <div class="p-3 bg-purple-500/10 text-purple-400 rounded-xl text-xl">
+                <i class="fa-solid fa-cookie-bite"></i>
+            </div>
+            <div>
+                <h4 class="font-bold text-white mb-1">Cookie Instellingen</h4>
+                <p class="text-xs text-slate-400 leading-relaxed mb-4">
+                    Wij gebruiken cookies om je inlogsessie te onthouden en je ervaring op onze 3D hub te optimaliseren. Ga je hiermee akkoord?
+                </p>
+                <div class="flex gap-3">
+                    <button onclick="acceptCookies()" class="flex-grow py-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-xs font-bold rounded-lg transition-all">Accepteren</button>
+                    <button onclick="declineCookies()" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-xs font-semibold rounded-lg border border-slate-800 transition-all">Weigeren</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
