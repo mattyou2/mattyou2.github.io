@@ -1,9 +1,10 @@
+filename="index.html" language="html"]
 <!DOCTYPE html>
 <html lang="nl" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mattheo's Game & App Hub</title>
+    <title>My Devable - Game & App Hub</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Iconen -->
@@ -24,17 +25,17 @@
     </div>
 
     <!-- Navigatiebalk -->
-    <nav class="sticky top-0 z-40 backdrop-blur-md bg-slate-950/70 border-b border-slate-800 transition-all duration-300">
+    <nav class="sticky top-0 z-40 backdrop-blur-md bg-slate-950/70 border-b border-slate-900 transition-all duration-300">
         <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-            <a href="#" class="text-2xl font-extrabold bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 bg-clip-text text-transparent hover:scale-105 transition-transform">
-                <i class="fa-solid fa-cubes-stacked mr-2"></i>MattheoHub
+            <a href="index.html" class="text-2xl font-extrabold bg-gradient-to-r from-purple-400 via-pink-500 to-blue-400 bg-clip-text text-transparent hover:scale-105 transition-transform flex items-center gap-2">
+                <i class="fa-solid fa-cubes-stacked text-purple-500"></i>My Devable
             </a>
             
             <div class="hidden md:flex items-center space-x-8">
                 <a href="#projects" class="hover:text-purple-400 transition-colors">Projecten</a>
-                <a href="#about" class="hover:text-purple-400 transition-colors">Over Mij</a>
+                <a href="#about" class="hover:text-purple-400 transition-colors">Over Ons</a>
                 <div id="auth-nav-buttons" class="flex items-center space-x-4">
-                    <!-- Dynamisch gevuld door JS -->
+                    <!-- Dynamisch gevuld door auth.js -->
                     <button onclick="openAuthModal('login')" class="px-4 py-2 rounded-full border border-purple-500/30 hover:bg-purple-500/10 transition-all">Inloggen</button>
                     <button onclick="openAuthModal('register')" class="px-5 py-2 rounded-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 shadow-lg shadow-purple-500/20 transition-all">Registreren</button>
                 </div>
@@ -42,40 +43,24 @@
         </div>
     </nav>
 
-    <!-- Dashboard Sectie (Verborgen tot ingelogd) -->
-    <section id="dashboard-section" class="hidden max-w-7xl mx-auto px-6 py-8 w-full">
-        <div class="glass-card p-6 rounded-2xl border border-slate-800 mb-8">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                    <h2 class="text-2xl font-bold">Welkom terug, <span id="user-display-name" class="text-purple-400">Gebruiker</span>!</h2>
-                    <p class="text-slate-400 text-sm">Rol: <span id="user-display-role" class="capitalize font-semibold text-blue-400">Laden...</span> | School: <span id="user-display-school" class="text-pink-400">Geen</span></p>
-                </div>
-                <div class="flex gap-3">
-                    <button id="teacher-action-btn" class="hidden px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-sm font-semibold transition-all" onclick="openClassModal()">
-                        <i class="fa-solid fa-users-gear mr-2"></i>Klas Beheren
-                    </button>
-                    <button onclick="handleLogout()" class="px-4 py-2 bg-red-600/20 hover:bg-red-600/40 border border-red-500/30 rounded-lg text-sm font-semibold transition-all">
-                        Uitloggen
-                    </button>
-                </div>
-            </div>
-        </div>
-    </section>
-
     <!-- Hero Sectie -->
     <header class="relative max-w-7xl mx-auto px-6 py-20 md:py-32 flex flex-col items-center text-center">
         <div class="absolute -top-10 left-1/2 -translate-x-1/2 w-72 h-72 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <span class="px-4 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-400 text-xs font-semibold uppercase tracking-wider mb-6 animate-bounce">
+            Welkom bij de toekomst van development
+        </span>
         <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight mb-6">
-            Ontdek Mijn <span class="bg-gradient-to-r from-purple-400 via-pink-500 to-blue-500 bg-clip-text text-transparent">Digitale Wereld</span>
+            Ontdek de Kracht van <br>
+            <span class="bg-gradient-to-r from-purple-400 via-pink-500 to-blue-400 bg-clip-text text-transparent">My Devable</span>
         </h1>
         <p class="text-lg md:text-xl text-slate-400 max-w-2xl mb-10 leading-relaxed">
-            Welkom op mijn interactieve hub! Hier vind je al mijn games, web-apps en geavanceerde programma's. Maak een account aan om je voortgang op te slaan en klassen te joinen!
+            Jouw ultieme hub voor interactieve web-apps, games en geavanceerde software. Log in om je voortgang op te slaan, klassen te beheren en direct aan de slag te gaan!
         </p>
         <div class="flex flex-col sm:flex-row gap-4">
             <a href="#projects" class="px-8 py-4 rounded-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 font-bold text-lg shadow-xl shadow-purple-500/20 transition-all hover:-translate-y-1">
                 Bekijk Projecten <i class="fa-solid fa-arrow-down ml-2"></i>
             </a>
-            <button onclick="openAuthModal('register')" class="px-8 py-4 rounded-full border border-slate-700 hover:border-purple-500/50 hover:bg-purple-500/5 font-bold text-lg transition-all hover:-translate-y-1">
+            <button onclick="openAuthModal('register')" class="px-8 py-4 rounded-full border border-slate-800 hover:border-purple-500/50 hover:bg-purple-500/5 font-bold text-lg transition-all hover:-translate-y-1">
                 Account Aanmaken
             </button>
         </div>
@@ -85,8 +70,8 @@
     <main id="projects" class="max-w-7xl mx-auto px-6 py-16 w-full flex-grow">
         <div class="flex flex-col md:flex-row justify-between items-center mb-12 gap-6">
             <div>
-                <h2 class="text-3xl font-bold mb-2">Mijn Creaties</h2>
-                <p class="text-slate-400">Beweeg je muis over de kaarten voor een 3D-effect!</p>
+                <h2 class="text-3xl font-bold mb-2">Onze Creaties</h2>
+                <p class="text-slate-400">Beweeg je muis over de kaarten voor een interactief 3D-effect.</p>
             </div>
             <!-- Filter Knoppen -->
             <div class="flex gap-2 bg-slate-900/80 p-1.5 rounded-xl border border-slate-800">
@@ -103,10 +88,20 @@
         </div>
     </main>
 
+    <!-- Over Ons Sectie -->
+    <section id="about" class="border-t border-slate-900 bg-slate-950/50 py-20">
+        <div class="max-w-5xl mx-auto px-6 text-center">
+            <h2 class="text-3xl font-bold mb-6">Over My Devable</h2>
+            <p class="text-slate-400 leading-relaxed max-w-3xl mx-auto">
+                My Devable is opgericht om innovatieve, snelle en prachtige weboplossingen te bouwen. Wij geloven in de kracht van moderne webtechnologieën zoals Tailwind CSS, Supabase en interactieve 3D-animaties om de ultieme gebruikerservaring te creëren.
+            </p>
+        </div>
+    </section>
+
     <!-- Footer -->
-    <footer class="border-t border-slate-900 bg-slate-950/80 py-8 mt-auto">
+    <footer class="border-t border-slate-900 bg-slate-950 py-8 mt-auto">
         <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4 text-slate-500 text-sm">
-            <p>&copy; 2024 MattheoHub. Alle rechten voorbehouden.</p>
+            <p>&copy; 2024 My Devable. Alle rechten voorbehouden.</p>
             <div class="flex gap-6">
                 <a href="#" class="hover:text-slate-300 transition-colors">Privacybeleid</a>
                 <a href="#" class="hover:text-slate-300 transition-colors">Voorwaarden</a>
@@ -167,12 +162,10 @@
                 <!-- School Selectie -->
                 <div id="school-select-container">
                     <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Selecteer School (Optioneel)</label>
-                    <div class="flex gap-2">
-                        <select id="reg-school" class="flex-grow bg-slate-900/50 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 transition-colors">
-                            <option value="">Geen school selecteren</option>
-                            <option value="new">+ Voeg nieuwe school toe...</option>
-                        </select>
-                    </div>
+                    <select id="reg-school" class="w-full bg-slate-900/50 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 transition-colors">
+                        <option value="">Geen school selecteren</option>
+                        <option value="new">+ Voeg nieuwe school toe...</option>
+                    </select>
                 </div>
                 <!-- Nieuwe School Toevoegen Veld -->
                 <div id="new-school-container" class="hidden">
@@ -184,48 +177,6 @@
                     Account Aanmaken
                 </button>
             </form>
-        </div>
-    </div>
-
-    <!-- DOCENT KLAS BEHEER MODAL -->
-    <div id="class-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300">
-        <div class="glass-card w-full max-w-2xl p-8 rounded-2xl border border-slate-800 relative mx-4 max-h-[90vh] overflow-y-auto">
-            <button onclick="closeClassModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-xl">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-            <h3 class="text-2xl font-bold mb-6 text-purple-400"><i class="fa-solid fa-graduation-cap mr-2"></i>Klas & Leerlingen Beheer</h3>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Klas Aanmaken -->
-                <div class="p-4 bg-slate-900/50 border border-slate-800 rounded-xl">
-                    <h4 class="font-bold mb-3 text-sm uppercase tracking-wider text-slate-300">Nieuwe Klas Aanmaken</h4>
-                    <form onsubmit="handleCreateClass(event)" class="space-y-3">
-                        <input type="text" id="class-name-input" required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500" placeholder="Bijv. Klas 4A of WebDev 101">
-                        <button type="submit" class="w-full py-2 bg-purple-600 hover:bg-purple-500 rounded-lg text-sm font-bold transition-all">Klas Aanmaken</button>
-                    </form>
-                </div>
-
-                <!-- Leerling Toevoegen -->
-                <div class="p-4 bg-slate-900/50 border border-slate-800 rounded-xl">
-                    <h4 class="font-bold mb-3 text-sm uppercase tracking-wider text-slate-300">Leerling Toevoegen</h4>
-                    <form onsubmit="handleAddStudent(event)" class="space-y-3">
-                        <select id="student-class-select" required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500">
-                            <option value="">Selecteer een klas...</option>
-                        </select>
-                        <input type="email" id="student-email-input" required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500" placeholder="E-mail van de leerling">
-                        <button type="submit" class="w-full py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-sm font-bold transition-all">Toevoegen aan Klas</button>
-                    </form>
-                </div>
-            </div>
-
-            <!-- Klassen & Leerlingen Overzicht -->
-            <div class="mt-6">
-                <h4 class="font-bold mb-3 text-sm uppercase tracking-wider text-slate-300">Jouw Klassen & Actieve Leerlingen</h4>
-                <div id="classes-list" class="space-y-3">
-                    <!-- Dynamisch geladen klassen -->
-                    <p class="text-slate-500 text-sm italic">Nog geen klassen aangemaakt.</p>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -250,6 +201,7 @@
 
     <!-- Scripts -->
     <script src="config.js"></script>
+    <script src="auth.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
