@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Crystal PvP Simulator</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
+            background-color: #000;
+        }
+
+        #canvas-container {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        /* Crosshair */
+        #crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 10px;
+            height: 10px;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 10;
+        }
+        #crosshair::before, #crosshair::after {
+            content: '';
+            position: absolute;
+            background: white;
+            mix-blend-mode: difference;
+        }
+        #crosshair::before { top: 4px; left: -5px; width: 20px; height: 2px; }
+        #crosshair::after { top: -5px; left: 4px; width: 2px; height: 20px; }
+
+        /* HUD Overlay */
+        #hud {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        /* Health Bar */
+        .bar-container {
+            width: 360px;
+            height: 20px;
+            background: rgba(0, 0, 0, 0.6);
+            border: 2px solid #333;
+            border-radius: 5px;
+            overflow: hidden;
+            position: relative;
+        }
+        #health-bar {
+            width: 100%;
+            height: 100%;
+            background: #ff3333;
+            transition: width 0.1s ease-out;
+        }
+        #health-text {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+            line-height: 20px;
+            text-shadow: 1px 1px 2px black;
+        }
+
+        /* Hotbar */
+        #hotbar {
+            display: flex;
+            gap: 5px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 5px;
+            border-radius: 5px;
+            border: 2px solid #555;
+            pointer-events: auto;
+        }
+        .slot {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 3px solid #333;
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 10px;
+            font-weight: bold;
+            position: relative;
+            cursor: pointer;
+        }
+        .slot.active {
+            border-color: #fff;
+            background: rgba(255, 255, 255, 0.3);
+        }
+        .slot img, .slot .icon-placeholder {
+            font-size: 18px;
+            margin-bottom: 2px;
+        }
+        .slot-key {
+            position: absolute;
+            top: 2px;
+            left: 4px;
+            font-size: 9px;
+            color: #aaa;
+        }
+
+        /* Instructions & Menus */
+        #blocker {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+            color: white;
+            text-align: center;
+        }
+        #instructions {
+            background: rgba(20, 20, 20, 0.9);
+            padding: 30px;
+            border-radius: 10px;
+            border: 2px solid #555;
+            max-width: 500px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+        }
+        button {
+            background: #4CAF50;
+            border: none;
+            color: white;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-top: 15px;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background: #45a049;
+        }
+
+        /* Settings Menu */
+        #settings-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 15;
+            background: rgba(0,0,0,0.6);
+            border: 1px solid #555;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #settings-menu {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(15, 15, 15, 0.95);
+            border: 2px solid #777;
+            border-radius: 8px;
+            padding: 25px;
+            color: white;
+            z-index: 30;
+            width: 400px;
+            box-shadow: 0 0 25px rgba(0,0,0,0.9);
+        }
+        .settings-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .settings-row label {
+            font-size: 14px;
+        }
+        .keybind-btn {
+            background: #333;
+            border: 1px solid #555;
+            color: #fff;
+            padding: 5px 10px;
+            min-width: 80px;
+            text-align: center;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .keybind-btn:focus {
+            outline: 2px solid #4CAF50;
+            background: #444;
+        }
+        .slider {
+            width: 120px;
+        }
+
+        /* Bot Status Indicator */
+        #bot-status {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            background: rgba(0,0,0,0.6);
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 13px;
+            border: 1px solid #444;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="canvas-container"></div>
+    <div id="crosshair"></div>
+
+    <!-- HUD -->
+    <div id="hud">
+        <div class="bar-container">
+            <div id="health-bar"></div>
+            <div id="health-text">HP: 100 / 100</div>
+        </div>
+        <div id="hotbar">
+            <div class="slot active" data-slot="1">
+                <span class="slot-key" id="key-slot-1">1</span>
+                <span class="icon-placeholder">⚔️</span>
+                Sword
+            </div>
+            <div class="slot" data-slot="2">
+                <span class="slot-key" id="key-slot-2">2</span>
+                <span class="icon-placeholder">⬛</span>
+                Obsidian
+            </div>
+            <div class="slot" data-slot="3">
+                <span class="slot-key" id="key-slot-3">3</span>
+                <span class="icon-placeholder">🔮</span>
+                Crystal
+            </div>
+            <div class="slot" data-slot="4">
+                <span class="slot-key" id="key-slot-4">4</span>
+                <span class="icon-placeholder">⚓</span>
+                Anchor
+            </div>
+            <div class="slot" data-slot="5">
+                <span class="slot-key" id="key-slot-5">5</span>
+                <span class="icon-placeholder">🟡</span>
+                Glowstone
+            </div>
+        </div>
+    </div>
+
+    <!-- Bot Status -->
+    <div id="bot-status">
+        Bot HP: <span id="bot-hp">100</span><br>
+        Bot State: <span id="bot-state-txt">IDLE</span>
+    </div>
+
+    <!-- Settings Button -->
+    <button id="settings-btn">⚙️ Settings</button>
+
+    <!-- Blocker / Start Screen -->
+    <div id="blocker">
+        <div id="instructions">
+            <h1 style="margin-top:0; color: #4CAF50;">Crystal PvP Simulator</h1>
+            <p>
+                <b>W, A, S, D</b> - Bewegen<br>
+                <b>SPACE</b> - Springen | <b>SHIFT</b> - Sprinten<br>
+                <b>Left Click</b> - Slaan / Crystal Detoneren<br>
+                <b>Right Click</b> - Blokken Plaatsen / Anchor Opladen & Detoneren<br>
+                <b>1 t/m 5</b> - Hotbar selectie
+            </p>
+            <p style="color: #aaa; font-size: 13px;">
+                <i>Tip: Respawn Anchors kunnen overal geplaatst worden. Laad ze op met Glowstone en klik met een ander item om ze te laten ontploffen! Bescherm je voeten met obsidian om blast damage te verminderen.</i>
+            </p>
+            <button id="play-button">START SIMULATIE</button>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-menu">
+        <h3 style="margin-top:0; border-bottom: 1px solid #444; padding-bottom: 10px;">Instellingen</h3>
+        
+        <div class="settings-row">
+            <label>Field of View (FOV)</label>
+            <input type="range" id="fov-slider" class="slider" min="50" max="110" value="75">
+        </div>
+        <div class="settings-row">
+            <label>Muis Gevoeligheid</label>
+            <input type="range" id="sens-slider" class="slider" min="1" max="10" value="5">
+        </div>
+
+        <h4 style="margin-bottom: 10px; color: #4CAF50;">Keybinds (Klik om te wijzigen)</h4>
+        <div class="settings-row">
+            <label>Slot 1 (Sword)</label>
+            <button class="keybind-btn" id="bind-slot-1" data-slot="1">1</button>
+        </div>
+        <div class="settings-row">
+            <label>Slot 2 (Obsidian)</label>
+            <button class="keybind-btn" id="bind-slot-2" data-slot="2">2</button>
+        </div>
+        <div class="settings-row">
+            <label>Slot 3 (Crystal)</label>
+            <button class="keybind-btn" id="bind-slot-3" data-slot="3">3</button>
+        </div>
+        <div class="settings-row">
+            <label>Slot 4 (Anchor)</label>
+            <button class="keybind-btn" id="bind-slot-4" data-slot="4">4</button>
+        </div>
+        <div class="settings-row">
+            <label>Slot 5 (Glowstone)</label>
+            <button class="keybind-btn" id="bind-slot-5" data-slot="5">5</button>
+        </div>
+
+        <button id="close-settings" style="width: 100%; background: #d32f2f;">Sluiten & Opslaan</button>
+    </div>
+
+    <!-- Three.js en PointerLockControls importeren -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/PointerLockControls.js"></script>
+
+    <script>
+        // --- GAME CONFIG & STATE ---
+        const CONFIG = {
+            gravity: 0.015,
+            playerSpeed: 0.07,
+            sprintMultiplier: 1.5,
+            jumpForce: 0.25,
+            friction: 0.85,
+            botSpeed: 0.05,
+            gridSize: 32,
+            blockSize: 2
+        };
+
+        let keybinds = {
+            slot1: '1',
+            slot2: '2',
+            slot3: '3',
+            slot4: '4',
+            slot5: '5'
+        };
+
+        let mouseSensitivity = 0.002;
+        let activeSlot = 1;
+
+        // --- SCENE SETUP ---
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x1a1a2e);
+        scene.fog = new THREE.FogExp2(0x1a1a2e, 0.015);
+
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+        // Lights
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+        scene.add(ambientLight);
+
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        dirLight.position.set(20, 40, 20);
+        dirLight.castShadow = true;
+        scene.add(dirLight);
+
+        // --- VOXEL GRID SYSTEM ---
+        const BLOCK_TYPES = {
+            AIR: 0,
+            BEDROCK: 1,
+            OBSIDIAN: 2,
+            ANCHOR: 3,
+            GLOWSTONE: 4
+        };
+
+        const voxelGrid = {}; // Key: "x,y,z" -> { type, mesh, charge }
+        const blockGeometries = {};
+        const blockMaterials = {};
+
+        // Materials setup
+        const loader = new THREE.TextureLoader();
+        
+        // Helper to create solid color textures with borders (low-poly style)
+        function createBlockMaterial(color, emissive = 0x000000) {
+            return new THREE.MeshStandardMaterial({
+                color: color,
+                roughness: 0.8,
+                metalness: 0.2,
+                emissive: emissive
+            });
+        }
+
+        blockGeometries[BLOCK_TYPES.BEDROCK] = new THREE.BoxGeometry(CONFIG.blockSize, CONFIG.blockSize, CONFIG.blockSize);
+        blockMaterials[BLOCK_TYPES.BEDROCK] = createBlockMaterial(0x2c2c2c);
+
+        blockGeometries[BLOCK_TYPES.OBSIDIAN] = new THREE.BoxGeometry(CONFIG.blockSize, CONFIG.blockSize, CONFIG.blockSize);
+        blockMaterials[BLOCK_TYPES.OBSIDIAN] = createBlockMaterial(0x100518, 0x050010);
+
+        blockGeometries[BLOCK_TYPES.GLOWSTONE] = new THREE.BoxGeometry(CONFIG.blockSize, CONFIG.blockSize, CONFIG.blockSize);
+        blockMaterials[BLOCK_TYPES.GLOWSTONE] = createBlockMaterial(0xffcc44, 0x553300);
+
+        // Anchor is custom (we will build it dynamically to show charge)
+        blockGeometries[BLOCK_TYPES.ANCHOR] = new THREE.BoxGeometry(CONFIG.blockSize, CONFIG.blockSize, CONFIG.blockSize);
+
+        function getGridKey(x, y, z) {
+            return `${Math.floor(x)},${Math.floor(y)},${Math.floor(z)}`;
+        }
+
+        function setBlock(x, y, z, type, charge = 0) {
+            const key = getGridKey(x, y, z);
+            
+            // Remove old block if exists
+            if (voxelGrid[key]) {
+                scene.remove(voxelGrid[key].mesh);
+                delete voxelGrid[key];
+            }
+
+            if (type === BLOCK_TYPES.AIR) return;
+
+            let material;
+            if (type === BLOCK_TYPES.ANCHOR) {
+                // Custom material based on charge
+                material = new THREE.MeshStandardMaterial({
+                    color: 0x220033,
+                    emissive: new THREE.Color(0x00ffff).multiplyScalar(charge * 0.25),
+                    roughness: 0.5
+                });
+            } else {
+                material = blockMaterials[type];
+            }
+
+            const mesh = new THREE.Mesh(blockGeometries[type], material);
+            mesh.position.set(
+                x * CONFIG.blockSize + CONFIG.blockSize/2,
+                y * CONFIG.blockSize + CONFIG.blockSize/2,
+                z * CONFIG.blockSize + CONFIG.blockSize/2
+            );
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+            scene.add(mesh);
+
+            voxelGrid[key] = { type, mesh, charge, x, y, z };
+        }
+
+        function getBlock(x, y, z) {
+            const key = getGridKey(x, y, z);
+            return voxelGrid[key] || null;
+        }
+
+        // Build Arena (Bedrock floor, some obsidian walls)
+        for (let x = -15; x < 15; x++) {
+            for (let z = -15; z < 15; z++) {
+                setBlock(x, -1, z, BLOCK_TYPES.BEDROCK);
+                // Outer walls
+                if (x === -15 || x === 14 || z === -15 || z === 14) {
+                    setBlock(x, 0, z, BLOCK_TYPES.BEDROCK);
+                    setBlock(x, 1, z, BLOCK_TYPES.BEDROCK);
+                }
+            }
+        }
+        // Add some random obsidian pillars
+        setBlock(-3, 0, -3, BLOCK_TYPES.OBSIDIAN);
+        setBlock(-3, 1, -3, BLOCK_TYPES.OBSIDIAN);
+        setBlock(3, 0, 3, BLOCK_TYPES.OBSIDIAN);
+        setBlock(3, 1, 3, BLOCK_TYPES.OBSIDIAN);
+
+        // --- ENTITY SYSTEM (PLAYER & BOT) ---
+        class Entity {
+            constructor(color, isPlayer = false) {
+                this.isPlayer = isPlayer;
+                this.width = 1.2;
+                this.height = 3.6;
+                this.depth = 1.2;
+                
+                // Physics
+                this.position = new THREE.Vector3(0, 5, 0);
+                this.velocity = new THREE.Vector3();
+                this.onGround = false;
+                this.health = 100;
+
+                // Visual Mesh
+                const geometry = new THREE.BoxGeometry(this.width, this.height, this.depth);
+                const material = new THREE.MeshStandardMaterial({ color: color });
+                this.mesh = new THREE.Mesh(geometry, material);
+                this.mesh.castShadow = true;
+                scene.add(this.mesh);
+            }
+
+            updatePhysics() {
+                // Apply Gravity
+                if (!this.onGround) {
+                    this.velocity.y -= CONFIG.gravity;
+                }
+
+                // Apply Friction
+                this.velocity.x *= CONFIG.friction;
+                this.velocity.z *= CONFIG.friction;
+
+                // Move Entity
+                this.position.add(this.velocity);
+
+                // Collision Detection against Voxel Grid (Simple AABB)
+                this.onGround = false;
+                const feetY = this.position.y - this.height / 2;
+                const gridX = Math.floor(this.position.x / CONFIG.blockSize);
+                const gridY = Math.floor(feetY / CONFIG.blockSize);
+                const gridZ = Math.floor(this.position.z / CONFIG.blockSize);
+
+                // Check block directly underneath
+                const blockUnder = getBlock(gridX, gridY, gridZ);
+                if (blockUnder && blockUnder.type !== BLOCK_TYPES.AIR) {
+                    const blockTop = (gridY + 1) * CONFIG.blockSize;
+                    if (feetY <= blockTop && this.velocity.y <= 0) {
+                        this.position.y = blockTop + this.height / 2;
+                        this.velocity.y = 0;
+                        this.onGround = true;
+                    }
+                }
+
+                // Keep within arena bounds
+                if (this.position.y < -10) {
+                    this.respawn();
+                }
+
+                // Update Mesh Position
+                this.mesh.position.copy(this.position);
+            }
+
+            takeDamage(amount, knockbackVec) {
+                this.health = Math.max(0, this.health - amount);
+                this.velocity.add(knockbackVec);
+                
+                if (this.isPlayer) {
+                    updateHUD();
+                    // Screen shake
+                    camera.position.x += (Math.random() - 0.5) * 0.5;
+                } else {
+                    document.getElementById('bot-hp').innerText = Math.round(this.health);
+                }
+
+                if (this.health <= 0) {
+                    this.respawn();
+                }
+            }
+
+            respawn() {
+                this.health = 100;
+                this.position.set((Math.random() - 0.5) * 10, 10, (Math.random() - 0.5) * 10);
+                this.velocity.set(0, 0, 0);
+                if (this.isPlayer) updateHUD();
+            }
+        }
+
+        const player = new Entity(0x0000ff, true);
+        player.position.set(-5, 2, -5);
+
+        const bot = new Entity(0xff0000, false);
+        bot.position.set(5, 2, 5);
+
+        // --- CONTROLS SETUP ---
+        const controls = new THREE.PointerLockControls(camera, document.body);
+        
+        document.getElementById('play-button').addEventListener('click', () => {
+            controls.lock();
+        });
+
+        controls.addEventListener('lock', () => {
+            document.getElementById('blocker').style.display = 'none';
+        });
+
+        controls.addEventListener('unlock', () => {
+            document.getElementById('blocker').style.display = 'flex';
+        });
+
+        // Keyboard Inputs
+        const keys = {};
+        window.addEventListener('keydown', (e) => {
+            keys[e.key.toLowerCase()] = true;
+            handleHotbarKeys(e.key);
+        });
+        window.addEventListener('keyup', (e) => {
+            keys[e.key.toLowerCase()] = false;
+        });
+
+        function handleHotbarKeys(key) {
+            if (key === keybinds.slot1) selectSlot(1);
+            if (key === keybinds.slot2) selectSlot(2);
+            if (key === keybinds.slot3) selectSlot(3);
+            if (key === keybinds.slot4) selectSlot(4);
+            if (key === keybinds.slot5) selectSlot(5);
+        }
+
+        function selectSlot(slot) {
+            activeSlot = slot;
+            document.querySelectorAll('.slot').forEach(s => s.classList.remove('active'));
+            document.querySelector(`.slot[data-slot="${slot}"]`).classList.add('active');
+        }
+
+        // --- END CRYSTAL SYSTEM ---
+        const crystals = []; // Array of { mesh, position }
+
+        function spawnCrystal(x, y, z) {
+            // Check if placed on Obsidian or Bedrock
+            const blockBelow = getBlock(x, y - 1, z);
+            if (!blockBelow || (blockBelow.type !== BLOCK_TYPES.OBSIDIAN && blockBelow.type !== BLOCK_TYPES.BEDROCK)) {
+                return; // Can only place on Obsidian or Bedrock
+            }
+
+            // Create Crystal Mesh (Rotating Octahedron inside Glass Box)
+            const crystalGroup = new THREE.Group();
+            
+            const outerGeo = new THREE.BoxGeometry(1.2, 1.2, 1.2);
+            const outerMat = new THREE.MeshStandardMaterial({
+                color: 0xffffff,
+                transparent: true,
+                opacity: 0.4,
+                wireframe: false
+            });
+            const outerMesh = new THREE.Mesh(outerGeo, outerMat);
+            crystalGroup.add(outerMesh);
+
+            const innerGeo = new THREE.OctahedronGeometry(0.6);
+            const innerMat = new THREE.MeshStandardMaterial({
+                color: 0xff00ff,
+                emissive: 0xff00ff,
+                roughness: 0.1
+            });
+            const innerMesh = new THREE.Mesh(innerGeo, innerMat);
+            innerMesh.name = "inner";
+            crystalGroup.add(innerMesh);
+
+            crystalGroup.position.set(
+                x * CONFIG.blockSize + CONFIG.blockSize/2,
+                y * CONFIG.blockSize + CONFIG.blockSize/2,
+                z * CONFIG.blockSize + CONFIG.blockSize/2
+            );
+
+            scene.add(crystalGroup);
+            crystals.push({
+                mesh: crystalGroup,
+                gridPos: { x, y, z },
+                worldPos: crystalGroup.position.clone()
+            });
+        }
+
+        // --- EXPLOSION SYSTEM (WITH FEET PROTECTION) ---
+        function triggerExplosion(pos, maxDamage = 85, radius = 8) {
+            // Visual Explosion Effect
+            const expGeo = new THREE.SphereGeometry(radius / 2, 16, 16);
+            const expMat = new THREE.MeshBasicMaterial({
+                color: 0xffaa00,
+                transparent: true,
+                opacity: 0.8,
+                blending: THREE.AdditiveBlending
+            });
+            const expMesh = new THREE.Mesh(expGeo, expMat);
+            expMesh.position.copy(pos);
+            scene.add(expMesh);
+
+            // Animate explosion fade out
+            let scale = 1;
+            const interval = setInterval(() => {
+                scale += 0.1;
+                expMesh.scale.set(scale, scale, scale);
+                expMesh.material.opacity -= 0.08;
+                if (expMesh.material.opacity <= 0) {
+                    scene.remove(expMesh);
+                    clearInterval(interval);
+                }
+            }, 30);
+
+            // Apply Damage & Knockback to Player & Bot
+            [player, bot].forEach(entity => {
+                const dist = entity.position.distanceTo(pos);
+                if (dist < radius) {
+                    // Calculate raw damage factor
+                    let damageFactor = (radius - dist) / radius;
+
+                    // FEET PROTECTION MECHANIC:
+                    // Check if the target's lower half (feet) is protected by a solid block
+                    const feetPos = entity.position.clone().sub(new THREE.Vector3(0, entity.height/2, 0));
+                    const raycaster = new THREE.Raycaster(pos, feetPos.clone().sub(pos).normalize());
+                    const intersects = raycaster.intersectObjects(scene.children, true);
+                    
+                    let protectedByBlock = false;
+                    for (let hit of intersects) {
+                        if (hit.distance < dist) {
+                            // If hit object is not the entity itself and is a solid block
+                            if (hit.object !== entity.mesh && hit.object !== expMesh) {
+                                protectedByBlock = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (protectedByBlock) {
+                        damageFactor *= 0.2; // Drastically reduce damage/knockback if feet are covered
+                    }
+
+                    const finalDamage = maxDamage * damageFactor;
+
+                    // Knockback Vector (Exponential)
+                    const kbDir = entity.position.clone().sub(pos).normalize();
+                    kbDir.y += 0.5; // Upward lift
+                    const kbStrength = 0.8 * damageFactor;
+                    const kbVector = kbDir.multiplyScalar(kbStrength);
+
+                    entity.takeDamage(finalDamage, kbVector);
+                }
+            });
+        }
+
+        // --- INTERACTION LOGIC ---
+        window.addEventListener('mousedown', (e) => {
+            if (!controls.isLocked) return;
+
+            if (e.button === 0) { // Left Click (Attack / Detonate)
+                handleLeftClick();
+            } else if (e.button === 2) { // Right Click (Place / Charge)
+                handleRightClick();
+            }
+        });
+
+        function handleLeftClick() {
+            // Raycast to find crystals or entities
+            const raycaster = new THREE.Raycaster();
+            raycaster.setFromCamera(new THREE.Vector2(0,0), camera);
+
+            // Check Crystal hits first (instant high-damage explosion)
+            const crystalMeshes = crystals.map(c => c.mesh);
+            const intersects = raycaster.intersectObjects(crystalMeshes, true);
+
+            if (intersects.length > 0) {
+                // Find which crystal was hit
+                let hitGroup = intersects[0].object;
+                while (hitGroup.parent && hitGroup.parent !== scene) {
+                    hitGroup = hitGroup.parent;
+                }
+
+                const index = crystals.findIndex(c => c.mesh === hitGroup);
+                if (index !== -1) {
+                    const crystal = crystals[index];
+                    triggerExplosion(crystal.worldPos, 95, 9); // High damage
+                    scene.remove(crystal.mesh);
+                    crystals.splice(index, 1);
+                    return;
+                }
+            }
+
+            // Sword Attack
+            const botHit = raycaster.intersectObject(bot.mesh);
+            if (botHit.length > 0 && botHit[0].distance < 4) {
+                const kb = bot.position.clone().sub(player.position).normalize().multiplyScalar(0.3);
+                kb.y = 0.1;
+                bot.takeDamage(12, kb);
+            }
+        }
+
+        function handleRightClick() {
+            const raycaster = new THREE.Raycaster();
+            raycaster.setFromCamera(new THREE.Vector2(0,0), camera);
+
+            // Find block we are looking at
+            const intersects = raycaster.intersectObjects(scene.children, true);
+            if (intersects.length === 0) return;
+
+            const hit = intersects[0];
+            if (hit.distance > 6) return; // Reach distance limit
+
+            // Determine grid position of hit block
+            const normal = hit.face.normal.clone();
+            const point = hit.point.clone().sub(normal.clone().multiplyScalar(CONFIG.blockSize / 2));
+            const gx = Math.floor(point.x / CONFIG.blockSize);
+            const gy = Math.floor(point.y / CONFIG.blockSize);
+            const gz = Math.floor(point.z / CONFIG.blockSize);
+
+            const targetBlock = getBlock(gx, gy, gz);
+
+            // ADVANCED RESPAWN ANCHOR LOGICA
+            if (targetBlock && targetBlock.type === BLOCK_TYPES.ANCHOR) {
+                if (activeSlot === 5) { // Glowstone in hand -> Charge Anchor
+                    if (targetBlock.charge < 4) {
+                        targetBlock.charge++;
+                        // Update visual glow
+                        targetBlock.mesh.material.emissive.setHex(0x00ffff).multiplyScalar(targetBlock.charge * 0.25);
+                    }
+                } else { // Any other item -> Explode!
+                    if (targetBlock.charge > 0) {
+                        triggerExplosion(targetBlock.mesh.position.clone(), 85, 8);
+                        setBlock(gx, gy, gz, BLOCK_TYPES.AIR);
+                    }
+                }
+                return;
+            }
+
+            // Place Block Logic
+            const px = gx + normal.x;
+            const py = gy + normal.y;
+            const pz = gz + normal.z;
+
+            if (activeSlot === 2) { // Obsidian
+                setBlock(px, py, pz, BLOCK_TYPES.OBSIDIAN);
+            } else if (activeSlot === 3) { // Crystal
+                spawnCrystal(px, py, pz);
+            } else if (activeSlot === 4) { // Respawn Anchor (Can be placed on any block)
+                setBlock(px, py, pz, BLOCK_TYPES.ANCHOR, 0);
+            }
+        }
+
+        // --- SMART PVP AI BOT ---
+        const BOT_STATES = {
+            IDLE: 'IDLE',
+            CHASE: 'CHASE',
+            PLACE_OBSIDIAN: 'PLACE_OBSIDIAN',
+            PLACE_CRYSTAL: 'PLACE_CRYSTAL',
+            DETONATE: 'DETONATE',
+            RETREAT: 'RETREAT'
+        };
+        let botState = BOT_STATES.IDLE;
+        let botTimer = 0;
+        let botTargetPos = null;
+
+        function updateBotAI() {
+            botTimer++;
+            const distToPlayer = bot.position.distanceTo(player.position);
+            document.getElementById('bot-state-txt').innerText = botState;
+
+            // Simple State Machine
+            switch (botState) {
+                case BOT_STATES.IDLE:
+                    if (distToPlayer < 20) {
+                        botState = BOT_STATES.CHASE;
+                    }
+                    break;
+
+                case BOT_STATES.CHASE:
+                    // Move towards player
+                    const dir = player.position.clone().sub(bot.position).normalize();
+                    bot.velocity.x = dir.x * CONFIG.botSpeed;
+                    bot.velocity.z = dir.z * CONFIG.botSpeed;
+
+                    // Look at player
+                    bot.mesh.lookAt(player.position.x, bot.position.y, player.position.z);
+
+                    // If close enough, prepare crystal setup
+                    if (distToPlayer < 5 && botTimer % 30 === 0) {
+                        botState = BOT_STATES.PLACE_OBSIDIAN;
+                    }
+                    break;
+
+                case BOT_STATES.PLACE_OBSIDIAN:
+                    // Place Obsidian near player's feet
+                    const ox = Math.floor(player.position.x / CONFIG.blockSize);
+                    const oy = Math.floor(player.position.y / CONFIG.blockSize) - 1;
+                    const oz = Math.floor(player.position.z / CONFIG.blockSize);
+
+                    setBlock(ox, oy, oz, BLOCK_TYPES.OBSIDIAN);
+                    botTargetPos = { x: ox, y: oy + 1, z: oz };
+                    botState = BOT_STATES.PLACE_CRYSTAL;
+                    break;
+
+                case BOT_STATES.PLACE_CRYSTAL:
+                    if (botTargetPos) {
+                        spawnCrystal(botTargetPos.x, botTargetPos.y, botTargetPos.z);
+                        botState = BOT_STATES.DETONATE;
+                    } else {
+                        botState = BOT_STATES.CHASE;
+                    }
+                    break;
+
+                case BOT_STATES.DETONATE:
+                    // Find and detonate the placed crystal
+                    if (botTargetPos) {
+                        const crystalIndex = crystals.findIndex(c => 
+                            c.gridPos.x === botTargetPos.x && 
+                            c.gridPos.y === botTargetPos.y && 
+                            c.gridPos.z === botTargetPos.z
+                        );
+                        if (crystalIndex !== -1) {
+                            const crystal = crystals[crystalIndex];
+                            triggerExplosion(crystal.worldPos, 90, 8);
+                            scene.remove(crystal.mesh);
+                            crystals.splice(crystalIndex, 1);
+                        }
+                    }
+                    botState = BOT_STATES.RETREAT;
+                    break;
+
+                case BOT_STATES.RETREAT:
+                    // Strafe away to avoid blast / recharge
+                    const retreatDir = bot.position.clone().sub(player.position).normalize();
+                    // Add some strafe
+                    const strafe = new THREE.Vector3(-retreatDir.z, 0, retreatDir.x).multiplyScalar(0.5);
+                    bot.velocity.add(retreatDir.multiplyScalar(CONFIG.botSpeed * 1.5).add(strafe));
+                    
+                    if (botTimer % 40 === 0) {
+                        botState = BOT_STATES.CHASE;
+                    }
+                    break;
+            }
+
+            bot.updatePhysics();
+        }
+
+        // --- PLAYER MOVEMENT ---
+        function updatePlayerMovement() {
+            if (!controls.isLocked) return;
+
+            const speed = CONFIG.playerSpeed * (keys['shift'] ? CONFIG.sprintMultiplier : 1);
+
+            if (keys['w']) {
+                controls.moveForward(speed);
+            }
+            if (keys['s']) {
+                controls.moveForward(-speed);
+            }
+            if (keys['a']) {
+                controls.moveRight(-speed);
+            }
+            if (keys['d']) {
+                controls.moveRight(speed);
+            }
+
+            // Jump
+            if (keys[' '] && player.onGround) {
+                player.velocity.y = CONFIG.jumpForce;
+                player.onGround = false;
+            }
+
+            // Sync player entity position with camera
+            player.position.x = camera.position.x;
+            player.position.z = camera.position.z;
+            // Camera is at eye level
+            player.position.y = camera.position.y - 1.8;
+
+            player.updatePhysics();
+
+            // Re-sync camera back to player eye level
+            camera.position.y = player.position.y + 1.8;
+            camera.position.x = player.position.x;
+            camera.position.z = player.position.z;
+        }
+
+        // --- UI & SETTINGS SYSTEM ---
+        function updateHUD() {
+            document.getElementById('health-bar').style.width = `${player.health}%`;
+            document.getElementById('health-text').innerText = `HP: ${Math.round(player.health)} / 100`;
+        }
+
+        // Settings Menu Interactions
+        const settingsBtn = document.getElementById('settings-btn');
+        const settingsMenu = document.getElementById('settings-menu');
+        const closeSettings = document.getElementById('close-settings');
+        const fovSlider = document.getElementById('fov-slider');
+        const sensSlider = document.getElementById('sens-slider');
+
+        settingsBtn.addEventListener('click', () => {
+            controls.unlock();
+            settingsMenu.style.display = 'block';
+        });
+
+        closeSettings.addEventListener('click', () => {
+            settingsMenu.style.display = 'none';
+            controls.lock();
+        });
+
+        fovSlider.addEventListener('input', (e) => {
+            camera.fov = parseInt(e.target.value);
+            camera.updateProjectionMatrix();
+        });
+
+        sensSlider.addEventListener('input', (e) => {
+            mouseSensitivity = parseFloat(e.target.value) * 0.0004;
+            // Update PointerLockControls sensitivity internally
+            controls.pointerSpeed = parseFloat(e.target.value) * 0.2;
+        });
+
+        // Keybind Rebinding
+        let activeRebindBtn = null;
+        document.querySelectorAll('.keybind-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                activeRebindBtn = e.target;
+                activeRebindBtn.innerText = 'Druk toets...';
+            });
+        });
+
+        window.addEventListener('keydown', (e) => {
+            if (activeRebindBtn) {
+                const slotNum = activeRebindBtn.dataset.slot;
+                const newKey = e.key.toLowerCase();
+                
+                keybinds[`slot${slotNum}`] = newKey;
+                activeRebindBtn.innerText = newKey.toUpperCase();
+                document.getElementById(`key-slot-${slotNum}`).innerText = newKey.toUpperCase();
+                
+                activeRebindBtn = null;
+            }
+        });
+
+        // --- MAIN GAME LOOP ---
+        const clock = new THREE.Clock();
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Rotate Crystals
+            crystals.forEach(c => {
+                const inner = c.mesh.getObjectByName("inner");
+                if (inner) {
+                    inner.rotation.y += 0.05;
+                    inner.rotation.x += 0.02;
+                }
+            });
+
+            updatePlayerMovement();
+            updateBotAI();
+
+            renderer.render(scene, camera);
+        }
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Start the loop
+        animate();
+
+    </script>
+</body>
+</html>
