@@ -1,206 +1,55 @@
 <!DOCTYPE html>
-<html lang="nl" class="scroll-smooth">
+<html lang="nl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Devable - Game & App Hub</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome Iconen -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-    <!-- Supabase JS Library -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- Custom CSS -->
+    <title>Devable | Next-Gen Interactive Experiences</title>
     <link rel="stylesheet" href="style.css">
+    <!-- Three.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
-<body class="bg-slate-950 text-slate-100 font-['Poppins'] overflow-x-hidden min-h-screen flex flex-col">
+<body>
 
-    <!-- 3D Geanimeerde Achtergrond -->
-    <div class="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-        <div class="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-purple-900/20 blur-[120px] animate-pulse"></div>
-        <div class="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-blue-900/20 blur-[120px] animate-pulse" style="animation-delay: 2s;"></div>
-    </div>
+    <div id="canvas-container"></div>
 
-    <!-- Navigatiebalk -->
-    <nav class="sticky top-0 z-40 backdrop-blur-md bg-slate-950/70 border-b border-slate-900 transition-all duration-300">
-        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-            <a href="index.html" class="text-2xl font-extrabold bg-gradient-to-r from-purple-400 via-pink-500 to-blue-400 bg-clip-text text-transparent hover:scale-105 transition-transform flex items-center gap-2">
-                <i class="fa-solid fa-cubes-stacked text-purple-500"></i>My Devable
-            </a>
-            
-            <div class="hidden md:flex items-center space-x-8">
-                <a href="#projects" class="hover:text-purple-400 transition-colors">Projecten</a>
-                <a href="#about" class="hover:text-purple-400 transition-colors">Over Ons</a>
-                <div id="auth-nav-buttons" class="flex items-center space-x-4">
-                    <!-- Dynamisch gevuld door auth.js -->
-                    <button onclick="openAuthModal('login')" class="px-4 py-2 rounded-full border border-purple-500/30 hover:bg-purple-500/10 transition-all">Inloggen</button>
-                    <button onclick="openAuthModal('register')" class="px-5 py-2 rounded-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 shadow-lg shadow-purple-500/20 transition-all">Registreren</button>
-                </div>
-            </div>
-        </div>
+    <nav>
+        <div class="logo">DEVABLE<span>by Mattyou Studios™</span></div>
+        <ul class="nav-links">
+            <li><a href="index.html" class="active">Home</a></li>
+            <li><a href="games.html">Games</a></li>
+            <li><a href="webapps.html">Web Apps</a></li>
+        </ul>
     </nav>
 
-    <!-- Hero Sectie -->
-    <header class="relative max-w-7xl mx-auto px-6 py-20 md:py-32 flex flex-col items-center text-center">
-        <div class="absolute -top-10 left-1/2 -translate-x-1/2 w-72 h-72 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
-        <span class="px-4 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-400 text-xs font-semibold uppercase tracking-wider mb-6 animate-bounce">
-            Welkom bij de toekomst van development
-        </span>
-        <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight mb-6">
-            Ontdek de Kracht van <br>
-            <span class="bg-gradient-to-r from-purple-400 via-pink-500 to-blue-400 bg-clip-text text-transparent">My Devable</span>
-        </h1>
-        <p class="text-lg md:text-xl text-slate-400 max-w-2xl mb-10 leading-relaxed">
-            Jouw ultieme hub voor interactieve web-apps, games en geavanceerde software. Log in om je voortgang op te slaan, klassen te beheren en direct aan de slag te gaan!
-        </p>
-        <div class="flex flex-col sm:flex-row gap-4">
-            <a href="#projects" class="px-8 py-4 rounded-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 font-bold text-lg shadow-xl shadow-purple-500/20 transition-all hover:-translate-y-1">
-                Bekijk Projecten <i class="fa-solid fa-arrow-down ml-2"></i>
-            </a>
-            <button onclick="openAuthModal('register')" class="px-8 py-4 rounded-full border border-slate-800 hover:border-purple-500/50 hover:bg-purple-500/5 font-bold text-lg transition-all hover:-translate-y-1">
-                Account Aanmaken
-            </button>
-        </div>
-    </header>
+    <main>
+        <section class="hero">
+            <h1>De Toekomst van Interactieve Web Ervaringen</h1>
+            <p>Wij bouwen high-performance 3D web applicaties, geavanceerde game-engines voor browsers en professionele cloud systemen. Ontdek de grenzen van de browser.</p>
+            <a href="games.html" class="btn">Ontdek Games</a>
+            <a href="webapps.html" class="btn btn-secondary">Bekijk Web Apps</a>
+        </section>
 
-    <!-- Projecten Filter & Grid -->
-    <main id="projects" class="max-w-7xl mx-auto px-6 py-16 w-full flex-grow">
-        <div class="flex flex-col md:flex-row justify-between items-center mb-12 gap-6">
-            <div>
-                <h2 class="text-3xl font-bold mb-2">Onze Creaties</h2>
-                <p class="text-slate-400">Beweeg je muis over de kaarten voor een interactief 3D-effect.</p>
+        <div class="grid">
+            <div class="card" onclick="location.href='games.html'">
+                <div class="card-icon">🎮</div>
+                <h3>Next-Gen Web Games</h3>
+                <p>Ervaar vloeiende 3D en 2D Minecraft klonen, physics simulators en retro arcade games direct in je browser zonder downloads.</p>
+                <span style="color: var(--primary); font-weight: 600;">Open Arcade →</span>
             </div>
-            <!-- Filter Knoppen -->
-            <div class="flex gap-2 bg-slate-900/80 p-1.5 rounded-xl border border-slate-800">
-                <button onclick="filterProjects('all')" class="filter-btn active px-4 py-2 rounded-lg text-sm font-semibold transition-all">Alles</button>
-                <button onclick="filterProjects('game')" class="filter-btn px-4 py-2 rounded-lg text-sm font-semibold transition-all">Games</button>
-                <button onclick="filterProjects('web-app')" class="filter-btn px-4 py-2 rounded-lg text-sm font-semibold transition-all">Web Apps</button>
-                <button onclick="filterProjects('program')" class="filter-btn px-4 py-2 rounded-lg text-sm font-semibold transition-all">Programma's</button>
-            </div>
-        </div>
 
-        <!-- Het 3D Projecten Grid -->
-        <div id="projects-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <!-- Projecten worden dynamisch ingeladen door app.js -->
+            <div class="card" onclick="location.href='webapps.html'">
+                <div class="card-icon">⚡</div>
+                <h3>Geavanceerde Web Apps</h3>
+                <p>Van de ultra-veilige Mattyou Cloud tot Ecosy, ons realtime Minecraft economie dashboard. Professionele tools voor power-users.</p>
+                <span style="color: var(--primary); font-weight: 600;">Open Dashboard →</span>
+            </div>
         </div>
     </main>
 
-    <!-- Over Ons Sectie -->
-    <section id="about" class="border-t border-slate-900 bg-slate-950/50 py-20">
-        <div class="max-w-5xl mx-auto px-6 text-center">
-            <h2 class="text-3xl font-bold mb-6">Over My Devable</h2>
-            <p class="text-slate-400 leading-relaxed max-w-3xl mx-auto">
-                My Devable is opgericht om innovatieve, snelle en prachtige weboplossingen te bouwen. Wij geloven in de kracht van moderne webtechnologieën zoals Tailwind CSS, Supabase en interactieve 3D-animaties om de ultieme gebruikerservaring te creëren.
-            </p>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="border-t border-slate-900 bg-slate-950 py-8 mt-auto">
-        <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4 text-slate-500 text-sm">
-            <p>&copy; 2024 My Devable. Alle rechten voorbehouden.</p>
-            <div class="flex gap-6">
-                <a href="#" class="hover:text-slate-300 transition-colors">Privacybeleid</a>
-                <a href="#" class="hover:text-slate-300 transition-colors">Voorwaarden</a>
-            </div>
-        </div>
+    <footer>
+        <p>&copy; 2024 Devable. All rights reserved. Powered by Mattyou Studios™</p>
     </footer>
 
-    <!-- AUTH MODAL (Login / Register) -->
-    <div id="auth-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300">
-        <div class="glass-card w-full max-w-md p-8 rounded-2xl border border-slate-800 relative mx-4 transform scale-95 transition-transform duration-300">
-            <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-xl">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-            
-            <div class="flex justify-center mb-6">
-                <div class="bg-slate-900 p-1 rounded-lg border border-slate-800">
-                    <button id="tab-login" onclick="switchAuthTab('login')" class="px-4 py-2 rounded-md font-semibold text-sm transition-all">Inloggen</button>
-                    <button id="tab-register" onclick="switchAuthTab('register')" class="px-4 py-2 rounded-md font-semibold text-sm transition-all">Registreren</button>
-                </div>
-            </div>
-
-            <!-- Login Formulier -->
-            <form id="login-form" onsubmit="handleLogin(event)" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">E-mailadres</label>
-                    <input type="email" required id="login-email" class="w-full bg-slate-900/50 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 transition-colors" placeholder="je@email.nl">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Wachtwoord</label>
-                    <input type="password" required id="login-password" class="w-full bg-slate-900/50 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 transition-colors" placeholder="••••••••">
-                </div>
-                <button type="submit" class="w-full py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 rounded-xl font-bold shadow-lg shadow-purple-500/10 transition-all">
-                    Inloggen
-                </button>
-            </form>
-
-            <!-- Registreer Formulier -->
-            <form id="register-form" onsubmit="handleRegister(event)" class="space-y-4 hidden">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Volledige Naam</label>
-                    <input type="text" required id="reg-name" class="w-full bg-slate-900/50 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 transition-colors" placeholder="Mattheo de Bouwer">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">E-mailadres</label>
-                    <input type="email" required id="reg-email" class="w-full bg-slate-900/50 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 transition-colors" placeholder="je@email.nl">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Wachtwoord</label>
-                    <input type="password" required id="reg-password" class="w-full bg-slate-900/50 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 transition-colors" placeholder="Minimaal 6 tekens">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Ik ben een...</label>
-                    <select id="reg-role" onchange="toggleRegFields()" class="w-full bg-slate-900/50 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 transition-colors">
-                        <option value="student">Leerling / Gebruiker</option>
-                        <option value="teacher">Docent / Begeleider</option>
-                    </select>
-                </div>
-                <!-- School Selectie -->
-                <div id="school-select-container">
-                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Selecteer School (Optioneel)</label>
-                    <select id="reg-school" class="w-full bg-slate-900/50 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 transition-colors">
-                        <option value="">Geen school selecteren</option>
-                        <option value="new">+ Voeg nieuwe school toe...</option>
-                    </select>
-                </div>
-                <!-- Nieuwe School Toevoegen Veld -->
-                <div id="new-school-container" class="hidden">
-                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Nieuwe School Naam</label>
-                    <input type="text" id="reg-new-school" class="w-full bg-slate-900/50 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 transition-colors" placeholder="Naam van jouw school">
-                </div>
-
-                <button type="submit" class="w-full py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 rounded-xl font-bold shadow-lg shadow-purple-500/10 transition-all">
-                    Account Aanmaken
-                </button>
-            </form>
-        </div>
-    </div>
-
-    <!-- COOKIE BANNER -->
-    <div id="cookie-banner" class="fixed bottom-6 left-6 right-6 md:left-auto md:right-6 md:w-96 z-50 glass-card p-6 rounded-2xl border border-slate-800 shadow-2xl transform translate-y-20 opacity-0 transition-all duration-500">
-        <div class="flex items-start gap-4">
-            <div class="p-3 bg-purple-500/10 text-purple-400 rounded-xl text-xl">
-                <i class="fa-solid fa-cookie-bite"></i>
-            </div>
-            <div>
-                <h4 class="font-bold text-white mb-1">Cookie Instellingen</h4>
-                <p class="text-xs text-slate-400 leading-relaxed mb-4">
-                    Wij gebruiken cookies om je inlogsessie te onthouden en je ervaring op onze 3D hub te optimaliseren. Ga je hiermee akkoord?
-                </p>
-                <div class="flex gap-3">
-                    <button onclick="acceptCookies()" class="flex-grow py-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-xs font-bold rounded-lg transition-all">Accepteren</button>
-                    <button onclick="declineCookies()" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-xs font-semibold rounded-lg border border-slate-800 transition-all">Weigeren</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Scripts -->
-    <script src="config.js"></script>
-    <script src="auth.js"></script>
-    <script src="app.js"></script>
+    <script src="three-bg.js"></script>
 </body>
 </html>
