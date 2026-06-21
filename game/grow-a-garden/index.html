@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Grow a Garden!</title>
+    <title>3D Grow a Garden RPG!</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Three.js en OrbitControls voor een interactieve 3D camera -->
+    <!-- Three.js en OrbitControls -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 </head>
@@ -24,15 +24,27 @@
         </div>
 
         <!-- Actieve selectie -->
-        <div class="card selection-card">
+        <div class="card selection-card" id="selection-card">
             <h3>Geselecteerd Zaad:</h3>
-            <div id="active-seed-display" class="active-seed">Geen (Selecteer in de winkel)</div>
-            <p class="instruction">Klik op een bruine akker om te planten!</p>
+            <div id="active-seed-display" class="active-seed">Geen (Koop in de winkel)</div>
         </div>
+    </div>
 
-        <!-- De Winkel (Shop) -->
-        <div class="card shop-card">
+    <!-- Interactie Prompts (Zwevend in het midden/onderin) -->
+    <div id="interaction-prompt" class="hidden">
+        <span id="prompt-text">Houd [E] ingedrukt</span>
+        <!-- Progress bar voor 4 seconden hold -->
+        <div id="progress-bar-container">
+            <div id="progress-bar"></div>
+        </div>
+    </div>
+
+    <!-- Grote Pop-up: De Winkel (Shop) -->
+    <div id="shop-modal" class="modal hidden">
+        <div class="modal-content card">
+            <span class="close-btn" onclick="closeShop()">&times;</span>
             <h2>🛒 De Zaadwinkel</h2>
+            <p style="margin-bottom: 15px; font-size: 0.9rem; color: #666;">Koop zaden om te planten op je akkers!</p>
             <div class="shop-items">
                 <div class="shop-item" onclick="buySeed('carrot', 10)">
                     <span class="icon">🥕</span>
@@ -51,22 +63,38 @@
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Inventaris & Verkoop (Inventory & Sell) -->
-        <div class="card inventory-card">
-            <h2>🎒 Je Schuur (Oogst)</h2>
-            <div class="inventory-items">
-                <div class="inv-item">🥕 Wortels: <span id="inv-carrot">0</span></div>
-                <div class="inv-item">🍅 Tomaten: <span id="inv-tomato">0</span></div>
-                <div class="inv-item">🌻 Zonnebloemen: <span id="inv-sunflower">0</span></div>
+    <!-- Grote Pop-up: Inventaris (Rugzak) - Geopend met 'E' -->
+    <div id="inventory-modal" class="modal hidden">
+        <div class="modal-content card">
+            <span class="close-btn" onclick="toggleInventory()">&times;</span>
+            <h2>🎒 Je Rugzak (Oogst)</h2>
+            <p style="margin-bottom: 15px; font-size: 0.9rem; color: #666;">Dit heb je geoogst. Loop naar de Verkoopkraam om het te verkopen!</p>
+            <div class="inventory-grid">
+                <div class="inv-slot">
+                    <span class="slot-icon">🥕</span>
+                    <span class="slot-name">Wortels</span>
+                    <span id="inv-carrot" class="slot-count">0</span>
+                </div>
+                <div class="inv-slot">
+                    <span class="slot-icon">🍅</span>
+                    <span class="slot-name">Tomaten</span>
+                    <span id="inv-tomato" class="slot-count">0</span>
+                </div>
+                <div class="inv-slot">
+                    <span class="slot-icon">🌻</span>
+                    <span class="slot-name">Zonnebloemen</span>
+                    <span id="inv-sunflower" class="slot-count">0</span>
+                </div>
             </div>
-            <button id="sell-btn" onclick="sellAllCrops()">💰 Verkoop Alles voor Goud!</button>
+            <p style="text-align: center; margin-top: 15px; font-size: 0.85rem; color: #7f8c8d;">Druk op [E] om je rugzak te sluiten</p>
         </div>
     </div>
 
-    <!-- Instructies onderin -->
+    <!-- Besturing Instructies -->
     <div id="controls-hint">
-        Slepen met links = Camera draaien | Slepen met rechts = Camera bewegen | Scrollen = Zoomen
+        🏃 <b>WASD / Pijltjes</b> = Lopen | 🎒 <b>[E]</b> = Rugzak openen/sluiten | 🌾 <b>[Spatie]</b> = Planten/Oogsten bij akker
     </div>
 
     <script src="game.js"></script>
