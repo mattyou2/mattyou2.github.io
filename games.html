@@ -3,16 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Devable | By Mattyou Studios™</title>
+    <title>Devable Games | By Mattyou Studios™</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
-<body>
+<body class="theme-neon-rainbow">
 
     <div id="canvas-container"></div>
 
     <nav>
         <div class="logo">DEVABLE<span>by Mattyou Studios™</span></div>
+        
+        <!-- Thema Selector -->
+        <div class="theme-selector" title="Kies een design">
+            <div class="theme-btn active" data-theme="neon-rainbow" style="background: linear-gradient(45deg, #ff007f, #7000ff);" onclick="changeTheme('neon-rainbow')"></div>
+            <div class="theme-btn" data-theme="cyber-blue" style="background: linear-gradient(45deg, #00f0ff, #0044ff);" onclick="changeTheme('cyber-blue')"></div>
+            <div class="theme-btn" data-theme="retro-gold" style="background: linear-gradient(45deg, #ffaa00, #ff3c00);" onclick="changeTheme('retro-gold')"></div>
+        </div>
+
         <ul class="nav-links">
             <li><a href="index.html">Home</a></li>
             <li><a href="games.html" class="active">Games</a></li>
@@ -31,7 +39,7 @@
             <div class="card" onclick="location.href='mc/3D/light/v3'">
                 <div class="card-icon">🧊</div>
                 <h3>Minecraft 3D (mattyou edition)</h3>
-                <p>Een volledig 3D minecraft gebouwt met in Three.js. Plaats en breek blokken in een oneindige 3D ruimte.</p>
+                <p>Een volledig 3D minecraft gebouwd met Three.js. Plaats en breek blokken in een oneindige 3D ruimte.</p>
                 <span class="btn" style="padding: 8px 20px; font-size: 0.9rem;">Speel Nu</span>
             </div>
 
@@ -47,24 +55,24 @@
             <div class="card" onclick="location.href='game/survival'">
                 <div class="card-icon">🏝️</div>
                 <h3>Survival world</h3>
-                <p>overleef op een eiland in de natuur!</p>
+                <p>Overleef op een eiland in de wilde natuur! Verzamel grondstoffen en bouw je eigen veilige haven.</p>
                 <span class="btn" style="padding: 8px 20px; font-size: 0.9rem;">Speel Nu</span>
             </div>
 
             <!-- Gravity Sandbox -->
-            <div class="card">
-                <div class="card-icon">🪐</div>
-                <h3>nog niet af</h3>
-                <p>nog niet af beschrijving</p>
-                <span class="btn btn-secondary" style="padding: 8px 20px; font-size: 0.9rem;">Binnenkort</span>
+            <div class="card" style="opacity: 0.7;">
+                <div class="card-icon" style="filter: grayscale(40%);">🪐</div>
+                <h3 style="color: var(--text-muted);">Gravity Sandbox</h3>
+                <p>Simuleer de zwaartekracht van planeten, zwarte gaten en sterrenstelsels in een interactieve physics sandbox.</p>
+                <span class="btn btn-secondary" style="padding: 8px 20px; font-size: 0.9rem; cursor: not-allowed;">Binnenkort</span>
             </div>
 
             <!-- Neon Rider -->
-            <div class="card">
-                <div class="card-icon">🏎️</div>
-                <h3>nog niet af</h3>
-                <p>nog niet af beschrijving</p>
-                <span class="btn btn-secondary" style="padding: 8px 20px; font-size: 0.9rem;">Binnenkort</span>
+            <div class="card" style="opacity: 0.7;">
+                <div class="card-icon" style="filter: grayscale(40%);">🏎️</div>
+                <h3 style="color: var(--text-muted);">Neon Rider 3D</h3>
+                <p>Race door een procedureel gegenereerde synthwave-stad en ontwijk obstakels op hoge snelheid.</p>
+                <span class="btn btn-secondary" style="padding: 8px 20px; font-size: 0.9rem; cursor: not-allowed;">Binnenkort</span>
             </div>
         </div>
     </main>
