@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Devable Games | Mattyou Studios™</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+
+    <div id="canvas-container"></div>
+
+    <nav>
+        <div class="logo">DEVABLE<span>by Mattyou Studios™</span></div>
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="games.html" class="active">Games</a></li>
+            <li><a href="webapps.html">Web Apps</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <section class="hero">
+            <h1>Interactieve Games</h1>
+            <p>Onze in-house ontwikkelde games verleggen de grenzen van HTML5 en WebGL. Klik op een game om direct te spelen.</p>
+        </section>
+
+        <div class="grid">
+            <!-- 3D Minecraft -->
+            <div class="card" onclick="location.href='minecraft3d.html'">
+                <div class="card-icon">🧊</div>
+                <h3>Minecraft 3D Voxel</h3>
+                <p>Een volledig interactieve 3D voxel builder gebouwd in Three.js. Plaats en breek blokken in een oneindige 3D ruimte.</p>
+                <span class="btn" style="padding: 8px 20px; font-size: 0.9rem;">Speel Nu</span>
+            </div>
+
+            <!-- 2D Minecraft -->
+            <div class="card" onclick="location.href='minecraft2d.html'">
+                <div class="card-icon">🧱</div>
+                <h3>Minecraft 2D Sandbox</h3>
+                <p>Een klassieke 2D side-scrolling sandbox game met physics, gravity, block mining en inventory systemen.</p>
+                <span class="btn" style="padding: 8px 20px; font-size: 0.9rem;">Speel Nu</span>
+            </div>
+
+            <!-- Space Shooter -->
+            <div class="card">
+                <div class="card-icon">🚀</div>
+                <h3>Cosmic Voyager 3D</h3>
+                <p>Vlieg door een asteroïdenveld in deze snelle 3D space shooter met real-time physics en lasers.</p>
+                <span class="btn btn-secondary" style="padding: 8px 20px; font-size: 0.9rem;">Binnenkort</span>
+            </div>
+
+            <!-- Gravity Sandbox -->
+            <div class="card">
+                <div class="card-icon">🪐</div>
+                <h3>Gravity Sandbox</h3>
+                <p>Simuleer zwaartekracht, planeten en zwarte gaten in een interactieve 3D ruimte-omgeving.</p>
+                <span class="btn btn-secondary" style="padding: 8px 20px; font-size: 0.9rem;">Binnenkort</span>
+            </div>
+
+            <!-- Neon Rider -->
+            <div class="card">
+                <div class="card-icon">🏎️</div>
+                <h3>Neon Rider 3D</h3>
+                <p>Een synthwave-stijl racegame waarbij je over een oneindige, procedureel gegenereerde 3D neon-grid rijdt.</p>
+                <span class="btn btn-secondary" style="padding: 8px 20px; font-size: 0.9rem;">Binnenkort</span>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Devable. All rights reserved. Powered by Mattyou Studios™</p>
+    </footer>
+
+    <script src="three-bg.js"></script>
+</body>
+</html>
