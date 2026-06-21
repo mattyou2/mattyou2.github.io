@@ -1,5 +1,5 @@
 filename="style.css" language="css"]
-/* Custom Styling & 3D Effecten */
+/* Custom Styling & 3D Effecten voor My Devable */
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
@@ -50,12 +50,15 @@ filename="style.css" language="css"]
 /* Glow Effecten */
 .glow-purple:hover {
     box-shadow: 0 0 30px rgba(168, 85, 247, 0.25);
+    border-color: rgba(168, 85, 247, 0.4);
 }
 .glow-blue:hover {
     box-shadow: 0 0 30px rgba(59, 130, 246, 0.25);
+    border-color: rgba(59, 130, 246, 0.4);
 }
 .glow-pink:hover {
     box-shadow: 0 0 30px rgba(236, 72, 153, 0.25);
+    border-color: rgba(236, 72, 153, 0.4);
 }
 
 /* Pulse Animation */
