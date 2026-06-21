@@ -1,0 +1,1487 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<title>Survival Island 3D</title>
+<style>
+  html,body{margin:0;padding:0;overflow:hidden;background:#000;font-family:'Segoe UI',Arial,sans-serif;}
+  #c{display:block;width:100vw;height:100vh;}
+  #crosshair{
+    position:fixed;top:50%;left:50%;width:8px;height:8px;margin:-4px 0 0 -4px;
+    border:2px solid rgba(255,255,255,0.85);border-radius:50%;pointer-events:none;z-index:10;
+    mix-blend-mode:difference;
+  }
+  #hud{position:fixed;left:16px;bottom:16px;z-index:10;display:flex;flex-direction:column;gap:6px;user-select:none;}
+  .bar-wrap{width:220px;height:18px;background:rgba(0,0,0,0.45);border:1px solid rgba(255,255,255,0.3);border-radius:4px;overflow:hidden;position:relative;}
+  .bar-fill{height:100%;transition:width .25s;}
+  .bar-label{position:absolute;left:6px;top:0;font-size:11px;color:#fff;text-shadow:0 0 3px #000;line-height:18px;}
+  #health .bar-fill{background:linear-gradient(90deg,#e74c3c,#ff6b5b);}
+  #hunger .bar-fill{background:linear-gradient(90deg,#e67e22,#f5b041);}
+  #thirst .bar-fill{background:linear-gradient(90deg,#2980b9,#5dade2);}
+  #stamina .bar-fill{background:linear-gradient(90deg,#27ae60,#58d68d);}
+  #ammoHud{position:fixed;right:18px;bottom:18px;z-index:10;color:#fff;font-size:22px;text-shadow:0 0 6px #000;display:none;text-align:right;}
+  #ammoHud span{font-size:13px;color:#ddd;display:block;}
+  #hotbar{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:10;}
+  .slot{width:54px;height:54px;background:rgba(20,20,20,0.6);border:2px solid rgba(255,255,255,0.25);border-radius:6px;
+    display:flex;align-items:center;justify-content:center;flex-direction:column;color:#fff;font-size:22px;position:relative;cursor:pointer;}
+  .slot.active{border-color:#f5d142;box-shadow:0 0 8px #f5d142;}
+  .slot .count{position:absolute;bottom:1px;right:4px;font-size:11px;color:#fff;text-shadow:0 0 2px #000;}
+  .slot .key{position:absolute;top:1px;left:4px;font-size:10px;color:#aaa;}
+  .panel{
+    position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+    background:rgba(15,15,20,0.94);border:1px solid rgba(255,255,255,0.2);border-radius:10px;
+    color:#fff;padding:18px;display:none;z-index:20;min-width:340px;max-height:82vh;overflow:auto;
+  }
+  .panel h2{margin-top:0;font-size:18px;border-bottom:1px solid #444;padding-bottom:8px;}
+  .grid{display:grid;grid-template-columns:repeat(5,56px);gap:6px;}
+  .item{width:56px;height:56px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.2);border-radius:6px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:22px;position:relative;cursor:pointer;}
+  .item .cnt{position:absolute;bottom:1px;right:4px;font-size:10px;color:#ddd;}
+  .recipe{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px;border-bottom:1px solid #333;}
+  .recipe button{background:#3a6f43;color:#fff;border:none;padding:6px 10px;border-radius:5px;cursor:pointer;font-size:12px;}
+  .recipe button:disabled{background:#555;cursor:not-allowed;opacity:.6;}
+  .recipe .cost{font-size:11px;color:#bbb;}
+  #msg{position:fixed;top:18%;left:50%;transform:translate(-50%,0);color:#fff;font-size:16px;
+    text-shadow:0 0 6px #000;z-index:15;pointer-events:none;text-align:center;}
+  #help{position:fixed;top:16px;right:16px;color:#ddd;font-size:12px;background:rgba(0,0,0,0.4);
+    padding:10px 12px;border-radius:8px;line-height:1.5;z-index:10;max-width:240px;}
+  #titleScreen{position:fixed;inset:0;background:linear-gradient(180deg,#0b1320,#1b3350);color:#fff;z-index:30;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;overflow:auto;padding:30px 0;}
+  #titleScreen h1{font-size:46px;margin-bottom:4px;text-shadow:0 0 20px #4ab0ff;}
+  #titleScreen p.sub{color:#bcd;margin-bottom:22px;max-width:520px;}
+  .menuBtn{font-size:18px;padding:13px 30px;border-radius:8px;border:none;background:#3a6f43;color:#fff;cursor:pointer;margin:6px;}
+  .menuBtn:hover{background:#4d8c58;}
+  .menuBtn.secondary{background:#345;}
+  .menuBtn.secondary:hover{background:#456;}
+  .menuBtn.danger{background:#7a2222;}
+  .menuBtn.danger:hover{background:#992c2c;}
+  #worldList{display:flex;flex-direction:column;gap:8px;width:460px;max-height:300px;overflow:auto;margin-bottom:14px;}
+  .worldRow{display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.07);
+    border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:10px 14px;text-align:left;}
+  .worldRow .wname{font-weight:bold;font-size:15px;}
+  .worldRow .wmeta{font-size:11px;color:#aac;}
+  .worldRow .wbtns{display:flex;gap:6px;}
+  .worldRow button{font-size:12px;padding:6px 10px;border-radius:5px;border:none;cursor:pointer;}
+  .screenBox{display:none;flex-direction:column;align-items:center;}
+  .formRow{display:flex;flex-direction:column;align-items:flex-start;width:420px;margin-bottom:14px;text-align:left;}
+  .formRow label{font-size:13px;color:#cde;margin-bottom:5px;}
+  .formRow input[type=text]{width:100%;padding:9px;border-radius:6px;border:1px solid #456;background:#0e1726;color:#fff;font-size:14px;}
+  .toggleRow{display:flex;align-items:center;justify-content:space-between;width:420px;background:rgba(255,255,255,0.05);
+    padding:10px 14px;border-radius:8px;margin-bottom:10px;}
+  .toggleRow .tdesc{font-size:11px;color:#9ab;margin-top:2px;}
+  .switch{position:relative;width:48px;height:26px;flex-shrink:0;}
+  .switch input{display:none;}
+  .switch .slider{position:absolute;inset:0;background:#444;border-radius:26px;cursor:pointer;transition:.2s;}
+  .switch .slider:before{content:'';position:absolute;width:20px;height:20px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;}
+  .switch input:checked + .slider{background:#3a6f43;}
+  .switch input:checked + .slider:before{transform:translateX(22px);}
+  .sliderRow{display:flex;flex-direction:column;width:420px;margin-bottom:12px;text-align:left;}
+  .sliderRow label{font-size:13px;color:#cde;margin-bottom:5px;display:flex;justify-content:space-between;}
+  #compass{position:fixed;top:16px;left:50%;transform:translateX(-50%);color:#fff;font-size:13px;
+    background:rgba(0,0,0,0.4);padding:5px 14px;border-radius:6px;z-index:10;letter-spacing:2px;}
+  #dayInfo{position:fixed;top:46px;left:50%;transform:translateX(-50%);color:#ffe;font-size:12px;z-index:10;text-shadow:0 0 4px #000;}
+  #deathScreen{position:fixed;inset:0;background:rgba(60,0,0,0.85);color:#fff;z-index:40;display:none;
+    flex-direction:column;align-items:center;justify-content:center;text-align:center;}
+  #deathScreen button{font-size:18px;padding:12px 28px;border-radius:8px;border:none;background:#7a2222;color:#fff;cursor:pointer;margin-top:14px;}
+  #pauseScreen{position:fixed;inset:0;background:rgba(5,8,16,0.78);color:#fff;z-index:35;display:none;
+    flex-direction:column;align-items:center;justify-content:center;text-align:center;}
+  .close-x{position:absolute;top:8px;right:10px;cursor:pointer;font-size:18px;color:#ccc;}
+  #damageVignette{position:fixed;inset:0;pointer-events:none;z-index:9;box-shadow:inset 0 0 160px 40px rgba(180,0,0,0);transition:box-shadow .15s;}
+  #hitMarker{position:fixed;top:50%;left:50%;width:22px;height:22px;margin:-11px 0 0 -11px;pointer-events:none;z-index:11;opacity:0;}
+  #hitMarker::before,#hitMarker::after{content:'';position:absolute;background:#ff3b3b;}
+  #hitMarker::before{width:22px;height:3px;top:9.5px;}
+  #hitMarker::after{width:3px;height:22px;left:9.5px;}
+  #saveToast{position:fixed;top:16px;left:16px;background:rgba(0,0,0,0.55);color:#cfc;padding:8px 14px;border-radius:6px;
+    font-size:12px;z-index:12;opacity:0;transition:opacity .4s;}
+  .tag{display:inline-block;background:#264;padding:2px 7px;border-radius:4px;font-size:10px;margin-left:6px;}
+  ::-webkit-scrollbar{width:8px;}
+  ::-webkit-scrollbar-thumb{background:#555;border-radius:4px;}
+</style>
+</head>
+<body>
+
+<div id="titleScreen">
+  <div id="screen-main" class="screenBox" style="display:flex;">
+    <h1>🏝️ Survival Island 3D</h1>
+    <p class="sub">Bouw eigen werelden, overleef honger, dorst en de nacht, vecht tegen wilde dieren en vijandige overlevenden — met of zonder vuurwapens. Voortgang wordt automatisch opgeslagen in je browser.</p>
+    <button class="menuBtn" id="btnPlay">▶ Spelen</button>
+    <button class="menuBtn secondary" id="btnSettingsMain">⚙ Instellingen</button>
+    <div id="help" style="position:static;margin-top:18px;max-width:480px;">
+      <b>Besturing</b><br>
+      WASD - bewegen (W vooruit, S achteruit) · Muis - kijken<br>
+      Shift - rennen · Spatie - springen · Q - eten/drinken<br>
+      Klik links - aanvallen/schieten/verzamelen · R - slapen · F - koken/herladen<br>
+      E - inventaris · C - crafting · B - bouwen · Esc - pauze/menu sluiten<br>
+      1-8 - hotbar selecteren · Klik op scherm om muis te vergrendelen
+    </div>
+  </div>
+
+  <div id="screen-worlds" class="screenBox">
+    <h1 style="font-size:30px;">Jouw werelden</h1>
+    <div id="worldList"></div>
+    <button class="menuBtn" id="btnNewWorld">＋ Nieuwe wereld</button>
+    <button class="menuBtn secondary" id="btnBackToMain1">← Terug</button>
+  </div>
+
+  <div id="screen-newworld" class="screenBox">
+    <h1 style="font-size:30px;">Nieuwe wereld</h1>
+    <div class="formRow">
+      <label>Naam van de wereld</label>
+      <input type="text" id="newWorldName" placeholder="Mijn eiland" maxlength="28">
+    </div>
+    <div class="toggleRow">
+      <div><b>🔫 Vuurwapens</b><div class="tdesc">Schakel het gebruik en craften van pistolen/geweren in deze wereld in of uit.</div></div>
+      <label class="switch"><input type="checkbox" id="newWorldGuns" checked><span class="slider"></span></label>
+    </div>
+    <div class="toggleRow">
+      <div><b>🧟 Vijandige overlevenden (bots)</b><div class="tdesc">Vijandige NPC's die je aanvallen, vooral 's nachts.</div></div>
+      <label class="switch"><input type="checkbox" id="newWorldBots" checked><span class="slider"></span></label>
+    </div>
+    <div class="sliderRow">
+      <label>Moeilijkheidsgraad: <span id="diffLabel">Normaal</span></label>
+      <input type="range" id="newWorldDifficulty" min="0" max="2" value="1" step="1">
+    </div>
+    <div class="sliderRow">
+      <label>Wereld-zaad (seed): <span id="seedLabel">12345</span></label>
+      <input type="range" id="newWorldSeed" min="1" max="99999" value="12345" step="1">
+    </div>
+    <button class="menuBtn" id="btnCreateWorld">Wereld aanmaken & spelen</button>
+    <button class="menuBtn secondary" id="btnBackToWorlds">← Terug</button>
+  </div>
+
+  <div id="screen-settings" class="screenBox">
+    <h1 style="font-size:30px;">Instellingen</h1>
+    <div class="sliderRow">
+      <label>Muisgevoeligheid: <span id="sensLabel">1.0</span></label>
+      <input type="range" id="sensRange" min="0.2" max="3" step="0.1" value="1">
+    </div>
+    <div class="sliderRow">
+      <label>Gezichtsveld (FOV): <span id="fovLabel">75</span></label>
+      <input type="range" id="fovRange" min="60" max="100" step="1" value="75">
+    </div>
+    <div class="toggleRow">
+      <div><b>📳 Camera-schok bij schade</b><div class="tdesc">Schermtrilling wanneer je geraakt wordt.</div></div>
+      <label class="switch"><input type="checkbox" id="shakeToggle" checked><span class="slider"></span></label>
+    </div>
+    <div class="toggleRow">
+      <div><b>🩻 Hoofdbeweging (head bob)</b><div class="tdesc">Realistische camerabeweging tijdens lopen.</div></div>
+      <label class="switch"><input type="checkbox" id="bobToggle" checked><span class="slider"></span></label>
+    </div>
+    <div class="toggleRow">
+      <div><b>🌥️ Schaduwen</b><div class="tdesc">Zet uit voor betere prestaties.</div></div>
+      <label class="switch"><input type="checkbox" id="shadowToggle" checked><span class="slider"></span></label>
+    </div>
+    <button class="menuBtn secondary" id="btnBackFromSettings">← Terug</button>
+  </div>
+</div>
+
+<canvas id="c"></canvas>
+<div id="crosshair"></div>
+<div id="hitMarker"></div>
+<div id="damageVignette"></div>
+<div id="compass">N</div>
+<div id="dayInfo">Dag 1 · 06:00</div>
+<div id="msg"></div>
+<div id="saveToast">💾 Wereld opgeslagen</div>
+
+<div id="hud">
+  <div class="bar-wrap" id="health"><div class="bar-fill" style="width:100%"></div><div class="bar-label">❤ Gezondheid</div></div>
+  <div class="bar-wrap" id="hunger"><div class="bar-fill" style="width:100%"></div><div class="bar-label">🍖 Honger</div></div>
+  <div class="bar-wrap" id="thirst"><div class="bar-fill" style="width:100%"></div><div class="bar-label">💧 Dorst</div></div>
+  <div class="bar-wrap" id="stamina"><div class="bar-fill" style="width:100%"></div><div class="bar-label">⚡ Stamina</div></div>
+</div>
+<div id="ammoHud">🔫 <span id="ammoCount">0 / 0</span></div>
+
+<div id="hotbar"></div>
+
+<div class="panel" id="inventoryPanel">
+  <span class="close-x" onclick="closePanels()">✕</span>
+  <h2>🎒 Inventaris</h2>
+  <div class="grid" id="invGrid"></div>
+</div>
+
+<div class="panel" id="craftPanel">
+  <span class="close-x" onclick="closePanels()">✕</span>
+  <h2>🛠️ Crafting</h2>
+  <div id="craftList"></div>
+</div>
+
+<div class="panel" id="buildPanel">
+  <span class="close-x" onclick="closePanels()">✕</span>
+  <h2>🏗️ Bouwen (klik in de wereld om te plaatsen, Esc om te annuleren)</h2>
+  <div id="buildList"></div>
+</div>
+
+<div id="pauseScreen">
+  <h1>⏸️ Pauze</h1>
+  <button class="menuBtn" id="btnResume">▶ Doorgaan</button>
+  <button class="menuBtn secondary" id="btnSaveNow">💾 Opslaan</button>
+  <button class="menuBtn secondary" id="btnPauseSettings">⚙ Instellingen</button>
+  <button class="menuBtn danger" id="btnQuit">🚪 Opslaan & afsluiten naar menu</button>
+</div>
+
+<div id="deathScreen">
+  <h1>💀 Je bent omgekomen</h1>
+  <p id="deathReason"></p>
+  <button id="btnRespawn">Herrijzen op het eiland</button>
+  <button class="menuBtn danger" id="btnDeathQuit">Terug naar hoofdmenu</button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+/* ====================== SURVIVAL ISLAND 3D ======================
+   Single-file Three.js survival game with world saves, guns toggle,
+   hostile bots, and a settings system.
+================================================================== */
+
+// SETTINGS
+const SETTINGS_KEY = 'survival3d_settings';
+let settings = Object.assign({
+  sensitivity: 1.0, fov: 75, shake: true, bob: true, shadows: true
+}, JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'));
+function saveSettings(){ localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); }
+
+// WORLD SAVE SYSTEM
+const WORLDS_KEY = 'survival3d_worlds';
+function getWorlds(){ return JSON.parse(localStorage.getItem(WORLDS_KEY) || '{}'); }
+function setWorlds(w){ localStorage.setItem(WORLDS_KEY, JSON.stringify(w)); }
+function deleteWorld(id){ const w = getWorlds(); delete w[id]; setWorlds(w); }
+
+let currentWorldId = null;
+let world = null;
+
+function defaultWorldState(cfg){
+  return {
+    id: cfg.id, name: cfg.name, seed: cfg.seed,
+    gunsEnabled: cfg.gunsEnabled, botsEnabled: cfg.botsEnabled, difficulty: cfg.difficulty,
+    createdAt: cfg.createdAt, lastPlayed: Date.now(),
+    player:{ x:8, y:0, z:8, yaw:0, pitch:0, health:100, hunger:100, thirst:100, stamina:100 },
+    inventory:{wood:6, stone:2, fiber:1},
+    hotbar:['axe','pickaxe','spear','torch','wood','stone','berry', cfg.gunsEnabled?'pistol':''],
+    dayTime:0.27, dayCount:1,
+    placed:[], depleted:[], kills:0, deaths:0,
+  };
+}
+
+// TITLE / MENU NAVIGATION
+function showScreen(id){
+  document.querySelectorAll('.screenBox').forEach(s=>s.style.display='none');
+  document.getElementById(id).style.display='flex';
+}
+document.getElementById('btnPlay').onclick = ()=>{ renderWorldList(); showScreen('screen-worlds'); };
+document.getElementById('btnSettingsMain').onclick = ()=>{ loadSettingsUI(); showScreen('screen-settings'); };
+document.getElementById('btnBackToMain1').onclick = ()=> showScreen('screen-main');
+document.getElementById('btnBackFromSettings').onclick = ()=>{
+  if(pauseFromSettings){
+    document.getElementById('titleScreen').style.display='none';
+    document.getElementById('pauseScreen').style.display='flex';
+    pauseFromSettings=false;
+  } else { showScreen('screen-main'); }
+};
+document.getElementById('btnBackToWorlds').onclick = ()=>{ renderWorldList(); showScreen('screen-worlds'); };
+document.getElementById('btnNewWorld').onclick = ()=>{ showScreen('screen-newworld'); };
+
+document.getElementById('newWorldDifficulty').oninput = (e)=>{
+  document.getElementById('diffLabel').textContent = ['Makkelijk','Normaal','Hardcore'][e.target.value];
+};
+document.getElementById('newWorldSeed').oninput = (e)=>{
+  document.getElementById('seedLabel').textContent = e.target.value;
+};
+
+function renderWorldList(){
+  const list = document.getElementById('worldList');
+  const worlds = getWorlds();
+  list.innerHTML='';
+  const ids = Object.keys(worlds).sort((a,b)=>worlds[b].lastPlayed-worlds[a].lastPlayed);
+  if(ids.length===0){
+    list.innerHTML = '<p style="color:#9ab;">Nog geen werelden. Maak je eerste eiland!</p>';
+    return;
+  }
+  ids.forEach(id=>{
+    const w = worlds[id];
+    const row = document.createElement('div');
+    row.className='worldRow';
+    const date = new Date(w.lastPlayed).toLocaleString('nl-NL');
+    row.innerHTML = `<div>
+        <div class="wname">${w.name} ${w.gunsEnabled?'<span class="tag">🔫 Wapens</span>':''}${w.botsEnabled?'<span class="tag">🧟 Bots</span>':''}</div>
+        <div class="wmeta">Dag ${w.dayCount} · Laatst gespeeld: ${date}</div>
+      </div>
+      <div class="wbtns">
+        <button style="background:#3a6f43;color:#fff;" data-act="load">Spelen</button>
+        <button style="background:#7a2222;color:#fff;" data-act="del">Verwijder</button>
+      </div>`;
+    row.querySelector('[data-act=load]').onclick = ()=> startGame(id);
+    row.querySelector('[data-act=del]').onclick = ()=>{
+      if(confirm(`Wereld "${w.name}" definitief verwijderen?`)){ deleteWorld(id); renderWorldList(); }
+    };
+    list.appendChild(row);
+  });
+}
+
+document.getElementById('btnCreateWorld').onclick = ()=>{
+  const name = document.getElementById('newWorldName').value.trim() || 'Naamloos Eiland';
+  const guns = document.getElementById('newWorldGuns').checked;
+  const bots = document.getElementById('newWorldBots').checked;
+  const diff = parseInt(document.getElementById('newWorldDifficulty').value);
+  const seed = parseInt(document.getElementById('newWorldSeed').value);
+  const id = 'w_'+Date.now();
+  const cfg = {id, name, seed, gunsEnabled:guns, botsEnabled:bots, difficulty:diff, createdAt:Date.now()};
+  const state = defaultWorldState(cfg);
+  const worlds = getWorlds();
+  worlds[id] = state;
+  setWorlds(worlds);
+  startGame(id);
+};
+
+function loadSettingsUI(){
+  document.getElementById('sensRange').value = settings.sensitivity;
+  document.getElementById('sensLabel').textContent = settings.sensitivity.toFixed(1);
+  document.getElementById('fovRange').value = settings.fov;
+  document.getElementById('fovLabel').textContent = settings.fov;
+  document.getElementById('shakeToggle').checked = settings.shake;
+  document.getElementById('bobToggle').checked = settings.bob;
+  document.getElementById('shadowToggle').checked = settings.shadows;
+}
+document.getElementById('sensRange').oninput = e=>{ settings.sensitivity=parseFloat(e.target.value); document.getElementById('sensLabel').textContent=settings.sensitivity.toFixed(1); saveSettings(); };
+document.getElementById('fovRange').oninput = e=>{ settings.fov=parseInt(e.target.value); document.getElementById('fovLabel').textContent=settings.fov; saveSettings(); if(typeof camera!=='undefined'){ camera.fov=settings.fov; camera.updateProjectionMatrix(); } };
+document.getElementById('shakeToggle').onchange = e=>{ settings.shake=e.target.checked; saveSettings(); };
+document.getElementById('bobToggle').onchange = e=>{ settings.bob=e.target.checked; saveSettings(); };
+document.getElementById('shadowToggle').onchange = e=>{ settings.shadows=e.target.checked; saveSettings(); if(typeof renderer!=='undefined'){ renderer.shadowMap.enabled = settings.shadows; } };
+
+let pauseFromSettings = false;
+
+// THREE SETUP
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true, powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = settings.shadows;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputEncoding = THREE.sRGBEncoding;
+
+const scene = new THREE.Scene();
+const FOG_COLOR = new THREE.Color(0xbfe3ff);
+scene.fog = new THREE.FogExp2(FOG_COLOR.getHex(), 0.012);
+scene.background = FOG_COLOR.clone();
+
+const camera = new THREE.PerspectiveCamera(settings.fov, window.innerWidth/window.innerHeight, 0.1, 1000);
+camera.position.set(0, 3, 0);
+scene.add(camera);
+
+window.addEventListener('resize', ()=>{
+  camera.aspect = window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// LIGHTING / SKY
+const hemiLight = new THREE.HemisphereLight(0xbfe3ff, 0x2f4f2f, 0.9);
+scene.add(hemiLight);
+const sunLight = new THREE.DirectionalLight(0xffffff, 1.4);
+sunLight.castShadow = true;
+sunLight.shadow.mapSize.set(2048,2048);
+sunLight.shadow.camera.left = -120; sunLight.shadow.camera.right = 120;
+sunLight.shadow.camera.top = 120; sunLight.shadow.camera.bottom = -120;
+sunLight.shadow.camera.far = 400;
+scene.add(sunLight); scene.add(sunLight.target);
+const moonLight = new THREE.DirectionalLight(0x6e87c9, 0.0);
+scene.add(moonLight);
+
+const skyGeo = new THREE.SphereGeometry(450, 32, 16);
+const skyMat = new THREE.ShaderMaterial({
+  side: THREE.BackSide,
+  uniforms:{ topColor:{value:new THREE.Color(0x4aa6ff)}, bottomColor:{value:new THREE.Color(0xeaf6ff)}, offset:{value:20}, exponent:{value:0.7} },
+  vertexShader:`varying vec3 vWorldPosition;
+    void main(){ vec4 worldPosition = modelMatrix*vec4(position,1.0); vWorldPosition = worldPosition.xyz;
+      gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
+  fragmentShader:`uniform vec3 topColor; uniform vec3 bottomColor; uniform float offset; uniform float exponent;
+    varying vec3 vWorldPosition;
+    void main(){ float h = normalize(vWorldPosition+vec3(0,offset,0)).y;
+      gl_FragColor = vec4(mix(bottomColor, topColor, max(pow(max(h,0.0),exponent),0.0)),1.0); }`
+});
+const sky = new THREE.Mesh(skyGeo, skyMat);
+scene.add(sky);
+const sunMesh = new THREE.Mesh(new THREE.SphereGeometry(8,16,16), new THREE.MeshBasicMaterial({color:0xfff3b0}));
+scene.add(sunMesh);
+const moonMesh = new THREE.Mesh(new THREE.SphereGeometry(5,16,16), new THREE.MeshBasicMaterial({color:0xccd6ff}));
+scene.add(moonMesh);
+
+const starGeo = new THREE.BufferGeometry();
+const starCount = 1200;
+const starPos = new Float32Array(starCount*3);
+for(let i=0;i<starCount;i++){
+  const r = 400; const theta = Math.random()*Math.PI*2; const phi = Math.acos(Math.random()*0.9);
+  starPos[i*3] = r*Math.sin(phi)*Math.cos(theta);
+  starPos[i*3+1] = Math.abs(r*Math.cos(phi));
+  starPos[i*3+2] = r*Math.sin(phi)*Math.sin(theta);
+}
+starGeo.setAttribute('position', new THREE.BufferAttribute(starPos,3));
+const starMat = new THREE.PointsMaterial({color:0xffffff,size:1.6,transparent:true,opacity:0});
+const stars = new THREE.Points(starGeo, starMat);
+scene.add(stars);
+
+// TERRAIN (seeded)
+const WORLD_SIZE = 240;
+const SEG = 120;
+let worldSeed = 12345;
+function noise2(x,z,seed){
+  function hash(x,y){ let h = Math.sin(x*127.1+y*311.7+seed*43758.5453)*43758.5453; return h - Math.floor(h); }
+  function smooth(x,y){
+    const xi=Math.floor(x), yi=Math.floor(y); const xf=x-xi, yf=y-yi;
+    const u = xf*xf*(3-2*xf), v=yf*yf*(3-2*yf);
+    const a=hash(xi,yi), b=hash(xi+1,yi), c=hash(xi,yi+1), d=hash(xi+1,yi+1);
+    return a*(1-u)*(1-v)+b*u*(1-v)+c*(1-u)*v+d*u*v;
+  }
+  let amp=1, freq=1, sum=0, max=0;
+  for(let o=0;o<5;o++){ sum += smooth(x*freq, z*freq)*amp; max += amp; amp*=0.5; freq*=2; }
+  return sum/max;
+}
+function islandHeight(x,z){
+  const d = Math.sqrt(x*x+z*z)/(WORLD_SIZE*0.5);
+  const falloff = Math.max(0, 1 - d*d*1.05);
+  let h = noise2(x*0.02+worldSeed*0.13, z*0.02+worldSeed*0.07, 7) * 18 * falloff;
+  h += noise2(x*0.06+worldSeed*0.05, z*0.06+worldSeed*0.11, 19) * 4 * falloff;
+  h -= 2.2;
+  return h;
+}
+let terrain;
+function buildTerrain(){
+  if(terrain) scene.remove(terrain);
+  const terrainGeo = new THREE.PlaneGeometry(WORLD_SIZE, WORLD_SIZE, SEG, SEG);
+  terrainGeo.rotateX(-Math.PI/2);
+  const posAttr = terrainGeo.attributes.position;
+  const colors = new Float32Array(posAttr.count*3);
+  const grassCol = new THREE.Color(0x4f8a3c), dirtCol = new THREE.Color(0x8a6b3d),
+        sandCol = new THREE.Color(0xe5d293), rockCol = new THREE.Color(0x8a8a86), snowCol = new THREE.Color(0xf3f6fa);
+  for(let i=0;i<posAttr.count;i++){
+    const x = posAttr.getX(i), z = posAttr.getZ(i);
+    const h = islandHeight(x,z);
+    posAttr.setY(i,h);
+    let c;
+    if(h < 0.3) c = sandCol;
+    else if(h < 6) c = grassCol;
+    else if(h < 11) c = dirtCol.clone().lerp(rockCol,0.4);
+    else if(h < 15) c = rockCol;
+    else c = snowCol;
+    colors[i*3]=c.r; colors[i*3+1]=c.g; colors[i*3+2]=c.b;
+  }
+  terrainGeo.setAttribute('color', new THREE.BufferAttribute(colors,3));
+  terrainGeo.computeVertexNormals();
+  const terrainMat = new THREE.MeshStandardMaterial({vertexColors:true, roughness:0.95, metalness:0.02});
+  terrain = new THREE.Mesh(terrainGeo, terrainMat);
+  terrain.receiveShadow = true;
+  scene.add(terrain);
+}
+function getHeight(x,z){ return islandHeight(x,z); }
+
+let water;
+function buildWater(){
+  if(water) scene.remove(water);
+  const waterGeo = new THREE.PlaneGeometry(WORLD_SIZE*2.2, WORLD_SIZE*2.2, 1,1);
+  waterGeo.rotateX(-Math.PI/2);
+  const waterMat = new THREE.MeshStandardMaterial({color:0x1f6fb0, transparent:true, opacity:0.82, roughness:0.25, metalness:0.3});
+  water = new THREE.Mesh(waterGeo, waterMat);
+  water.position.y = -1.2;
+  scene.add(water);
+}
+
+// PLAYER
+const player = {
+  pos: new THREE.Vector3(8,10,8), vel:new THREE.Vector3(),
+  yaw:0, pitch:0, height:1.7, onGround:false,
+  health:100, hunger:100, thirst:100, stamina:100, alive:true,
+};
+const keys = {};
+document.addEventListener('keydown', e=>{ keys[e.code]=true; handleHotkey(e); });
+document.addEventListener('keyup', e=> keys[e.code]=false);
+
+let pointerLocked = false;
+canvas.addEventListener('click', ()=>{
+  if(gameRunning && !anyPanelOpen() && !buildMode && !paused) canvas.requestPointerLock();
+});
+document.addEventListener('pointerlockchange', ()=>{ pointerLocked = document.pointerLockElement===canvas; });
+document.addEventListener('mousemove', e=>{
+  if(!pointerLocked) return;
+  const s = settings.sensitivity*0.0022;
+  player.yaw -= e.movementX*s;
+  player.pitch -= e.movementY*s;
+  player.pitch = Math.max(-Math.PI/2+0.05, Math.min(Math.PI/2-0.05, player.pitch));
+});
+
+// RESOURCES
+let resources = [];
+function rand(seed){ let x = Math.sin((seed+worldSeed*7.13)*9999)*10000; return x-Math.floor(x); }
+
+function makeTree(x,z,scale,rid){
+  const g = new THREE.Group();
+  const trunkH = 3.2*scale;
+  const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.28*scale,0.38*scale,trunkH,7), new THREE.MeshStandardMaterial({color:0x6b4326, roughness:0.9}));
+  trunk.position.y = trunkH/2; trunk.castShadow = true; g.add(trunk);
+  const leafCol = new THREE.MeshStandardMaterial({color: rand(rid+5)>0.5?0x357a31:0x2f6e2c, roughness:0.85});
+  for(let i=0;i<3;i++){
+    const leaf = new THREE.Mesh(new THREE.ConeGeometry(1.5*scale-i*0.3*scale, 2.0*scale, 8), leafCol);
+    leaf.position.y = trunkH - 0.5*scale + i*1.1*scale; leaf.castShadow = true; g.add(leaf);
+  }
+  g.position.set(x, getHeight(x,z), z);
+  scene.add(g);
+  resources.push({id:'tree'+rid, mesh:g, type:'tree', hp:3, maxHp:3, give:'wood', amount:[3,6], pos:g.position.clone()});
+}
+function makeRock(x,z,scale,rid){
+  const g = new THREE.Group();
+  const mat = new THREE.MeshStandardMaterial({color:0x8d8d88, roughness:0.95, flatShading:true});
+  const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(0.9*scale,0), mat);
+  rock.scale.y = 0.6; rock.rotation.set(rand(rid+1)*6,rand(rid+2)*6,rand(rid+3)*6); rock.castShadow = true;
+  g.add(rock); g.position.set(x, getHeight(x,z)+0.3*scale, z);
+  scene.add(g);
+  resources.push({id:'rock'+rid, mesh:g, type:'rock', hp:4, maxHp:4, give:'stone', amount:[2,4], pos:g.position.clone()});
+}
+function makeBush(x,z,rid){
+  const g = new THREE.Group();
+  const mat = new THREE.MeshStandardMaterial({color:0x3f7d3a, roughness:0.9});
+  const b = new THREE.Mesh(new THREE.IcosahedronGeometry(0.55,0), mat); b.castShadow = true; g.add(b);
+  for(let i=0;i<5;i++){
+    const berry = new THREE.Mesh(new THREE.SphereGeometry(0.08,6,6), new THREE.MeshStandardMaterial({color:0xc23b3b}));
+    berry.position.set((rand(rid+i)-0.5)*0.7,(rand(rid+i+10)-0.2)*0.5,(rand(rid+i+20)-0.5)*0.7);
+    g.add(berry);
+  }
+  g.position.set(x, getHeight(x,z)+0.3, z);
+  scene.add(g);
+  resources.push({id:'bush'+rid, mesh:g, type:'bush', hp:1, maxHp:1, give:'berry', amount:[2,4], pos:g.position.clone(), respawn:true});
+}
+function buildResources(depletedIds){
+  resources.forEach(r=>scene.remove(r.mesh));
+  resources = [];
+  for(let i=0;i<260;i++){
+    const x = (rand(i*3.1+1)-0.5)*WORLD_SIZE*0.92;
+    const z = (rand(i*7.7+2)-0.5)*WORLD_SIZE*0.92;
+    const h = getHeight(x,z);
+    if(h < 0.6 || h > 13) continue;
+    const r = rand(i*13.3+5);
+    if(r < 0.55) makeTree(x,z, 0.7+rand(i*2+1)*0.6, i);
+    else if(r < 0.85) makeRock(x,z, 0.7+rand(i*4+2)*0.8, i);
+    else makeBush(x,z,i);
+  }
+  if(depletedIds && depletedIds.length){
+    resources.forEach(r=>{
+      if(depletedIds.includes(r.id) && !r.respawn){ scene.remove(r.mesh); r.removed=true; }
+    });
+  }
+}
+
+// ANIMALS
+let animals = [];
+function makeAnimal(kind, x, z){
+  const g = new THREE.Group();
+  let body, color, speed, hp, danger, give;
+  let hostile=false;
+  if(kind==='rabbit'){
+    color=0xc9b89a; speed=3.2; hp=1; danger=0; give='meat';
+    body = new THREE.Mesh(new THREE.BoxGeometry(0.4,0.3,0.55), new THREE.MeshStandardMaterial({color}));
+    const ear1 = new THREE.Mesh(new THREE.BoxGeometry(0.06,0.25,0.06), new THREE.MeshStandardMaterial({color}));
+    ear1.position.set(0.08,0.35,-0.15); g.add(ear1);
+    const ear2 = ear1.clone(); ear2.position.x=-0.08; g.add(ear2);
+  } else if(kind==='boar'){
+    color=0x5a4634; speed=2.4; hp=3; danger=8; give='meat'; hostile=true;
+    body = new THREE.Mesh(new THREE.BoxGeometry(0.8,0.6,1.1), new THREE.MeshStandardMaterial({color}));
+    const tusk1 = new THREE.Mesh(new THREE.ConeGeometry(0.05,0.25,6), new THREE.MeshStandardMaterial({color:0xeeeeee}));
+    tusk1.rotation.x = Math.PI/2; tusk1.position.set(0.18,-0.05,0.55); g.add(tusk1);
+    const tusk2 = tusk1.clone(); tusk2.position.x=-0.18; g.add(tusk2);
+  } else {
+    color=0x33363b; speed=4.0; hp=3; danger=14; give='meat'; hostile=true;
+    body = new THREE.Mesh(new THREE.BoxGeometry(0.5,0.55,1.2), new THREE.MeshStandardMaterial({color}));
+    const head = new THREE.Mesh(new THREE.ConeGeometry(0.22,0.5,6), new THREE.MeshStandardMaterial({color}));
+    head.rotation.x = Math.PI/2; head.position.set(0,0.15,0.7); g.add(head);
+    const eye1 = new THREE.Mesh(new THREE.SphereGeometry(0.04,6,6), new THREE.MeshStandardMaterial({color:0xff3030, emissive:0xff0000, emissiveIntensity:1}));
+    eye1.position.set(0.08,0.2,0.9); g.add(eye1);
+    const eye2 = eye1.clone(); eye2.position.x=-0.08; g.add(eye2);
+  }
+  body.position.y = 0.35; body.castShadow = true; g.add(body);
+  for(let i=0;i<4;i++){
+    const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,0.35,5), new THREE.MeshStandardMaterial({color:color}));
+    leg.position.set((i%2===0?0.2:-0.2),0.18,(i<2?0.35:-0.35)); g.add(leg);
+  }
+  g.position.set(x, getHeight(x,z)+0.4, z);
+  scene.add(g);
+  const a = {mesh:g, kind, hp, maxHp:hp, speed, danger, give, hostile, pos:g.position.clone(), wander:new THREE.Vector3(), state:'idle', timer:0, dead:false};
+  animals.push(a); return a;
+}
+function buildAnimals(){
+  animals.forEach(a=>scene.remove(a.mesh)); animals=[]; wolves=[];
+  for(let i=0;i<18;i++){
+    const x = (rand(i*5.5+100)-0.5)*WORLD_SIZE*0.8;
+    const z = (rand(i*8.8+200)-0.5)*WORLD_SIZE*0.8;
+    const h = getHeight(x,z);
+    if(h<0.8||h>12) continue;
+    makeAnimal(rand(i*9+50)<0.65?'rabbit':'boar', x, z);
+  }
+}
+let wolves = [];
+
+// HOSTILE BOTS
+let bots = [];
+function makeBot(x,z){
+  const g = new THREE.Group();
+  const skin = new THREE.MeshStandardMaterial({color:0xd8a878});
+  const clothes = new THREE.MeshStandardMaterial({color: Math.random()<0.5?0x4a4a4a:0x5a3a2a});
+  const torso = new THREE.Mesh(new THREE.BoxGeometry(0.5,0.7,0.3), clothes);
+  torso.position.y = 1.05; torso.castShadow=true; g.add(torso);
+  const head = new THREE.Mesh(new THREE.BoxGeometry(0.32,0.32,0.32), skin);
+  head.position.y = 1.6; head.castShadow=true; g.add(head);
+  const legL = new THREE.Mesh(new THREE.BoxGeometry(0.18,0.7,0.2), clothes); legL.position.set(0.14,0.45,0); g.add(legL);
+  const legR = legL.clone(); legR.position.x=-0.14; g.add(legR);
+  const armL = new THREE.Mesh(new THREE.BoxGeometry(0.16,0.6,0.16), clothes); armL.position.set(0.36,1.05,0); g.add(armL);
+  const armR = armL.clone(); armR.position.x=-0.36; g.add(armR);
+  const weaponMesh = new THREE.Mesh(new THREE.BoxGeometry(0.08,0.08,0.5), new THREE.MeshStandardMaterial({color:0x333}));
+  weaponMesh.position.set(0.36,1.05,0.3); g.add(weaponMesh);
+  g.position.set(x, getHeight(x,z)+1.0, z);
+  scene.add(g);
+  const useGun = world.gunsEnabled && Math.random()<0.6;
+  const b = {
+    mesh:g, hp:5, maxHp:5, speed: 2.6+Math.random()*1.2, danger: useGun? (8+world.difficulty*4) : (10+world.difficulty*3),
+    useGun, state:'patrol', timer:0, wander:new THREE.Vector3(), dead:false, fireTimer:0, weaponMesh,
+  };
+  bots.push(b); return b;
+}
+function buildBots(){
+  bots.forEach(b=>scene.remove(b.mesh)); bots=[];
+  if(!world.botsEnabled) return;
+  const count = 6 + world.difficulty*4;
+  for(let i=0;i<count;i++){
+    const x = (rand(i*17.2+700)-0.5)*WORLD_SIZE*0.85;
+    const z = (rand(i*23.4+800)-0.5)*WORLD_SIZE*0.85;
+    const h = getHeight(x,z);
+    if(h<0.7||h>13) continue;
+    makeBot(x,z);
+  }
+}
+
+// ITEM DB
+const ITEM_DB = {
+  wood:{icon:'🪵', name:'Hout'},
+  stone:{icon:'🪨', name:'Steen'},
+  berry:{icon:'🍓', name:'Bessen'},
+  meat:{icon:'🥩', name:'Rauw vlees'},
+  cookedmeat:{icon:'🍗', name:'Gekookt vlees'},
+  fiber:{icon:'🌿', name:'Vezel'},
+  metal:{icon:'⚙️', name:'Metaal'},
+  axe:{icon:'🪓', name:'Bijl'},
+  pickaxe:{icon:'⛏️', name:'Houweel'},
+  spear:{icon:'🔱', name:'Speer'},
+  bow:{icon:'🏹', name:'Boog'},
+  arrow:{icon:'➳', name:'Pijl'},
+  torch:{icon:'🔥', name:'Toorts'},
+  pistol:{icon:'🔫', name:'Pistool'},
+  rifle:{icon:'🔫', name:'Geweer'},
+  ammo:{icon:'🔸', name:'Munitie'},
+  campfire:{icon:'🏕️', name:'Kampvuur (plaatsbaar)'},
+  wall:{icon:'🧱', name:'Houten muur (plaatsbaar)'},
+  bed:{icon:'🛏️', name:'Bed (plaatsbaar)'},
+  waterbottle:{icon:'🥤', name:'Waterfles'},
+};
+const TOOL_ITEMS = ['axe','pickaxe','spear','torch','bow','pistol','rifle'];
+const WEAPON_DAMAGE = {fist:1, spear:2.2, bow:2, pistol:3.4, rifle:5.5};
+
+let RECIPES = [];
+function buildRecipes(){
+  RECIPES = [
+    {id:'axe', name:'Bijl', icon:'🪓', cost:{wood:3,stone:2}, desc:'Hak sneller hout'},
+    {id:'pickaxe', name:'Houweel', icon:'⛏️', cost:{wood:3,stone:3}, desc:'Win sneller steen & metaal'},
+    {id:'spear', name:'Speer', icon:'🔱', cost:{wood:4,stone:1}, desc:'Wapen tegen dieren & bots'},
+    {id:'bow', name:'Boog', icon:'🏹', cost:{wood:5,fiber:3}, desc:'Wapen op afstand'},
+    {id:'arrow', name:'Pijl (x5)', icon:'➳', cost:{wood:2,stone:1}, desc:'Munitie voor de boog', amount:5},
+    {id:'torch', name:'Toorts', icon:'🔥', cost:{wood:1,fiber:1}, desc:'Licht in het donker'},
+    {id:'campfire', name:'Kampvuur', icon:'🏕️', cost:{wood:5,stone:3}, desc:'Kook voedsel, warmte'},
+    {id:'wall', name:'Houten muur', icon:'🧱', cost:{wood:6}, desc:'Bouw een schuilplaats'},
+    {id:'bed', name:'Bed', icon:'🛏️', cost:{wood:8,fiber:3}, desc:'Slaap & herstel'},
+    {id:'waterbottle', name:'Waterfles', icon:'🥤', cost:{wood:2,fiber:2}, desc:'Drink uit zee/regen'},
+  ];
+  if(world.gunsEnabled){
+    RECIPES.push({id:'pistol', name:'Pistool', icon:'🔫', cost:{metal:6,wood:2}, desc:'Snel vuurwapen, weinig schade'});
+    RECIPES.push({id:'rifle', name:'Geweer', icon:'🔫', cost:{metal:12,wood:5}, desc:'Krachtig vuurwapen op afstand'});
+    RECIPES.push({id:'ammo', name:'Munitie (x10)', icon:'🔸', cost:{metal:3}, desc:'Voor pistool & geweer', amount:10});
+  }
+}
+
+let inventory = {};
+function addItem(type, amount){
+  inventory[type] = (inventory[type]||0)+amount;
+  showMsg(`+${amount} ${ITEM_DB[type].icon} ${ITEM_DB[type].name}`);
+  refreshInventoryUI();
+}
+function removeItems(cost){ for(const k in cost){ inventory[k]=(inventory[k]||0)-cost[k]; } refreshInventoryUI(); }
+function hasItems(cost){ for(const k in cost){ if((inventory[k]||0) < cost[k]) return false; } return true; }
+
+let hotbarSlots = [];
+let activeSlot = 0;
+let gunAmmoLoaded = {pistol:0, rifle:0};
+
+function refreshInventoryUI(){
+  const grid = document.getElementById('invGrid');
+  grid.innerHTML='';
+  for(const k in inventory){
+    if(inventory[k]<=0) continue;
+    const it = ITEM_DB[k];
+    if(!it) continue;
+    const div = document.createElement('div');
+    div.className='item';
+    div.innerHTML = `${it.icon}<div class="cnt">${inventory[k]}</div>`;
+    div.title = it.name;
+    grid.appendChild(div);
+  }
+  renderHotbar();
+}
+function renderHotbar(){
+  const hb = document.getElementById('hotbar');
+  hb.innerHTML='';
+  hotbarSlots.forEach((item,i)=>{
+    const div = document.createElement('div');
+    div.className = 'slot'+(i===activeSlot?' active':'');
+    const it = item?ITEM_DB[item]:null;
+    const count = item?(inventory[item]||0):0;
+    const isTool = TOOL_ITEMS.includes(item);
+    div.innerHTML = `<div class="key">${i+1}</div>${it?it.icon:''}${(item && !isTool)?`<div class="count">${count}</div>`:''}`;
+    div.onclick = ()=>{activeSlot=i; renderHotbar(); updateAmmoHud();};
+    hb.appendChild(div);
+  });
+  updateAmmoHud();
+}
+function updateAmmoHud(){
+  const tool = hotbarSlots[activeSlot];
+  const hud = document.getElementById('ammoHud');
+  if(tool==='pistol' || tool==='rifle'){
+    hud.style.display='block';
+    document.getElementById('ammoCount').textContent = `${gunAmmoLoaded[tool]} / ${inventory.ammo||0}`;
+  } else hud.style.display='none';
+}
+function renderCraftList(){
+  const list = document.getElementById('craftList');
+  list.innerHTML='';
+  RECIPES.forEach(r=>{
+    const have = hasItems(r.cost);
+    const costStr = Object.entries(r.cost).map(([k,v])=>`${ITEM_DB[k].icon}${v}`).join(' ');
+    const div = document.createElement('div');
+    div.className='recipe';
+    div.innerHTML = `<div>${r.icon} <b>${r.name}</b><div class="cost">${r.desc} · Kosten: ${costStr}</div></div>
+      <button ${have?'':'disabled'} data-id="${r.id}">Maken</button>`;
+    div.querySelector('button').onclick = ()=>craftItem(r.id);
+    list.appendChild(div);
+  });
+}
+function craftItem(id){
+  const r = RECIPES.find(x=>x.id===id);
+  if(!hasItems(r.cost)) return;
+  removeItems(r.cost);
+  const amt = r.amount||1;
+  if(['campfire','wall','bed'].includes(id)){
+    inventory[id]=(inventory[id]||0)+1;
+    showMsg(`${r.icon} ${r.name} gemaakt! Selecteer hem in Bouwen.`);
+  } else {
+    inventory[id]=(inventory[id]||0)+amt;
+    if(TOOL_ITEMS.includes(id) && !hotbarSlots.includes(id)){
+      const idx = hotbarSlots.findIndex(s=> !s || !TOOL_ITEMS.includes(s));
+      hotbarSlots[idx>=0?idx:0]=id;
+    }
+    showMsg(`${r.icon} ${r.name} gemaakt!`);
+  }
+  refreshInventoryUI(); renderCraftList();
+}
+
+// PANELS
+let buildMode = null;
+function anyPanelOpen(){ return ['inventoryPanel','craftPanel','buildPanel'].some(id=>document.getElementById(id).style.display==='block'); }
+function closePanels(){ ['inventoryPanel','craftPanel','buildPanel'].forEach(id=>document.getElementById(id).style.display='none'); buildMode=null; }
+function togglePanel(id){
+  const el = document.getElementById(id);
+  const willOpen = el.style.display !== 'block';
+  closePanels();
+  if(willOpen){ el.style.display='block'; document.exitPointerLock(); }
+}
+function showMsg(text){
+  const m = document.getElementById('msg');
+  m.textContent = text; m.style.opacity = 1; m.style.transition='none';
+  clearTimeout(m._t);
+  m._t = setTimeout(()=>{ m.style.transition='opacity .6s'; m.style.opacity=0; }, 1600);
+}
+function showSaveToast(){
+  const t = document.getElementById('saveToast');
+  t.style.opacity = 1; clearTimeout(t._t);
+  t._t = setTimeout(()=> t.style.opacity=0, 1500);
+}
+
+let paused = false;
+function handleHotkey(e){
+  if(!gameRunning) return;
+  if(e.code==='Escape'){
+    if(anyPanelOpen() || buildMode){ closePanels(); return; }
+    togglePause();
+    return;
+  }
+  if(paused) return;
+  if(e.code==='KeyE'){ togglePanel('inventoryPanel'); }
+  if(e.code==='KeyC'){ togglePanel('craftPanel'); renderCraftList(); }
+  if(e.code==='KeyB'){ togglePanel('buildPanel'); renderBuildList(); }
+  for(let i=1;i<=8;i++){ if(e.code==='Digit'+i){ activeSlot=i-1; renderHotbar(); } }
+}
+function togglePause(){
+  paused = !paused;
+  document.getElementById('pauseScreen').style.display = paused?'flex':'none';
+  if(paused) document.exitPointerLock();
+}
+document.getElementById('btnResume').onclick = ()=>{ togglePause(); canvas.requestPointerLock(); };
+document.getElementById('btnSaveNow').onclick = ()=>{ saveWorldState(); showSaveToast(); };
+document.getElementById('btnPauseSettings').onclick = ()=>{
+  pauseFromSettings = true;
+  document.getElementById('pauseScreen').style.display='none';
+  document.getElementById('titleScreen').style.display='flex';
+  loadSettingsUI(); showScreen('screen-settings');
+};
+document.getElementById('btnQuit').onclick = ()=>{
+  saveWorldState();
+  gameRunning = false; paused=false;
+  document.exitPointerLock();
+  document.getElementById('pauseScreen').style.display='none';
+  document.getElementById('titleScreen').style.display='flex';
+  renderWorldList();
+  showScreen('screen-worlds');
+};
+
+function renderBuildList(){
+  const list = document.getElementById('buildList');
+  list.innerHTML='';
+  ['campfire','wall','bed'].forEach(id=>{
+    const count = inventory[id]||0;
+    const it = ITEM_DB[id];
+    const div = document.createElement('div');
+    div.className='recipe';
+    div.innerHTML = `<div>${it.icon} <b>${it.name}</b><div class="cost">In voorraad: ${count}</div></div>
+      <button ${count>0?'':'disabled'}>Plaatsen</button>`;
+    div.querySelector('button').onclick = ()=>{
+      if(count<=0) return;
+      buildMode = {type:id};
+      closePanels(); canvas.requestPointerLock();
+      showMsg('Klik om te plaatsen, Esc om te annuleren');
+    };
+    list.appendChild(div);
+  });
+}
+
+// PLACED OBJECTS
+let placed = [];
+function placeObject(type, pos, fromSave){
+  let g;
+  if(type==='campfire'){
+    g = new THREE.Group();
+    const base = new THREE.Mesh(new THREE.CylinderGeometry(0.5,0.6,0.25,10), new THREE.MeshStandardMaterial({color:0x4a3a2a}));
+    g.add(base);
+    for(let i=0;i<4;i++){
+      const log = new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.08,0.9,6), new THREE.MeshStandardMaterial({color:0x5a3d22}));
+      log.rotation.z = Math.PI/2; log.rotation.y = i*Math.PI/2; log.position.y = 0.15; g.add(log);
+    }
+    const flame = new THREE.PointLight(0xff8a3d, 2.4, 14); flame.position.y=0.6; g.add(flame);
+    const flameMesh = new THREE.Mesh(new THREE.ConeGeometry(0.25,0.6,8), new THREE.MeshStandardMaterial({color:0xff7b29, emissive:0xff5500, emissiveIntensity:1.4, transparent:true, opacity:0.9}));
+    flameMesh.position.y=0.5; g.add(flameMesh);
+    g.userData.flame = flame; g.userData.flameMesh = flameMesh; g.userData.isFire=true;
+  } else if(type==='wall'){
+    g = new THREE.Group();
+    const wall = new THREE.Mesh(new THREE.BoxGeometry(2.2,1.6,0.2), new THREE.MeshStandardMaterial({color:0x8a6437, roughness:0.9}));
+    wall.position.y = 0.8; wall.castShadow=true; g.add(wall);
+  } else if(type==='bed'){
+    g = new THREE.Group();
+    const base = new THREE.Mesh(new THREE.BoxGeometry(1.0,0.25,2.0), new THREE.MeshStandardMaterial({color:0x6b4a2c}));
+    base.position.y=0.15;
+    const mattress = new THREE.Mesh(new THREE.BoxGeometry(0.9,0.15,1.8), new THREE.MeshStandardMaterial({color:0xb33b4a}));
+    mattress.position.y=0.32; g.add(base); g.add(mattress);
+    g.userData.isBed = true;
+  }
+  g.position.copy(pos);
+  scene.add(g);
+  placed.push({mesh:g, type, pos:pos.clone()});
+  if(!fromSave){ inventory[type]--; refreshInventoryUI(); }
+}
+
+// COMBAT / TOOL USE
+let attackCooldown = 0;
+let toolSwing = 0;
+
+document.addEventListener('mousedown', e=>{
+  if(e.button!==0 || paused) return;
+  if(buildMode){ tryPlaceBuild(); return; }
+  if(!pointerLocked) return;
+  tryAttack();
+});
+
+function tryPlaceBuild(){
+  const dir = new THREE.Vector3(); camera.getWorldDirection(dir);
+  const target = camera.position.clone().add(dir.multiplyScalar(3.2));
+  target.y = getHeight(target.x, target.z) + 0.05;
+  placeObject(buildMode.type, target);
+  showMsg(`${ITEM_DB[buildMode.type].icon} geplaatst`);
+  buildMode = null;
+}
+function getCurrentTool(){ return hotbarSlots[activeSlot]; }
+
+function tryAttack(){
+  const tool = getCurrentTool();
+  const isGun = tool==='pistol' || tool==='rifle';
+  const fireRate = tool==='rifle'?0.5: tool==='pistol'?0.28: 0.4;
+  if(attackCooldown>0) return;
+  attackCooldown = fireRate;
+
+  if(isGun){
+    if((gunAmmoLoaded[tool]||0)<=0){ showMsg('Geen munitie geladen — druk F om te herladen'); return; }
+    gunAmmoLoaded[tool]--;
+    fireGun(tool);
+    updateAmmoHud();
+    return;
+  }
+  toolSwing = 1;
+  const dir = new THREE.Vector3(); camera.getWorldDirection(dir);
+  meleeHit(dir, tool);
+}
+function meleeHit(dir, tool){
+  let bestDist=3.4, bestRes=null, bestAnimal=null, bestBot=null;
+  for(const r of resources){
+    if(r.removed) continue;
+    const d = r.mesh.position.distanceTo(camera.position);
+    if(d>bestDist) continue;
+    const toObj = r.mesh.position.clone().sub(camera.position).normalize();
+    if(toObj.dot(dir) > 0.85){ bestDist=d; bestRes=r; }
+  }
+  for(const a of animals){
+    if(a.dead) continue;
+    const d = a.mesh.position.distanceTo(camera.position);
+    if(d>3.6) continue;
+    const toObj = a.mesh.position.clone().sub(camera.position).normalize();
+    if(toObj.dot(dir) > 0.85){ bestAnimal=a; }
+  }
+  for(const b of bots){
+    if(b.dead) continue;
+    const d = b.mesh.position.distanceTo(camera.position);
+    if(d>3.6) continue;
+    const toObj = b.mesh.position.clone().sub(camera.position).normalize();
+    if(toObj.dot(dir) > 0.85){ bestBot=b; }
+  }
+  const dmg = WEAPON_DAMAGE[tool] || WEAPON_DAMAGE.fist;
+  if(bestBot){ damageBot(bestBot, dmg); return; }
+  if(bestAnimal){
+    bestAnimal.hp -= dmg; bestAnimal.fleeing = true; bestAnimal.state='flee';
+    if(bestAnimal.hp<=0) killAnimal(bestAnimal);
+    return;
+  }
+  if(bestRes){
+    let d2 = 1;
+    if(bestRes.type==='tree' && tool==='axe') d2 = 2;
+    if(bestRes.type==='rock' && tool==='pickaxe') d2 = 2;
+    bestRes.hp -= d2; bumpMesh(bestRes.mesh);
+    if(bestRes.hp<=0){
+      const amt = Math.floor(bestRes.amount[0]+Math.random()*(bestRes.amount[1]-bestRes.amount[0]+1));
+      addItem(bestRes.give, amt);
+      if(bestRes.type==='tree') addItem('fiber', 1+Math.floor(Math.random()*2));
+      if(bestRes.type==='rock' && tool==='pickaxe' && Math.random()<0.5) addItem('metal', 1+Math.floor(Math.random()*2));
+      scene.remove(bestRes.mesh); bestRes.removed = true;
+      if(bestRes.respawn){ setTimeout(()=>{ bestRes.removed=false; bestRes.hp=bestRes.maxHp; scene.add(bestRes.mesh); }, 30000); }
+    }
+  }
+}
+function fireGun(tool){
+  const dir = new THREE.Vector3(); camera.getWorldDirection(dir);
+  flashMuzzle();
+  let bestBot=null,bestDist=60,bestAnimal=null;
+  for(const b of bots){
+    if(b.dead) continue;
+    const toObj = b.mesh.position.clone().sub(camera.position);
+    const d = toObj.length(); if(d>60) continue;
+    toObj.normalize();
+    if(toObj.dot(dir) > 0.985 && d<bestDist){ bestDist=d; bestBot=b; bestAnimal=null; }
+  }
+  for(const a of animals){
+    if(a.dead) continue;
+    const toObj = a.mesh.position.clone().sub(camera.position);
+    const d = toObj.length(); if(d>60) continue;
+    toObj.normalize();
+    if(toObj.dot(dir) > 0.985 && d<bestDist){ bestDist=d; bestAnimal=a; bestBot=null; }
+  }
+  const dmg = WEAPON_DAMAGE[tool];
+  if(bestBot){ damageBot(bestBot, dmg); showHitMarker(); }
+  else if(bestAnimal){ bestAnimal.hp -= dmg; bestAnimal.state='flee'; bestAnimal.fleeing=true; showHitMarker(); if(bestAnimal.hp<=0) killAnimal(bestAnimal); }
+  const points = [camera.position.clone().add(dir.clone().multiplyScalar(0.5)), camera.position.clone().add(dir.clone().multiplyScalar(50))];
+  const geo = new THREE.BufferGeometry().setFromPoints(points);
+  const mat = new THREE.LineBasicMaterial({color:0xfff7c2, transparent:true, opacity:0.85});
+  const line = new THREE.Line(geo, mat);
+  scene.add(line);
+  setTimeout(()=>scene.remove(line), 70);
+}
+function flashMuzzle(){
+  if(!handGroup.userData.muzzleLight){
+    const l = new THREE.PointLight(0xffe9a8, 4, 6);
+    handGroup.add(l); handGroup.userData.muzzleLight = l;
+  }
+  handGroup.userData.muzzleLight.position.copy(toolMesh.position);
+  handGroup.userData.muzzleLight.intensity = 4;
+  setTimeout(()=>{ if(handGroup.userData.muzzleLight) handGroup.userData.muzzleLight.intensity=0; }, 60);
+}
+function showHitMarker(){
+  const hm = document.getElementById('hitMarker');
+  hm.style.opacity = 1; clearTimeout(hm._t);
+  hm._t = setTimeout(()=> hm.style.opacity = 0, 150);
+}
+function bumpMesh(mesh){ const orig = mesh.scale.clone(); mesh.scale.multiplyScalar(1.08); setTimeout(()=>mesh.scale.copy(orig), 90); }
+
+function killAnimal(a){
+  a.dead = true;
+  a.mesh.rotation.z = Math.PI/2;
+  a.mesh.position.y = getHeight(a.mesh.position.x, a.mesh.position.z)+0.15;
+  const amt = a.kind==='rabbit'?1: (a.kind==='boar'?3:2);
+  addItem(a.give, amt);
+  setTimeout(()=>{ scene.remove(a.mesh); animals.splice(animals.indexOf(a),1); }, 4000);
+}
+function damageBot(b, dmg){
+  b.hp -= dmg; bumpMesh(b.mesh); b.state='chase'; b.alerted=true;
+  if(b.hp<=0) killBot(b);
+}
+function killBot(b){
+  b.dead = true;
+  b.mesh.rotation.z = Math.PI/2;
+  b.mesh.position.y = getHeight(b.mesh.position.x,b.mesh.position.z)+0.3;
+  world.kills = (world.kills||0)+1;
+  const lootRoll = Math.random();
+  if(lootRoll<0.4) addItem('ammo', 3+Math.floor(Math.random()*5));
+  else if(lootRoll<0.7) addItem('metal', 2+Math.floor(Math.random()*3));
+  else addItem('wood', 3);
+  showMsg('💀 Overlever uitgeschakeld');
+  setTimeout(()=>{ scene.remove(b.mesh); bots.splice(bots.indexOf(b),1); }, 5000);
+}
+
+// CONSUME / RELOAD
+document.addEventListener('keydown', e=>{
+  if(!gameRunning || paused) return;
+  if(e.code==='KeyQ'){ consumeActive(); }
+  if(e.code==='KeyF'){ handleF(); }
+  if(e.code==='KeyR'){ handleSleepOrReload(); }
+});
+function consumeActive(){
+  const item = hotbarSlots[activeSlot];
+  if(item==='berry' && inventory.berry>0){
+    inventory.berry--; player.hunger=Math.min(100,player.hunger+12); player.thirst=Math.min(100,player.thirst+4);
+    showMsg('🍓 Bessen gegeten'); refreshInventoryUI();
+  } else if(item==='meat' && inventory.meat>0){
+    inventory.meat--; player.hunger=Math.min(100,player.hunger+8); player.health=Math.max(0,player.health-2);
+    showMsg('🥩 Rauw vlees gegeten (risico op ziekte!)'); refreshInventoryUI();
+  } else if(item==='cookedmeat' && inventory.cookedmeat>0){
+    inventory.cookedmeat--; player.hunger=Math.min(100,player.hunger+30);
+    showMsg('🍗 Gekookt vlees gegeten'); refreshInventoryUI();
+  } else if(item==='waterbottle'){
+    player.thirst = Math.min(100, player.thirst+25); showMsg('🥤 Water gedronken');
+  } else { showMsg('Niets om te eten/drinken in dit vak'); }
+}
+function handleF(){
+  const tool = getCurrentTool();
+  if(tool==='pistol' || tool==='rifle'){
+    const max = tool==='rifle'?8:6;
+    const need = max - gunAmmoLoaded[tool];
+    const avail = inventory.ammo||0;
+    if(need<=0){ showMsg('Wapen al vol'); return; }
+    if(avail<=0){ showMsg('Geen munitie in voorraad'); return; }
+    const loaded = Math.min(need, avail);
+    gunAmmoLoaded[tool] += loaded; inventory.ammo -= loaded;
+    showMsg(`🔄 Herladen (+${loaded})`); refreshInventoryUI(); updateAmmoHud();
+    return;
+  }
+  const fire = placed.find(p=>p.type==='campfire' && p.mesh.position.distanceTo(camera.position) < 3.5);
+  if(fire && inventory.meat>0){
+    inventory.meat--; inventory.cookedmeat=(inventory.cookedmeat||0)+1;
+    showMsg('🍗 Vlees gekookt!'); refreshInventoryUI();
+  } else if(!fire){ showMsg('Sta dichter bij een kampvuur om te koken (F)'); }
+  else showMsg('Geen rauw vlees om te koken');
+}
+function handleSleepOrReload(){
+  const bed = placed.find(p=>p.type==='bed' && p.mesh.position.distanceTo(camera.position) < 2.2);
+  if(bed){ sleepUntilMorning(); }
+}
+function sleepUntilMorning(){
+  showMsg('😴 Slapen tot de ochtend...');
+  dayTime = 0.27;
+  player.health = Math.min(100, player.health+20);
+  player.stamina = 100;
+}
+
+// DAY / NIGHT
+let dayTime = 0.27, dayCount = 1;
+const DAY_LENGTH = 150;
+let isNight = false;
+function updateDayNight(dt){
+  dayTime += dt/DAY_LENGTH;
+  if(dayTime>=1){ dayTime-=1; dayCount++; }
+  const angle = dayTime*Math.PI*2 - Math.PI/2;
+  const sunDir = new THREE.Vector3(Math.cos(angle), Math.sin(angle), 0.3).normalize();
+  sunLight.position.copy(sunDir.clone().multiplyScalar(200));
+  sunLight.target.position.set(0,0,0);
+  sunMesh.position.copy(sunDir.clone().multiplyScalar(380));
+  moonMesh.position.copy(sunDir.clone().multiplyScalar(-380));
+  const dayAmount = Math.max(0, Math.sin(dayTime*Math.PI*2 - Math.PI/2)*1.3+0.25);
+  const clamped = Math.max(0, Math.min(1, dayAmount));
+  sunLight.intensity = clamped*1.4;
+  moonLight.intensity = (1-clamped)*0.25;
+  hemiLight.intensity = 0.25 + clamped*0.75;
+  starMat.opacity = Math.max(0,(1-clamped)*0.9 - 0.1);
+  const dayTop = new THREE.Color(0x4aa6ff), nightTop = new THREE.Color(0x020314);
+  const dayBot = new THREE.Color(0xeaf6ff), nightBot = new THREE.Color(0x10172b);
+  skyMat.uniforms.topColor.value.copy(nightTop).lerp(dayTop, clamped);
+  skyMat.uniforms.bottomColor.value.copy(nightBot).lerp(dayBot, clamped);
+  const fogCol = nightBot.clone().lerp(new THREE.Color(0xbfe3ff), clamped);
+  scene.fog.color.copy(fogCol); scene.background.copy(fogCol);
+  const hrs = Math.floor(dayTime*24); const mins = Math.floor((dayTime*24*60)%60);
+  document.getElementById('dayInfo').textContent = `Dag ${dayCount} · ${String(hrs).padStart(2,'0')}:${String(mins).padStart(2,'0')}`;
+  isNight = clamped < 0.18;
+}
+
+let wolfSpawned = false;
+function manageNightSpawns(){
+  if(isNight && !wolfSpawned && wolves.length<4){
+    for(let i=0;i<3;i++){
+      const ang = Math.random()*Math.PI*2, dist = 18+Math.random()*10;
+      const x = camera.position.x+Math.cos(ang)*dist, z = camera.position.z+Math.sin(ang)*dist;
+      const h = getHeight(x,z); if(h<0.5) continue;
+      const w = makeAnimal('wolf', x, z); wolves.push(w);
+    }
+    wolfSpawned = true;
+  }
+  if(!isNight && wolfSpawned){
+    wolves.forEach(w=>{ if(!w.dead){ scene.remove(w.mesh); animals.splice(animals.indexOf(w),1); } });
+    wolves = []; wolfSpawned = false;
+  }
+}
+
+// ANIMAL AI
+function updateAnimals(dt){
+  for(const a of animals){
+    if(a.dead) continue;
+    a.timer -= dt;
+    const distToPlayer = a.mesh.position.distanceTo(camera.position);
+    if(a.hostile && distToPlayer < (a.kind==='wolf'?12:8) && !a.fleeing){ a.state='chase'; }
+    else if(!a.hostile && distToPlayer < 6){ a.state='flee'; a.fleeing=true; }
+    if(a.timer<=0 && a.state!=='chase'){
+      a.state = Math.random()<0.6 ? 'wander':'idle';
+      a.wander.set((Math.random()-0.5),0,(Math.random()-0.5)).normalize();
+      a.timer = 2+Math.random()*3;
+    }
+    let move = new THREE.Vector3();
+    if(a.state==='chase'){
+      move.copy(camera.position).sub(a.mesh.position); move.y=0; move.normalize();
+      if(distToPlayer<1.6){ damagePlayer(a.danger*dt); }
+    } else if(a.state==='flee'){
+      move.copy(a.mesh.position).sub(camera.position); move.y=0; move.normalize();
+      if(distToPlayer>14){ a.fleeing=false; a.state='idle'; }
+    } else if(a.state==='wander'){ move.copy(a.wander); }
+    if(move.lengthSq()>0){
+      const spd = a.speed*(a.state==='chase'||a.state==='flee'?1.6:0.5);
+      a.mesh.position.addScaledVector(move, spd*dt);
+      a.mesh.rotation.y = Math.atan2(move.x, move.z);
+    }
+    const h = getHeight(a.mesh.position.x, a.mesh.position.z);
+    a.mesh.position.y = h + 0.38;
+    const distFromCenter = Math.hypot(a.mesh.position.x, a.mesh.position.z);
+    if(distFromCenter > WORLD_SIZE*0.46){ a.mesh.position.x *= 0.97; a.mesh.position.z *= 0.97; }
+  }
+}
+
+// BOT AI
+function updateBots(dt){
+  for(const b of bots){
+    if(b.dead) continue;
+    b.timer -= dt; b.fireTimer -= dt;
+    const distToPlayer = b.mesh.position.distanceTo(camera.position);
+    const detectRange = isNight? 26 : 18;
+    if(distToPlayer < detectRange || b.alerted) b.state='chase';
+    if(b.timer<=0 && b.state!=='chase'){
+      b.state='patrol'; b.wander.set((Math.random()-0.5),0,(Math.random()-0.5)).normalize(); b.timer=3+Math.random()*3;
+    }
+    let move = new THREE.Vector3();
+    if(b.state==='chase'){
+      const toPlayer = camera.position.clone().sub(b.mesh.position); toPlayer.y=0;
+      const dist = toPlayer.length(); toPlayer.normalize();
+      const engageRange = b.useGun ? 22 : 1.7;
+      if(dist > engageRange*0.6){ move.copy(toPlayer); }
+      b.mesh.lookAt(camera.position.x, b.mesh.position.y, camera.position.z);
+      if(dist < engageRange){
+        if(b.useGun && b.fireTimer<=0 && dist<22){
+          b.fireTimer = 1.1 - world.difficulty*0.25;
+          botShoot(b);
+        } else if(!b.useGun && dist<1.8){
+          damagePlayer(b.danger*dt);
+        }
+      }
+    } else if(b.state==='patrol'){ move.copy(b.wander); }
+    if(move.lengthSq()>0){
+      const spd = b.speed*(b.state==='chase'?1.3:0.45);
+      b.mesh.position.addScaledVector(move, spd*dt);
+      if(b.state!=='chase') b.mesh.rotation.y = Math.atan2(move.x, move.z);
+    }
+    const h = getHeight(b.mesh.position.x, b.mesh.position.z);
+    b.mesh.position.y = h + 1.0;
+    const distFromCenter = Math.hypot(b.mesh.position.x, b.mesh.position.z);
+    if(distFromCenter > WORLD_SIZE*0.46){ b.mesh.position.x *= 0.97; b.mesh.position.z *= 0.97; }
+  }
+}
+function botShoot(b){
+  const points = [b.mesh.position.clone().add(new THREE.Vector3(0,1.1,0)), camera.position.clone()];
+  const geo = new THREE.BufferGeometry().setFromPoints(points);
+  const mat = new THREE.LineBasicMaterial({color:0xff5050, transparent:true, opacity:0.7});
+  const line = new THREE.Line(geo, mat);
+  scene.add(line);
+  setTimeout(()=>scene.remove(line), 80);
+  const accuracy = 0.55 + world.difficulty*0.18;
+  if(Math.random() < accuracy){
+    damagePlayer(8 + world.difficulty*4);
+    flashDamage();
+  }
+}
+
+let damageFlashTimer = 0;
+function flashDamage(){ damageFlashTimer = 0.3; }
+function damagePlayer(amount){
+  player.health = Math.max(0, player.health - amount);
+  flashDamage();
+}
+
+// MOVEMENT (W = forward, S = backward)
+let velocityY = 0;
+const GRAVITY = -22;
+let bobT = 0;
+function updateMovement(dt){
+  const speedBase = 5.0;
+  const running = keys['ShiftLeft'] && player.stamina>1;
+  const speed = running ? speedBase*1.8 : speedBase;
+  if(running){ player.stamina = Math.max(0, player.stamina - dt*14); }
+  else { player.stamina = Math.min(100, player.stamina + dt*8); }
+
+  const forward = new THREE.Vector3(-Math.sin(player.yaw),0,-Math.cos(player.yaw));
+  const right = new THREE.Vector3(Math.sin(player.yaw+Math.PI/2),0,Math.cos(player.yaw+Math.PI/2));
+  let move = new THREE.Vector3();
+  if(keys['KeyW']) move.add(forward);
+  if(keys['KeyS']) move.sub(forward);
+  if(keys['KeyD']) move.add(right);
+  if(keys['KeyA']) move.sub(right);
+  if(move.lengthSq()>0){ move.normalize(); }
+
+  player.pos.addScaledVector(move, speed*dt);
+
+  const groundY = getHeight(player.pos.x, player.pos.z);
+  const targetY = groundY + player.height;
+
+  if(keys['Space'] && player.onGround){ velocityY = 7.2; player.onGround = false; }
+  velocityY += GRAVITY*dt;
+  player.pos.y += velocityY*dt;
+  if(player.pos.y <= targetY){ player.pos.y = targetY; velocityY = 0; player.onGround = true; }
+
+  const distFromCenter = Math.hypot(player.pos.x, player.pos.z);
+  if(distFromCenter > WORLD_SIZE*0.5){
+    const k = (WORLD_SIZE*0.5)/distFromCenter;
+    player.pos.x *= k; player.pos.z *= k;
+  }
+
+  camera.position.copy(player.pos);
+  camera.rotation.order = 'YXZ';
+  camera.rotation.y = player.yaw;
+  camera.rotation.x = player.pitch;
+
+  if(settings.bob && move.lengthSq()>0 && player.onGround){
+    bobT += dt*(running?14:9);
+    camera.position.y += Math.sin(bobT)*0.045;
+  }
+}
+
+// SURVIVAL STATS
+function updateStats(dt){
+  if(!player.alive) return;
+  player.hunger = Math.max(0, player.hunger - dt*0.9);
+  player.thirst = Math.max(0, player.thirst - dt*1.2);
+  const nearFire = placed.some(p=>p.type==='campfire' && p.mesh.position.distanceTo(camera.position)<6);
+  if(isNight && !nearFire){ player.health -= dt*1.1; }
+  if(player.hunger<=0) player.health -= dt*1.6;
+  if(player.thirst<=0) player.health -= dt*2.2;
+  if(damageFlashTimer>0) damageFlashTimer -= dt;
+  applyDamageVignette();
+  player.health = Math.min(100, Math.max(0, player.health));
+  if(player.health<=0 && player.alive){
+    player.alive = false;
+    world.deaths = (world.deaths||0)+1;
+    document.getElementById('deathReason').textContent =
+      player.hunger<=0?'Je bent omgekomen van de honger.' :
+      player.thirst<=0?'Je bent uitgedroogd.':
+      isNight?'De kou en het gevaar van de nacht hebben je overmand.':'Je gezondheid raakte op.';
+    document.getElementById('deathScreen').style.display='flex';
+    document.exitPointerLock();
+    saveWorldState();
+  }
+  updateHUD();
+}
+function applyDamageVignette(){
+  const dv = document.getElementById('damageVignette');
+  if(!settings.shake){ dv.style.boxShadow='inset 0 0 160px 40px rgba(180,0,0,0)'; return; }
+  const intensity = damageFlashTimer>0 ? Math.min(1,damageFlashTimer/0.3) : 0;
+  const lowHealth = player.health<25 ? (1-player.health/25)*0.5 : 0;
+  const alpha = Math.min(0.85, intensity*0.7+lowHealth);
+  dv.style.boxShadow = `inset 0 0 160px 40px rgba(180,0,0,${alpha})`;
+}
+function updateHUD(){
+  document.querySelector('#health .bar-fill').style.width = player.health+'%';
+  document.querySelector('#hunger .bar-fill').style.width = player.hunger+'%';
+  document.querySelector('#thirst .bar-fill').style.width = player.thirst+'%';
+  document.querySelector('#stamina .bar-fill').style.width = player.stamina+'%';
+}
+function updateCompass(){
+  const dirs = ['N','NO','O','ZO','Z','ZW','W','NW'];
+  let deg = (player.yaw*180/Math.PI)%360; if(deg<0) deg+=360;
+  const idx = Math.round(deg/45)%8;
+  document.getElementById('compass').textContent = dirs[(8-idx)%8];
+}
+
+// VIEWMODEL
+const handGroup = new THREE.Group();
+camera.add(handGroup);
+const handMat = new THREE.MeshStandardMaterial({color:0x6b4326});
+const toolMesh = new THREE.Mesh(new THREE.BoxGeometry(0.08,0.08,0.7), handMat);
+toolMesh.position.set(0.35,-0.3,-0.6);
+toolMesh.rotation.set(0.3,0.4,0);
+handGroup.add(toolMesh);
+
+function updateToolView(dt){
+  const tool = getCurrentTool();
+  let color = 0x6b4326;
+  if(tool==='axe') color=0x999999;
+  if(tool==='pickaxe') color=0x777777;
+  if(tool==='spear') color=0x8a6b3d;
+  if(tool==='torch') color=0xff7b29;
+  if(tool==='bow') color=0x7a5230;
+  if(tool==='pistol') color=0x2a2a2a;
+  if(tool==='rifle') color=0x1a1a1a;
+  toolMesh.material.color.setHex(color);
+  toolMesh.visible = !!tool && tool!=='wood' && tool!=='stone' && tool!=='berry';
+  if(tool==='pistol') toolMesh.scale.set(1,1,0.55);
+  else if(tool==='rifle') toolMesh.scale.set(1,1,1.5);
+  else toolMesh.scale.set(1,1,1);
+  if(toolSwing>0){ toolSwing -= dt*4; toolMesh.rotation.x = 0.3 - Math.max(0,toolSwing)*1.2; }
+  else { toolMesh.rotation.x = 0.3; }
+  if(tool==='torch'){
+    if(!handGroup.userData.torchLight){ const l = new THREE.PointLight(0xffa552, 1.6, 10); handGroup.add(l); handGroup.userData.torchLight = l; }
+    handGroup.userData.torchLight.position.copy(toolMesh.position);
+  } else if(handGroup.userData.torchLight){ handGroup.remove(handGroup.userData.torchLight); handGroup.userData.torchLight = null; }
+}
+
+// SAVE / LOAD
+let autosaveTimer = 0;
+function saveWorldState(){
+  if(!world) return;
+  world.player = { x:player.pos.x, y:player.pos.y, z:player.pos.z, yaw:player.yaw, pitch:player.pitch,
+    health:player.health, hunger:player.hunger, thirst:player.thirst, stamina:player.stamina };
+  world.inventory = Object.assign({}, inventory);
+  world.hotbar = hotbarSlots.slice();
+  world.dayTime = dayTime; world.dayCount = dayCount;
+  world.placed = placed.map(p=>({type:p.type, x:p.pos.x, y:p.pos.y, z:p.pos.z}));
+  world.depleted = resources.filter(r=>r.removed && !r.respawn).map(r=>r.id);
+  world.lastPlayed = Date.now();
+  world.gunAmmoLoaded = gunAmmoLoaded;
+  const worlds = getWorlds();
+  worlds[world.id] = world;
+  setWorlds(worlds);
+}
+
+let gameRunning = false;
+function startGame(id){
+  const worlds = getWorlds();
+  const data = worlds[id];
+  world = data;
+  currentWorldId = id;
+  worldSeed = world.seed || 12345;
+
+  document.getElementById('titleScreen').style.display='none';
+  document.getElementById('deathScreen').style.display='none';
+  document.getElementById('pauseScreen').style.display='none';
+  closePanels();
+
+  buildTerrain();
+  buildWater();
+  buildResources(world.depleted||[]);
+  buildAnimals();
+  buildBots();
+  buildRecipes();
+
+  inventory = Object.assign({}, world.inventory||{wood:6,stone:2,fiber:1});
+  hotbarSlots = (world.hotbar||['axe','pickaxe','spear','torch','wood','stone','berry', world.gunsEnabled?'pistol':'']).slice();
+  while(hotbarSlots.length<8) hotbarSlots.push('');
+  gunAmmoLoaded = world.gunAmmoLoaded || {pistol:0, rifle:0};
+
+  player.pos.set(world.player.x, world.player.y, world.player.z);
+  player.yaw = world.player.yaw||0; player.pitch = world.player.pitch||0;
+  player.health = world.player.health??100; player.hunger = world.player.hunger??100;
+  player.thirst = world.player.thirst??100; player.stamina = world.player.stamina??100;
+  player.alive = true;
+
+  dayTime = world.dayTime??0.27; dayCount = world.dayCount??1;
+
+  placed.forEach(p=>scene.remove(p.mesh)); placed=[];
+  (world.placed||[]).forEach(p=> placeObject(p.type, new THREE.Vector3(p.x,p.y,p.z), true));
+
+  refreshInventoryUI();
+  renderCraftList();
+
+  gameRunning = true; paused = false;
+  damageFlashTimer = 0;
+  clock.start();
+  saveWorldState();
+  canvas.requestPointerLock();
+}
+
+document.getElementById('btnRespawn').onclick = ()=>{
+  document.getElementById('deathScreen').style.display='none';
+  player.alive = true; player.health = 100; player.hunger=70; player.thirst=70; player.stamina=100;
+  player.pos.set(8,0,8); player.pos.y = getHeight(8,8)+player.height;
+  canvas.requestPointerLock();
+};
+document.getElementById('btnDeathQuit').onclick = ()=>{
+  saveWorldState();
+  gameRunning = false;
+  document.getElementById('deathScreen').style.display='none';
+  document.getElementById('titleScreen').style.display='flex';
+  renderWorldList();
+  showScreen('screen-worlds');
+};
+
+// RENDER LOOP
+const clock = new THREE.Clock();
+clock.autoStart = false;
+function animate(){
+  requestAnimationFrame(animate);
+  if(!gameRunning){ renderer.render(scene,camera); return; }
+  let dt = Math.min(clock.getDelta(), 0.05);
+  if(!paused){
+    if(attackCooldown>0) attackCooldown -= dt;
+    if(player.alive){
+      updateMovement(dt);
+      updateDayNight(dt);
+      manageNightSpawns();
+      updateAnimals(dt);
+      updateBots(dt);
+      updateStats(dt);
+      updateCompass();
+      updateToolView(dt);
+    }
+    placed.forEach(p=>{
+      if(p.mesh.userData.isFire){
+        p.mesh.userData.flame.intensity = 2.0 + Math.sin(performance.now()*0.01)*0.5 + Math.random()*0.2;
+        p.mesh.userData.flameMesh.scale.y = 1 + Math.sin(performance.now()*0.02)*0.15;
+      }
+    });
+    water.position.x = camera.position.x; water.position.z = camera.position.z;
+
+    autosaveTimer += dt;
+    if(autosaveTimer > 30){ autosaveTimer = 0; saveWorldState(); showSaveToast(); }
+  }
+  renderer.render(scene, camera);
+}
+animate();
+window.closePanels = closePanels;
+</script>
+</body>
+</html>
