@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Crystal PvP Simulator</title>
+    <title>3D PvP Crystal Simulator - Three.js</title>
     <style>
         body, html {
             margin: 0;
@@ -11,17 +11,14 @@
             overflow: hidden;
             width: 100%;
             height: 100%;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Courier New', Courier, monospace;
             user-select: none;
-            background-color: #000;
         }
 
         #canvas-container {
             width: 100%;
             height: 100%;
-            position: absolute;
-            top: 0;
-            left: 0;
+            display: block;
         }
 
         /* Crosshair */
@@ -38,13 +35,12 @@
         #crosshair::before, #crosshair::after {
             content: '';
             position: absolute;
-            background: white;
-            mix-blend-mode: difference;
+            background: rgba(255, 255, 255, 0.8);
         }
-        #crosshair::before { top: 4px; left: -5px; width: 20px; height: 2px; }
-        #crosshair::after { top: -5px; left: 4px; width: 2px; height: 20px; }
+        #crosshair::before { top: 4px; left: 0; width: 10px; height: 2px; }
+        #crosshair::after { top: 0; left: 4px; width: 2px; height: 10px; }
 
-        /* HUD Overlay */
+        /* HUD */
         #hud {
             position: absolute;
             bottom: 20px;
@@ -53,186 +49,218 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 10px;
-            z-index: 10;
             pointer-events: none;
+            z-index: 5;
         }
 
-        /* Health Bar */
-        .bar-container {
-            width: 360px;
-            height: 20px;
-            background: rgba(0, 0, 0, 0.6);
-            border: 2px solid #333;
-            border-radius: 5px;
-            overflow: hidden;
-            position: relative;
-        }
-        #health-bar {
-            width: 100%;
-            height: 100%;
-            background: #ff3333;
-            transition: width 0.1s ease-out;
-        }
-        #health-text {
-            position: absolute;
-            width: 100%;
-            text-align: center;
-            color: white;
-            font-weight: bold;
-            font-size: 12px;
-            line-height: 20px;
-            text-shadow: 1px 1px 2px black;
-        }
-
-        /* Hotbar */
-        #hotbar {
+        #health-bar-container {
             display: flex;
-            gap: 5px;
-            background: rgba(0, 0, 0, 0.5);
-            padding: 5px;
-            border-radius: 5px;
-            border: 2px solid #555;
-            pointer-events: auto;
+            gap: 4px;
+            margin-bottom: 10px;
         }
+
+        .heart {
+            width: 18px;
+            height: 18px;
+            background: red;
+            clip-path: polygon(50% 15%, 65% 0%, 100% 20%, 100% 50%, 50% 100%, 0% 50%, 0% 20%, 35% 0%);
+        }
+
+        .heart.empty {
+            background: #333;
+        }
+
+        #hotbar-wrapper {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .hotbar {
+            display: flex;
+            background: rgba(0, 0, 0, 0.6);
+            border: 4px solid #333;
+            border-radius: 4px;
+            padding: 2px;
+        }
+
         .slot {
             width: 50px;
             height: 50px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 3px solid #333;
-            border-radius: 4px;
+            border: 2px solid transparent;
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
-            color: white;
-            font-size: 10px;
-            font-weight: bold;
             position: relative;
-            cursor: pointer;
+            background: rgba(255, 255, 255, 0.1);
+            margin: 2px;
         }
+
         .slot.active {
             border-color: #fff;
             background: rgba(255, 255, 255, 0.3);
         }
-        .slot img, .slot .icon-placeholder {
-            font-size: 18px;
-            margin-bottom: 2px;
-        }
-        .slot-key {
-            position: absolute;
-            top: 2px;
-            left: 4px;
-            font-size: 9px;
-            color: #aaa;
+
+        .slot img {
+            width: 40px;
+            height: 40px;
+            image-rendering: pixelated;
         }
 
-        /* Instructions & Menus */
-        #blocker {
+        .slot-num {
             position: absolute;
+            bottom: 2px;
+            right: 4px;
+            color: white;
+            font-size: 12px;
+            text-shadow: 1px 1px 2px black;
+        }
+
+        .offhand-slot {
+            background: rgba(0, 0, 0, 0.6);
+            border: 4px solid #555;
+            border-radius: 4px;
+            padding: 2px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .offhand-label {
+            color: white;
+            font-size: 10px;
+            margin-bottom: 2px;
+            text-shadow: 1px 1px 1px black;
+        }
+
+        /* Menus */
+        .menu-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0,0,0,0.7);
-            display: flex;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
             justify-content: center;
             align-items: center;
-            z-index: 20;
+            z-index: 100;
             color: white;
-            text-align: center;
-        }
-        #instructions {
-            background: rgba(20, 20, 20, 0.9);
-            padding: 30px;
-            border-radius: 10px;
-            border: 2px solid #555;
-            max-width: 500px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.8);
-        }
-        button {
-            background: #4CAF50;
-            border: none;
-            color: white;
-            padding: 12px 24px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            border-radius: 5px;
-            margin-top: 15px;
-            transition: background 0.2s;
-        }
-        button:hover {
-            background: #45a049;
         }
 
-        /* Settings Menu */
-        #settings-btn {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            z-index: 15;
-            background: rgba(0,0,0,0.6);
-            border: 1px solid #555;
-            color: white;
-            padding: 8px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        #settings-menu {
-            display: none;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(15, 15, 15, 0.95);
-            border: 2px solid #777;
+        .menu-content {
+            background: #222;
+            border: 4px solid #555;
+            padding: 30px;
             border-radius: 8px;
-            padding: 25px;
-            color: white;
-            z-index: 30;
-            width: 400px;
-            box-shadow: 0 0 25px rgba(0,0,0,0.9);
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
         }
-        .settings-row {
+
+        .menu-title {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #ffaa00;
+            text-transform: uppercase;
+        }
+
+        .btn {
+            background: #444;
+            color: white;
+            border: 2px solid #666;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px;
+            transition: 0.2s;
+        }
+
+        .btn:hover {
+            background: #555;
+            border-color: #ffaa00;
+        }
+
+        /* Keybind List */
+        .keybind-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .keybind-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 12px;
-        }
-        .settings-row label {
-            font-size: 14px;
-        }
-        .keybind-btn {
             background: #333;
-            border: 1px solid #555;
-            color: #fff;
-            padding: 5px 10px;
-            min-width: 80px;
-            text-align: center;
-            border-radius: 3px;
-            cursor: pointer;
-            font-size: 12px;
-        }
-        .keybind-btn:focus {
-            outline: 2px solid #4CAF50;
-            background: #444;
-        }
-        .slider {
-            width: 120px;
+            padding: 8px 12px;
+            border-radius: 4px;
         }
 
-        /* Bot Status Indicator */
-        #bot-status {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            color: white;
-            background: rgba(0,0,0,0.6);
+        .keybind-btn {
+            background: #555;
+            border: 1px solid #777;
+            color: #55ff55;
+            padding: 4px 8px;
+            cursor: pointer;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+
+        /* Inventory Grid */
+        .inventory-grid {
+            display: grid;
+            grid-template-columns: repeat(9, 1fr);
+            gap: 5px;
+            margin-top: 20px;
+            background: #111;
             padding: 10px;
             border-radius: 5px;
-            font-family: monospace;
-            font-size: 13px;
-            border: 1px solid #444;
-            z-index: 10;
+        }
+
+        /* Totem Pop Animation Overlay */
+        #totem-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 200;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            background: rgba(255, 255, 0, 0.15);
+        }
+
+        #totem-img {
+            width: 150px;
+            height: 150px;
+            image-rendering: pixelated;
+            animation: totemPop 1.5s ease-out forwards;
+        }
+
+        @keyframes totemPop {
+            0% { transform: scale(0.1) rotate(0deg); opacity: 0; }
+            20% { transform: scale(1.5) rotate(15deg); opacity: 1; }
+            40% { transform: scale(1.2) rotate(-10deg); }
+            100% { transform: scale(1) rotate(0deg); opacity: 0; }
+        }
+
+        /* Instructions */
+        #instructions {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            background: rgba(0,0,0,0.5);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            pointer-events: none;
         }
     </style>
 </head>
@@ -241,942 +269,980 @@
     <div id="canvas-container"></div>
     <div id="crosshair"></div>
 
+    <div id="instructions">
+        <strong>Besturing:</strong> WASD = Lopen | Muis = Kijken | ESC = Menu & Keybinds<br>
+        E = Inventory | F = Wissel naar Offhand | Linksklik = Slaan/Breken | Rechtsklik = Plaatsen/Gebruiken
+    </div>
+
     <!-- HUD -->
     <div id="hud">
-        <div class="bar-container">
-            <div id="health-bar"></div>
-            <div id="health-text">HP: 100 / 100</div>
-        </div>
-        <div id="hotbar">
-            <div class="slot active" data-slot="1">
-                <span class="slot-key" id="key-slot-1">1</span>
-                <span class="icon-placeholder">⚔️</span>
-                Sword
+        <div id="health-bar-container"></div>
+        <div id="hotbar-wrapper">
+            <!-- Offhand -->
+            <div class="offhand-slot">
+                <span class="offhand-label">OFF</span>
+                <div class="slot" id="offhand-slot-element"></div>
             </div>
-            <div class="slot" data-slot="2">
-                <span class="slot-key" id="key-slot-2">2</span>
-                <span class="icon-placeholder">⬛</span>
-                Obsidian
-            </div>
-            <div class="slot" data-slot="3">
-                <span class="slot-key" id="key-slot-3">3</span>
-                <span class="icon-placeholder">🔮</span>
-                Crystal
-            </div>
-            <div class="slot" data-slot="4">
-                <span class="slot-key" id="key-slot-4">4</span>
-                <span class="icon-placeholder">⚓</span>
-                Anchor
-            </div>
-            <div class="slot" data-slot="5">
-                <span class="slot-key" id="key-slot-5">5</span>
-                <span class="icon-placeholder">🟡</span>
-                Glowstone
-            </div>
+            <!-- Hotbar -->
+            <div class="hotbar" id="hotbar"></div>
         </div>
     </div>
 
-    <!-- Bot Status -->
-    <div id="bot-status">
-        Bot HP: <span id="bot-hp">100</span><br>
-        Bot State: <span id="bot-state-txt">IDLE</span>
-    </div>
-
-    <!-- Settings Button -->
-    <button id="settings-btn">⚙️ Settings</button>
-
-    <!-- Blocker / Start Screen -->
-    <div id="blocker">
-        <div id="instructions">
-            <h1 style="margin-top:0; color: #4CAF50;">Crystal PvP Simulator</h1>
-            <p>
-                <b>W, A, S, D</b> - Bewegen<br>
-                <b>SPACE</b> - Springen | <b>SHIFT</b> - Sprinten<br>
-                <b>Left Click</b> - Slaan / Blok Slopen / Crystal Detoneren<br>
-                <b>Right Click</b> - Blokken Plaatsen / Anchor Opladen & Detoneren<br>
-                <b>Hotbar Keys</b> - Selecteer items (Aanpasbaar in Settings!)
-            </p>
-            <p style="color: #aaa; font-size: 13px;">
-                <i>Tip: Respawn Anchors kunnen overal geplaatst worden. Laad ze op met Glowstone en klik met een ander item om ze te laten ontploffen! Bescherm je voeten met obsidian om blast damage te verminderen.</i>
-            </p>
-            <button id="play-button">START SIMULATIE</button>
+    <!-- ESC / Pause Menu -->
+    <div id="pause-menu" class="menu-overlay">
+        <div class="menu-content">
+            <div class="menu-title">Spel Gepauzeerd</div>
+            <button class="btn" id="resume-btn">Hervat Spel</button>
+            <button class="btn" id="settings-btn">Instellingen (Keybinds)</button>
+            <div style="margin-top: 15px; color: #aaa; font-size: 12px;">Klik buiten het menu of druk op ESC om te hervatten.</div>
         </div>
     </div>
 
-    <!-- Settings Modal -->
-    <div id="settings-menu">
-        <h3 style="margin-top:0; border-bottom: 1px solid #444; padding-bottom: 10px;">Instellingen</h3>
-        
-        <div class="settings-row">
-            <label>Field of View (FOV)</label>
-            <input type="range" id="fov-slider" class="slider" min="50" max="110" value="75">
+    <!-- Settings Menu -->
+    <div id="settings-menu" class="menu-overlay">
+        <div class="menu-content">
+            <div class="menu-title">Keybind Instellingen</div>
+            <p style="font-size: 12px; color: #ccc;">Klik op een knop en druk op een toets om deze toe te wijzen. Meerdere acties kunnen dezelfde toets hebben!</p>
+            <div class="keybind-list" id="keybind-list"></div>
+            <button class="btn" id="settings-back-btn" style="margin-top: 20px;">Terug</button>
         </div>
-        <div class="settings-row">
-            <label>Muis Gevoeligheid</label>
-            <input type="range" id="sens-slider" class="slider" min="1" max="10" value="5">
-        </div>
-
-        <h4 style="margin-bottom: 10px; color: #4CAF50;">Keybinds (Klik om te wijzigen)</h4>
-        <div class="settings-row">
-            <label>Slot 1 (Sword)</label>
-            <button class="keybind-btn" id="bind-slot-1" data-slot="1">1</button>
-        </div>
-        <div class="settings-row">
-            <label>Slot 2 (Obsidian)</label>
-            <button class="keybind-btn" id="bind-slot-2" data-slot="2">2</button>
-        </div>
-        <div class="settings-row">
-            <label>Slot 3 (Crystal)</label>
-            <button class="keybind-btn" id="bind-slot-3" data-slot="3">3</button>
-        </div>
-        <div class="settings-row">
-            <label>Slot 4 (Anchor)</label>
-            <button class="keybind-btn" id="bind-slot-4" data-slot="4">4</button>
-        </div>
-        <div class="settings-row">
-            <label>Slot 5 (Glowstone)</label>
-            <button class="keybind-btn" id="bind-slot-5" data-slot="5">5</button>
-        </div>
-
-        <button id="close-settings" style="width: 100%; background: #d32f2f;">Sluiten & Opslaan</button>
     </div>
 
-    <!-- Three.js en PointerLockControls importeren -->
+    <!-- Inventory Menu -->
+    <div id="inventory-menu" class="menu-overlay">
+        <div class="menu-content" style="max-width: 600px;">
+            <div class="menu-title">Je Rugzak (Inventory)</div>
+            <p style="font-size: 13px; color: #aaa;">Klik op een item om het in je actieve hotbar-slot te plaatsen.</p>
+            <div class="inventory-grid" id="inventory-grid"></div>
+            <button class="btn" id="close-inventory-btn" style="margin-top: 20px;">Sluit Rugzak (E)</button>
+        </div>
+    </div>
+
+    <!-- Totem Pop Overlay -->
+    <div id="totem-overlay">
+        <img id="totem-img" src="" alt="Totem of Undying">
+    </div>
+
+    <!-- Three.js en PointerLockControls via CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/PointerLockControls.js"></script>
 
     <script>
-        // --- GAME CONFIG & STATE ---
-        const CONFIG = {
-            gravity: 0.012,
-            playerSpeed: 0.08,
-            sprintMultiplier: 1.4,
-            jumpForce: 0.22,
-            friction: 0.85,
-            botSpeed: 0.05,
-            gridSize: 32,
-            blockSize: 2
-        };
+        // --- PROCEDURALE TEXTUREN EN ICONEN GENERATOR ---
+        // We maken pixel-art canvas afbeeldingen zodat we geen externe assets nodig hebben.
+        const textures = {};
+        const icons = {};
 
-        // Load keybinds from localStorage or use defaults
-        let keybinds = JSON.parse(localStorage.getItem('pvp_keybinds')) || {
-            slot1: '1',
-            slot2: '2',
-            slot3: '3',
-            slot4: '4',
-            slot5: '5'
-        };
+        function createPixelTexture(name, size, pixels, colors) {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            ctx.imageSmoothingEnabled = false;
 
-        let mouseSensitivity = parseFloat(localStorage.getItem('pvp_sens')) || 0.002;
-        let activeSlot = 1;
+            const pSize = size / pixels.length;
+            for (let y = 0; y < pixels.length; y++) {
+                for (let x = 0; x < pixels[y].length; x++) {
+                    const colorIdx = pixels[y][x];
+                    if (colorIdx !== null && colors[colorIdx]) {
+                        ctx.fillStyle = colors[colorIdx];
+                        ctx.fillRect(x * pSize, y * pSize, pSize, pSize);
+                    }
+                }
+            }
+            const dataUrl = canvas.toDataURL();
+            icons[name] = dataUrl;
 
-        // --- SCENE SETUP ---
-        const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x1a1a2e);
-        scene.fog = new THREE.FogExp2(0x1a1a2e, 0.015);
-
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.shadowMap.enabled = true;
-        document.getElementById('canvas-container').appendChild(renderer.domElement);
-
-        // Lights
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-        scene.add(ambientLight);
-
-        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-        dirLight.position.set(20, 40, 20);
-        dirLight.castShadow = true;
-        scene.add(dirLight);
-
-        // --- VOXEL GRID SYSTEM ---
-        const BLOCK_TYPES = {
-            AIR: 0,
-            BEDROCK: 1,
-            OBSIDIAN: 2,
-            ANCHOR: 3,
-            GLOWSTONE: 4
-        };
-
-        const voxelGrid = {}; // Key: "x,y,z" -> { type, mesh, charge }
-        const blockMeshes = []; // Array of meshes for raycasting
-        const blockGeometries = {};
-        const blockMaterials = {};
-
-        function createBlockMaterial(color, emissive = 0x000000) {
-            return new THREE.MeshStandardMaterial({
-                color: color,
-                roughness: 0.8,
-                metalness: 0.2,
-                emissive: emissive
-            });
+            const tex = new THREE.CanvasTexture(canvas);
+            tex.magFilter = THREE.NearestFilter;
+            tex.minFilter = THREE.NearestFilter;
+            textures[name] = tex;
+            return tex;
         }
 
-        blockGeometries[BLOCK_TYPES.BEDROCK] = new THREE.BoxGeometry(CONFIG.blockSize, CONFIG.blockSize, CONFIG.blockSize);
-        blockMaterials[BLOCK_TYPES.BEDROCK] = createBlockMaterial(0x2c2c2c);
+        // 1. Obsidian Texture
+        createPixelTexture('obsidian', 16, [
+            [1,1,2,1, 1,1,1,2, 2,1,1,1, 1,2,1,1],
+            [1,0,0,0, 0,0,1,2, 2,1,0,0, 0,0,0,1],
+            [2,0,3,0, 0,3,0,1, 1,0,0,3, 0,3,0,2],
+            [1,0,0,0, 3,0,0,0, 0,0,3,0, 0,0,0,1],
+            [1,0,3,0, 0,0,0,1, 1,0,0,0, 0,3,0,1],
+            [1,1,1,2, 2,1,1,1, 1,2,1,1, 1,1,1,2],
+            [2,0,0,0, 0,0,1,2, 2,1,0,0, 0,0,0,2],
+            [1,0,3,0, 0,3,0,1, 1,0,0,3, 0,3,0,1],
+            [1,0,0,0, 3,0,0,0, 0,0,3,0, 0,0,0,1],
+            [2,1,1,1, 1,2,1,1, 1,1,1,2, 2,1,1,1],
+            [1,0,0,0, 0,0,1,2, 2,1,0,0, 0,0,0,1],
+            [1,0,3,0, 0,3,0,1, 1,0,0,3, 0,3,0,1],
+            [2,0,0,0, 3,0,0,0, 0,0,3,0, 0,0,0,2],
+            [1,0,3,0, 0,0,0,1, 1,0,0,0, 0,3,0,1],
+            [1,1,1,2, 2,1,1,1, 1,2,1,1, 1,1,1,2],
+            [1,1,2,1, 1,1,1,2, 2,1,1,1, 1,2,1,1]
+        ], {
+            0: '#100518', // Deep dark purple
+            1: '#1a0b2e', // Dark purple
+            2: '#08020c', // Blackish purple
+            3: '#3f1c6b'  // Bright purple speckles
+        });
 
-        blockGeometries[BLOCK_TYPES.OBSIDIAN] = new THREE.BoxGeometry(CONFIG.blockSize, CONFIG.blockSize, CONFIG.blockSize);
-        blockMaterials[BLOCK_TYPES.OBSIDIAN] = createBlockMaterial(0x100518, 0x050010);
+        // 2. Respawn Anchor Texture (Uncharged)
+        createPixelTexture('respawn_anchor', 16, [
+            [2,2,2,2, 2,2,2,2, 2,2,2,2, 2,2,2,2],
+            [2,3,3,3, 3,3,3,3, 3,3,3,3, 3,3,3,2],
+            [2,3,1,1, 1,1,1,1, 1,1,1,1, 1,1,3,2],
+            [2,3,1,0, 0,0,0,0, 0,0,0,0, 0,1,3,2],
+            [2,3,1,0, 0,0,0,0, 0,0,0,0, 0,1,3,2],
+            [2,3,1,0, 0,0,0,0, 0,0,0,0, 0,1,3,2],
+            [2,3,1,0, 0,0,0,0, 0,0,0,0, 0,1,3,2],
+            [2,3,1,1, 1,1,1,1, 1,1,1,1, 1,1,3,2],
+            [2,3,3,3, 3,3,3,3, 3,3,3,3, 3,3,3,2],
+            [2,2,2,2, 2,2,2,2, 2,2,2,2, 2,2,2,2],
+            [2,1,1,2, 2,1,1,2, 2,1,1,2, 2,1,1,2],
+            [2,1,1,2, 2,1,1,2, 2,1,1,2, 2,1,1,2],
+            [2,2,2,2, 2,2,2,2, 2,2,2,2, 2,2,2,2],
+            [2,3,3,2, 2,3,3,2, 2,3,3,2, 2,3,3,2],
+            [2,3,3,2, 2,3,3,2, 2,3,3,2, 2,3,3,2],
+            [2,2,2,2, 2,2,2,2, 2,2,2,2, 2,2,2,2]
+        ], {
+            0: '#000000', // Empty center
+            1: '#2c144d', // Dark purple frame
+            2: '#120524', // Border
+            3: '#d4af37'  // Gold accents
+        });
 
-        blockGeometries[BLOCK_TYPES.GLOWSTONE] = new THREE.BoxGeometry(CONFIG.blockSize, CONFIG.blockSize, CONFIG.blockSize);
-        blockMaterials[BLOCK_TYPES.GLOWSTONE] = createBlockMaterial(0xffcc44, 0x553300);
+        // 3. Respawn Anchor Charged Texture
+        createPixelTexture('respawn_anchor_charged', 16, [
+            [2,2,2,2, 2,2,2,2, 2,2,2,2, 2,2,2,2],
+            [2,3,3,3, 3,3,3,3, 3,3,3,3, 3,3,3,2],
+            [2,3,1,1, 1,1,1,1, 1,1,1,1, 1,1,3,2],
+            [2,3,1,4, 4,5,5,4, 4,5,5,4, 4,1,3,2],
+            [2,3,1,4, 5,5,5,5, 5,5,5,5, 4,1,3,2],
+            [2,3,1,5, 5,5,5,5, 5,5,5,5, 5,1,3,2],
+            [2,3,1,4, 5,5,5,5, 5,5,5,5, 4,1,3,2],
+            [2,3,1,1, 1,1,1,1, 1,1,1,1, 1,1,3,2],
+            [2,3,3,3, 3,3,3,3, 3,3,3,3, 3,3,3,2],
+            [2,2,2,2, 2,2,2,2, 2,2,2,2, 2,2,2,2],
+            [2,1,1,2, 2,1,1,2, 2,1,1,2, 2,1,1,2],
+            [2,1,1,2, 2,1,1,2, 2,1,1,2, 2,1,1,2],
+            [2,2,2,2, 2,2,2,2, 2,2,2,2, 2,2,2,2],
+            [2,3,3,2, 2,3,3,2, 2,3,3,2, 2,3,3,2],
+            [2,3,3,2, 2,3,3,2, 2,3,3,2, 2,3,3,2],
+            [2,2,2,2, 2,2,2,2, 2,2,2,2, 2,2,2,2]
+        ], {
+            1: '#2c144d',
+            2: '#120524',
+            3: '#d4af37',
+            4: '#a124db', // Glowing purple
+            5: '#e066ff'  // Bright glow center
+        });
 
-        blockGeometries[BLOCK_TYPES.ANCHOR] = new THREE.BoxGeometry(CONFIG.blockSize, CONFIG.blockSize, CONFIG.blockSize);
+        // 4. Glowstone Texture
+        createPixelTexture('glowstone', 16, [
+            [1,1,2,2, 1,1,2,2, 1,1,2,2, 1,1,2,2],
+            [1,0,0,1, 1,0,0,1, 1,0,0,1, 1,0,0,1],
+            [2,0,0,2, 2,0,0,2, 2,0,0,2, 2,0,0,2],
+            [2,1,2,2, 2,1,2,2, 2,1,2,2, 2,1,2,2],
+            [1,1,2,2, 1,1,2,2, 1,1,2,2, 1,1,2,2],
+            [1,0,0,1, 1,0,0,1, 1,0,0,1, 1,0,0,1],
+            [2,0,0,2, 2,0,0,2, 2,0,0,2, 2,0,0,2],
+            [2,1,2,2, 2,1,2,2, 2,1,2,2, 2,1,2,2],
+            [1,1,2,2, 1,1,2,2, 1,1,2,2, 1,1,2,2],
+            [1,0,0,1, 1,0,0,1, 1,0,0,1, 1,0,0,1],
+            [2,0,0,2, 2,0,0,2, 2,0,0,2, 2,0,0,2],
+            [2,1,2,2, 2,1,2,2, 2,1,2,2, 2,1,2,2],
+            [1,1,2,2, 1,1,2,2, 1,1,2,2, 1,1,2,2],
+            [1,0,0,1, 1,0,0,1, 1,0,0,1, 1,0,0,1],
+            [2,0,0,2, 2,0,0,2, 2,0,0,2, 2,0,0,2],
+            [2,1,2,2, 2,1,2,2, 2,1,2,2, 2,1,2,2]
+        ], {
+            0: '#ffeb7a', // Bright yellow
+            1: '#e5b22d', // Golden brown
+            2: '#8c620d'  // Dark brown border
+        });
 
-        function getGridKey(x, y, z) {
-            return `${Math.floor(x)},${Math.floor(y)},${Math.floor(z)}`;
-        }
+        // 5. End Crystal Texture
+        createPixelTexture('end_crystal', 16, [
+            [null,null,null,null, 1,1,1,1, 1,1,1,1, null,null,null,null],
+            [null,null, 1,1, 2,2,2,2, 2,2,2,2, 1,1, null,null],
+            [null,1, 2,2, 3,3,3,3, 3,3,3,3, 2,2, 1,null],
+            [null,1, 2,3, 3,3,3,3, 3,3,3,3, 3,2, 1,null],
+            [1,2, 3,3, 3,3,3,3, 3,3,3,3, 3,3, 2,1],
+            [1,2, 3,3, 3,3,3,3, 3,3,3,3, 3,3, 2,1],
+            [1,2, 3,3, 3,3,3,3, 3,3,3,3, 3,3, 2,1],
+            [1,2, 3,3, 3,3,3,3, 3,3,3,3, 3,3, 2,1],
+            [1,2, 3,3, 3,3,3,3, 3,3,3,3, 3,3, 2,1],
+            [1,2, 3,3, 3,3,3,3, 3,3,3,3, 3,3, 2,1],
+            [1,2, 3,3, 3,3,3,3, 3,3,3,3, 3,3, 2,1],
+            [1,2, 3,3, 3,3,3,3, 3,3,3,3, 3,3, 2,1],
+            [null,1, 2,3, 3,3,3,3, 3,3,3,3, 3,2, 1,null],
+            [null,1, 2,2, 3,3,3,3, 3,3,3,3, 2,2, 1,null],
+            [null,null, 1,1, 2,2,2,2, 2,2,2,2, 1,1, null,null],
+            [null,null,null,null, 1,1,1,1, 1,1,1,1, null,null,null,null]
+        ], {
+            1: '#3a005c', // Dark purple
+            2: '#b800e6', // Magenta
+            3: '#ff99ff'  // Light pink core
+        });
 
-        function setBlock(x, y, z, type, charge = 0) {
-            const key = getGridKey(x, y, z);
+        // 6. Diamond Sword Icon
+        createPixelTexture('sword', 16, [
+            [null,null,null,null, null,null,null,null, null,null,null,null, null,null,1,1],
+            [null,null,null,null, null,null,null,null, null,null,null,null, null,1,2,1],
+            [null,null,null,null, null,null,null,null, null,null,null,1, 1,2,1,null],
+            [null,null,null,null, null,null,null,null, null,null,1,2, 2,1,null,null],
+            [null,null,null,null, null,null,null,null, null,1,2,2, 1,null,null,null],
+            [null,null,null,null, null,null,null,null, 1,2,2,1, null,null,null,null],
+            [null,null,null,null, null,null,null,1, 2,2,1,null, null,null,null,null],
+            [null,null,null,null, null,null,1,2, 2,1,null,null, null,null,null,null],
+            [null,null,null,null, null,1,2,2, 1,null,null,null, null,null,null,null],
+            [null,null,null,null, 1,2,2,1, null,null,null,null, null,null,null,null],
+            [null,null,null,1, 1,2,1,null, null,null,null,null, null,null,null,null],
+            [null,null,1,3, 3,1,null,null, null,null,null,null, null,null,null,null],
+            [null,1,3,4, 3,1,null,null, null,null,null,null, null,null,null,null],
+            [1,3,4,3, 1,null,null,null, null,null,null,null, null,null,null,null],
+            [1,4,3,1, null,null,null,null, null,null,null,null, null,null,null,null],
+            [1,1,1,null, null,null,null, null, null,null,null,null, null,null,null,null]
+        ], {
+            1: '#2c3e50', // Sword border
+            2: '#5dade2', // Diamond blade
+            3: '#873600', // Wood hilt
+            4: '#f39c12'  // Gold pommel
+        });
+
+        // 7. Golden Apple Icon
+        createPixelTexture('gapple', 16, [
+            [null,null,null,null, null,null,1,1, 1,null,null,null, null,null,null,null],
+            [null,null,null,null, null,1,2,2, 2,1,null,null, null,null,null,null],
+            [null,null,null,1, 1,3,3,3, 3,3,1,1, null,null,null,null],
+            [null,null,1,3, 3,3,3,3, 3,3,3,3, 1,null,null,null],
+            [null,1,3,3, 3,3,3,3, 3,3,3,3, 3,1,null,null],
+            [1,3,3,3, 3,3,3,3, 3,3,3,3, 3,3,1,null],
+            [1,3,3,3, 3,3,3,3, 3,3,3,3, 3,3,1,null],
+            [1,3,3,3, 3,3,3,3, 3,3,3,3, 3,3,1,null],
+            [1,3,3,3, 3,3,3,3, 3,3,3,3, 3,3,1,null],
+            [1,3,3,3, 3,3,3,3, 3,3,3,3, 3,3,1,null],
+            [null,1,3,3, 3,3,3,3, 3,3,3,3, 3,1,null],
+            [null,1,3,3, 3,3,3,3, 3,3,3,3, 3,1,null],
+            [null,null,1,3, 3,3,3,3, 3,3,3,1, null,null,null,null],
+            [null,null,null,1, 1,3,3,3, 3,1,1,null, null,null,null,null],
+            [null,null,null,null, null,1,1,1, 1,null,null,null, null,null,null,null]
+        ], {
+            1: '#7e5109', // Dark gold border
+            2: '#27ae60', // Green stem
+            3: '#f1c40f'  // Golden yellow
+        });
+
+        // 8. Totem of Undying Icon
+        createPixelTexture('totem', 16, [
+            [null,null,null,null, null,1,1,1, 1,1,1,null, null,null,null,null],
+            [null,null,null,null, 1,2,2,2, 2,2,2,1, null,null,null,null],
+            [null,null,null,1, 2,2,3,2, 2,3,2,2, 1,null,null,null],
+            [null,null,null,1, 2,3,3,2, 2,3,3,2, 1,null,null,null],
+            [null,null,null,1, 2,2,2,2, 2,2,2,2, 1,null,null,null],
+            [null,null,1,1, 1,2,2,2, 2,2,2,1, 1,1,null,null],
+            [null,1,2,2, 2,1,1,1, 1,1,1,2, 2,2,1,null],
+            [1,2,2,2, 2,2,2,1, 1,2,2,2, 2,2,2,1],
+            [1,2,2,2, 2,2,2,1, 1,2,2,2, 2,2,2,1],
+            [null,1,2,2, 2,1,1,1, 1,1,1,2, 2,2,1,null],
+            [null,null,1,1, 1,2,2,2, 2,2,2,1, 1,1,null,null],
+            [null,null,null,1, 2,2,2,2, 2,2,2,2, 1,null,null,null],
+            [null,null,null,1, 2,2,2,2, 2,2,2,2, 1,null,null,null],
+            [null,null,null,null, 1,2,2,2, 2,2,2,1, null,null,null,null],
+            [null,null,null,null, null,1,1,1, 1,1,1,null, null,null,null,null]
+        ], {
+            1: '#7e5109', // Border
+            2: '#f1c40f', // Gold body
+            3: '#2ecc71'  // Green eyes
+        });
+
+        // --- GAME CONFIGURATIE & STATE ---
+        const BLOCK_SIZE = 2;
+        const ARENA_SIZE = 40; // 40x40 blocks
+        const GRAVITY = -0.012;
+        const PLAYER_SPEED = 0.12;
+        const JUMP_FORCE = 0.22;
+
+        let scene, camera, renderer, controls;
+        let player = {
+            height: 1.8,
+            position: new THREE.Vector3(0, 2, 0),
+            velocity: new THREE.Vector3(),
+            onGround: false,
+            health: 20, // 10 hearts
+            maxHealth: 20
+        };
+
+        // Keybinds (meerdere toetsen mogelijk per actie!)
+        let keybinds = {
+            forward: ['KeyW', 'ArrowUp'],
+            backward: ['KeyS', 'ArrowDown'],
+            left: ['KeyA', 'ArrowLeft'],
+            right: ['KeyD', 'ArrowRight'],
+            jump: ['Space'],
+            inventory: ['KeyE'],
+            offhand: ['KeyF'],
+            hotbar1: ['Digit1'],
+            hotbar2: ['Digit2'],
+            hotbar3: ['Digit3'],
+            hotbar4: ['Digit4'],
+            hotbar5: ['Digit5'],
+            hotbar6: ['Digit6'],
+            hotbar7: ['Digit7'],
+            hotbar8: ['Digit8'],
+            hotbar9: ['Digit9'],
+            place: ['mousedown_2'], // Rechtsklik
+            break: ['mousedown_0']  // Linksklik
+        };
+
+        // Actieve toetsen status
+        const keysPressed = {};
+
+        // Hotbar & Items definitie
+        const ITEMS = {
+            SWORD: { id: 'sword', name: 'Zwaard', isBlock: false, icon: icons.sword },
+            RESPAWN_ANCHOR: { id: 'respawn_anchor', name: 'Respawn Anchor', isBlock: true, texture: 'respawn_anchor', icon: icons.respawn_anchor },
+            GLOWSTONE: { id: 'glowstone', name: 'Glowstone', isBlock: true, texture: 'glowstone', icon: icons.glowstone },
+            OBSIDIAN: { id: 'obsidian', name: 'Obsidian', isBlock: true, texture: 'obsidian', icon: icons.obsidian },
+            CRYSTAL: { id: 'crystal', name: 'End Crystal', isBlock: false, icon: icons.end_crystal },
+            GAPPLE: { id: 'gapple', name: 'Golden Apple', isBlock: false, icon: icons.gapple },
+            TOTEM: { id: 'totem', name: 'Totem of Undying', isBlock: false, icon: icons.totem }
+        };
+
+        let hotbar = [
+            ITEMS.SWORD,
+            ITEMS.RESPAWN_ANCHOR,
+            ITEMS.GLOWSTONE,
+            ITEMS.OBSIDIAN,
+            ITEMS.CRYSTAL,
+            ITEMS.GAPPLE,
+            null,
+            null,
+            null
+        ];
+        let activeSlot = 0;
+        let offhandSlot = ITEMS.TOTEM; // Start met een totem in offhand!
+
+        // Inventory gevuld met Totems en extra blocks
+        let inventory = Array(27).fill(null).map((_, i) => i < 15 ? ITEMS.TOTEM : (i < 20 ? ITEMS.OBSIDIAN : ITEMS.GLOWSTONE));
+
+        // Wereld data structuur
+        const worldBlocks = {}; // Sleutel: "x,y,z" -> { mesh, type, charged: boolean }
+        const blockGeometry = new THREE.BoxGeometry(BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
+
+        // --- INITIALISATIE ---
+        function init() {
+            // Scene & Renderer
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color('#0a0512'); // Dark end-like sky
+            scene.fog = new THREE.FogExp2('#0a0512', 0.015);
+
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
             
-            // Remove old block if exists
-            if (voxelGrid[key]) {
-                scene.remove(voxelGrid[key].mesh);
-                const index = blockMeshes.indexOf(voxelGrid[key].mesh);
-                if (index !== -1) blockMeshes.splice(index, 1);
-                delete voxelGrid[key];
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+            // Controls
+            controls = new THREE.PointerLockControls(camera, document.body);
+            scene.add(controls.getObject());
+
+            // Belichting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+            scene.add(ambientLight);
+
+            const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            dirLight.position.set(20, 40, 20);
+            scene.add(dirLight);
+
+            // Bouw Arena
+            buildArena();
+
+            // Event Listeners
+            setupEventListeners();
+            setupUI();
+            updateHUD();
+
+            // Start Loop
+            animate();
+        }
+
+        // --- ARENA BOUWEN ---
+        function buildArena() {
+            // Vloer (Bedrock/Obsidian-achtig)
+            const floorMat = new THREE.MeshStandardMaterial({ map: textures.obsidian, roughness: 0.8 });
+            
+            for (let x = -ARENA_SIZE/2; x <= ARENA_SIZE/2; x++) {
+                for (let z = -ARENA_SIZE/2; z <= ARENA_SIZE/2; z++) {
+                    // Maak een vlakke vloer op y = 0
+                    createBlock(x, 0, z, ITEMS.OBSIDIAN, false);
+
+                    // Hoge muren aan de randen
+                    if (x === -ARENA_SIZE/2 || x === ARENA_SIZE/2 || z === -ARENA_SIZE/2 || z === ARENA_SIZE/2) {
+                        for (let y = 1; y <= 8; y++) {
+                            createBlock(x, y, z, ITEMS.OBSIDIAN, false);
+                        }
+                    }
+                }
             }
 
-            if (type === BLOCK_TYPES.AIR) return;
+            // Voeg wat pilaren en obstakels toe in de arena
+            for (let i = 0; i < 8; i++) {
+                const px = Math.floor(Math.random() * (ARENA_SIZE - 10)) - (ARENA_SIZE/2 - 5);
+                const pz = Math.floor(Math.random() * (ARENA_SIZE - 10)) - (ARENA_SIZE/2 - 5);
+                const height = 3 + Math.floor(Math.random() * 4);
+                for (let y = 1; y <= height; y++) {
+                    createBlock(px, y, pz, ITEMS.OBSIDIAN, false);
+                }
+            }
 
-            let material;
-            if (type === BLOCK_TYPES.ANCHOR) {
-                material = new THREE.MeshStandardMaterial({
-                    color: 0x220033,
-                    emissive: new THREE.Color(0x00ffff).multiplyScalar(charge * 0.25),
-                    roughness: 0.5
-                });
+            // Zet speler in het midden
+            player.position.set(0, 4, 0);
+            controls.getObject().position.copy(player.position);
+        }
+
+        function createBlock(x, y, z, item, dynamic = true) {
+            const key = `${x},${y},${z}`;
+            if (worldBlocks[key]) return; // Al bezet
+
+            let mat;
+            if (item.id === 'respawn_anchor') {
+                mat = new THREE.MeshStandardMaterial({ map: textures.respawn_anchor, roughness: 0.5 });
+            } else if (item.id === 'glowstone') {
+                mat = new THREE.MeshStandardMaterial({ map: textures.glowstone, emissive: new THREE.Color('#ffeb7a'), emissiveIntensity: 0.5 });
             } else {
-                material = blockMaterials[type];
+                mat = new THREE.MeshStandardMaterial({ map: textures[item.texture] || textures.obsidian, roughness: 0.8 });
             }
 
-            const mesh = new THREE.Mesh(blockGeometries[type], material);
-            mesh.position.set(
-                x * CONFIG.blockSize + CONFIG.blockSize/2,
-                y * CONFIG.blockSize + CONFIG.blockSize/2,
-                z * CONFIG.blockSize + CONFIG.blockSize/2
-            );
-            mesh.castShadow = true;
-            mesh.receiveShadow = true;
-            
-            // Store grid coordinates directly on mesh for easy retrieval
-            mesh.userData = { gridX: x, gridY: y, gridZ: z };
-
+            const mesh = new THREE.Mesh(blockGeometry, mat);
+            mesh.position.set(x * BLOCK_SIZE, y * BLOCK_SIZE, z * BLOCK_SIZE);
             scene.add(mesh);
 
-            voxelGrid[key] = { type, mesh, charge, x, y, z };
-            blockMeshes.push(mesh);
+            worldBlocks[key] = {
+                mesh: mesh,
+                type: item.id,
+                charged: false,
+                pos: { x, y, z }
+            };
         }
 
-        function getBlock(x, y, z) {
-            const key = getGridKey(x, y, z);
-            return voxelGrid[key] || null;
-        }
-
-        // Build Arena (Bedrock floor, some obsidian walls)
-        for (let x = -15; x < 15; x++) {
-            for (let z = -15; z < 15; z++) {
-                setBlock(x, -1, z, BLOCK_TYPES.BEDROCK);
-                if (x === -15 || x === 14 || z === -15 || z === 14) {
-                    setBlock(x, 0, z, BLOCK_TYPES.BEDROCK);
-                    setBlock(x, 1, z, BLOCK_TYPES.BEDROCK);
-                }
+        function removeBlock(x, y, z) {
+            const key = `${x},${y},${z}`;
+            if (worldBlocks[key]) {
+                scene.remove(worldBlocks[key].mesh);
+                delete worldBlocks[key];
             }
         }
-        // Add some random obsidian pillars
-        setBlock(-3, 0, -3, BLOCK_TYPES.OBSIDIAN);
-        setBlock(-3, 1, -3, BLOCK_TYPES.OBSIDIAN);
-        setBlock(3, 0, 3, BLOCK_TYPES.OBSIDIAN);
-        setBlock(3, 1, 3, BLOCK_TYPES.OBSIDIAN);
 
-        // --- BLOCK HIGHLIGHT (SELECTION BOX) ---
-        const highlightGeo = new THREE.BoxGeometry(CONFIG.blockSize + 0.02, CONFIG.blockSize + 0.02, CONFIG.blockSize + 0.02);
-        const highlightMat = new THREE.MeshBasicMaterial({
-            color: 0xffffff,
-            wireframe: true,
-            transparent: true,
-            opacity: 0.6
-        });
-        const blockHighlight = new THREE.Mesh(highlightGeo, highlightMat);
-        scene.add(blockHighlight);
+        // --- KEYBIND CHECKER ---
+        function isActionPressed(action) {
+            const keys = keybinds[action];
+            if (!keys) return false;
+            return keys.some(k => keysPressed[k]);
+        }
 
-        // --- ENTITY SYSTEM (PLAYER & BOT) ---
-        class Entity {
-            constructor(color, isPlayer = false) {
-                this.isPlayer = isPlayer;
-                this.width = 1.2;
-                this.height = 3.4;
-                this.depth = 1.2;
-                
-                // Physics
-                this.position = new THREE.Vector3(0, 5, 0);
-                this.velocity = new THREE.Vector3();
-                this.onGround = false;
-                this.health = 100;
+        // --- INPUT & EVENT LISTENERS ---
+        function setupEventListeners() {
+            // Toetsenbord
+            window.addEventListener('keydown', (e) => {
+                keysPressed[e.code] = true;
+                handleInstantKeys(e.code);
+            });
 
-                // Visual Mesh
-                const geometry = new THREE.BoxGeometry(this.width, this.height, this.depth);
-                const material = new THREE.MeshStandardMaterial({ color: color });
-                this.mesh = new THREE.Mesh(geometry, material);
-                this.mesh.castShadow = true;
-                
-                if (this.isPlayer) {
-                    this.mesh.visible = false; // Hide player mesh from first person camera
+            window.addEventListener('keyup', (e) => {
+                keysPressed[e.code] = false;
+            });
+
+            // Muis clicks (voor slaan/plaatsen)
+            window.addEventListener('mousedown', (e) => {
+                if (!controls.isLocked) return;
+                const clickKey = `mousedown_${e.button}`;
+                keysPressed[clickKey] = true;
+                handleMouseClick(e.button);
+            });
+
+            window.addEventListener('mouseup', (e) => {
+                const clickKey = `mousedown_${e.button}`;
+                keysPressed[clickKey] = false;
+            });
+
+            // Pointer Lock Events
+            const pauseMenu = document.getElementById('pause-menu');
+            controls.addEventListener('lock', () => {
+                pauseMenu.style.display = 'none';
+                closeAllMenus();
+            });
+
+            controls.addEventListener('unlock', () => {
+                // Toon pause menu alleen als er geen ander menu (zoals inventory) open staat
+                if (document.getElementById('inventory-menu').style.display !== 'flex' &&
+                    document.getElementById('settings-menu').style.display !== 'flex') {
+                    pauseMenu.style.display = 'flex';
                 }
-                
-                scene.add(this.mesh);
-            }
+            });
+        }
 
-            // Robust 3D AABB Collision Detection
-            checkCollision(pos) {
-                const minX = pos.x - this.width / 2;
-                const maxX = pos.x + this.width / 2;
-                const minY = pos.y - this.height / 2;
-                const maxY = pos.y + this.height / 2;
-                const minZ = pos.z - this.depth / 2;
-                const maxZ = pos.z + this.depth / 2;
-
-                const gMinX = Math.floor(minX / CONFIG.blockSize);
-                const gMaxX = Math.floor(maxX / CONFIG.blockSize);
-                const gMinY = Math.floor(minY / CONFIG.blockSize);
-                const gMaxY = Math.floor(maxY / CONFIG.blockSize);
-                const gMinZ = Math.floor(minZ / CONFIG.blockSize);
-                const gMaxZ = Math.floor(maxZ / CONFIG.blockSize);
-
-                for (let x = gMinX; x <= gMaxX; x++) {
-                    for (let y = gMinY; y <= gMaxY; y++) {
-                        for (let z = gMinZ; z <= gMaxZ; z++) {
-                            const block = getBlock(x, y, z);
-                            if (block && block.type !== BLOCK_TYPES.AIR) {
-                                return true; // Collision!
-                            }
-                        }
-                    }
-                }
-                return false;
-            }
-
-            updatePhysics() {
-                // Apply Gravity
-                if (!this.onGround) {
-                    this.velocity.y -= CONFIG.gravity;
-                }
-
-                // Apply Friction
-                this.velocity.x *= CONFIG.friction;
-                this.velocity.z *= CONFIG.friction;
-
-                // X movement & collision
-                this.position.x += this.velocity.x;
-                if (this.checkCollision(this.position)) {
-                    this.position.x -= this.velocity.x;
-                    this.velocity.x = 0;
-                }
-
-                // Y movement & collision
-                this.onGround = false;
-                this.position.y += this.velocity.y;
-                if (this.checkCollision(this.position)) {
-                    if (this.velocity.y < 0) {
-                        this.onGround = true;
-                    }
-                    this.position.y -= this.velocity.y;
-                    this.velocity.y = 0;
-                }
-
-                // Z movement & collision
-                this.position.z += this.velocity.z;
-                if (this.checkCollision(this.position)) {
-                    this.position.z -= this.velocity.z;
-                    this.velocity.z = 0;
-                }
-
-                // Keep within arena bounds
-                if (this.position.y < -10) {
-                    this.respawn();
-                }
-
-                // Update Mesh Position
-                this.mesh.position.copy(this.position);
-            }
-
-            takeDamage(amount, knockbackVec) {
-                this.health = Math.max(0, this.health - amount);
-                this.velocity.add(knockbackVec);
-                
-                if (this.isPlayer) {
+        function handleInstantKeys(code) {
+            // Check hotbar selectie via keybinds
+            for (let i = 1; i <= 9; i++) {
+                if (keybinds[`hotbar${i}`].includes(code)) {
+                    activeSlot = i - 1;
                     updateHUD();
+                }
+            }
+
+            // Inventory openen/sluiten
+            if (keybinds.inventory.includes(code)) {
+                if (document.getElementById('inventory-menu').style.display === 'flex') {
+                    closeAllMenus();
+                    controls.lock();
                 } else {
-                    document.getElementById('bot-hp').innerText = Math.round(this.health);
-                }
-
-                if (this.health <= 0) {
-                    this.respawn();
+                    controls.unlock();
+                    openInventory();
                 }
             }
 
-            respawn() {
-                this.health = 100;
-                this.position.set((Math.random() - 0.5) * 10, 10, (Math.random() - 0.5) * 10);
-                this.velocity.set(0, 0, 0);
-                if (this.isPlayer) updateHUD();
+            // Offhand wissel (F)
+            if (keybinds.offhand.includes(code)) {
+                const temp = hotbar[activeSlot];
+                hotbar[activeSlot] = offhandSlot;
+                offhandSlot = temp;
+                updateHUD();
             }
         }
 
-        const player = new Entity(0x0000ff, true);
-        player.position.set(-5, 2, -5);
+        // --- INTERACTIE: PLAATSEN & BREKEN ---
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2(0, 0); // Altijd in het midden van het scherm
 
-        const bot = new Entity(0xff0000, false);
-        bot.position.set(5, 2, 5);
-
-        // --- CONTROLS SETUP ---
-        const controls = new THREE.PointerLockControls(camera, document.body);
-        
-        document.getElementById('play-button').addEventListener('click', () => {
-            controls.lock();
-        });
-
-        controls.addEventListener('lock', () => {
-            document.getElementById('blocker').style.display = 'none';
-        });
-
-        controls.addEventListener('unlock', () => {
-            document.getElementById('blocker').style.display = 'flex';
-        });
-
-        // Keyboard Inputs
-        const keys = {};
-        window.addEventListener('keydown', (e) => {
-            keys[e.key.toLowerCase()] = true;
-            handleHotbarKeys(e.key);
-        });
-        window.addEventListener('keyup', (e) => {
-            keys[e.key.toLowerCase()] = false;
-        });
-
-        function handleHotbarKeys(key) {
-            const lowerKey = key.toLowerCase();
-            if (lowerKey === keybinds.slot1) selectSlot(1);
-            if (lowerKey === keybinds.slot2) selectSlot(2);
-            if (lowerKey === keybinds.slot3) selectSlot(3);
-            if (lowerKey === keybinds.slot4) selectSlot(4);
-            if (lowerKey === keybinds.slot5) selectSlot(5);
-        }
-
-        function selectSlot(slot) {
-            activeSlot = slot;
-            document.querySelectorAll('.slot').forEach(s => s.classList.remove('active'));
-            document.querySelector(`.slot[data-slot="${slot}"]`).classList.add('active');
-        }
-
-        // --- END CRYSTAL SYSTEM ---
-        const crystals = []; // Array of { mesh, position }
-
-        function spawnCrystal(x, y, z) {
-            // Check if placed on Obsidian or Bedrock
-            const blockBelow = getBlock(x, y - 1, z);
-            if (!blockBelow || (blockBelow.type !== BLOCK_TYPES.OBSIDIAN && blockBelow.type !== BLOCK_TYPES.BEDROCK)) {
-                return; // Can only place on Obsidian or Bedrock
-            }
-
-            // Create Crystal Mesh (Rotating Octahedron inside Glass Box)
-            const crystalGroup = new THREE.Group();
+        function handleMouseClick(button) {
+            // Raycast vanaf camera
+            raycaster.setFromCamera(mouse, camera);
             
-            const outerGeo = new THREE.BoxGeometry(1.2, 1.2, 1.2);
-            const outerMat = new THREE.MeshStandardMaterial({
-                color: 0xffffff,
-                transparent: true,
-                opacity: 0.4,
-                wireframe: false
-            });
-            const outerMesh = new THREE.Mesh(outerGeo, outerMat);
-            crystalGroup.add(outerMesh);
+            // Verzamel alle block meshes
+            const meshes = Object.values(worldBlocks).map(b => b.mesh);
+            const intersects = raycaster.intersectObjects(meshes);
 
-            const innerGeo = new THREE.OctahedronGeometry(0.6);
-            const innerMat = new THREE.MeshStandardMaterial({
-                color: 0xff00ff,
-                emissive: 0xff00ff,
-                roughness: 0.1
-            });
-            const innerMesh = new THREE.Mesh(innerGeo, innerMat);
-            innerMesh.name = "inner";
-            crystalGroup.add(innerMesh);
+            if (intersects.length > 0 && intersects[0].distance < 8) {
+                const hit = intersects[0];
+                const blockMesh = hit.object;
+                
+                // Vind de coördinaten van het geraakte blok
+                const bx = Math.round(blockMesh.position.x / BLOCK_SIZE);
+                const by = Math.round(blockMesh.position.y / BLOCK_SIZE);
+                const bz = Math.round(blockMesh.position.z / BLOCK_SIZE);
+                const key = `${bx},${by},${bz}`;
+                const blockData = worldBlocks[key];
 
-            crystalGroup.position.set(
-                x * CONFIG.blockSize + CONFIG.blockSize/2,
-                y * CONFIG.blockSize + CONFIG.blockSize/2,
-                z * CONFIG.blockSize + CONFIG.blockSize/2
-            );
+                // LINKERKLIK: Breken / Slaan
+                if (button === 0) {
+                    // Als we een block slaan, breek het (behalve de onderste laag muren/vloer ter bescherming van de arena)
+                    if (by > 0) {
+                        removeBlock(bx, by, bz);
+                    }
+                } 
+                // RECHTSKLIK: Plaatsen / Gebruiken
+                else if (button === 2) {
+                    const activeItem = hotbar[activeSlot];
 
-            scene.add(crystalGroup);
-            crystals.push({
-                mesh: crystalGroup,
-                gridPos: { x, y, z },
-                worldPos: crystalGroup.position.clone()
-            });
-        }
-
-        // --- EXPLOSION SYSTEM (WITH FEET PROTECTION) ---
-        function triggerExplosion(pos, maxDamage = 85, radius = 8) {
-            // Visual Explosion Effect
-            const expGeo = new THREE.SphereGeometry(radius / 2, 16, 16);
-            const expMat = new THREE.MeshBasicMaterial({
-                color: 0xffaa00,
-                transparent: true,
-                opacity: 0.8,
-                blending: THREE.AdditiveBlending
-            });
-            const expMesh = new THREE.Mesh(expGeo, expMat);
-            expMesh.position.copy(pos);
-            scene.add(expMesh);
-
-            // Animate explosion fade out
-            let scale = 1;
-            const interval = setInterval(() => {
-                scale += 0.1;
-                expMesh.scale.set(scale, scale, scale);
-                expMesh.material.opacity -= 0.08;
-                if (expMesh.material.opacity <= 0) {
-                    scene.remove(expMesh);
-                    clearInterval(interval);
-                }
-            }, 30);
-
-            // Apply Damage & Knockback to Player & Bot
-            [player, bot].forEach(entity => {
-                const dist = entity.position.distanceTo(pos);
-                if (dist < radius) {
-                    let damageFactor = (radius - dist) / radius;
-
-                    // FEET PROTECTION MECHANIC:
-                    const feetPos = entity.position.clone().sub(new THREE.Vector3(0, entity.height/2, 0));
-                    const raycaster = new THREE.Raycaster(pos, feetPos.clone().sub(pos).normalize());
-                    
-                    // Only raycast against blocks to check for cover
-                    const intersects = raycaster.intersectObjects(blockMeshes, true);
-                    
-                    let protectedByBlock = false;
-                    for (let hit of intersects) {
-                        if (hit.distance < dist) {
-                            protectedByBlock = true;
-                            break;
+                    // Speciale interactie: Respawn Anchor opladen of laten ontploffen
+                    if (blockData && blockData.type === 'respawn_anchor') {
+                        if (activeItem && activeItem.id === 'glowstone') {
+                            // Opladen!
+                            blockData.charged = true;
+                            blockData.mesh.material.map = textures.respawn_anchor_charged;
+                            blockData.mesh.material.needsUpdate = true;
+                            // Consumeer glowstone
+                            consumeActiveItem();
+                        } else if (blockData.charged) {
+                            // Klik met een ANDER item op een opgeladen anchor -> ONTPLOFFING!
+                            triggerExplosion(bx, by, bz);
                         }
-                    }
-
-                    if (protectedByBlock) {
-                        damageFactor *= 0.2; // Drastically reduce damage/knockback if feet are covered
-                    }
-
-                    const finalDamage = maxDamage * damageFactor;
-
-                    // Knockback Vector (Exponential)
-                    const kbDir = entity.position.clone().sub(pos).normalize();
-                    kbDir.y += 0.5; // Upward lift
-                    const kbStrength = 0.8 * damageFactor;
-                    const kbVector = kbDir.multiplyScalar(kbStrength);
-
-                    entity.takeDamage(finalDamage, kbVector);
-                }
-            });
-        }
-
-        // --- INTERACTION LOGIC ---
-        window.addEventListener('mousedown', (e) => {
-            if (!controls.isLocked) return;
-
-            if (e.button === 0) { // Left Click (Attack / Break Block / Detonate Crystal)
-                handleLeftClick();
-            } else if (e.button === 2) { // Right Click (Place / Charge)
-                handleRightClick();
-            }
-        });
-
-        function handleLeftClick() {
-            const raycaster = new THREE.Raycaster();
-            raycaster.setFromCamera(new THREE.Vector2(0,0), camera);
-
-            // 1. Check Crystal hits first (instant high-damage explosion)
-            const crystalMeshes = crystals.map(c => c.mesh);
-            const crystalIntersects = raycaster.intersectObjects(crystalMeshes, true);
-
-            if (crystalIntersects.length > 0 && crystalIntersects[0].distance < 6) {
-                let hitGroup = crystalIntersects[0].object;
-                while (hitGroup.parent && hitGroup.parent !== scene) {
-                    hitGroup = hitGroup.parent;
-                }
-
-                const index = crystals.findIndex(c => c.mesh === hitGroup);
-                if (index !== -1) {
-                    const crystal = crystals[index];
-                    triggerExplosion(crystal.worldPos, 95, 9); // High damage
-                    scene.remove(crystal.mesh);
-                    crystals.splice(index, 1);
-                    return;
-                }
-            }
-
-            // 2. Check Block hits to Break/Mine them (except Bedrock)
-            const blockIntersects = raycaster.intersectObjects(blockMeshes, true);
-            if (blockIntersects.length > 0 && blockIntersects[0].distance < 6) {
-                const hitBlockMesh = blockIntersects[0].object;
-                const gd = hitBlockMesh.userData;
-                if (gd) {
-                    const block = getBlock(gd.gridX, gd.gridY, gd.gridZ);
-                    if (block && block.type !== BLOCK_TYPES.BEDROCK) {
-                        setBlock(gd.gridX, gd.gridY, gd.gridZ, BLOCK_TYPES.AIR);
                         return;
                     }
-                }
-            }
 
-            // 3. Sword Attack against Bot
-            const botHit = raycaster.intersectObject(bot.mesh);
-            if (botHit.length > 0 && botHit[0].distance < 4) {
-                const kb = bot.position.clone().sub(player.position).normalize().multiplyScalar(0.3);
-                kb.y = 0.1;
-                bot.takeDamage(12, kb);
+                    // Normaal blok plaatsen
+                    if (activeItem && activeItem.isBlock) {
+                        // Bereken positie voor nieuw blok op basis van de geraakte face normal
+                        const normal = hit.face.normal;
+                        const nx = bx + Math.round(normal.x);
+                        const ny = by + Math.round(normal.y);
+                        const nz = bz + Math.round(normal.z);
+
+                        // Check of de speler niet in de weg staat
+                        const distToPlayer = player.position.distanceTo(new THREE.Vector3(nx*BLOCK_SIZE, ny*BLOCK_SIZE, nz*BLOCK_SIZE));
+                        if (distToPlayer > 1.5) {
+                            createBlock(nx, ny, nz, activeItem);
+                            consumeActiveItem();
+                        }
+                    } 
+                    // Golden Apple eten
+                    else if (activeItem && activeItem.id === 'gapple') {
+                        player.health = Math.min(player.maxHealth, player.health + 6); // Genees 3 hartjes
+                        consumeActiveItem();
+                        updateHUD();
+                    }
+                }
             }
         }
 
-        function handleRightClick() {
-            const raycaster = new THREE.Raycaster();
-            raycaster.setFromCamera(new THREE.Vector2(0,0), camera);
-
-            const intersects = raycaster.intersectObjects(blockMeshes, true);
-            if (intersects.length === 0) return;
-
-            const hit = intersects[0];
-            if (hit.distance > 6) return; // Reach distance limit
-
-            if (!hit.face) return;
-
-            // Determine grid position of hit block
-            const normal = hit.face.normal.clone();
-            const point = hit.point.clone().add(normal.clone().multiplyScalar(-0.1));
-            const gx = Math.floor(point.x / CONFIG.blockSize);
-            const gy = Math.floor(point.y / CONFIG.blockSize);
-            const gz = Math.floor(point.z / CONFIG.blockSize);
-
-            const targetBlock = getBlock(gx, gy, gz);
-
-            // ADVANCED RESPAWN ANCHOR LOGICA
-            if (targetBlock && targetBlock.type === BLOCK_TYPES.ANCHOR) {
-                if (activeSlot === 5) { // Glowstone in hand -> Charge Anchor
-                    if (targetBlock.charge < 4) {
-                        targetBlock.charge++;
-                        targetBlock.mesh.material.emissive.setHex(0x00ffff).multiplyScalar(targetBlock.charge * 0.25);
-                    }
-                } else { // Any other item -> Explode!
-                    if (targetBlock.charge > 0) {
-                        triggerExplosion(targetBlock.mesh.position.clone(), 85, 8);
-                        setBlock(gx, gy, gz, BLOCK_TYPES.AIR);
-                    }
-                }
-                return;
+        function consumeActiveItem() {
+            // In deze sim hebben we oneindig bouwblokken, maar we kunnen ze verminderen of weghalen indien gewenst.
+            // Om het speelbaar te houden laten we de items in de hotbar staan, behalve verbruiksartikelen zoals Gapples.
+            if (hotbar[activeSlot] && hotbar[activeSlot].id === 'gapple') {
+                hotbar[activeSlot] = null;
+                updateHUD();
             }
+        }
 
-            // Place Block Logic
-            const px = gx + Math.round(normal.x);
-            const py = gy + Math.round(normal.y);
-            const pz = gz + Math.round(normal.z);
-
-            // Prevent placing blocks inside the player or bot
-            const tempPos = new THREE.Vector3(
-                px * CONFIG.blockSize + CONFIG.blockSize/2,
-                py * CONFIG.blockSize + CONFIG.blockSize/2,
-                pz * CONFIG.blockSize + CONFIG.blockSize/2
-            );
+        // --- EXPLOSIE MECHANICS & BLAST SHIELDING ---
+        function triggerExplosion(ex, ey, ez) {
+            const expPos = new THREE.Vector3(ex * BLOCK_SIZE, ey * BLOCK_SIZE, ez * BLOCK_SIZE);
             
-            if (player.position.distanceTo(tempPos) < 1.8 || bot.position.distanceTo(tempPos) < 1.8) {
-                return; // Block would collide with entity
-            }
+            // 1. Visueel effect (tijdelijke vuurbal/lichtflits)
+            const expGeo = new THREE.SphereGeometry(4, 16, 16);
+            const expMat = new THREE.MeshBasicMaterial({ color: 0xffaa00, transparent: true, opacity: 0.8 });
+            const expMesh = new THREE.Mesh(expGeo, expMat);
+            expMesh.position.copy(expPos);
+            scene.add(expMesh);
 
-            if (activeSlot === 2) { // Obsidian
-                setBlock(px, py, pz, BLOCK_TYPES.OBSIDIAN);
-            } else if (activeSlot === 3) { // Crystal
-                spawnCrystal(px, py, pz);
-            } else if (activeSlot === 4) { // Respawn Anchor
-                setBlock(px, py, pz, BLOCK_TYPES.ANCHOR, 0);
-            }
-        }
+            // Verwijder flits na 200ms
+            setTimeout(() => {
+                scene.remove(expMesh);
+            }, 200);
 
-        // --- UPDATE BLOCK HIGHLIGHT ---
-        function updateBlockHighlight() {
-            if (!controls.isLocked) {
-                blockHighlight.visible = false;
-                return;
-            }
+            // Verwijder het anchor zelf
+            removeBlock(ex, ey, ez);
 
-            const raycaster = new THREE.Raycaster();
-            raycaster.setFromCamera(new THREE.Vector2(0,0), camera);
-            const intersects = raycaster.intersectObjects(blockMeshes, true);
-
-            if (intersects.length > 0 && intersects[0].distance < 6) {
-                const hit = intersects[0];
-                if (hit.face) {
-                    const normal = hit.face.normal.clone();
-                    const point = hit.point.clone().add(normal.clone().multiplyScalar(-0.1));
-                    const gx = Math.floor(point.x / CONFIG.blockSize);
-                    const gy = Math.floor(point.y / CONFIG.blockSize);
-                    const gz = Math.floor(point.z / CONFIG.blockSize);
-
-                    blockHighlight.position.set(
-                        gx * CONFIG.blockSize + CONFIG.blockSize/2,
-                        gy * CONFIG.blockSize + CONFIG.blockSize/2,
-                        gz * CONFIG.blockSize + CONFIG.blockSize/2
-                    );
-                    blockHighlight.visible = true;
-                    return;
-                }
-            }
-            blockHighlight.visible = false;
-        }
-
-        // --- SMART PVP AI BOT ---
-        const BOT_STATES = {
-            IDLE: 'IDLE',
-            CHASE: 'CHASE',
-            PLACE_OBSIDIAN: 'PLACE_OBSIDIAN',
-            PLACE_CRYSTAL: 'PLACE_CRYSTAL',
-            DETONATE: 'DETONATE',
-            RETREAT: 'RETREAT'
-        };
-        let botState = BOT_STATES.IDLE;
-        let botTimer = 0;
-        let botTargetPos = null;
-
-        function updateBotAI() {
-            botTimer++;
-            const distToPlayer = bot.position.distanceTo(player.position);
-            document.getElementById('bot-state-txt').innerText = botState;
-
-            // Jump if stuck or trying to climb
-            if (bot.onGround && bot.velocity.lengthSq() < 0.001 && distToPlayer > 2 && Math.random() < 0.05) {
-                bot.velocity.y = CONFIG.jumpForce;
-            }
-
-            switch (botState) {
-                case BOT_STATES.IDLE:
-                    if (distToPlayer < 20) {
-                        botState = BOT_STATES.CHASE;
-                    }
-                    break;
-
-                case BOT_STATES.CHASE:
-                    const dir = player.position.clone().sub(bot.position).normalize();
-                    bot.velocity.x = dir.x * CONFIG.botSpeed;
-                    bot.velocity.z = dir.z * CONFIG.botSpeed;
-
-                    bot.mesh.lookAt(player.position.x, bot.position.y, player.position.z);
-
-                    if (distToPlayer < 5 && botTimer % 30 === 0) {
-                        botState = BOT_STATES.PLACE_OBSIDIAN;
-                    }
-                    break;
-
-                case BOT_STATES.PLACE_OBSIDIAN:
-                    const ox = Math.floor(player.position.x / CONFIG.blockSize);
-                    const oy = Math.floor(player.position.y / CONFIG.blockSize) - 1;
-                    const oz = Math.floor(player.position.z / CONFIG.blockSize);
-
-                    setBlock(ox, oy, oz, BLOCK_TYPES.OBSIDIAN);
-                    botTargetPos = { x: ox, y: oy + 1, z: oz };
-                    botState = BOT_STATES.PLACE_CRYSTAL;
-                    break;
-
-                case BOT_STATES.PLACE_CRYSTAL:
-                    if (botTargetPos) {
-                        spawnCrystal(botTargetPos.x, botTargetPos.y, botTargetPos.z);
-                        botState = BOT_STATES.DETONATE;
-                    } else {
-                        botState = BOT_STATES.CHASE;
-                    }
-                    break;
-
-                case BOT_STATES.DETONATE:
-                    if (botTargetPos) {
-                        const crystalIndex = crystals.findIndex(c => 
-                            c.gridPos.x === botTargetPos.x && 
-                            c.gridPos.y === botTargetPos.y && 
-                            c.gridPos.z === botTargetPos.z
-                        );
-                        if (crystalIndex !== -1) {
-                            const crystal = crystals[crystalIndex];
-                            triggerExplosion(crystal.worldPos, 90, 8);
-                            scene.remove(crystal.mesh);
-                            crystals.splice(crystalIndex, 1);
+            // 2. Vernietig omliggende blokken in een straal van 3 blokken (behalve de vloer y=0)
+            const radius = 3;
+            for (let x = ex - radius; x <= ex + radius; x++) {
+                for (let y = ey - radius; y <= ey + radius; y++) {
+                    for (let z = ez - radius; z <= ez + radius; z++) {
+                        const dist = Math.sqrt((x-ex)**2 + (y-ey)**2 + (z-ez)**2);
+                        if (dist <= radius && y > 0) {
+                            removeBlock(x, y, z);
                         }
                     }
-                    botState = BOT_STATES.RETREAT;
-                    break;
-
-                case BOT_STATES.RETREAT:
-                    const retreatDir = bot.position.clone().sub(player.position).normalize();
-                    const strafe = new THREE.Vector3(-retreatDir.z, 0, retreatDir.x).multiplyScalar(0.5);
-                    bot.velocity.add(retreatDir.multiplyScalar(CONFIG.botSpeed * 1.5).add(strafe));
-                    
-                    if (botTimer % 40 === 0) {
-                        botState = BOT_STATES.CHASE;
-                    }
-                    break;
+                }
             }
 
-            bot.updatePhysics();
+            // 3. Bereken schade aan de speler met BLAST SHIELDING logica!
+            const playerPos = player.position.clone();
+            const distance = playerPos.distanceTo(expPos);
+
+            if (distance < 12) { // Binnen explosiebereik
+                let damage = (12 - distance) * 3.5; // Basis schade op basis van afstand
+
+                // --- BLAST SHIELDING CHECK ---
+                let isShielded = false;
+
+                // Check 1: Staat de speler hoger dan de explosie? (Voeten beschermd)
+                if (playerPos.y > expPos.y + 0.5) {
+                    isShielded = true;
+                }
+
+                // Check 2: Staat er een solide blok tussen de speler en de explosie?
+                if (!isShielded) {
+                    // Raycast van explosie naar speler
+                    const direction = playerPos.clone().sub(expPos).normalize();
+                    const ray = new THREE.Raycaster(expPos, direction, 0.1, distance);
+                    const blockMeshes = Object.values(worldBlocks).map(b => b.mesh);
+                    const hits = ray.intersectObjects(blockMeshes);
+
+                    if (hits.length > 0) {
+                        // Er staat een blok tussen!
+                        isShielded = true;
+                    }
+                }
+
+                // Pas schade aan op basis van shielding
+                if (isShielded) {
+                    damage = damage * 0.1; // 90% minder schade!
+                }
+
+                damage = Math.round(damage);
+                applyDamage(damage);
+            }
         }
 
-        // --- PLAYER MOVEMENT ---
-        function updatePlayerMovement() {
+        // --- SCHADE & TOTEM MECHANIC ---
+        function applyDamage(amount) {
+            if (amount <= 0) return;
+            player.health -= amount;
+            
+            // Schermflits rood effect
+            document.body.style.backgroundColor = 'red';
+            setTimeout(() => { document.body.style.backgroundColor = ''; }, 100);
+
+            if (player.health <= 0) {
+                // Check of we een Totem in de hand of offhand hebben!
+                if (offhandSlot && offhandSlot.id === 'totem') {
+                    popTotem('offhand');
+                } else if (hotbar[activeSlot] && hotbar[activeSlot].id === 'totem') {
+                    popTotem('mainhand');
+                } else {
+                    // Dood & Respawn
+                    alert("Je bent ontploft! Respawning...");
+                    player.health = player.maxHealth;
+                    player.position.set(0, 4, 0);
+                    controls.getObject().position.copy(player.position);
+                }
+            }
+            updateHUD();
+        }
+
+        function popTotem(hand) {
+            // Consumeer totem
+            if (hand === 'offhand') {
+                offhandSlot = null;
+            } else {
+                hotbar[activeSlot] = null;
+            }
+
+            player.health = 4; // Herstel naar 2 hartjes
+
+            // Toon Totem Pop Animatie
+            const overlay = document.getElementById('totem-overlay');
+            const img = document.getElementById('totem-img');
+            img.src = icons.totem;
+            overlay.style.display = 'flex';
+
+            setTimeout(() => {
+                overlay.style.display = 'none';
+            }, 1500);
+        }
+
+        // --- PHYSICS & MOVEMENT ---
+        function updatePhysics() {
             if (!controls.isLocked) return;
 
-            const speed = CONFIG.playerSpeed * (keys['shift'] ? CONFIG.sprintMultiplier : 1);
+            // Zwaartekracht toepassen
+            player.velocity.y += GRAVITY;
 
-            // Calculate movement relative to camera look direction
-            const camDir = new THREE.Vector3();
-            camera.getWorldDirection(camDir);
-            camDir.y = 0;
-            camDir.normalize();
+            // Bereken bewegingsrichting
+            const moveDirection = new THREE.Vector3();
+            
+            if (isActionPressed('forward')) moveDirection.z -= 1;
+            if (isActionPressed('backward')) moveDirection.z += 1;
+            if (isActionPressed('left')) moveDirection.x -= 1;
+            if (isActionPressed('right')) moveDirection.x += 1;
+            
+            moveDirection.normalize();
+            moveDirection.applyQuaternion(camera.quaternion);
+            moveDirection.y = 0; // Voorkom vliegen bij omhoog kijken
+            moveDirection.normalize();
 
-            const camRight = new THREE.Vector3(-camDir.z, 0, camDir.x);
+            // Snelheid toepassen
+            player.position.addScaledVector(moveDirection, PLAYER_SPEED);
+            player.position.y += player.velocity.y;
 
-            const moveVec = new THREE.Vector3();
+            // --- COLLISION DETECTION (Eenvoudige AABB met de vloer en muren) ---
+            const px = Math.round(player.position.x / BLOCK_SIZE);
+            const py = Math.round((player.position.y - player.height) / BLOCK_SIZE);
+            const pz = Math.round(player.position.z / BLOCK_SIZE);
 
-            if (keys['w']) moveVec.add(camDir);
-            if (keys['s']) moveVec.sub(camDir);
-            if (keys['a']) moveVec.sub(camRight);
-            if (keys['d']) moveVec.add(camRight);
-
-            moveVec.normalize().multiplyScalar(speed);
-
-            player.velocity.x = moveVec.x;
-            player.velocity.z = moveVec.z;
-
-            // Jump
-            if (keys[' '] && player.onGround) {
-                player.velocity.y = CONFIG.jumpForce;
+            // Check vloer collision
+            const standKey = `${px},${py},${pz}`;
+            if (worldBlocks[standKey] || player.position.y <= player.height) {
+                // We staan op een blok of de grond
+                const blockTop = worldBlocks[standKey] ? (py * BLOCK_SIZE) + BLOCK_SIZE/2 : 0;
+                if (player.position.y - player.height < blockTop) {
+                    player.position.y = blockTop + player.height;
+                    player.velocity.y = 0;
+                    player.onGround = true;
+                }
+            } else {
                 player.onGround = false;
             }
 
-            player.updatePhysics();
-
-            // Sync camera to player eye level
-            camera.position.copy(player.position);
-            camera.position.y += 1.6; // Eye height
-        }
-
-        // --- UI & SETTINGS SYSTEM ---
-        function updateHUD() {
-            document.getElementById('health-bar').style.width = `${player.health}%`;
-            document.getElementById('health-text').innerText = `HP: ${Math.round(player.health)} / 100`;
-            
-            // Update key labels on hotbar
-            document.getElementById('key-slot-1').innerText = keybinds.slot1.toUpperCase();
-            document.getElementById('key-slot-2').innerText = keybinds.slot2.toUpperCase();
-            document.getElementById('key-slot-3').innerText = keybinds.slot3.toUpperCase();
-            document.getElementById('key-slot-4').innerText = keybinds.slot4.toUpperCase();
-            document.getElementById('key-slot-5').innerText = keybinds.slot5.toUpperCase();
-        }
-
-        // Initialize Settings UI values
-        function initSettingsUI() {
-            document.getElementById('bind-slot-1').innerText = keybinds.slot1.toUpperCase();
-            document.getElementById('bind-slot-2').innerText = keybinds.slot2.toUpperCase();
-            document.getElementById('bind-slot-3').innerText = keybinds.slot3.toUpperCase();
-            document.getElementById('bind-slot-4').innerText = keybinds.slot4.toUpperCase();
-            document.getElementById('bind-slot-5').innerText = keybinds.slot5.toUpperCase();
-            
-            const sensVal = Math.round(mouseSensitivity / 0.0004);
-            document.getElementById('sens-slider').value = sensVal;
-            controls.pointerSpeed = sensVal * 0.2;
-        }
-
-        // Settings Menu Interactions
-        const settingsBtn = document.getElementById('settings-btn');
-        const settingsMenu = document.getElementById('settings-menu');
-        const closeSettings = document.getElementById('close-settings');
-        const fovSlider = document.getElementById('fov-slider');
-        const sensSlider = document.getElementById('sens-slider');
-
-        settingsBtn.addEventListener('click', () => {
-            controls.unlock();
-            settingsMenu.style.display = 'block';
-        });
-
-        closeSettings.addEventListener('click', () => {
-            settingsMenu.style.display = 'none';
-            controls.lock();
-            // Save settings to localStorage
-            localStorage.setItem('pvp_keybinds', JSON.stringify(keybinds));
-            localStorage.setItem('pvp_sens', mouseSensitivity);
-        });
-
-        fovSlider.addEventListener('input', (e) => {
-            camera.fov = parseInt(e.target.value);
-            camera.updateProjectionMatrix();
-        });
-
-        sensSlider.addEventListener('input', (e) => {
-            mouseSensitivity = parseFloat(e.target.value) * 0.0004;
-            controls.pointerSpeed = parseFloat(e.target.value) * 0.2;
-        });
-
-        // Keybind Rebinding
-        let activeRebindBtn = null;
-        document.querySelectorAll('.keybind-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                activeRebindBtn = e.target;
-                activeRebindBtn.innerText = 'Druk toets...';
-            });
-        });
-
-        window.addEventListener('keydown', (e) => {
-            if (activeRebindBtn) {
-                const slotNum = activeRebindBtn.dataset.slot;
-                const newKey = e.key.toLowerCase();
-                
-                keybinds[`slot${slotNum}`] = newKey;
-                activeRebindBtn.innerText = newKey.toUpperCase();
-                
-                activeRebindBtn = null;
-                updateHUD();
-                e.preventDefault();
+            // Springen
+            if (isActionPressed('jump') && player.onGround) {
+                player.velocity.y = JUMP_FORCE;
+                player.onGround = false;
             }
-        });
 
-        // Initialize HUD & Settings
-        updateHUD();
-        initSettingsUI();
+            // Grensbeveiliging arena muren
+            const limit = (ARENA_SIZE / 2) * BLOCK_SIZE - 1;
+            if (player.position.x < -limit) player.position.x = -limit;
+            if (player.position.x > limit) player.position.x = limit;
+            if (player.position.z < -limit) player.position.z = -limit;
+            if (player.position.z > limit) player.position.z = limit;
 
-        // --- MAIN GAME LOOP ---
+            // Update camera positie
+            controls.getObject().position.copy(player.position);
+        }
+
+        // --- UI & HUD UPDATE ---
+        function updateHUD() {
+            // Update Health Bar (Harten)
+            const healthContainer = document.getElementById('health-bar-container');
+            healthContainer.innerHTML = '';
+            const totalHearts = player.maxHealth / 2;
+            const fullHearts = Math.floor(player.health / 2);
+            const hasHalf = player.health % 2 !== 0;
+
+            for (let i = 0; i < totalHearts; i++) {
+                const heart = document.createElement('div');
+                heart.classList.add('heart');
+                if (i >= fullHearts + (hasHalf ? 1 : 0)) {
+                    heart.classList.add('empty');
+                }
+                healthContainer.appendChild(heart);
+            }
+
+            // Update Hotbar
+            const hotbarEl = document.getElementById('hotbar');
+            hotbarEl.innerHTML = '';
+            for (let i = 0; i < 9; i++) {
+                const slot = document.createElement('div');
+                slot.className = `slot ${i === activeSlot ? 'active' : ''}`;
+                
+                const item = hotbar[i];
+                if (item) {
+                    const img = document.createElement('img');
+                    img.src = item.icon;
+                    slot.appendChild(img);
+                }
+
+                const num = document.createElement('span');
+                num.className = 'slot-num';
+                num.innerText = i + 1;
+                slot.appendChild(num);
+
+                hotbarEl.appendChild(slot);
+            }
+
+            // Update Offhand Slot
+            const offhandEl = document.getElementById('offhand-slot-element');
+            offhandEl.innerHTML = '';
+            if (offhandSlot) {
+                const img = document.createElement('img');
+                img.src = offhandSlot.icon;
+                offhandEl.appendChild(img);
+            }
+        }
+
+        // --- INVENTORY MENU ---
+        function openInventory() {
+            const grid = document.getElementById('inventory-grid');
+            grid.innerHTML = '';
+
+            inventory.forEach((item, index) => {
+                const slot = document.createElement('div');
+                slot.className = 'slot';
+                if (item) {
+                    const img = document.createElement('img');
+                    img.src = item.icon;
+                    slot.appendChild(img);
+                }
+
+                slot.addEventListener('click', () => {
+                    // Wissel item met actieve hotbar slot
+                    const temp = hotbar[activeSlot];
+                    hotbar[activeSlot] = item;
+                    inventory[index] = temp;
+                    updateHUD();
+                    openInventory(); // Refresh grid
+                });
+
+                grid.appendChild(slot);
+            });
+
+            document.getElementById('inventory-menu').style.display = 'flex';
+        }
+
+        // --- KEYBIND CONFIGURATIE MENU ---
+        let activeBindingAction = null;
+
+        function openSettings() {
+            document.getElementById('pause-menu').style.display = 'none';
+            const list = document.getElementById('keybind-list');
+            list.innerHTML = '';
+
+            Object.keys(keybinds).forEach(action => {
+                const row = document.createElement('div');
+                row.className = 'keybind-row';
+
+                const label = document.createElement('span');
+                label.innerText = action.toUpperCase();
+                row.appendChild(label);
+
+                const btn = document.createElement('button');
+                btn.className = 'keybind-btn';
+                btn.innerText = keybinds[action].join(' / ') || 'GEEN';
+                
+                btn.addEventListener('click', () => {
+                    activeBindingAction = action;
+                    btn.innerText = 'Druk op een toets...';
+                    
+                    // Luister eenmalig naar de volgende toetsaanslag
+                    const listenKey = (e) => {
+                        e.preventDefault();
+                        // Voeg de nieuwe toets toe of vervang (we voegen hem toe om meerdere toetsen te ondersteunen!)
+                        if (!keybinds[action].includes(e.code)) {
+                            keybinds[action].push(e.code);
+                        } else {
+                            // Als hij er al in staat, reset en zet alleen deze erin
+                            keybinds[action] = [e.code];
+                        }
+                        window.removeEventListener('keydown', listenKey);
+                        openSettings(); // Refresh list
+                    };
+                    window.addEventListener('keydown', listenKey);
+                });
+
+                row.appendChild(btn);
+                list.appendChild(row);
+            });
+
+            document.getElementById('settings-menu').style.display = 'flex';
+        }
+
+        function closeAllMenus() {
+            document.getElementById('pause-menu').style.display = 'none';
+            document.getElementById('settings-menu').style.display = 'none';
+            document.getElementById('inventory-menu').style.display = 'none';
+        }
+
+        function setupUI() {
+            document.getElementById('resume-btn').addEventListener('click', () => {
+                controls.lock();
+            });
+
+            document.getElementById('settings-btn').addEventListener('click', () => {
+                openSettings();
+            });
+
+            document.getElementById('settings-back-btn').addEventListener('click', () => {
+                document.getElementById('settings-menu').style.display = 'none';
+                document.getElementById('pause-menu').style.display = 'flex';
+            });
+
+            document.getElementById('close-inventory-btn').addEventListener('click', () => {
+                closeAllMenus();
+                controls.lock();
+            });
+        }
+
+        // --- GAME LOOP ---
         function animate() {
             requestAnimationFrame(animate);
 
-            // Rotate Crystals
-            crystals.forEach(c => {
-                const inner = c.mesh.getObjectByName("inner");
-                if (inner) {
-                    inner.rotation.y += 0.05;
-                    inner.rotation.x += 0.02;
-                }
-            });
-
-            updatePlayerMovement();
-            updateBlockHighlight();
-            updateBotAI();
+            updatePhysics();
 
             renderer.render(scene, camera);
         }
 
-        // Handle window resize
+        // Start de game zodra de pagina geladen is
+        window.onload = init;
+
+        // Resize handler
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
-
-        // Start the loop
-        animate();
 
     </script>
 </body>
