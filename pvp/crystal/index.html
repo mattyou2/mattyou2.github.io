@@ -292,9 +292,9 @@
             <p>
                 <b>W, A, S, D</b> - Bewegen<br>
                 <b>SPACE</b> - Springen | <b>SHIFT</b> - Sprinten<br>
-                <b>Left Click</b> - Slaan / Crystal Detoneren<br>
+                <b>Left Click</b> - Slaan / Blok Slopen / Crystal Detoneren<br>
                 <b>Right Click</b> - Blokken Plaatsen / Anchor Opladen & Detoneren<br>
-                <b>1 t/m 5</b> - Hotbar selectie
+                <b>Hotbar Keys</b> - Selecteer items (Aanpasbaar in Settings!)
             </p>
             <p style="color: #aaa; font-size: 13px;">
                 <i>Tip: Respawn Anchors kunnen overal geplaatst worden. Laad ze op met Glowstone en klik met een ander item om ze te laten ontploffen! Bescherm je voeten met obsidian om blast damage te verminderen.</i>
@@ -358,7 +358,8 @@
             blockSize: 2
         };
 
-        let keybinds = {
+        // Load keybinds from localStorage or use defaults
+        let keybinds = JSON.parse(localStorage.getItem('pvp_keybinds')) || {
             slot1: '1',
             slot2: '2',
             slot3: '3',
@@ -366,7 +367,7 @@
             slot5: '5'
         };
 
-        let mouseSensitivity = 0.002;
+        let mouseSensitivity = parseFloat(localStorage.getItem('pvp_sens')) || 0.002;
         let activeSlot = 1;
 
         // --- SCENE SETUP ---
@@ -459,6 +460,10 @@
             );
             mesh.castShadow = true;
             mesh.receiveShadow = true;
+            
+            // Store grid coordinates directly on mesh for easy retrieval
+            mesh.userData = { gridX: x, gridY: y, gridZ: z };
+
             scene.add(mesh);
 
             voxelGrid[key] = { type, mesh, charge, x, y, z };
@@ -486,6 +491,17 @@
         setBlock(3, 0, 3, BLOCK_TYPES.OBSIDIAN);
         setBlock(3, 1, 3, BLOCK_TYPES.OBSIDIAN);
 
+        // --- BLOCK HIGHLIGHT (SELECTION BOX) ---
+        const highlightGeo = new THREE.BoxGeometry(CONFIG.blockSize + 0.02, CONFIG.blockSize + 0.02, CONFIG.blockSize + 0.02);
+        const highlightMat = new THREE.MeshBasicMaterial({
+            color: 0xffffff,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.6
+        });
+        const blockHighlight = new THREE.Mesh(highlightGeo, highlightMat);
+        scene.add(blockHighlight);
+
         // --- ENTITY SYSTEM (PLAYER & BOT) ---
         class Entity {
             constructor(color, isPlayer = false) {
@@ -506,9 +522,8 @@
                 this.mesh = new THREE.Mesh(geometry, material);
                 this.mesh.castShadow = true;
                 
-                // Hide player mesh from first person camera to prevent blocking raycasts
                 if (this.isPlayer) {
-                    this.mesh.visible = false;
+                    this.mesh.visible = false; // Hide player mesh from first person camera
                 }
                 
                 scene.add(this.mesh);
@@ -642,11 +657,12 @@
         });
 
         function handleHotbarKeys(key) {
-            if (key === keybinds.slot1) selectSlot(1);
-            if (key === keybinds.slot2) selectSlot(2);
-            if (key === keybinds.slot3) selectSlot(3);
-            if (key === keybinds.slot4) selectSlot(4);
-            if (key === keybinds.slot5) selectSlot(5);
+            const lowerKey = key.toLowerCase();
+            if (lowerKey === keybinds.slot1) selectSlot(1);
+            if (lowerKey === keybinds.slot2) selectSlot(2);
+            if (lowerKey === keybinds.slot3) selectSlot(3);
+            if (lowerKey === keybinds.slot4) selectSlot(4);
+            if (lowerKey === keybinds.slot5) selectSlot(5);
         }
 
         function selectSlot(slot) {
@@ -770,7 +786,7 @@
         window.addEventListener('mousedown', (e) => {
             if (!controls.isLocked) return;
 
-            if (e.button === 0) { // Left Click (Attack / Detonate)
+            if (e.button === 0) { // Left Click (Attack / Break Block / Detonate Crystal)
                 handleLeftClick();
             } else if (e.button === 2) { // Right Click (Place / Charge)
                 handleRightClick();
@@ -781,12 +797,12 @@
             const raycaster = new THREE.Raycaster();
             raycaster.setFromCamera(new THREE.Vector2(0,0), camera);
 
-            // Check Crystal hits first (instant high-damage explosion)
+            // 1. Check Crystal hits first (instant high-damage explosion)
             const crystalMeshes = crystals.map(c => c.mesh);
-            const intersects = raycaster.intersectObjects(crystalMeshes, true);
+            const crystalIntersects = raycaster.intersectObjects(crystalMeshes, true);
 
-            if (intersects.length > 0 && intersects[0].distance < 6) {
-                let hitGroup = intersects[0].object;
+            if (crystalIntersects.length > 0 && crystalIntersects[0].distance < 6) {
+                let hitGroup = crystalIntersects[0].object;
                 while (hitGroup.parent && hitGroup.parent !== scene) {
                     hitGroup = hitGroup.parent;
                 }
@@ -801,7 +817,21 @@
                 }
             }
 
-            // Sword Attack against Bot
+            // 2. Check Block hits to Break/Mine them (except Bedrock)
+            const blockIntersects = raycaster.intersectObjects(blockMeshes, true);
+            if (blockIntersects.length > 0 && blockIntersects[0].distance < 6) {
+                const hitBlockMesh = blockIntersects[0].object;
+                const gd = hitBlockMesh.userData;
+                if (gd) {
+                    const block = getBlock(gd.gridX, gd.gridY, gd.gridZ);
+                    if (block && block.type !== BLOCK_TYPES.BEDROCK) {
+                        setBlock(gd.gridX, gd.gridY, gd.gridZ, BLOCK_TYPES.AIR);
+                        return;
+                    }
+                }
+            }
+
+            // 3. Sword Attack against Bot
             const botHit = raycaster.intersectObject(bot.mesh);
             if (botHit.length > 0 && botHit[0].distance < 4) {
                 const kb = bot.position.clone().sub(player.position).normalize().multiplyScalar(0.3);
@@ -814,7 +844,6 @@
             const raycaster = new THREE.Raycaster();
             raycaster.setFromCamera(new THREE.Vector2(0,0), camera);
 
-            // Find block we are looking at (only raycast against blocks!)
             const intersects = raycaster.intersectObjects(blockMeshes, true);
             if (intersects.length === 0) return;
 
@@ -871,6 +900,38 @@
             } else if (activeSlot === 4) { // Respawn Anchor
                 setBlock(px, py, pz, BLOCK_TYPES.ANCHOR, 0);
             }
+        }
+
+        // --- UPDATE BLOCK HIGHLIGHT ---
+        function updateBlockHighlight() {
+            if (!controls.isLocked) {
+                blockHighlight.visible = false;
+                return;
+            }
+
+            const raycaster = new THREE.Raycaster();
+            raycaster.setFromCamera(new THREE.Vector2(0,0), camera);
+            const intersects = raycaster.intersectObjects(blockMeshes, true);
+
+            if (intersects.length > 0 && intersects[0].distance < 6) {
+                const hit = intersects[0];
+                if (hit.face) {
+                    const normal = hit.face.normal.clone();
+                    const point = hit.point.clone().add(normal.clone().multiplyScalar(-0.1));
+                    const gx = Math.floor(point.x / CONFIG.blockSize);
+                    const gy = Math.floor(point.y / CONFIG.blockSize);
+                    const gz = Math.floor(point.z / CONFIG.blockSize);
+
+                    blockHighlight.position.set(
+                        gx * CONFIG.blockSize + CONFIG.blockSize/2,
+                        gy * CONFIG.blockSize + CONFIG.blockSize/2,
+                        gz * CONFIG.blockSize + CONFIG.blockSize/2
+                    );
+                    blockHighlight.visible = true;
+                    return;
+                }
+            }
+            blockHighlight.visible = false;
         }
 
         // --- SMART PVP AI BOT ---
@@ -1008,10 +1069,27 @@
         function updateHUD() {
             document.getElementById('health-bar').style.width = `${player.health}%`;
             document.getElementById('health-text').innerText = `HP: ${Math.round(player.health)} / 100`;
+            
+            // Update key labels on hotbar
+            document.getElementById('key-slot-1').innerText = keybinds.slot1.toUpperCase();
+            document.getElementById('key-slot-2').innerText = keybinds.slot2.toUpperCase();
+            document.getElementById('key-slot-3').innerText = keybinds.slot3.toUpperCase();
+            document.getElementById('key-slot-4').innerText = keybinds.slot4.toUpperCase();
+            document.getElementById('key-slot-5').innerText = keybinds.slot5.toUpperCase();
         }
 
-        // Initialize HUD
-        updateHUD();
+        // Initialize Settings UI values
+        function initSettingsUI() {
+            document.getElementById('bind-slot-1').innerText = keybinds.slot1.toUpperCase();
+            document.getElementById('bind-slot-2').innerText = keybinds.slot2.toUpperCase();
+            document.getElementById('bind-slot-3').innerText = keybinds.slot3.toUpperCase();
+            document.getElementById('bind-slot-4').innerText = keybinds.slot4.toUpperCase();
+            document.getElementById('bind-slot-5').innerText = keybinds.slot5.toUpperCase();
+            
+            const sensVal = Math.round(mouseSensitivity / 0.0004);
+            document.getElementById('sens-slider').value = sensVal;
+            controls.pointerSpeed = sensVal * 0.2;
+        }
 
         // Settings Menu Interactions
         const settingsBtn = document.getElementById('settings-btn');
@@ -1028,6 +1106,9 @@
         closeSettings.addEventListener('click', () => {
             settingsMenu.style.display = 'none';
             controls.lock();
+            // Save settings to localStorage
+            localStorage.setItem('pvp_keybinds', JSON.stringify(keybinds));
+            localStorage.setItem('pvp_sens', mouseSensitivity);
         });
 
         fovSlider.addEventListener('input', (e) => {
@@ -1056,12 +1137,16 @@
                 
                 keybinds[`slot${slotNum}`] = newKey;
                 activeRebindBtn.innerText = newKey.toUpperCase();
-                document.getElementById(`key-slot-${slotNum}`).innerText = newKey.toUpperCase();
                 
                 activeRebindBtn = null;
+                updateHUD();
                 e.preventDefault();
             }
         });
+
+        // Initialize HUD & Settings
+        updateHUD();
+        initSettingsUI();
 
         // --- MAIN GAME LOOP ---
         function animate() {
@@ -1077,6 +1162,7 @@
             });
 
             updatePlayerMovement();
+            updateBlockHighlight();
             updateBotAI();
 
             renderer.render(scene, camera);
