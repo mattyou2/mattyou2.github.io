@@ -7,24 +7,24 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
-        /* Extra styling voor de live simulatie */
         .live-indicator {
             display: inline-flex;
             align-items: center;
             gap: 8px;
             font-size: 0.8rem;
-            color: #00f0ff;
+            color: var(--primary);
             background: rgba(0, 240, 255, 0.1);
             padding: 4px 12px;
             border-radius: 20px;
             margin-bottom: 15px;
+            transition: all 0.3s ease;
         }
         .pulse {
             width: 8px;
             height: 8px;
-            background: #00f0ff;
+            background: var(--primary);
             border-radius: 50%;
-            box-shadow: 0 0 8px #00f0ff;
+            box-shadow: 0 0 8px var(--primary);
             animation: pulse-anim 1.5s infinite;
         }
         @keyframes pulse-anim {
@@ -34,12 +34,20 @@
         }
     </style>
 </head>
-<body>
+<body class="theme-neon-rainbow">
 
     <div id="canvas-container"></div>
 
     <nav>
         <div class="logo">DEVABLE<span>by Mattyou Studios™</span></div>
+        
+        <!-- Thema Selector -->
+        <div class="theme-selector" title="Kies een design">
+            <div class="theme-btn active" data-theme="neon-rainbow" style="background: linear-gradient(45deg, #ff007f, #7000ff);" onclick="changeTheme('neon-rainbow')"></div>
+            <div class="theme-btn" data-theme="cyber-blue" style="background: linear-gradient(45deg, #00f0ff, #0044ff);" onclick="changeTheme('cyber-blue')"></div>
+            <div class="theme-btn" data-theme="retro-gold" style="background: linear-gradient(45deg, #ffaa00, #ff3c00);" onclick="changeTheme('retro-gold')"></div>
+        </div>
+
         <ul class="nav-links">
             <li><a href="index.html">Home</a></li>
             <li><a href="games.html">Games</a></li>
@@ -55,30 +63,30 @@
 
         <div class="grid">
             <!-- Mattyou Cloud -->
-            <div class="card">
+            <div class="card" onclick="location.href='mattyoucloud.html'">
                 <div class="live-indicator"><span class="pulse"></span>Mattyou Cloud v2.1</div>
                 <div class="card-icon">☁️</div>
                 <h3>Mattyou Cloud</h3>
                 <p>De ultieme gedecentraliseerde cloud-opslag. Sleep bestanden rechtstreeks in de browser met end-to-end encryptie en razendsnelle downloads.</p>
-                <a href="#" class="btn" onclick="alert('Mattyou Cloud Simulatie: Sleep uw bestanden hierheen om te uploaden!')">Open Cloud Console</a>
+                <span class="btn" style="padding: 8px 20px; font-size: 0.9rem;">Open Cloud Console</span>
             </div>
 
             <!-- Minecraft Wiki -->
-            <div class="card">
+            <div class="card" onclick="location.href='minecraftwiki.html'">
                 <div class="live-indicator" style="color: #55ff55; background: rgba(85, 255, 85, 0.1);"><span class="pulse" style="background: #55ff55; box-shadow: 0 0 8px #55ff55;"></span>Database Live</div>
                 <div class="card-icon">📖</div>
                 <h3>Minecraft Wiki</h3>
                 <p>Een interactieve, 3D-geoptimaliseerde encyclopedie voor alle Minecraft items, blocks en crafting recepten. Volledig doorzoekbaar.</p>
-                <a href="#" class="btn" onclick="alert('Wiki Database laadt... Zoek naar blokken in de 3D viewer!')">Start Wiki</a>
+                <span class="btn" style="padding: 8px 20px; font-size: 0.9rem;">Start Wiki</span>
             </div>
 
             <!-- Ecosy -->
-            <div class="card">
+            <div class="card" onclick="location.href='ecosy.html'">
                 <div class="live-indicator" style="color: #ffaa00; background: rgba(255, 170, 0, 0.1);"><span class="pulse" style="background: #ffaa00; box-shadow: 0 0 8px #ffaa00;"></span>Ecosy API Connected</div>
                 <div class="card-icon">📈</div>
                 <h3>Ecosy</h3>
                 <p>Het meest geavanceerde Minecraft economie-systeem. Monitor realtime in-game transacties, inflatie, speler-shops en marktfluctuaties.</p>
-                <a href="#" class="btn" onclick="alert('Ecosy Dashboard verbinding maken... Realtime grafieken worden geladen.')">Bekijk Statistieken</a>
+                <span class="btn" style="padding: 8px 20px; font-size: 0.9rem;">Bekijk Statistieken</span>
             </div>
         </div>
     </main>
