@@ -132,6 +132,19 @@
             color: var(--text-bright);
             font-weight: 600;
         }
+
+        .credit-link {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+            border-bottom: 1px dashed var(--primary);
+            transition: color 0.2s ease, border-bottom-color 0.2s ease;
+        }
+
+        .credit-link:hover {
+            color: #ffffff;
+            border-bottom: 1px solid #ffffff;
+        }
         
         .alert-text {
             color: #ff6b6b;
@@ -170,7 +183,7 @@
     <h1 class="credits-title">💎 Credits & Attributions</h1>
     <p>This pack features curated elements from talented creators within the Minecraft optimization community:</p>
     <ul>
-        <li><span class="highlight">Minecraft Main Menu Background Artwork:</span> Exclusively created by and credited to <span class="highlight">agent-drl3x2015</span>.</li>
+        <li><span class="highlight">Minecraft Main Menu Background Artwork:</span> Exclusively created by and credited to <a href="https://modrinth.com/user/agent-drl3x2015" target="_blank" class="credit-link">agent-drl3x2015</a>.</li>
     </ul>
 
     <div class="footer">
