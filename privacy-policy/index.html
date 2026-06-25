@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Devable - Next-Gen Web Apps & Games</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- PREMIUM CYBER SPACE DESIGN SYSTEM --- */
+        :root {
+            --bg-dark: #05050a;
+            --purple-neon: #ff007f;
+            --blue-neon: #00f0ff;
+            --green-neon: #00ff66;
+            --orange-neon: #ffaa00;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.07);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            overflow-x: hidden;
+            position: relative;
+            min-height: 100vh;
+        }
+
+        /* Geanimeerde sterren/space achtergrond effect via CSS gelaagdheid */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: 
+                radial-gradient(white, rgba(255,255,255,.2) 2px, transparent 40px),
+                radial-gradient(white, rgba(255,255,255,.15) 1px, transparent 30px),
+                radial-gradient(white, rgba(255,255,255,.1) 2px, transparent 40px);
+            background-size: 550px 550px, 350px 350px, 250px 250px;
+            background-position: 0 0, 40px 60px, 130px 270px;
+            opacity: 0.25;
+            z-index: -1;
+        }
+
+        /* --- NAVBAR --- */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 6%;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(12px);
+            background: rgba(5, 5, 10, 0.5);
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .logo {
+            font-weight: 800;
+            font-size: 24px;
+            letter-spacing: 1px;
+            background: linear-gradient(to right, var(--purple-neon), #ff66b2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo span {
+            font-size: 11px;
+            font-weight: 400;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--text-muted);
+            margin-left: 8px;
+            -webkit-text-fill-color: var(--text-muted);
+        }
+
+        /* Premium Theme Dots in de navbar */
+        .theme-dots {
+            display: flex;
+            gap: 10px;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .dot-1 { background-color: var(--purple-neon); box-shadow: 0 0 10px var(--purple-neon); }
+        .dot-2 { background-color: var(--blue-neon); box-shadow: 0 0 10px var(--blue-neon); }
+        .dot-3 { background-color: var(--orange-neon); box-shadow: 0 0 10px var(--orange-neon); }
+        .dot:hover { transform: scale(1.3); }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 32px;
+        }
+
+        nav ul li a {
+            color: var(--text-main);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 15px;
+            transition: color 0.3s, opacity 0.3s;
+            opacity: 0.8;
+        }
+
+        nav ul li a:hover, nav ul li a.active {
+            color: var(--blue-neon);
+            opacity: 1;
+        }
+
+        /* --- HERO SECTION --- */
+        .hero {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 160px 6% 60px 6%;
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 40px;
+            align-items: center;
+        }
+
+        .hero-text h1 {
+            font-size: 64px;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 24px;
+            letter-spacing: -1px;
+        }
+
+        .hero-text p {
+            font-size: 18px;
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin-bottom: 40px;
+            max-width: 540px;
+        }
+
+        /* Knoppen Stijlen */
+        .cta-group {
+            display: flex;
+            gap: 20px;
+        }
+
+        .btn {
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--purple-neon), #bc00dd);
+            color: white;
+            border: none;
+            box-shadow: 0 0 25px rgba(255, 0, 127, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 0 35px rgba(255, 0, 127, 0.6);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-main);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(5px);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--text-main);
+            background: rgba(255,255,255,0.05);
+            transform: translateY(-3px);
+        }
+
+        /* --- FLOATING SHOWCASE GRID (RECHTS) --- */
+        .showcase-grid {
+            position: relative;
+            height: 480px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Premium zwevende mockups met glow */
+        .preview-card {
+            position: absolute;
+            background: rgba(10, 10, 20, 0.7);
+            border-radius: 16px;
+            padding: 24px;
+            width: 280px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            transition: transform 0.4s ease, box-shadow 0.4s ease;
+        }
+
+        .preview-card:hover {
+            transform: translateY(-10px) scale(1.03) !important;
+            z-index: 10 !important;
+        }
+
+        .card-tag {
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            margin-bottom: 4px;
+        }
+
+        .card-sub {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* Posities en unieke neon-glows per project */
+        .card-minecraft-3d {
+            border: 1px solid var(--purple-neon);
+            box-shadow: 0 0 30px rgba(255, 0, 127, 0.2);
+            top: 20px;
+            left: 20px;
+            transform: rotate(-4deg);
+            animation: float 6s ease-in-out infinite;
+        }
+        .card-minecraft-3d .card-tag { color: var(--purple-neon); }
+
+        .card-minecraft-2d {
+            border: 1px solid var(--blue-neon);
+            box-shadow: 0 0 30px rgba(0, 240, 255, 0.2);
+            top: 60px;
+            right: 10px;
+            transform: rotate(3deg);
+            animation: float 7s ease-in-out infinite 1s;
+        }
+        .card-minecraft-2d .card-tag { color: var(--blue-neon); }
+
+        .card-neon-rider {
+            border: 1px solid var(--green-neon);
+            box-shadow: 0 0 30px rgba(0, 255, 102, 0.2);
+            bottom: 40px;
+            left: 80px;
+            transform: rotate(-2deg);
+            animation: float 5s ease-in-out infinite 0.5s;
+        }
+        .card-neon-rider .card-tag { color: var(--green-neon); }
+
+        /* --- PREMIUM APPS & PROJECTS CARDS (ONDER) --- */
+        .features-section {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 6% 100px 6%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .feature-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 40px;
+            backdrop-filter: blur(20px);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        /* Subtiele hover-glow achtergrond effect */
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(255,255,255,0.06), transparent 40%);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.4);
+        }
+
+        .icon-box {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 24px;
+        }
+
+        .purple-icon { background: rgba(255, 0, 127, 0.1); color: var(--purple-neon); border: 1px solid rgba(255, 0, 127, 0.2); }
+        .orange-icon { background: rgba(255, 170, 0, 0.1); color: var(--orange-neon); border: 1px solid rgba(255, 170, 0, 0.2); }
+
+        .feature-card h3 {
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 12px;
+            letter-spacing: -0.5px;
+        }
+
+        .feature-card p {
+            color: var(--text-muted);
+            font-size: 15px;
+            line-height: 1.6;
+            margin-bottom: 28px;
+        }
+
+        .action-link {
+            font-weight: 600;
+            font-size: 15px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: gap 0.2s;
+        }
+
+        .purple-link { color: var(--purple-neon); }
+        .orange-link { color: var(--orange-neon); }
+
+        .feature-card:hover .action-link {
+            gap: 14px;
+        }
+
+        /* --- ANIMATIES --- */
+        @keyframes float {
+            0% { transform: translateY(0px) rotate(var(--rot)); }
+            50% { transform: translateY(-15px) rotate(var(--rot)); }
+            100% { transform: translateY(0px) rotate(var(--rot)); }
+        }
+        /* Rotatie fix voor de animaties */
+        .card-minecraft-3d { --rot: -4deg; }
+        .card-minecraft-2d { --rot: 3deg; }
+        .card-neon-rider { --rot: -2deg; }
+
+        /* Responsive Design */
+        @media (max-width: 968px) {
+            .hero { grid-template-columns: 1fr; text-align: center; padding-top: 120px; }
+            .hero-text p { margin: 0 auto 40px auto; }
+            .cta-group { justify-content: center; }
+            .showcase-grid { height: 350px; margin-top: 40px; }
+            .preview-card { width: 220px; padding: 16px; }
+            .features-section { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">DEVABLE<span>by Mattyou Studios™</span></div>
+        <div class="theme-dots">
+            <div class="dot dot-1"></div>
+            <div class="dot dot-2"></div>
+            <div class="dot dot-3"></div>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="#" class="active">Home</a></li>
+                <li><a href="#">Games</a></li>
+                <li><a href="#">Web Apps</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section class="hero">
+        <div class="hero-text">
+            <h1>Devable</h1>
+            <p>Wij bouwen high-performance 3D webapplicaties, geavanceerde game-engines voor browsers en professionele cloud systemen. Ontdek de grenzen van de browser.</p>
+            <div class="cta-group">
+                <a href="#" class="btn btn-primary">Ontdek Games</a>
+                <a href="#" class="btn btn-secondary">Bekijk Web Apps</a>
+            </div>
+        </div>
+        
+        <div class="showcase-grid">
+            <div class="preview-card card-minecraft-3d">
+                <div class="card-tag">PROJECT VOLTOOID</div>
+                <div class="card-title">MINECRAFT 3D</div>
+                <div class="card-sub">(Mattyou edition)</div>
+            </div>
+            
+            <div class="preview-card card-minecraft-2d">
+                <div class="card-tag">POPULAIR</div>
+                <div class="card-title">MINECRAFT 2D</div>
+                <div class="card-sub">(Mattyou edition)</div>
+            </div>
+            
+            <div class="preview-card card-neon-rider">
+                <div class="card-tag">SYNTHWAVE RACER</div>
+                <div class="card-title">NEON RIDER 3D</div>
+                <div class="card-sub">In ontwikkeling</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="features-section">
+        <div class="feature-card" id="card1">
+            <div class="icon-box purple-icon">🎮</div>
+            <h3>Next-Gen Web Games</h3>
+            <p>Ervaar vloeiende 3D en 2D Minecraft klonen, physics simulators en retro arcade games direct in je browser zonder downloads.</p>
+            <a href="#" class="action-link purple-link">Open Arcade &rarr;</a>
+        </div>
+
+        <div class="feature-card" id="card2">
+            <div class="icon-box orange-icon">⚡</div>
+            <h3>Geavanceerde Web Apps & projecten</h3>
+            <p>Van de ultra-veilige Mattyou Cloud tot Ecosy, ons realtime Minecraft economic dashboard. Professionele tools voor power-users.</p>
+            <a href="#" class="action-link orange-link">Open Dashboard &rarr;</a>
+        </div>
+    </section>
+
+    <script>
+        const cards = document.querySelectorAll('.feature-card');
+        cards.forEach(card => {
+            card.addEventListener('mousemove', e => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                card.style.setProperty('--x', `${x}px`);
+                card.style.setProperty('--y', `${y}px`);
+            });
+        });
+    </script>
+
+</body>
+</html>
