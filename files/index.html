@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Devable Files | By Mattyou Studios™</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        .download-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+            color: var(--primary);
+            background: rgba(0, 240, 255, 0.1);
+            padding: 4px 12px;
+            border-radius: 20px;
+            margin-bottom: 15px;
+            font-weight: 600;
+            border: 1px solid rgba(0, 240, 255, 0.2);
+        }
+        .install-box {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 40px;
+            pointer-events: auto;
+        }
+        .install-step {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            align-items: flex-start;
+        }
+        .step-number {
+            background: var(--primary);
+            color: var(--bg-color);
+            font-weight: 800;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            box-shadow: var(--glow);
+        }
+        .step-text {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+        .step-text strong {
+            color: #fff;
+        }
+    </style>
+</head>
+<body class="theme-neon-rainbow">
+
+    <div id="canvas-container"></div>
+
+    <nav>
+        <div class="logo">DEVABLE<span>by Mattyou Studios™</span></div>
+        
+        <!-- Thema Selector -->
+        <div class="theme-selector" title="Kies een design">
+            <div class="theme-btn active" data-theme="neon-rainbow" style="background: linear-gradient(45deg, #ff007f, #7000ff);" onclick="changeTheme('neon-rainbow')"></div>
+            <div class="theme-btn" data-theme="cyber-blue" style="background: linear-gradient(45deg, #00f0ff, #0044ff);" onclick="changeTheme('cyber-blue')"></div>
+            <div class="theme-btn" data-theme="retro-gold" style="background: linear-gradient(45deg, #ffaa00, #ff3c00);" onclick="changeTheme('retro-gold')"></div>
+        </div>
+
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="games.html">Games</a></li>
+            <li><a href="webapps.html">Web Apps</a></li>
+            <li><a href="files.html" class="active">Files</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <section class="hero">
+            <h1>Texture Pack Downloads</h1>
+            <p>Download hier de officiële texture packs van Mattyou Studios™. Kies de versie die bij jouw Minecraft installatie past.</p>
+        </section>
+
+        <!-- Grid met verschillende downloads -->
+        <div class="grid">
+            
+            <!-- Java Edition - Full Version -->
+            <div class="card" onclick="window.location.href='downloads/MattyouPack-Java-Full.zip'">
+                <div class="download-badge">RECOMMENDED</div>
+                <div class="card-icon">💎</div>
+                <h3>Mattyou Pack (Java 1.20+)</h3>
+                <p>De ultieme ervaring met high-res 3D blocks, custom skyboxes en glimmende armor (OptiFine/Iris vereist voor extra effecten).</p>
+                <span class="btn" style="padding: 8px 20px; font-size: 0.9rem; width: 100%; text-align: center;">Download .ZIP (45 MB)</span>
+            </div>
+
+            <!-- Java Edition - Lite Version -->
+            <div class="card" onclick="window.location.href='downloads/MattyouPack-Java-Lite.zip'">
+                <div class="download-badge" style="color: #ffaa00; background: rgba(255, 170, 0, 0.1); border-color: rgba(255, 170, 0, 0.2);">FPS BOOST</div>
+                <div class="card-icon">⚡</div>
+                <h3>Mattyou Pack Lite (Java)</h3>
+                <p>Een lichtere versie van ons texture pack, speciaal geoptimaliseerd voor lagere specificaties pc's. Behoudt de stijl, verdubbelt je FPS!</p>
+                <span class="btn" style="padding: 8px 20px; font-size: 0.9rem; width: 100%; text-align: center;">Download .ZIP (12 MB)</span>
+            </div>
+
+            <!-- Bedrock / MCPE Edition -->
+            <div class="card" onclick="window.location.href='downloads/MattyouPack-Bedrock.mcpack'">
+                <div class="download-badge" style="color: #55ff55; background: rgba(85, 255, 85, 0.1); border-color: rgba(85, 255, 85, 0.2);">BEDROCK / PE</div>
+                <div class="card-icon">📱</div>
+                <h3>Mattyou Pack (Bedrock / PE)</h3>
+                <p>Geschikt voor Windows 10/11 Edition, Xbox, PlayStation, Nintendo Switch en mobiele apparaten (iOS & Android).</p>
+                <span class="btn" style="padding: 8px 20px; font-size: 0.9rem; width: 100%; text-align: center;">Download .MCPACK (32 MB)</span>
+            </div>
+
+        </div>
+
+        <!-- Installatie Handleiding -->
+        <div class="install-box">
+            <h3 style="margin-bottom: 20px; color: #fff; font-size: 1.4rem; display: flex; align-items: center; gap: 10px;">
+                <span>🛠️</span> Hoe installeer je het Texture Pack?
+            </h3>
+            
+            <div class="install-step">
+                <div class="step-number">1</div>
+                <div class="step-text">
+                    Klik hierboven op de gewenste versie om het <strong>.zip</strong> of <strong>.mcpack</strong> bestand te downloaden.
+                </div>
+            </div>
+
+            <div class="install-step">
+                <div class="step-number">2</div>
+                <div class="step-text">
+                    Voor <strong>Java Edition</strong>: Open Minecraft, ga naar <em>Opties > Resource Packs > Open Pack Folder</em>.
+                </div>
+            </div>
+
+            <div class="install-step">
+                <div class="step-number">3</div>
+                <div class="step-text">
+                    Sleep het zojuist gedownloade <strong>.zip</strong> bestand rechtstreeks in die geopende map. Je hoeft het niet uit te pakken!
+                </div>
+            </div>
+
+            <div class="install-step">
+                <div class="step-number">4</div>
+                <div class="step-text">
+                    Activeer het pack in-game door op de pijl te klikken en geniet van je nieuwe Minecraft look! (Voor <strong>Bedrock</strong> hoef je alleen dubbel te klikken op het gedownloade <code>.mcpack</code> bestand).
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 Devable. All rights reserved. Powered by Mattyou Studios™</p>
+    </footer>
+
+    <script src="three-bg.js"></script>
+</body>
+</html>
