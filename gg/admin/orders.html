@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Beheerder — Bestellingen</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/admin.css" />
+</head>
+<body>
+
+<div class="admin-layout">
+  <aside class="admin-sidebar">
+    <div class="sidebar-brand">
+      <div class="logo">MijnWinkel</div>
+      <div class="role">Beheerportaal</div>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="nav-item" href="index.html"><span class="icon">📊</span> Dashboard</a>
+      <a class="nav-item" href="products.html"><span class="icon">📦</span> Producten</a>
+      <a class="nav-item active" href="orders.html"><span class="icon">🧾</span> Bestellingen</a>
+      <a class="nav-item" href="settings.html"><span class="icon">⚙️</span> Instellingen</a>
+      <hr style="border:none;border-top:1px solid rgba(255,255,255,.1);margin:.5rem 0;" />
+      <a class="nav-item" href="../index.html" target="_blank"><span class="icon">🏪</span> Winkel bekijken</a>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="nav-item" onclick="logout()" style="color:rgba(255,82,82,.8);"><span class="icon">🚪</span> Uitloggen</button>
+    </div>
+  </aside>
+
+  <main class="admin-main">
+    <div class="admin-topbar">
+      <h1>Bestellingen</h1>
+      <div style="display:flex;gap:.5rem;align-items:center;">
+        <select id="statusFilter" onchange="loadOrders()" style="padding:.5rem .8rem;border:1.5px solid #e2e0db;border-radius:7px;font-family:inherit;font-size:.9rem;background:#fff;">
+          <option value="">Alle statussen</option>
+          <option value="nieuw">Nieuw</option>
+          <option value="verwerkt">Verwerkt</option>
+          <option value="verzonden">Verzonden</option>
+          <option value="afgerond">Afgerond</option>
+          <option value="geannuleerd">Geannuleerd</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="admin-content">
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Klant</th>
+                <th>Adres</th>
+                <th>Datum</th>
+                <th>Totaal</th>
+                <th>Status</th>
+                <th>Acties</th>
+              </tr>
+            </thead>
+            <tbody id="ordersTable">
+              <tr><td colspan="6" style="text-align:center;color:#4a4a6a;padding:2rem;">Laden…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ORDER DETAIL MODAL -->
+<div class="modal-backdrop" id="orderModal">
+  <div class="modal-box" style="max-width:600px;">
+    <h3>Bestelling details</h3>
+    <div id="orderDetail"></div>
+    <div style="margin-top:1.5rem;display:flex;gap:.75rem;flex-wrap:wrap;align-items:center;">
+      <label style="font-weight:600;font-size:.9rem;">Status:</label>
+      <select id="orderStatus" style="padding:.5rem .8rem;border:1.5px solid #e2e0db;border-radius:7px;font-family:inherit;">
+        <option value="nieuw">Nieuw</option>
+        <option value="verwerkt">Verwerkt</option>
+        <option value="verzonden">Verzonden</option>
+        <option value="afgerond">Afgerond</option>
+        <option value="geannuleerd">Geannuleerd</option>
+      </select>
+      <button class="btn btn-accent" onclick="updateStatus()">Bijwerken</button>
+      <button class="btn btn-outline" onclick="document.getElementById('orderModal').classList.remove('open')">Sluiten</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="../js/supabase-config.js"></script>
+<script src="js/admin.js"></script>
+<script>
+let currentOrderId = null;
+
+document.addEventListener('DOMContentLoaded', async () => {
+  await requireAuth();
+  loadOrders();
+});
+
+async function loadOrders() {
+  const status = document.getElementById('statusFilter').value;
+  let query = db.from('orders').select('*').order('created_at', { ascending: false });
+  if (status) query = query.eq('status', status);
+
+  const { data, error } = await query;
+  if (error) { showToast('Fout bij laden bestellingen', 'error'); return; }
+
+  const tbody = document.getElementById('ordersTable');
+  if (!data || data.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#4a4a6a;padding:2rem;">Geen bestellingen gevonden</td></tr>`;
+    return;
+  }
+
+  const statusColors = {
+    nieuw: 'badge-danger',
+    verwerkt: 'badge-success',
+    verzonden: 'badge-success',
+    afgerond: 'badge-success',
+    geannuleerd: ''
+  };
+
+  tbody.innerHTML = data.map(o => `
+    <tr>
+      <td>
+        <div style="font-weight:600;">${escapeHTML(o.customer_name || '—')}</div>
+        <div style="font-size:.78rem;color:#4a4a6a;">${escapeHTML(o.customer_email || '')}</div>
+      </td>
+      <td style="font-size:.85rem;color:#4a4a6a;max-width:160px;">${escapeHTML(o.customer_address || '—')}</td>
+      <td>${new Date(o.created_at).toLocaleDateString('nl-NL', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+      <td style="font-weight:700;">${formatPrice(o.total)}</td>
+      <td><span class="badge ${statusColors[o.status] || ''}">${escapeHTML(o.status || 'nieuw')}</span></td>
+      <td><button class="btn btn-sm btn-outline" onclick="openOrder('${o.id}')">Bekijk</button></td>
+    </tr>
+  `).join('');
+}
+
+async function openOrder(id) {
+  currentOrderId = id;
+  const { data, error } = await db.from('orders').select('*').eq('id', id).single();
+  if (error || !data) { showToast('Bestelling niet gevonden', 'error'); return; }
+
+  const items = Array.isArray(data.items) ? data.items : [];
+
+  document.getElementById('orderDetail').innerHTML = `
+    <div style="background:#f8f7f4;border-radius:8px;padding:1rem;margin-bottom:1rem;font-size:.9rem;">
+      <p><strong>Klant:</strong> ${escapeHTML(data.customer_name || '—')}</p>
+      <p><strong>E-mail:</strong> ${escapeHTML(data.customer_email || '—')}</p>
+      <p><strong>Adres:</strong> ${escapeHTML(data.customer_address || '—')}</p>
+      <p><strong>Datum:</strong> ${new Date(data.created_at).toLocaleString('nl-NL')}</p>
+    </div>
+    <div style="margin-bottom:.75rem;font-weight:700;font-size:.9rem;">Producten:</div>
+    ${items.map(item => `
+      <div style="display:flex;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid #e2e0db;font-size:.9rem;">
+        <span>${escapeHTML(item.name)} × ${item.qty}</span>
+        <span style="font-weight:600;">${formatPrice(item.price * item.qty)}</span>
+      </div>
+    `).join('')}
+    <div style="display:flex;justify-content:space-between;padding:.75rem 0;font-weight:800;font-size:1rem;">
+      <span>Totaal</span>
+      <span>${formatPrice(data.total)}</span>
+    </div>
+  `;
+
+  document.getElementById('orderStatus').value = data.status || 'nieuw';
+  document.getElementById('orderModal').classList.add('open');
+}
+
+async function updateStatus() {
+  if (!currentOrderId) return;
+  const status = document.getElementById('orderStatus').value;
+  const { error } = await db.from('orders').update({ status }).eq('id', currentOrderId);
+  if (error) {
+    showToast('Bijwerken mislukt', 'error');
+  } else {
+    showToast('✓ Status bijgewerkt!', 'success');
+    document.getElementById('orderModal').classList.remove('open');
+    loadOrders();
+  }
+}
+
+document.getElementById('orderModal').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) e.target.classList.remove('open');
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Beheerder — Inloggen</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/admin.css" />
+</head>
+<body>
+
+<div class="login-page">
+  <div class="login-card">
+    <div class="login-logo">MijnWinkel</div>
+    <p class="login-subtitle">Beheerportaal</p>
+
+    <div class="form-group">
+      <label for="email">E-mailadres</label>
+      <input type="email" id="email" placeholder="beheerder@email.nl" autocomplete="email" />
+    </div>
+
+    <div class="form-group">
+      <label for="password">Wachtwoord</label>
+      <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" />
+    </div>
+
+    <div id="errorMsg" style="display:none;background:#fef0f0;border:1px solid #fca5a5;color:#c04040;padding:.65rem .9rem;border-radius:7px;font-size:.85rem;margin-bottom:1rem;"></div>
+
+    <button class="btn btn-primary btn-full" id="loginBtn" onclick="login()">
+      Inloggen →
+    </button>
+
+    <p style="margin-top:1.5rem;text-align:center;font-size:.82rem;color:#4a4a6a;">
+      <a href="../index.html" style="color:#c8a96e;text-decoration:none;">← Terug naar de winkel</a>
+    </p>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="../js/supabase-config.js"></script>
+<script>
+  // Controleer of al ingelogd
+  (async () => {
+    const { data } = await db.auth.getSession();
+    if (data.session) window.location.href = 'index.html';
+  })();
+
+  async function login() {
+    const email    = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const errEl    = document.getElementById('errorMsg');
+    const btn      = document.getElementById('loginBtn');
+
+    errEl.style.display = 'none';
+
+    if (!email || !password) {
+      errEl.textContent = 'Vul je e-mail en wachtwoord in.';
+      errEl.style.display = 'block';
+      return;
+    }
+
+    btn.textContent = 'Bezig…';
+    btn.disabled = true;
+
+    const { error } = await db.auth.signInWithPassword({ email, password });
+
+    if (error) {
+      errEl.textContent = 'Inloggen mislukt. Controleer je gegevens.';
+      errEl.style.display = 'block';
+      btn.textContent = 'Inloggen →';
+      btn.disabled = false;
+    } else {
+      window.location.href = 'index.html';
+    }
+  }
+
+  // Enter toets
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') login();
+  });
+</script>
+</body>
+</html>

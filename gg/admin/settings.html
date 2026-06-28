@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Beheerder — Instellingen</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/admin.css" />
+</head>
+<body>
+
+<div class="admin-layout">
+  <aside class="admin-sidebar">
+    <div class="sidebar-brand">
+      <div class="logo">MijnWinkel</div>
+      <div class="role">Beheerportaal</div>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="nav-item" href="index.html"><span class="icon">📊</span> Dashboard</a>
+      <a class="nav-item" href="products.html"><span class="icon">📦</span> Producten</a>
+      <a class="nav-item" href="orders.html"><span class="icon">🧾</span> Bestellingen</a>
+      <a class="nav-item active" href="settings.html"><span class="icon">⚙️</span> Instellingen</a>
+      <hr style="border:none;border-top:1px solid rgba(255,255,255,.1);margin:.5rem 0;" />
+      <a class="nav-item" href="../index.html" target="_blank"><span class="icon">🏪</span> Winkel bekijken</a>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="nav-item" onclick="logout()" style="color:rgba(255,82,82,.8);"><span class="icon">🚪</span> Uitloggen</button>
+    </div>
+  </aside>
+
+  <main class="admin-main">
+    <div class="admin-topbar"><h1>Instellingen</h1></div>
+
+    <div class="admin-content">
+
+      <!-- WINKEL INFORMATIE -->
+      <div class="card">
+        <div class="card-title">🏪 Winkel informatie</div>
+        <div class="form-group">
+          <label>Winkelnaam</label>
+          <input type="text" id="storeName" placeholder="bijv. MijnWinkel" />
+        </div>
+        <div class="form-group">
+          <label>Omschrijving</label>
+          <textarea id="storeDesc" rows="3" placeholder="Korte omschrijving van je winkel…"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Contact e-mail</label>
+          <input type="email" id="storeEmail" placeholder="info@mijnwinkel.nl" />
+        </div>
+        <button class="btn btn-accent" onclick="saveSettings()">💾 Opslaan</button>
+      </div>
+
+      <!-- WACHTWOORD WIJZIGEN -->
+      <div class="card">
+        <div class="card-title">🔐 Wachtwoord wijzigen</div>
+        <div class="form-group">
+          <label>Nieuw wachtwoord</label>
+          <input type="password" id="newPassword" placeholder="Minimaal 8 tekens" />
+        </div>
+        <div class="form-group">
+          <label>Herhaal wachtwoord</label>
+          <input type="password" id="confirmPassword" placeholder="Herhaal wachtwoord" />
+        </div>
+        <button class="btn btn-primary" onclick="changePassword()">Wachtwoord wijzigen</button>
+      </div>
+
+      <!-- SUPABASE INFO -->
+      <div class="card" style="border:2px solid #e2e0db;">
+        <div class="card-title">ℹ️ Over beveiliging</div>
+        <p style="color:#4a4a6a;font-size:.9rem;line-height:1.7;">
+          <strong>Jouw API sleutel is veilig.</strong> De <code style="background:#f0eef8;padding:.1rem .3rem;border-radius:4px;">anon</code> sleutel van Supabase is ontworpen om publiek te zijn — Supabase's <strong>Row Level Security (RLS)</strong> bepaalt wat wie mag zien en bewerken.
+        </p>
+        <ul style="color:#4a4a6a;font-size:.9rem;line-height:1.9;margin-top:.75rem;padding-left:1.25rem;">
+          <li>Klanten kunnen alleen <strong>actieve producten lezen</strong> en bestellingen plaatsen.</li>
+          <li>Producten bewerken, verwijderen en bestellingen inzien kan alleen als je bent <strong>ingelogd als beheerder</strong>.</li>
+          <li>De geheime <code style="background:#f0eef8;padding:.1rem .3rem;border-radius:4px;">service_role</code> sleutel staat <strong>nooit</strong> in de frontend code.</li>
+        </ul>
+        <p style="color:#4a4a6a;font-size:.9rem;margin-top:.75rem;">
+          Stel dit in via <a href="https://supabase.com/dashboard" target="_blank" style="color:#c8a96e;">Supabase Dashboard</a> → Authentication → Policies.
+        </p>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="../js/supabase-config.js"></script>
+<script src="js/admin.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+  await requireAuth();
+  loadSettings();
+});
+
+async function loadSettings() {
+  const { data } = await db.from('settings').select('*').eq('id', 1).single();
+  if (data) {
+    document.getElementById('storeName').value  = data.store_name  || '';
+    document.getElementById('storeDesc').value  = data.description || '';
+    document.getElementById('storeEmail').value = data.email       || '';
+  }
+}
+
+async function saveSettings() {
+  const payload = {
+    id:          1,
+    store_name:  document.getElementById('storeName').value.trim(),
+    description: document.getElementById('storeDesc').value.trim(),
+    email:       document.getElementById('storeEmail').value.trim()
+  };
+
+  const { error } = await db.from('settings').upsert(payload);
+  if (error) {
+    showToast('Opslaan mislukt: ' + error.message, 'error');
+  } else {
+    showToast('✓ Instellingen opgeslagen!', 'success');
+  }
+}
+
+async function changePassword() {
+  const np = document.getElementById('newPassword').value;
+  const cp = document.getElementById('confirmPassword').value;
+
+  if (!np || np.length < 8) {
+    showToast('Wachtwoord moet minimaal 8 tekens zijn.', 'error'); return;
+  }
+  if (np !== cp) {
+    showToast('Wachtwoorden komen niet overeen.', 'error'); return;
+  }
+
+  const { error } = await db.auth.updateUser({ password: np });
+  if (error) {
+    showToast('Wijzigen mislukt: ' + error.message, 'error');
+  } else {
+    showToast('✓ Wachtwoord gewijzigd!', 'success');
+    document.getElementById('newPassword').value = '';
+    document.getElementById('confirmPassword').value = '';
+  }
+}
+</script>
+</body>
+</html>

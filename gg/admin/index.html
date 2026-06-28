@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Beheerder — Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/admin.css" />
+</head>
+<body>
+
+<div class="admin-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="admin-sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="logo">MijnWinkel</div>
+      <div class="role">Beheerportaal</div>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="nav-item active" href="index.html"><span class="icon">📊</span> Dashboard</a>
+      <a class="nav-item" href="products.html"><span class="icon">📦</span> Producten</a>
+      <a class="nav-item" href="orders.html"><span class="icon">🧾</span> Bestellingen</a>
+      <a class="nav-item" href="settings.html"><span class="icon">⚙️</span> Instellingen</a>
+      <hr style="border:none;border-top:1px solid rgba(255,255,255,.1);margin:.5rem 0;" />
+      <a class="nav-item" href="../index.html" target="_blank"><span class="icon">🏪</span> Winkel bekijken</a>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="nav-item" onclick="logout()" style="color:rgba(255,82,82,.8);">
+        <span class="icon">🚪</span> Uitloggen
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="admin-main">
+    <div class="admin-topbar">
+      <h1>Dashboard</h1>
+      <span id="userEmail" style="font-size:.85rem;color:#4a4a6a;"></span>
+    </div>
+
+    <div class="admin-content">
+      <!-- STATISTIEKEN -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <span class="stat-icon">📦</span>
+          <div>
+            <div class="stat-label">Producten</div>
+            <div class="stat-value" id="statProducts">—</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <span class="stat-icon">🧾</span>
+          <div>
+            <div class="stat-label">Bestellingen</div>
+            <div class="stat-value" id="statOrders">—</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <span class="stat-icon">💰</span>
+          <div>
+            <div class="stat-label">Totale omzet</div>
+            <div class="stat-value" id="statRevenue">—</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <span class="stat-icon">🆕</span>
+          <div>
+            <div class="stat-label">Nieuwe orders</div>
+            <div class="stat-value" id="statNew">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RECENTE BESTELLINGEN -->
+      <div class="card">
+        <div class="card-title">Recente bestellingen</div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Klant</th>
+                <th>Datum</th>
+                <th>Totaal</th>
+                <th>Status</th>
+                <th>Actie</th>
+              </tr>
+            </thead>
+            <tbody id="recentOrders">
+              <tr><td colspan="5" style="text-align:center;color:#4a4a6a;padding:2rem;">Laden…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- RECENTE PRODUCTEN -->
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;padding-bottom:.75rem;border-bottom:1px solid #e2e0db;">
+          <div class="card-title" style="margin:0;padding:0;border:none;">Recente producten</div>
+          <a href="products.html" class="btn btn-sm btn-outline">Alle producten →</a>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Foto</th>
+                <th>Naam</th>
+                <th>Prijs</th>
+                <th>Voorraad</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="recentProducts">
+              <tr><td colspan="5" style="text-align:center;color:#4a4a6a;padding:2rem;">Laden…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="../js/supabase-config.js"></script>
+<script src="js/admin.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+  await requireAuth();
+  loadDashboard();
+});
+
+async function loadDashboard() {
+  const [{ count: prodCount }, { data: orders }, { data: products }] = await Promise.all([
+    db.from('products').select('*', { count: 'exact', head: true }),
+    db.from('orders').select('*').order('created_at', { ascending: false }).limit(5),
+    db.from('products').select('*').order('created_at', { ascending: false }).limit(5)
+  ]);
+
+  const allOrders = await db.from('orders').select('total, status');
+
+  document.getElementById('statProducts').textContent = prodCount || 0;
+  document.getElementById('statOrders').textContent   = (allOrders.data || []).length;
+
+  const revenue = (allOrders.data || []).reduce((sum, o) => sum + (o.total || 0), 0);
+  document.getElementById('statRevenue').textContent  = formatPrice(revenue);
+
+  const newOrders = (allOrders.data || []).filter(o => o.status === 'nieuw').length;
+  document.getElementById('statNew').textContent = newOrders;
+
+  // Recente bestellingen
+  const ordersBody = document.getElementById('recentOrders');
+  if (!orders || orders.length === 0) {
+    ordersBody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#4a4a6a;padding:2rem;">Nog geen bestellingen</td></tr>`;
+  } else {
+    ordersBody.innerHTML = orders.map(o => `
+      <tr>
+        <td><div style="font-weight:600;">${escapeHTML(o.customer_name || '—')}</div><div style="font-size:.78rem;color:#4a4a6a;">${escapeHTML(o.customer_email || '')}</div></td>
+        <td>${new Date(o.created_at).toLocaleDateString('nl-NL')}</td>
+        <td>${formatPrice(o.total)}</td>
+        <td><span class="badge ${o.status === 'nieuw' ? 'badge-danger' : 'badge-success'}">${escapeHTML(o.status || 'nieuw')}</span></td>
+        <td><a href="orders.html" class="btn btn-sm btn-outline">Bekijk</a></td>
+      </tr>
+    `).join('');
+  }
+
+  // Recente producten
+  const prodBody = document.getElementById('recentProducts');
+  if (!products || products.length === 0) {
+    prodBody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#4a4a6a;padding:2rem;">Nog geen producten</td></tr>`;
+  } else {
+    prodBody.innerHTML = products.map(p => `
+      <tr>
+        <td>${p.image_url ? `<img src="${escapeHTML(p.image_url)}" class="td-img" onerror="this.src=''" />` : '<div class="td-img" style="display:flex;align-items:center;justify-content:center;background:#eee;">📦</div>'}</td>
+        <td><div class="td-name">${escapeHTML(p.name)}</div><div class="td-cat">${escapeHTML(p.category || '')}</div></td>
+        <td>${formatPrice(p.price)}</td>
+        <td>${p.stock !== null ? p.stock : '∞'}</td>
+        <td><span class="badge ${p.active ? 'badge-success' : 'badge-danger'}">${p.active ? 'Actief' : 'Verborgen'}</span></td>
+      </tr>
+    `).join('');
+  }
+}
+</script>
+</body>
+</html>
