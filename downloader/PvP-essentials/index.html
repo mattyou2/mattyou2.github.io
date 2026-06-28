@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download Starten...</title>
+</head>
+<body>
+
+    <p>Je download start over een moment. Als er niets gebeurt, <a id="downloadLink" href="JOUW-BESTANDSNAAM.ext">klik dan hier</a>.</p>
+
+    <script>
+        window.onload = function() {
+            const bestandNaam = PvP_essentials.zip'; 
+            
+            const link = document.createElement('a');
+            link.href = bestandNaam;
+            link.download = bestandNaam;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        };
+    </script>
+
+</body>
+</html>
