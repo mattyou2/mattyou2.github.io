@@ -1,79 +1,160 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Devable | By Mattyou Studios™</title>
-    <link rel="stylesheet" href="style.css">
-    <!-- Three.js CDN -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3540026329815958"
-     crossorigin="anonymous"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MijnWinkel — Home</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
 </head>
-<body class="theme-neon-rainbow">
+<body>
 
-    <div id="canvas-container"></div>
+<!-- NAVIGATIE -->
+<nav>
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">MijnWinkel</a>
+    <ul class="nav-links">
+      <li><a href="index.html">Shop</a></li>
+      <li><a href="#over">Over ons</a></li>
+      <li>
+        <a href="#" class="cart-btn" id="openCart">
+          🛒 Winkelwagen
+          <span class="cart-badge" id="cartBadge">0</span>
+        </a>
+      </li>
+    </ul>
+  </div>
+</nav>
 
-    <nav>
-        <div class="logo">DEVABLE<span>by Mattyou Studios™</span></div>
-        
-        <!-- Thema Selector -->
-        <div class="theme-selector" title="Kies een design">
-            <div class="theme-btn active" data-theme="neon-rainbow" style="background: linear-gradient(45deg, #ff007f, #7000ff);" onclick="changeTheme('neon-rainbow')"></div>
-            <div class="theme-btn" data-theme="cyber-blue" style="background: linear-gradient(45deg, #00f0ff, #0044ff);" onclick="changeTheme('cyber-blue')"></div>
-            <div class="theme-btn" data-theme="retro-gold" style="background: linear-gradient(45deg, #ffaa00, #ff3c00);" onclick="changeTheme('retro-gold')"></div>
-        </div>
+<!-- HERO -->
+<section class="hero">
+  <h1>Ontdek onze collectie</h1>
+  <p>Kwaliteitsproducten, zorgvuldig geselecteerd voor jou.</p>
+  <a href="#producten" class="hero-cta">Bekijk producten</a>
+</section>
 
-        <ul class="nav-links">
-            <li><a href="index.html" class="active">Home</a></li>
-            <li><a href="games.html">Games</a></li>
-            <li><a href="webapps.html">Web Apps</a></li>
-            <li><a href="files.html">Files</a></li>
-        </ul>
-    </nav>
+<!-- CATEGORIEËN -->
+<section class="categories" id="producten">
+  <h2 class="section-title">Categorieën</h2>
+  <div class="category-chips" id="categoryChips">
+    <button class="chip active" data-cat="">Alles</button>
+    <!-- Dynamisch ingeladen -->
+  </div>
+</section>
 
-    <main>
-        <section class="hero">
-            <h1>Devable</h1>
-            <p>Wij bouwen high-performance 3D web applicaties, geavanceerde game-engines voor browsers en professionele cloud systemen. Ontdek de grenzen van de browser.</p>
-            <a href="games.html" class="btn">Ontdek Games</a>
-            <a href="webapps.html" class="btn btn-secondary">Bekijk Web Apps</a>
-        </section>
-
-        <div class="grid">
-            <div class="card" onclick="location.href='games.html'">
-                <div class="card-icon">🎮</div>
-                <h3>Next-Gen Web Games</h3>
-                <p>Ervaar vloeiende 3D en 2D Minecraft klonen, physics simulators en retro arcade games direct in je browser zonder downloads.</p>
-                <span style="color: var(--primary); font-weight: 600;">Open Arcade →</span>
-            </div>
-
-            <div class="card" onclick="location.href='webapps.html'">
-                <div class="card-icon">⚡</div>
-                <h3>Geavanceerde Web Apps & projecten</h3>
-                <p>Van de ultra-veilige Mattyou Cloud tot Ecosy, ons realtime Minecraft economie dashboard. Professionele tools voor power-users.</p>
-                <span style="color: var(--primary); font-weight: 600;">Open Dashboard →</span>
-            </div>
-        </div>
-    </main>
-
-    <footer>
-        <p>&copy; 2026 Devable. All rights reserved. Powered by Mattyou Studios™</p>
-    </footer>
-
-    <script src="three-bg.js"></script>
-    
-<footer>
-    <div class="footer-content">
-        <div class="footer-left">
-            <div class="logo">DEVABLE<span>by Mattyou Studios™</span></div>
-        </div>
-        
-        <div class="footer-right">
-            <a href="privacy" class="footer-link legal-btn">Privacy Policy</a>
-        </div>
+<!-- PRODUCTEN -->
+<section class="products-section">
+  <div class="products-header">
+    <h2 class="section-title" id="productCount">Producten</h2>
+    <div class="search-bar">
+      <input type="text" id="searchInput" placeholder="Zoeken…" autocomplete="off" />
+      <button>🔍</button>
     </div>
+  </div>
+  <div class="products-grid" id="productsGrid">
+    <!-- Skeleton loaders -->
+    <div class="skeleton skeleton-card"></div>
+    <div class="skeleton skeleton-card"></div>
+    <div class="skeleton skeleton-card"></div>
+    <div class="skeleton skeleton-card"></div>
+  </div>
+</section>
+
+<!-- OVER ONS SECTIE -->
+<section id="over" style="max-width:1200px;margin:0 auto 4rem;padding:0 clamp(1rem,5vw,3rem);">
+  <div style="background:#fff;border-radius:14px;padding:3rem;box-shadow:0 2px 12px rgba(26,26,46,.08);display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:center;">
+    <div>
+      <h2 style="font-family:'Playfair Display',serif;font-size:2rem;margin-bottom:1rem;">Over MijnWinkel</h2>
+      <p style="color:#4a4a6a;line-height:1.8;margin-bottom:1rem;">
+        Wij geloven in kwaliteit boven kwantiteit. Elk product in onze winkel is zorgvuldig geselecteerd en voldoet aan onze hoge standaarden.
+      </p>
+      <p style="color:#4a4a6a;line-height:1.8;">
+        Snelle levering, eerlijke prijzen, en een klantenservice waar je op kunt rekenen.
+      </p>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+      <div style="background:#f0eef8;border-radius:10px;padding:1.5rem;text-align:center;">
+        <div style="font-size:2rem;font-weight:800;font-family:'Playfair Display',serif;color:#1a1a2e;" id="heroProductCount">—</div>
+        <div style="font-size:.85rem;color:#4a4a6a;margin-top:.25rem;">Producten</div>
+      </div>
+      <div style="background:#f0eef8;border-radius:10px;padding:1.5rem;text-align:center;">
+        <div style="font-size:2rem;font-weight:800;font-family:'Playfair Display',serif;color:#1a1a2e;">★ 4.9</div>
+        <div style="font-size:.85rem;color:#4a4a6a;margin-top:.25rem;">Beoordeling</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p>© 2025 MijnWinkel · Gemaakt met ❤️ · <a href="admin/index.html">Beheerder</a></p>
 </footer>
-    
+
+<!-- WINKELWAGEN SIDEBAR -->
+<div class="cart-overlay" id="cartOverlay"></div>
+<aside class="cart-sidebar" id="cartSidebar">
+  <div class="cart-header">
+    <h2>🛒 Winkelwagen</h2>
+    <button class="close-cart" id="closeCart">✕</button>
+  </div>
+  <div class="cart-items" id="cartItems">
+    <div style="text-align:center;padding:3rem 1rem;color:#4a4a6a;">
+      <div style="font-size:3rem;margin-bottom:1rem;">🛒</div>
+      <p>Je winkelwagen is leeg</p>
+    </div>
+  </div>
+  <div class="cart-footer" id="cartFooter" style="display:none;">
+    <div class="cart-total">
+      <span>Totaal</span>
+      <span id="cartTotal">€0,00</span>
+    </div>
+    <button class="checkout-btn" id="checkoutBtn">Afrekenen →</button>
+  </div>
+</aside>
+
+<!-- PRODUCT DETAIL MODAL -->
+<div class="modal-overlay" id="productModal">
+  <div class="modal" style="position:relative;">
+    <button class="modal-close-btn" id="closeModal">✕</button>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- CHECKOUT MODAL -->
+<div class="modal-overlay" id="checkoutModal">
+  <div class="modal">
+    <div class="modal-body">
+      <h2>Afrekenen</h2>
+      <p style="color:#4a4a6a;margin:.5rem 0 1.5rem;">Vul je gegevens in om de bestelling te plaatsen.</p>
+      <div style="display:flex;flex-direction:column;gap:.9rem;">
+        <div>
+          <label style="display:block;font-weight:600;font-size:.85rem;margin-bottom:.3rem;">Naam</label>
+          <input type="text" id="checkoutName" placeholder="Voor- en achternaam" style="width:100%;padding:.65rem .9rem;border:1.5px solid #e2e0db;border-radius:7px;font-size:.9rem;outline:none;font-family:inherit;" />
+        </div>
+        <div>
+          <label style="display:block;font-weight:600;font-size:.85rem;margin-bottom:.3rem;">E-mail</label>
+          <input type="email" id="checkoutEmail" placeholder="jouw@email.nl" style="width:100%;padding:.65rem .9rem;border:1.5px solid #e2e0db;border-radius:7px;font-size:.9rem;outline:none;font-family:inherit;" />
+        </div>
+        <div>
+          <label style="display:block;font-weight:600;font-size:.85rem;margin-bottom:.3rem;">Adres</label>
+          <input type="text" id="checkoutAddress" placeholder="Straat + huisnummer, Postcode Stad" style="width:100%;padding:.65rem .9rem;border:1.5px solid #e2e0db;border-radius:7px;font-size:.9rem;outline:none;font-family:inherit;" />
+        </div>
+      </div>
+      <div style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid #e2e0db;display:flex;gap:.75rem;flex-wrap:wrap;">
+        <button onclick="placeOrder()" style="flex:1;background:#c8a96e;color:#1a1a2e;border:none;padding:.8rem;border-radius:8px;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;">Bestelling plaatsen ✓</button>
+        <button onclick="document.getElementById('checkoutModal').classList.remove('open')" style="padding:.8rem 1.2rem;background:none;border:1.5px solid #e2e0db;border-radius:8px;cursor:pointer;font-family:inherit;">Annuleren</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SUPABASE -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="js/supabase-config.js"></script>
+<script src="js/shop.js"></script>
 </body>
 </html>
