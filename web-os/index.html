@@ -2,15 +2,20 @@
 <html lang="nl">
 <head>
     <meta charset="UTF-8">
-    <title>My-OS Portaal</title>
+    <title>My-OS</title>
     <style>
-        body { background: #000; color: #ff0000; font-family: monospace; text-align: center; padding-top: 100px; padding-left: 20px; padding-right: 20px; }
-        #security-msg { display: none; max-width: 600px; margin: 0 auto; line-height: 1.6; }
+        /* Zorg dat het iframe het hele scherm vult zonder randen */
+        html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: monospace; }
+        iframe { width: 100%; height: 100%; border: none; display: none; }
+        #security-msg { display: none; color: #ff0000; text-align: center; padding-top: 100px; max-width: 600px; margin: 0 auto; line-height: 1.6; padding: 20px; }
+        #loading-txt { color: #ff0000; text-align: center; padding-top: 100px; }
     </style>
 </head>
 <body>
 
-    <h1 id="loading-txt">BEVEILIGINGSLINK CONTROLEREN...</h1>
+    <h1 id="loading-txt">MY-OS: SYSTEM BOOTING...</h1>
+
+    <iframe id="os-frame"></iframe>
 
     <div id="security-msg">
         <h2>[ SECURITY ALERT ]</h2>
@@ -18,54 +23,62 @@
     </div>
 
     <script>
-const TOEGESTANE_URL = "https://mattyou2.github.io"; 
-const RECHTEN_SLEUTEL = "FD7G3993TGREFDHG34TV83TN8V4930W09TVNA8VWRNHGARIUGAGRAESGIHGH394T3897RTREWTHGU";
+        const TOEGESTANE_URL = "https://mattyou2.github.io"; 
+        const RECHTEN_SLEUTEL = "FD7G3993TGREFDHG34TV83TN8V4930W09TVNA8VWRNHGARIUGAGRAESGIHGH394T3897RTREWTHGU";
 
-function toonBlokkade() {
-    document.getElementById("loading-txt").style.display = "none";
-    document.getElementById("security-msg").style.display = "block";
-}
-
-// --- STRIKE & BLOCK CHECK ---
-if (localStorage.getItem("os_hard_blocked") === "true") {
-    toonBlokkade();
-} else {
-    const huidigeLocatie = window.location.origin.replace(/\/$/, "");
-
-    if (huidigeLocatie === TOEGESTANE_URL.replace(/\/$/, "")) {
-        // URL KLOOPT! We bouwen de bestandsnaam nu super specifiek op inclusief de map
-        const doelURL = window.location.protocol + "//" + window.location.host + window.location.pathname.replace("index.html", "") + "os.html?key=" + btoa(RECHTEN_SLEUTEL);
-        
-        // Stuur direct door naar de volledige link
-        window.location.href = doelURL;
-    } else {
-        // Foute URL (bijvoorbeeld lokaal geopend): strike toevoegen
-        let strikes = parseInt(localStorage.getItem("os_strikes") || "0") + 1;
-        localStorage.setItem("os_strikes", strikes);
-        
-        if (strikes >= 3) {
-            localStorage.setItem("os_hard_blocked", "true");
+        function toonBlokkade() {
+            document.getElementById("loading-txt").style.display = "none";
+            document.getElementById("os-frame").remove(); // Verwijder het iframe volledig
+            document.getElementById("security-msg").style.display = "block";
         }
-        toonBlokkade();
-    }
-}
 
-// --- GEHEIME UNLOCK BACKDOOR (5x 'm' binnen 5 seconden) ---
-let mPresses = [];
-window.addEventListener("keydown", function(e) {
-    if (e.key.toLowerCase() === "m") {
-        const nu = Date.now();
-        mPresses.push(nu);
-        mPresses = mPresses.filter(tijd => nu - tijd < 5000);
+        // --- STRIKE & BLOCK CHECK ---
+        if (localStorage.getItem("os_hard_blocked") === "true") {
+            toonBlokkade();
+        } else {
+            const huidigeLocatie = window.location.origin.replace(/\/$/, "");
 
-        if (mPresses.length >= 5) {
-            localStorage.removeItem("os_hard_blocked");
-            localStorage.setItem("os_strikes", "0");
-            alert("Systeem gedeblokkeerd! Pagina herladen...");
-            window.location.reload();
+            if (huidigeLocatie === TOEGESTANE_URL.replace(/\/$/, "")) {
+                // URL KLOOPT! We laden os.html IN het iframe met de sleutel erachter
+                const frame = document.getElementById("os-frame");
+                
+                // Bepaal het juiste pad naar os.html in dezelfde map
+                const mapPad = window.location.pathname.replace("index.html", "");
+                frame.src = mapPad + "os.html?key=" + btoa(RECHTEN_SLEUTEL);
+                
+                // Zodra het iframe klaar is met laden, tonen we het
+                frame.onload = function() {
+                    document.getElementById("loading-txt").style.display = "none";
+                    frame.style.display = "block";
+                };
+            } else {
+                // Foute URL: strike toevoegen
+                let strikes = parseInt(localStorage.getItem("os_strikes") || "0") + 1;
+                localStorage.setItem("os_strikes", strikes);
+                
+                if (strikes >= 3) {
+                    localStorage.setItem("os_hard_blocked", "true");
+                }
+                toonBlokkade();
+            }
         }
-    }
-});
+
+        // --- GEHEIME UNLOCK BACKDOOR (5x 'm' binnen 5 seconden) ---
+        let mPresses = [];
+        window.addEventListener("keydown", function(e) {
+            if (e.key.toLowerCase() === "m") {
+                const nu = Date.now();
+                mPresses.push(nu);
+                mPresses = mPresses.filter(tijd => nu - tijd < 5000);
+
+                if (mPresses.length >= 5) {
+                    localStorage.removeItem("os_hard_blocked");
+                    localStorage.setItem("os_strikes", "0");
+                    alert("Systeem gedeblokkeerd! Pagina herladen...");
+                    window.location.reload();
+                }
+            }
+        });
     </script>
 </body>
 </html>
