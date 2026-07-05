@@ -607,41 +607,31 @@ function unlockScreen() {
 }
 
 // ===================== OS INIT =====================
-const BUILTIN_APPS = [
-  { id: 'filemanager', name: 'Bestanden', icon: 'ti-folder', color: '#f59e0b', builtin: true },
-  { id: 'editor', name: 'Tekstverwerker', icon: 'ti-file-text', color: '#3b82f6', builtin: true },
-  { id: 'terminal', name: 'Terminal', icon: 'ti-terminal-2', color: '#22c55e', builtin: true },
-  { id: 'browser', name: 'Browser', icon: 'ti-world', color: '#6366f1', builtin: true },
-  { id: 'calculator', name: 'Rekenmachine', icon: 'ti-calculator', color: '#ec4899', builtin: true },
-  { id: 'settings', name: 'Instellingen', icon: 'ti-settings', color: '#94a3b8', builtin: true },
-  { id: 'notes', name: 'Notities', icon: 'ti-notebook', color: '#f59e0b', builtin: true },
-  { id: 'music', name: 'Muziek', icon: 'ti-music', color: '#a78bfa', builtin: true },
-  { id: 'photos', name: "Foto's", icon: 'ti-photo', color: '#14b8a6', builtin: true },
-  { id: 'calendar', name: 'Agenda', icon: 'ti-calendar', color: '#ef4444', builtin: true },
-  { id: 'weather', name: 'Weer', icon: 'ti-cloud', color: '#60a5fa', builtin: true },
-  { id: 'todo', name: "To-do's", icon: 'ti-checklist', color: '#22c55e', builtin: true },
-  { id: 'clock', name: 'Klok', icon: 'ti-clock', color: '#f59e0b', builtin: true },
-  { id: 'paint', name: 'Tekenen', icon: 'ti-brush', color: '#ec4899', builtin: true },
-  { id: 'sysinfo', name: 'Systeeminfo', icon: 'ti-cpu', color: '#6366f1', builtin: true },
-  { id: 'appstore', name: 'App Store', icon: 'ti-building-store', color: '#a78bfa', builtin: true },
+const APPS = [
+  { id: 'filemanager', name: 'Bestanden', icon: 'ti-folder', color: '#f59e0b' },
+  { id: 'editor', name: 'Tekstverwerker', icon: 'ti-file-text', color: '#3b82f6' },
+  { id: 'terminal', name: 'Terminal', icon: 'ti-terminal-2', color: '#22c55e' },
+  { id: 'browser', name: 'Browser', icon: 'ti-world', color: '#6366f1' },
+  { id: 'calculator', name: 'Rekenmachine', icon: 'ti-calculator', color: '#ec4899' },
+  { id: 'settings', name: 'Instellingen', icon: 'ti-settings', color: '#94a3b8' },
+  { id: 'notes', name: 'Notities', icon: 'ti-notebook', color: '#f59e0b' },
+  { id: 'music', name: 'Muziek', icon: 'ti-music', color: '#a78bfa' },
+  { id: 'photos', name: "Foto's", icon: 'ti-photo', color: '#14b8a6' },
+  { id: 'calendar', name: 'Agenda', icon: 'ti-calendar', color: '#ef4444' },
+  { id: 'weather', name: 'Weer', icon: 'ti-cloud', color: '#60a5fa' },
+  { id: 'todo', name: "To-do's", icon: 'ti-checklist', color: '#22c55e' },
+  { id: 'clock', name: 'Klok', icon: 'ti-clock', color: '#f59e0b' },
+  { id: 'paint', name: 'Tekenen', icon: 'ti-brush', color: '#ec4899' },
+  { id: 'sysinfo', name: 'Systeeminfo', icon: 'ti-cpu', color: '#6366f1' },
+  { id: 'minecraft3d', name: 'Minecraft 3D', icon: 'ti-cube', color: '#22c55e', iframe: 'https://mattyou2.github.io/mc/3D/light/v3/' },
+  { id: 'mattyou2', name: 'mattyou2.github.io', icon: 'ti-brand-github', color: '#a78bfa', iframe: 'https://mattyou2.github.io' },
 ];
-
-// Dynamic APPS = builtins + installed custom apps
-function getInstalledCustomApps() {
-  return LS.get('myos_custom_apps') || [];
-}
-function saveInstalledCustomApps(apps) {
-  LS.set('myos_custom_apps', apps);
-}
-
-let APPS = [...BUILTIN_APPS];
 
 let windows = {};
 let windowZCounter = 200;
 let desktopIconPositions = {};
 
 function initOS() {
-  loadCustomApps();
   updateTaskbarUser();
   renderDesktopIcons();
   renderStartMenu();
@@ -649,17 +639,6 @@ function initOS() {
   loadUserSettings();
   renderAuthUsers();
   notify('Welkom terug', `Hoi ${currentUser.name}! My-OS is klaar.`, 'ti-device-laptop');
-}
-
-function loadCustomApps() {
-  const custom = getInstalledCustomApps();
-  APPS = [...BUILTIN_APPS, ...custom];
-}
-
-function refreshApps() {
-  loadCustomApps();
-  renderDesktopIcons();
-  renderStartMenu();
 }
 
 function loadUserSettings() {
@@ -804,10 +783,11 @@ function createWindow(appId, app) {
   win.id = 'win-' + appId;
   const sizes = {
     filemanager: [700, 480], editor: [660, 480], terminal: [580, 400],
-    browser: [720, 500], calculator: [300, 460], settings: [620, 480],
+    browser: [900, 580], calculator: [300, 460], settings: [620, 480],
     notes: [560, 460], music: [340, 520], photos: [600, 450],
     calendar: [500, 520], weather: [480, 500], todo: [400, 480],
-    clock: [380, 480], paint: [640, 480], sysinfo: [540, 480]
+    clock: [380, 480], paint: [640, 480], sysinfo: [540, 480],
+    minecraft3d: [900, 580], mattyou2: [860, 560],
   };
   const [w, h] = sizes[appId] || [500, 400];
   const left = 60 + Object.keys(windows).length * 24;
@@ -988,15 +968,39 @@ function renderApp(appId, body) {
     clock: renderClock,
     paint: renderPaint,
     sysinfo: renderSysinfo,
-    appstore: renderAppStore,
   };
   if (renderers[appId]) {
     renderers[appId](body);
   } else {
-    // Custom installed app — render via iframe
+    // Check if it's an iframe app
     const app = APPS.find(a => a.id === appId);
-    if (app && app.url) renderCustomApp(body, app);
+    if (app && app.iframe) renderIframeApp(body, app);
   }
+}
+
+// ===== IFRAME APP RENDERER =====
+function renderIframeApp(body, app) {
+  body.style.height = '100%';
+  body.innerHTML = `
+    <div style="display:flex;flex-direction:column;height:100%;">
+      <div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:rgba(0,0,0,0.25);border-bottom:1px solid var(--border);flex-shrink:0;">
+        <i class="ti ${app.icon}" style="color:${app.color};font-size:16px;"></i>
+        <span style="font-size:12px;font-weight:600;color:var(--text);">${app.name}</span>
+        <span style="font-size:11px;color:var(--text-dim);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${app.iframe}</span>
+        <button onclick="window.open('${app.iframe}','_blank')" title="Openen in nieuw tabblad"
+          style="padding:3px 9px;background:rgba(255,255,255,0.07);border:1px solid var(--border);border-radius:6px;color:var(--text-muted);font-size:12px;cursor:pointer;flex-shrink:0;">
+          <i class="ti ti-external-link"></i>
+        </button>
+      </div>
+      <iframe
+        src="${app.iframe}"
+        style="flex:1;border:none;width:100%;display:block;"
+        allowfullscreen
+        allow="fullscreen; autoplay; clipboard-write; encrypted-media; picture-in-picture"
+        loading="lazy"
+        id="iframe-${app.id}"
+      ></iframe>
+    </div>`;
 }
 
 // ===== FILE MANAGER =====
@@ -1295,56 +1299,306 @@ function runTerminalCmd(cmd) {
 }
 
 // ===== BROWSER =====
+let _browserHistory = [];
+let _browserHistIdx = -1;
+
 function renderBrowser(body) {
-  body.innerHTML = `<div class="browser-wrap">
-    <div class="browser-bar">
-      <button class="browser-nav-btn"><i class="ti ti-arrow-left"></i></button>
-      <button class="browser-nav-btn"><i class="ti ti-arrow-right"></i></button>
-      <button class="browser-nav-btn" onclick="browserReload()"><i class="ti ti-refresh"></i></button>
-      <input class="browser-url" id="browser-url" type="text" value="my-os://nieuwetab" placeholder="Zoek of voer URL in..." onkeydown="if(event.key==='Enter')browserNavigate(this.value)">
-      <button class="browser-nav-btn" onclick="browserNavigate(document.getElementById('browser-url').value)"><i class="ti ti-arrow-right"></i></button>
-    </div>
-    <div class="browser-content" id="browser-content">
-      <div class="browser-home">
-        <div class="browser-home-logo">My-OS</div>
-        <div style="color:var(--text-muted);font-size:14px;margin-bottom:16px">Welkom, ${currentUser.name}! Waar wil je heen?</div>
-        <div class="browser-search-row">
-          <input class="browser-search-input" id="browser-search" placeholder="Zoek op het web..." onkeydown="if(event.key==='Enter')browserSearch(this.value)">
-          <button class="browser-search-btn" onclick="browserSearch(document.getElementById('browser-search').value)"><i class="ti ti-search"></i></button>
-        </div>
-        <div class="browser-bookmarks">
-          <div class="browser-bookmark" onclick="browserNavigate('https://google.com')"><i class="ti ti-brand-google"></i>Google</div>
-          <div class="browser-bookmark" onclick="browserNavigate('https://wikipedia.org')"><i class="ti ti-book"></i>Wikipedia</div>
-          <div class="browser-bookmark" onclick="browserNavigate('https://github.com')"><i class="ti ti-brand-github"></i>GitHub</div>
-          <div class="browser-bookmark" onclick="browserNavigate('https://youtube.com')"><i class="ti ti-brand-youtube"></i>YouTube</div>
-          <div class="browser-bookmark" onclick="browserNavigate('https://news.ycombinator.com')"><i class="ti ti-news"></i>Hacker News</div>
-        </div>
+  const ud = getUserData(currentUser.username);
+  if (!ud.bookmarks) {
+    ud.bookmarks = [
+      { label: 'Google', url: 'https://www.google.com', icon: 'ti-brand-google' },
+      { label: 'YouTube', url: 'https://www.youtube.com', icon: 'ti-brand-youtube' },
+      { label: 'mattyou2', url: 'https://mattyou2.github.io', icon: 'ti-brand-github' },
+      { label: 'Minecraft 3D', url: 'https://mattyou2.github.io/mc/3D/light/v3/', icon: 'ti-cube' },
+      { label: 'Wikipedia', url: 'https://nl.wikipedia.org', icon: 'ti-book' },
+      { label: 'GitHub', url: 'https://github.com', icon: 'ti-brand-github' },
+    ];
+    saveUserData(currentUser.username, ud);
+  }
+
+  body.style.height = '100%';
+  body.innerHTML = `
+    <div style="display:flex;flex-direction:column;height:100%;">
+
+      <!-- Address bar -->
+      <div class="browser-bar" style="flex-shrink:0;">
+        <button class="browser-nav-btn" id="br-back"  onclick="_brBack()"    title="Terug"><i class="ti ti-arrow-left"></i></button>
+        <button class="browser-nav-btn" id="br-fwd"   onclick="_brForward()" title="Vooruit"><i class="ti ti-arrow-right"></i></button>
+        <button class="browser-nav-btn"               onclick="_brReload()"  title="Herladen"><i class="ti ti-refresh"></i></button>
+        <button class="browser-nav-btn"               onclick="_brHome()"    title="Startpagina"><i class="ti ti-home"></i></button>
+        <input class="browser-url" id="browser-url" type="text" placeholder="URL of zoekterm..."
+          onkeydown="if(event.key==='Enter')_brNavigate(this.value)" onfocus="this.select()">
+        <button class="browser-nav-btn" onclick="_brNavigate(document.getElementById('browser-url').value)" title="Ga"><i class="ti ti-arrow-right" style="color:var(--accent)"></i></button>
+        <button class="browser-nav-btn" onclick="_brBookmark()" title="Bladwijzer"><i class="ti ti-bookmark"></i></button>
+        <button class="browser-nav-btn" onclick="_brExternal()" title="Open in nieuw tabblad"><i class="ti ti-external-link"></i></button>
       </div>
+
+      <!-- Main area: home page OR iframe -->
+      <div style="flex:1;position:relative;overflow:hidden;">
+
+        <!-- HOME PAGE -->
+        <div id="br-home" style="height:100%;overflow-y:auto;display:flex;align-items:flex-start;justify-content:center;">
+          <div style="padding:40px 20px;width:100%;max-width:560px;display:flex;flex-direction:column;gap:20px;align-items:center;">
+            <div style="font-size:38px;font-weight:800;background:linear-gradient(135deg,#6366f1,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">My-OS Browser</div>
+            <div style="display:flex;gap:8px;width:100%;">
+              <input id="br-home-q" style="flex:1;background:rgba(255,255,255,0.07);border:1px solid var(--border);border-radius:10px;padding:11px 16px;color:var(--text);font-size:14px;outline:none;"
+                placeholder="Zoek of voer URL in..." onkeydown="if(event.key==='Enter')_brNavigate(this.value)">
+              <button onclick="_brNavigate(document.getElementById('br-home-q').value)"
+                style="padding:11px 16px;background:var(--accent);border:none;border-radius:10px;color:#fff;cursor:pointer;font-size:14px;"><i class="ti ti-search"></i></button>
+            </div>
+            <div style="width:100%;">
+              <div style="font-size:11px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">Bladwijzers</div>
+              <div id="br-bookmarks-wrap" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;"></div>
+            </div>
+            <div style="width:100%;">
+              <div style="font-size:11px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">Snel naar</div>
+              <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                ${[
+                  ['https://www.google.com','ti-brand-google','Google'],
+                  ['https://translate.google.com','ti-language','Vertalen'],
+                  ['https://www.youtube.com','ti-brand-youtube','YouTube'],
+                  ['https://github.com','ti-brand-github','GitHub'],
+                  ['https://mattyou2.github.io','ti-cube','mattyou2'],
+                  ['https://mattyou2.github.io/mc/3D/light/v3/','ti-cube','MC 3D'],
+                  ['https://codepen.io','ti-brand-codepen','CodePen'],
+                  ['https://developer.mozilla.org','ti-code','MDN'],
+                ].map(([url,ic,lbl])=>`
+                  <div onclick="_brNavigate('${url}')" style="display:flex;align-items:center;gap:6px;padding:6px 12px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:12px;color:var(--text-muted);">
+                    <i class="ti ${ic}" style="color:var(--accent2)"></i>${lbl}
+                  </div>`).join('')}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- IFRAME (hidden until navigation) -->
+        <iframe id="br-iframe"
+          style="display:none;position:absolute;inset:0;width:100%;height:100%;border:none;"
+          allowfullscreen
+          allow="fullscreen; autoplay; clipboard-write; encrypted-media; gamepad; picture-in-picture"
+          sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-pointer-lock allow-top-navigation-by-user-activation"
+        ></iframe>
+
+        <!-- BLOCKED page (shown when iframe fails/blocks) -->
+        <div id="br-blocked" style="display:none;position:absolute;inset:0;overflow-y:auto;padding:40px;background:var(--bg-panel);">
+          <div style="max-width:440px;margin:0 auto;text-align:center;">
+            <i class="ti ti-shield-x" style="font-size:56px;color:var(--text-dim);"></i>
+            <div style="font-size:18px;font-weight:600;margin:16px 0 8px;">Website blokkeert inbedden</div>
+            <div style="font-size:13px;color:var(--text-muted);margin-bottom:20px;" id="br-blocked-url"></div>
+            <div style="font-size:13px;color:var(--text-muted);margin-bottom:20px;">
+              Deze website stuurt een <code>X-Frame-Options</code> of <code>Content-Security-Policy</code> header
+              waardoor browsers het laden in een iframe verbieden. My-OS kan dit niet omzeilen — dit is een beveiliging van die website zelf.
+            </div>
+            <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:16px;">
+              <a id="br-blocked-link" href="#" target="_blank"
+                style="padding:10px 20px;background:var(--accent);border-radius:9px;color:#fff;text-decoration:none;font-size:13px;display:inline-flex;align-items:center;gap:6px;">
+                <i class="ti ti-external-link"></i> Openen in nieuw tabblad
+              </a>
+              <button onclick="_brHome()"
+                style="padding:10px 20px;background:rgba(255,255,255,0.07);border:1px solid var(--border);border-radius:9px;color:var(--text);font-size:13px;cursor:pointer;">
+                ← Startpagina
+              </button>
+            </div>
+            <div style="padding:14px 16px;background:rgba(99,102,241,0.07);border:1px solid rgba(99,102,241,0.2);border-radius:10px;font-size:12px;color:var(--text-muted);text-align:left;line-height:1.6;">
+              <b style="color:var(--accent2)">💡 Websites die wél werken in My-OS Browser:</b><br>
+              mattyou2.github.io, GitHub Pages sites, CodePen, Wikipedia, OpenStreetMap, Itch.io games, kleine persoonlijke sites, en de meeste GitHub Pages projecten.
+              <br><br>Sites zoals Google, YouTube en Twitter blokkeren iframes altijd.
+            </div>
+          </div>
+        </div>
+
+        <!-- LOADING overlay -->
+        <div id="br-loading" style="display:none;position:absolute;inset:0;background:rgba(15,15,26,0.7);backdrop-filter:blur(4px);align-items:center;justify-content:center;flex-direction:column;gap:12px;">
+          <div style="width:40px;height:40px;border:3px solid rgba(255,255,255,0.1);border-top-color:var(--accent);border-radius:50%;animation:brSpin 0.8s linear infinite;"></div>
+          <div style="font-size:13px;color:var(--text-muted);" id="br-loading-url">Laden...</div>
+        </div>
+
+      </div>
+
+      <!-- Status bar -->
+      <div id="br-status" style="padding:3px 12px;border-top:1px solid var(--border);font-size:11px;color:var(--text-dim);flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Klaar</div>
     </div>
-  </div>`;
+    <style>@keyframes brSpin{to{transform:rotate(360deg)}}</style>`;
+
+  _brRenderBookmarks();
+  setTimeout(() => document.getElementById('br-home-q')?.focus(), 60);
 }
 
-function browserNavigate(url) {
-  if (!url.startsWith('http')) url = 'https://' + url;
-  document.getElementById('browser-url').value = url;
-  const content = document.getElementById('browser-content');
-  content.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:32px;text-align:center;">
-    <i class="ti ti-world" style="font-size:48px;color:var(--text-muted)"></i>
-    <div style="font-size:15px;font-weight:500">Navigeren naar</div>
-    <div style="font-size:13px;color:var(--accent2)">${url}</div>
-    <div style="font-size:13px;color:var(--text-muted);max-width:300px;">My-OS Browser kan geen externe websites laden vanwege browser-beveiligingsbeperkingen (CORS/sandboxing). Klik de link hieronder om te openen in een echt tabblad.</div>
-    <a href="${url}" target="_blank" style="padding:8px 18px;background:var(--accent);border-radius:8px;color:#fff;text-decoration:none;font-size:13px;">Openen in nieuw tabblad <i class="ti ti-external-link"></i></a>
-  </div>`;
+function _brRenderBookmarks() {
+  const ud = getUserData(currentUser.username);
+  const wrap = document.getElementById('br-bookmarks-wrap');
+  if (!wrap) return;
+  wrap.innerHTML = (ud.bookmarks || []).map((b, i) => `
+    <div style="position:relative;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:12px 8px;text-align:center;cursor:pointer;"
+      onclick="_brNavigate('${b.url}')">
+      <i class="ti ${b.icon || 'ti-world'}" style="font-size:22px;color:var(--accent2);display:block;margin-bottom:5px;"></i>
+      <div style="font-size:11px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${b.label}</div>
+      <button onclick="event.stopPropagation();_brDelBookmark(${i})"
+        style="position:absolute;top:4px;right:4px;background:transparent;border:none;color:var(--text-dim);cursor:pointer;font-size:11px;padding:2px;border-radius:4px;line-height:1;">✕</button>
+    </div>`).join('') + `
+    <div onclick="_brAddBookmark()" style="background:rgba(255,255,255,0.02);border:1px dashed var(--border);border-radius:10px;padding:12px 8px;text-align:center;cursor:pointer;">
+      <i class="ti ti-plus" style="font-size:22px;color:var(--text-dim);display:block;margin-bottom:5px;"></i>
+      <div style="font-size:11px;color:var(--text-dim);">Toevoegen</div>
+    </div>`;
 }
 
-function browserSearch(q) {
-  if (!q) return;
-  browserNavigate('https://www.google.com/search?q=' + encodeURIComponent(q));
+function _brNavigate(input) {
+  if (!input || !input.trim()) return;
+  input = input.trim();
+
+  let url;
+  if (input.startsWith('my-os://')) { _brHome(); return; }
+  if (/^https?:\/\//i.test(input)) {
+    url = input;
+  } else if (input.includes('.') && !input.includes(' ')) {
+    url = 'https://' + input;
+  } else {
+    url = 'https://www.google.com/search?q=' + encodeURIComponent(input);
+  }
+
+  // Push history
+  _browserHistory = _browserHistory.slice(0, _browserHistIdx + 1);
+  _browserHistory.push(url);
+  _browserHistIdx = _browserHistory.length - 1;
+
+  _brLoad(url);
 }
 
-function browserReload() {
-  notify('Browser', 'Pagina herladen', 'ti-refresh');
+function _brLoad(url) {
+  const iframe    = document.getElementById('br-iframe');
+  const home      = document.getElementById('br-home');
+  const blocked   = document.getElementById('br-blocked');
+  const loading   = document.getElementById('br-loading');
+  const urlInput  = document.getElementById('browser-url');
+  const status    = document.getElementById('br-status');
+  const loadingTxt= document.getElementById('br-loading-url');
+  if (!iframe) return;
+
+  // Update address bar
+  if (urlInput) urlInput.value = url;
+
+  // Show loading overlay
+  home.style.display = 'none';
+  blocked.style.display = 'none';
+  if (loading) { loading.style.display = 'flex'; if (loadingTxt) loadingTxt.textContent = url; }
+  iframe.style.display = 'block';
+  if (status) status.textContent = 'Laden: ' + url;
+
+  // We try to detect X-Frame-Options blocks via a HEAD fetch first (best effort)
+  // Many servers don't send CORS headers so fetch will fail — that's fine, we still try the iframe
+  let frameLoaded = false;
+  const TIMEOUT = 10000; // 10 seconds
+
+  const hideLoading = () => { if (loading) loading.style.display = 'none'; };
+
+  const onLoad = () => {
+    frameLoaded = true;
+    hideLoading();
+    if (status) status.textContent = url;
+    // Try to read title (only works same-origin)
+    try {
+      const t = iframe.contentDocument?.title;
+      if (t && document.getElementById('wintitle-browser')) document.getElementById('wintitle-browser').textContent = 'Browser — ' + t;
+    } catch {}
+  };
+
+  const onError = () => {
+    frameLoaded = true;
+    hideLoading();
+    _brShowBlocked(url);
+  };
+
+  iframe.onload = onLoad;
+  iframe.onerror = onError;
+  iframe.src = url;
+
+  // Fallback: if after 10s the iframe is "loaded" but shows blank (cross-origin block)
+  // we can't reliably detect this without server-side help, so we just trust the load event.
+  // If user sees blank, the "Openen in nieuw tabblad" button is always available.
+  setTimeout(() => {
+    if (!frameLoaded) {
+      hideLoading();
+      if (status) status.textContent = 'Timeout — ' + url;
+    }
+  }, TIMEOUT);
 }
+
+function _brShowBlocked(url) {
+  const iframe  = document.getElementById('br-iframe');
+  const blocked = document.getElementById('br-blocked');
+  const urlEl   = document.getElementById('br-blocked-url');
+  const linkEl  = document.getElementById('br-blocked-link');
+  if (iframe) iframe.style.display = 'none';
+  if (blocked) blocked.style.display = 'block';
+  if (urlEl) urlEl.textContent = url;
+  if (linkEl) { linkEl.href = url; }
+}
+
+function _brHome() {
+  const iframe  = document.getElementById('br-iframe');
+  const home    = document.getElementById('br-home');
+  const blocked = document.getElementById('br-blocked');
+  const loading = document.getElementById('br-loading');
+  const urlInput= document.getElementById('browser-url');
+  const status  = document.getElementById('br-status');
+  if (iframe)  { iframe.src = 'about:blank'; iframe.style.display = 'none'; }
+  if (blocked) blocked.style.display = 'none';
+  if (loading) loading.style.display = 'none';
+  if (home)    home.style.display = 'flex';
+  if (urlInput) urlInput.value = '';
+  if (status)  status.textContent = 'Startpagina';
+  _brRenderBookmarks();
+  setTimeout(() => document.getElementById('br-home-q')?.focus(), 60);
+}
+
+function _brBack() {
+  if (_browserHistIdx > 0) { _browserHistIdx--; _brLoad(_browserHistory[_browserHistIdx]); }
+  else _brHome();
+}
+function _brForward() {
+  if (_browserHistIdx < _browserHistory.length - 1) { _browserHistIdx++; _brLoad(_browserHistory[_browserHistIdx]); }
+}
+function _brReload() {
+  const iframe = document.getElementById('br-iframe');
+  if (iframe && iframe.src && iframe.src !== 'about:blank' && iframe.style.display !== 'none') {
+    const url = iframe.src; iframe.src = 'about:blank'; setTimeout(() => { iframe.src = url; }, 50);
+  }
+}
+function _brExternal() {
+  const url = document.getElementById('browser-url')?.value;
+  if (url && url !== '' && !url.startsWith('my-os://')) window.open(url, '_blank');
+}
+function _brBookmark() {
+  const url = document.getElementById('browser-url')?.value;
+  if (!url || url === '' || url.startsWith('my-os://')) { _brAddBookmark(); return; }
+  const label = prompt('Naam voor bladwijzer:', url.replace(/^https?:\/\//,'').split('/')[0]);
+  if (!label) return;
+  const ud = getUserData(currentUser.username);
+  ud.bookmarks = ud.bookmarks || [];
+  ud.bookmarks.push({ label, url, icon: 'ti-bookmark' });
+  saveUserData(currentUser.username, ud);
+  notify('Browser', `'${label}' toegevoegd als bladwijzer`, 'ti-bookmark');
+}
+function _brAddBookmark() {
+  const url   = prompt('URL:', 'https://'); if (!url) return;
+  const label = prompt('Naam:', url.replace(/^https?:\/\//,'').split('/')[0]); if (!label) return;
+  const ud = getUserData(currentUser.username);
+  ud.bookmarks = ud.bookmarks || [];
+  ud.bookmarks.push({ label, url, icon: 'ti-bookmark' });
+  saveUserData(currentUser.username, ud);
+  _brRenderBookmarks();
+}
+function _brDelBookmark(idx) {
+  const ud = getUserData(currentUser.username);
+  ud.bookmarks.splice(idx, 1);
+  saveUserData(currentUser.username, ud);
+  _brRenderBookmarks();
+}
+
+// Legacy aliases (used by old bookmarks in start menu)
+function browserNavigate(url) { _brNavigate(url); }
+function browserSearch(q) { _brNavigate(q); }
+function browserReload() { _brReload(); }
 
 // ===== CALCULATOR =====
 let calcState = { expr: '', val: '0', lastOp: null, waitNew: false };
