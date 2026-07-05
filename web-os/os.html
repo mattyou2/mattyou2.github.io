@@ -2,36 +2,36 @@
 <html lang="nl">
 <head>
     <meta charset="UTF-8">
-    <title>My-OS Desktop</title>
+    <title>My-OS Kernel</title>
     <style>
-        body { background: #111; color: #fff; font-family: sans-serif; }
-        #loading { text-align: center; padding-top: 100px; color: #ff0000; font-family: monospace; }
-        #security-msg { display: none; color: #ff0000; text-align: center; padding-top: 100px; font-family: monospace; padding-left: 20px; padding-right: 20px; }
-        #security-msg p { max-width: 600px; margin: 0 auto; line-height: 1.6; }
+        body { background: #000; color: #fff; font-family: sans-serif; margin: 0; padding: 0; }
+        #error-fallback { display: none; color: red; text-align: center; padding-top: 50px; font-family: monospace; }
     </style>
 </head>
 <body>
 
-    <div id="loading">MY-OS: SYSTEM BOOTING...</div>
-
-    <div id="security-msg">
-        <h2>[ SECURITY ALERT ]</h2>
-        <p>Dit platform en de broncode zijn het exclusieve intellectuele eigendom van Mattyou studios™ en internationaal auteursrechtelijk beschermd. Elke poging tot kopiëren, reverse-engineeren of namaken is strikt illegaal en zal direct leiden tot juridische vervolging en schadeclaims. Na 3 keer is je toegang permanent geweigerd.</p>
-    </div>
-    
+    <div id="error-fallback">Ongeautoriseerde toegang tot OS Kernel.</div>
     <div id="os-container"></div>
 
     <script>
         const RECHTEN_SLEUTEL = "FD7G3993TGREFDHG34TV83TN8V4930W09TVNA8VWRNHGARIUGAGRAESGIHGH394T3897RTREWTHGU";
 
-        function toonBlokkade() {
-            document.getElementById("loading").style.display = "none";
-            document.getElementById("os-container").remove(); 
-            document.getElementById("security-msg").style.display = "block";
+        function stuurBlokkadeNaarParent() {
+            try {
+                let strikes = parseInt(localStorage.getItem("os_strikes") || "0") + 1;
+                localStorage.setItem("os_strikes", strikes);
+                if (strikes >= 3) {
+                    localStorage.setItem("os_hard_blocked", "true");
+                }
+                window.parent.location.reload();
+            } catch(e) {
+                document.getElementById("os-container").remove();
+                document.getElementById("error-fallback").style.display = "block";
+            }
         }
 
         if (localStorage.getItem("os_hard_blocked") === "true") {
-            toonBlokkade();
+            stuurBlokkadeNaarParent();
         } else {
             const urlParams = new URLSearchParams(window.location.search);
             const meegegevenSleutelB64 = urlParams.get('key');
@@ -44,42 +44,14 @@
                         return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
                     }).join(''));
                     
-                    document.getElementById("loading").style.display = "none";
                     document.getElementById("os-container").innerHTML = echteHTML;
-
-                    const schoneURL = window.location.protocol + "//" + window.location.host + window.location.pathname;
-                    window.history.replaceState({ path: schoneURL }, '', schoneURL);
-
                 } else {
-                    throw new Error("Dit platform en de broncode zijn het exclusieve intellectuele eigendom van Mattyou studios™ en internationaal auteursrechtelijk beschermd. Elke poging tot kopiëren, reverse-engineeren of namaken is strikt illegaal en zal direct leiden tot juridische vervolging en schadeclaims. Na 3 keer is je toegang permanent geweigerd.");
+                    throw new Error();
                 }
             } catch(e) {
-                let strikes = parseInt(localStorage.getItem("os_strikes") || "0") + 1;
-                localStorage.setItem("os_strikes", strikes);
-                
-                if (strikes >= 3) {
-                    localStorage.setItem("os_hard_blocked", "true");
-                }
-                toonBlokkade();
+                stuurBlokkadeNaarParent();
             }
         }
-
-        let mPresses = [];
-        window.addEventListener("keydown", function(e) {
-            if (e.key.toLowerCase() === "m") {
-                const nu = Date.now();
-                mPresses.push(nu);
-                mPresses = mPresses.filter(tijd => nu - time < 5000);
-
-                if (mPresses.length >= 5) {
-                    localStorage.removeItem("os_hard_blocked");
-                    localStorage.setItem("os_strikes", "0");
-                    alert("Systeem gedeblokkeerd! Pagina herladen...");
-                    window.location.reload();
-                }
-            }
-        });
     </script>
-
 </body>
 </html>
