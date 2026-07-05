@@ -18,48 +18,54 @@
     </div>
 
     <script>
-        const TOEGESTANE_URL = "https://mattyou2.github.io"; 
-        const RECHTEN_SLEUTEL = "FD7G3993TGREFDHG34TV83TN8V4930W09TVNA8VWRNHGARIUGAGRAESGIHGH394T3897RTREWTHGU";
+const TOEGESTANE_URL = "https://mattyou2.github.io"; 
+const RECHTEN_SLEUTEL = "FD7G3993TGREFDHG34TV83TN8V4930W09TVNA8VWRNHGARIUGAGRAESGIHGH394T3897RTREWTHGU";
 
-        function toonBlokkade() {
-            document.getElementById("loading-txt").style.display = "none";
-            document.getElementById("security-msg").style.display = "block";
+function toonBlokkade() {
+    document.getElementById("loading-txt").style.display = "none";
+    document.getElementById("security-msg").style.display = "block";
+}
+
+// --- STRIKE & BLOCK CHECK ---
+if (localStorage.getItem("os_hard_blocked") === "true") {
+    toonBlokkade();
+} else {
+    const huidigeLocatie = window.location.origin.replace(/\/$/, "");
+
+    if (huidigeLocatie === TOEGESTANE_URL.replace(/\/$/, "")) {
+        // URL KLOOPT! We bouwen de bestandsnaam nu super specifiek op inclusief de map
+        const doelURL = window.location.protocol + "//" + window.location.host + window.location.pathname.replace("index.html", "") + "os.html?key=" + btoa(RECHTEN_SLEUTEL);
+        
+        // Stuur direct door naar de volledige link
+        window.location.href = doelURL;
+    } else {
+        // Foute URL (bijvoorbeeld lokaal geopend): strike toevoegen
+        let strikes = parseInt(localStorage.getItem("os_strikes") || "0") + 1;
+        localStorage.setItem("os_strikes", strikes);
+        
+        if (strikes >= 3) {
+            localStorage.setItem("os_hard_blocked", "true");
         }
+        toonBlokkade();
+    }
+}
 
-        if (localStorage.getItem("os_hard_blocked") === "true") {
-            toonBlokkade();
-        } else {
-            const huidigeLocatie = window.location.origin.replace(/\/$/, "");
+// --- GEHEIME UNLOCK BACKDOOR (5x 'm' binnen 5 seconden) ---
+let mPresses = [];
+window.addEventListener("keydown", function(e) {
+    if (e.key.toLowerCase() === "m") {
+        const nu = Date.now();
+        mPresses.push(nu);
+        mPresses = mPresses.filter(tijd => nu - tijd < 5000);
 
-            if (huidigeLocatie === TOEGESTANE_URL.replace(/\/$/, "")) {
-                window.location.href = "os.html?key=" + btoa(RECHTEN_SLEUTEL);
-            } else {
-                // URL is fout: +1 strike
-                let strikes = parseInt(localStorage.getItem("os_strikes") || "0") + 1;
-                localStorage.setItem("os_strikes", strikes);
-                
-                if (strikes >= 3) {
-                    localStorage.setItem("os_hard_blocked", "true");
-                }
-                toonBlokkade();
-            }
+        if (mPresses.length >= 5) {
+            localStorage.removeItem("os_hard_blocked");
+            localStorage.setItem("os_strikes", "0");
+            alert("Systeem gedeblokkeerd! Pagina herladen...");
+            window.location.reload();
         }
-
-        let mPresses = [];
-        window.addEventListener("keydown", function(e) {
-            if (e.key.toLowerCase() === "m") {
-                const nu = Date.now();
-                mPresses.push(nu);
-                mPresses = mPresses.filter(tijd => nu - tijd < 5000);
-
-                if (mPresses.length >= 5) {
-                    localStorage.removeItem("os_hard_blocked");
-                    localStorage.setItem("os_strikes", "0");
-                    alert("Systeem gedeblokkeerd! Pagina herladen...");
-                    window.location.reload();
-                }
-            }
-        });
+    }
+});
     </script>
 </body>
 </html>
