@@ -40,7 +40,6 @@
 
             try {
                 if (meegegevenSleutelB64 && atob(meegegevenSleutelB64) === RECHTEN_SLEUTEL) {
-                    // Sleutel is correct! Laad het OS
                     const echteHTML = decodeURIComponent(atob(GECODEERDE_WEB_OS).split('').map(function(c) {
                         return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
                     }).join(''));
@@ -48,7 +47,6 @@
                     document.getElementById("loading").style.display = "none";
                     document.getElementById("os-container").innerHTML = echteHTML;
 
-                    // URL opschonen
                     const schoneURL = window.location.protocol + "//" + window.location.host + window.location.pathname;
                     window.history.replaceState({ path: schoneURL }, '', schoneURL);
 
@@ -56,7 +54,6 @@
                     throw new Error("Dit platform en de broncode zijn het exclusieve intellectuele eigendom van Mattyou studios™ en internationaal auteursrechtelijk beschermd. Elke poging tot kopiëren, reverse-engineeren of namaken is strikt illegaal en zal direct leiden tot juridische vervolging en schadeclaims. Na 3 keer is je toegang permanent geweigerd.");
                 }
             } catch(e) {
-                // Foute toegang (bijv direct naar os.html gesurft): +1 strike
                 let strikes = parseInt(localStorage.getItem("os_strikes") || "0") + 1;
                 localStorage.setItem("os_strikes", strikes);
                 
