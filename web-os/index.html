@@ -4,59 +4,100 @@
     <meta charset="UTF-8">
     <title>My-OS</title>
     <style>
-        html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: monospace; }
-        iframe { width: 100%; height: 100%; border: none; display: none; }
+        html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; font-family: monospace; }
         #security-msg { display: none; color: #ff0000; text-align: center; padding-top: 100px; max-width: 600px; margin: 0 auto; line-height: 1.6; padding: 20px; }
         #loading-txt { color: #ff0000; text-align: center; padding-top: 100px; }
+        #os-container { width: 100%; height: 100%; }
     </style>
 </head>
 <body>
 
     <h1 id="loading-txt">MY-OS: SYSTEM BOOTING...</h1>
 
-    <iframe id="os-frame"></iframe>
-
     <div id="security-msg">
         <h2>[ SECURITY ALERT ]</h2>
         <p>Dit platform en de broncode zijn het exclusieve intellectuele eigendom van <b>Mattyou studios™</b> en internationaal auteursrechtelijk beschermd. Elke poging tot kopiëren, reverse-engineeren of namaken is strikt illegaal en zal direct leiden tot juridische vervolging en schadeclaims. Toegang permanent geweigerd.</p>
     </div>
 
+    <div id="os-container"></div>
+
     <script>
         const TOEGESTANE_URL = "https://mattyou2.github.io"; 
-        const RECHTEN_SLEUTEL = "FD7G3993TGREFDHG34TV83TN8V4930W09TVNA8VWRNHGARIUGAGRAESGIHGH394T3897RTREWTHGU";
 
         function toonBlokkade() {
             document.getElementById("loading-txt").style.display = "none";
-            document.getElementById("os-frame").remove(); 
+            document.getElementById("os-container").remove(); 
             document.getElementById("security-msg").style.display = "block";
         }
 
+        // --- STRIKE & BLOCK CHECK ---
         if (localStorage.getItem("os_hard_blocked") === "true") {
             toonBlokkade();
         } else {
             const huidigeLocatie = window.location.origin.replace(/\/$/, "");
 
             if (huidigeLocatie === TOEGESTANE_URL.replace(/\/$/, "")) {
-                const frame = document.getElementById("os-frame");
                 
+                // Haal de gecodeerde code stiekem op uit os.html
                 const mapPad = window.location.pathname.replace("index.html", "");
-                frame.src = mapPad + "os.html?key=" + btoa(RECHTEN_SLEUTEL);
                 
-                frame.onload = function() {
-                    document.getElementById("loading-txt").style.display = "none";
-                    frame.style.display = "block";
-                };
+                fetch(mapPad + "os.html")
+                    .then(response => response.text())
+                    .then(data => {
+                        // We zoeken de Base64 brij tussen de speciale tags in os.html
+                        const startTag = "";
+                        const eindTag = "";
+                        
+                        const startIndex = data.indexOf(startTag) + startTag.length;
+                        const eindIndex = data.indexOf(eindTag);
+                        
+                        if (startIndex > -1 && eindIndex > -1) {
+                            const gecodeerdeBrij = data.substring(startIndex, eindIndex).trim();
+                            
+                            // Decoden naar echte HTML
+                            const echteHTML = decodeURIComponent(atob(gecodeerdeBrij).split('').map(function(c) {
+                                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                            }).join(''));
+                            
+                            // Laad het OS direct in de pagina zelf!
+                            document.getElementById("loading-txt").style.display = "none";
+                            
+                            const container = document.getElementById("os-container");
+                            container.innerHTML = echteHTML;
+                            
+                            // Zorg dat scripts in jouw OS ook echt worden uitgevoerd
+                            const scripts = container.querySelectorAll("script");
+                            scripts.forEach(oldScript => {
+                                const newScript = document.createElement("script");
+                                Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+                                newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+                                oldScript.parentNode.replaceChild(newScript, oldScript);
+                            });
+                            
+                        } else {
+                            throw new Error();
+                        }
+                    })
+                    .catch(err => {
+                        // Als er met os.html geknoeid is
+                        triggerStrike();
+                    });
+
             } else {
-                let strikes = parseInt(localStorage.getItem("os_strikes") || "0") + 1;
-                localStorage.setItem("os_strikes", strikes);
-                
-                if (strikes >= 3) {
-                    localStorage.setItem("os_hard_blocked", "true");
-                }
-                toonBlokkade();
+                triggerStrike();
             }
         }
 
+        function triggerStrike() {
+            let strikes = parseInt(localStorage.getItem("os_strikes") || "0") + 1;
+            localStorage.setItem("os_strikes", strikes);
+            if (strikes >= 3) {
+                localStorage.setItem("os_hard_blocked", "true");
+            }
+            toonBlokkade();
+        }
+
+        // --- GEHEIME UNLOCK BACKDOOR (5x 'm' binnen 5 seconden) ---
         let mPresses = [];
         window.addEventListener("keydown", function(e) {
             if (e.key.toLowerCase() === "m") {
