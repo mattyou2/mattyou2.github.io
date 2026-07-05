@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <title>My-OS</title>
     <style>
-        /* Zorg dat het iframe het hele scherm vult zonder randen */
         html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: monospace; }
         iframe { width: 100%; height: 100%; border: none; display: none; }
         #security-msg { display: none; color: #ff0000; text-align: center; padding-top: 100px; max-width: 600px; margin: 0 auto; line-height: 1.6; padding: 20px; }
@@ -28,31 +27,26 @@
 
         function toonBlokkade() {
             document.getElementById("loading-txt").style.display = "none";
-            document.getElementById("os-frame").remove(); // Verwijder het iframe volledig
+            document.getElementById("os-frame").remove(); 
             document.getElementById("security-msg").style.display = "block";
         }
 
-        // --- STRIKE & BLOCK CHECK ---
         if (localStorage.getItem("os_hard_blocked") === "true") {
             toonBlokkade();
         } else {
             const huidigeLocatie = window.location.origin.replace(/\/$/, "");
 
             if (huidigeLocatie === TOEGESTANE_URL.replace(/\/$/, "")) {
-                // URL KLOOPT! We laden os.html IN het iframe met de sleutel erachter
                 const frame = document.getElementById("os-frame");
                 
-                // Bepaal het juiste pad naar os.html in dezelfde map
                 const mapPad = window.location.pathname.replace("index.html", "");
                 frame.src = mapPad + "os.html?key=" + btoa(RECHTEN_SLEUTEL);
                 
-                // Zodra het iframe klaar is met laden, tonen we het
                 frame.onload = function() {
                     document.getElementById("loading-txt").style.display = "none";
                     frame.style.display = "block";
                 };
             } else {
-                // Foute URL: strike toevoegen
                 let strikes = parseInt(localStorage.getItem("os_strikes") || "0") + 1;
                 localStorage.setItem("os_strikes", strikes);
                 
@@ -63,7 +57,6 @@
             }
         }
 
-        // --- GEHEIME UNLOCK BACKDOOR (5x 'm' binnen 5 seconden) ---
         let mPresses = [];
         window.addEventListener("keydown", function(e) {
             if (e.key.toLowerCase() === "m") {
