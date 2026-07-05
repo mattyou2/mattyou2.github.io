@@ -21,20 +21,17 @@
         const TOEGESTANE_URL = "https://mattyou2.github.io"; 
         const RECHTEN_SLEUTEL = "FD7G3993TGREFDHG34TV83TN8V4930W09TVNA8VWRNHGARIUGAGRAESGIHGH394T3897RTREWTHGU";
 
-        // Functie om de pagina te blokkeren
         function toonBlokkade() {
             document.getElementById("loading-txt").style.display = "none";
             document.getElementById("security-msg").style.display = "block";
         }
 
-        // --- STRIKE & BLOCK CHECK ---
         if (localStorage.getItem("os_hard_blocked") === "true") {
             toonBlokkade();
         } else {
             const huidigeLocatie = window.location.origin.replace(/\/$/, "");
 
             if (huidigeLocatie === TOEGESTANE_URL.replace(/\/$/, "")) {
-                // URL klopt! Stuur VEILIG door met de sleutel
                 window.location.href = "os.html?key=" + btoa(RECHTEN_SLEUTEL);
             } else {
                 // URL is fout: +1 strike
@@ -48,13 +45,11 @@
             }
         }
 
-        // --- GEHEIME UNLOCK BACKDOOR (5x 'm' binnen 5 seconden) ---
         let mPresses = [];
         window.addEventListener("keydown", function(e) {
             if (e.key.toLowerCase() === "m") {
                 const nu = Date.now();
                 mPresses.push(nu);
-                // Hou alleen de toetsen van de afgelopen 5 seconden over
                 mPresses = mPresses.filter(tijd => nu - tijd < 5000);
 
                 if (mPresses.length >= 5) {
