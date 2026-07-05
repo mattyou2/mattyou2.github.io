@@ -12,15 +12,13 @@
 <body>
 
     <div id="loading">MY-OS: SYSTEM BOOTING...</div>
-    <div id="error"><h1>[ BOOT FAILED ]</h1><p>De verplichte 2e code ontbreekt of is onjuist. Start het OS via de hoofdpagina.</p></div>
+    <div id="error"><h1>[ BOOT FAILED ]</h1><p>[ SECURITY ALERT ] Dit platform en de broncode zijn het exclusieve intellectuele eigendom van Mattyou studios™ en internationaal auteursrechtelijk beschermd. Elke poging tot kopiëren, reverse-engineeren of namaken is strikt illegaal en zal direct leiden tot juridische vervolging en schadeclaims. Toegang permanent geweigerd.</p></div>
     
     <div id="os-container"></div>
 
     <script>
-        // 1. De vaste sleutel ter controle
         const RECHTEN_SLEUTEL = "FD7G3993TGREFDHG34TV83TN8V4930W09TVNA8VWRNHGARIUGAGRAESGIHGH394T3897RTREWTHGU";
 
-        // 2. Het script scant automatisch de URL-balk op '?key=...'
         const urlParams = new URLSearchParams(window.location.search);
         const meegegevenSleutelB64 = urlParams.get('key');
 
@@ -36,7 +34,6 @@
                 document.getElementById("loading").style.display = "none";
                 document.getElementById("os-container").innerHTML = echteHTML;
 
-                // Haal de sleutel direct uit de URL-balk zodat niemand hem ziet staan
                 const schoneURL = window.location.protocol + "//" + window.location.host + window.location.pathname;
                 window.history.replaceState({ path: schoneURL }, '', schoneURL);
 
