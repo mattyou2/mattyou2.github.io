@@ -607,31 +607,77 @@ function unlockScreen() {
 }
 
 // ===================== OS INIT =====================
-const APPS = [
-  { id: 'filemanager', name: 'Bestanden', icon: 'ti-folder', color: '#f59e0b' },
-  { id: 'editor', name: 'Tekstverwerker', icon: 'ti-file-text', color: '#3b82f6' },
-  { id: 'terminal', name: 'Terminal', icon: 'ti-terminal-2', color: '#22c55e' },
-  { id: 'browser', name: 'Browser', icon: 'ti-world', color: '#6366f1' },
-  { id: 'calculator', name: 'Rekenmachine', icon: 'ti-calculator', color: '#ec4899' },
-  { id: 'settings', name: 'Instellingen', icon: 'ti-settings', color: '#94a3b8' },
-  { id: 'notes', name: 'Notities', icon: 'ti-notebook', color: '#f59e0b' },
-  { id: 'music', name: 'Muziek', icon: 'ti-music', color: '#a78bfa' },
-  { id: 'photos', name: "Foto's", icon: 'ti-photo', color: '#14b8a6' },
-  { id: 'calendar', name: 'Agenda', icon: 'ti-calendar', color: '#ef4444' },
-  { id: 'weather', name: 'Weer', icon: 'ti-cloud', color: '#60a5fa' },
-  { id: 'todo', name: "To-do's", icon: 'ti-checklist', color: '#22c55e' },
-  { id: 'clock', name: 'Klok', icon: 'ti-clock', color: '#f59e0b' },
-  { id: 'paint', name: 'Tekenen', icon: 'ti-brush', color: '#ec4899' },
-  { id: 'sysinfo', name: 'Systeeminfo', icon: 'ti-cpu', color: '#6366f1' },
-  { id: 'minecraft3d', name: 'Minecraft 3D', icon: 'ti-cube', color: '#22c55e', iframe: 'https://mattyou2.github.io/mc/3D/light/v3/' },
-  { id: 'mattyou2', name: 'mattyou2.github.io', icon: 'ti-brand-github', color: '#a78bfa', iframe: 'https://mattyou2.github.io' },
+// Ingebouwde apps (altijd aanwezig, niet verwijderbaar)
+const BUILTIN_APPS = [
+  { id: 'filemanager', name: 'Bestanden',      icon: 'ti-folder',         color: '#f59e0b' },
+  { id: 'editor',      name: 'Tekstverwerker', icon: 'ti-file-text',      color: '#3b82f6' },
+  { id: 'terminal',    name: 'Terminal',        icon: 'ti-terminal-2',     color: '#22c55e' },
+  { id: 'browser',     name: 'Browser',         icon: 'ti-world',          color: '#6366f1' },
+  { id: 'calculator',  name: 'Rekenmachine',    icon: 'ti-calculator',     color: '#ec4899' },
+  { id: 'settings',    name: 'Instellingen',    icon: 'ti-settings',       color: '#94a3b8' },
+  { id: 'notes',       name: 'Notities',        icon: 'ti-notebook',       color: '#f59e0b' },
+  { id: 'music',       name: 'Muziek',          icon: 'ti-music',          color: '#a78bfa' },
+  { id: "photos",      name: "Foto's",          icon: 'ti-photo',          color: '#14b8a6' },
+  { id: 'calendar',    name: 'Agenda',          icon: 'ti-calendar',       color: '#ef4444' },
+  { id: 'weather',     name: 'Weer',            icon: 'ti-cloud',          color: '#60a5fa' },
+  { id: 'todo',        name: "To-do's",         icon: 'ti-checklist',      color: '#22c55e' },
+  { id: 'clock',       name: 'Klok',            icon: 'ti-clock',          color: '#f59e0b' },
+  { id: 'paint',       name: 'Tekenen',         icon: 'ti-brush',          color: '#ec4899' },
+  { id: 'sysinfo',     name: 'Systeeminfo',     icon: 'ti-cpu',            color: '#6366f1' },
+  { id: 'appstore',    name: 'App Store',       icon: 'ti-building-store', color: '#a78bfa' },
 ];
+
+// App Store catalogus
+const STORE_CATALOG = [
+  { id:'minecraft3d',      name:'Minecraft 3D',        cat:'Games',         dev:'mattyou2',       desc:'Speel Minecraft 3D in My-OS - gemaakt door mattyou2!', icon:'ti-cube',             color:'#22c55e', iframe:'https://mattyou2.github.io/mc/3D/light/v3/', size:'Web' },
+  { id:'mattyou2site',     name:'mattyou2.github.io',  cat:'Websites',      dev:'mattyou2',       desc:'Persoonlijke website en portfolio van mattyou2.',       icon:'ti-brand-github',     color:'#a78bfa', iframe:'https://mattyou2.github.io', size:'Web' },
+  { id:'store_codeeditor', name:'Code Editor',          cat:'Ontwikkeling',  dev:'My-OS Team',     desc:'Code-editor met syntax highlighting voor HTML, CSS, JS, Python en meer. Met meerdere tabbladen en autocompletion.', icon:'ti-code',         color:'#3b82f6', br:'renderCodeEditor',  size:'0 KB' },
+  { id:'store_sqlpad',     name:'SQL Pad',              cat:'Ontwikkeling',  dev:'My-OS Team',     desc:'Schrijf en voer SQL-queries uit in de browser met in-memory database en tabelweergave.', icon:'ti-database',     color:'#f59e0b', br:'renderSqlPad',      size:'0 KB' },
+  { id:'store_jsonviewer', name:'JSON Viewer',          cat:'Ontwikkeling',  dev:'My-OS Team',     desc:'Plak JSON en bekijk het als opvouwbare boomstructuur met zoekfunctie.', icon:'ti-braces',       color:'#14b8a6', br:'renderJsonViewer',  size:'0 KB' },
+  { id:'store_markdown',   name:'Markdown Editor',      cat:'Ontwikkeling',  dev:'My-OS Team',     desc:'Schrijf Markdown links en zie rechts een live HTML-preview.', icon:'ti-markdown',     color:'#6366f1', br:'renderMarkdownPrev', size:'0 KB' },
+  { id:'store_pomodoro',   name:'Pomodoro Timer',       cat:'Productiviteit',dev:'My-OS Team',     desc:'Focus-timer op basis van de Pomodoro-techniek: 25 min werken, 5 min pauze.', icon:'ti-clock-play',  color:'#ef4444', br:'renderPomodoro',    size:'0 KB' },
+  { id:'store_converter',  name:'Eenheden Omrekenen',   cat:'Productiviteit',dev:'My-OS Team',     desc:'Reken lengte, gewicht, temperatuur, oppervlakte en meer om.', icon:'ti-transform',    color:'#22c55e', br:'renderConverter',   size:'0 KB' },
+  { id:'store_password',   name:'Wachtwoord Generator', cat:'Productiviteit',dev:'My-OS Team',     desc:'Genereer sterke willekeurige wachtwoorden met instelbare opties.', icon:'ti-lock-password',color:'#ec4899', br:'renderPassGen',     size:'0 KB' },
+  { id:'store_snake',      name:'Snake',                cat:'Games',         dev:'My-OS Team',     desc:'Het klassieke Snake-spel. Gebruik pijltjestoetsen of WASD.', icon:'ti-circles-relation',color:'#22c55e', br:'renderSnake',       size:'0 KB' },
+  { id:'store_2048',       name:'2048',                 cat:'Games',         dev:'My-OS Team',     desc:'Schuif tegels en bereik 2048!', icon:'ti-th',              color:'#f59e0b', br:'render2048',        size:'0 KB' },
+  { id:'store_tictactoe',  name:'Boter Kaas & Eieren',  cat:'Games',         dev:'My-OS Team',     desc:'Klassiek 3x3 spel tegen de computer.', icon:'ti-grid-3x3',     color:'#ec4899', br:'renderTicTacToe',   size:'0 KB' },
+  { id:'store_minesweeper',name:'Minesweeper',           cat:'Games',         dev:'My-OS Team',     desc:'Zoek alle mijnen zonder ze te raken!', icon:'ti-bomb',         color:'#64748b', br:'renderMinesweeper', size:'0 KB' },
+  { id:'store_codepen',    name:'CodePen',              cat:'Ontwikkeling',  dev:'CodePen',        desc:'Online HTML/CSS/JS sandbox rechtstreeks in My-OS.', icon:'ti-brand-codepen',color:'#47cf73', iframe:'https://codepen.io', size:'Web' },
+  { id:'store_excalidraw', name:'Excalidraw',           cat:'Ontwerp',       dev:'Excalidraw Team',desc:'Handgetekende stijl whiteboard en diagramtool.', icon:'ti-pencil',       color:'#6366f1', iframe:'https://excalidraw.com', size:'Web' },
+  { id:'store_osm',        name:'OpenStreetMap',        cat:'Kaarten',       dev:'OSM',            desc:'Gratis open-source kaartservice van de hele wereld.', icon:'ti-map-2',        color:'#22c55e', iframe:'https://www.openstreetmap.org', size:'Web' },
+  { id:'store_wolfram',    name:'WolframAlpha',         cat:'Wetenschap',    dev:'Wolfram',        desc:'Wiskundige en wetenschappelijke vragen, directe antwoorden.', icon:'ti-math-function',color:'#f97316', iframe:'https://www.wolframalpha.com', size:'Web' },
+  { id:'store_hn',         name:'Hacker News',          cat:'Nieuws',        dev:'YCombinator',    desc:'Tech-nieuws en startups.', icon:'ti-news',         color:'#f59e0b', iframe:'https://news.ycombinator.com', size:'Web' },
+  { id:'store_itchio',     name:'itch.io',              cat:'Games',         dev:'itch.io',        desc:'Platform vol indie-games die je in de browser speelt.', icon:'ti-device-gamepad',color:'#fa5c5c', iframe:'https://itch.io', size:'Web' },
+];
+const STORE_CATS = ['Alle','Games','Ontwikkeling','Ontwerp','Productiviteit','Kaarten','Wetenschap','Nieuws','Websites'];
+
+// localStorage slaat alleen de IDs op van geinstalleerde store-apps
+function getInstalledIds() { return LS.get('myos_installed') || []; }
+function saveInstalledIds(arr) { LS.set('myos_installed', arr); }
+function isInstalled(id) { return BUILTIN_APPS.some(a=>a.id===id) || getInstalledIds().includes(id); }
+
+function buildAppsList() {
+  const ids = getInstalledIds();
+  const extra = STORE_CATALOG.filter(s => ids.includes(s.id)).map(s => ({
+    id: s.id, name: s.name, icon: s.icon, color: s.color,
+    iframe: s.iframe || null, br: s.br || null,
+  }));
+  return [...BUILTIN_APPS, ...extra];
+}
+let APPS = buildAppsList();
+
+function refreshApps() {
+  APPS = buildAppsList();
+  renderDesktopIcons();
+  renderStartMenu();
+}
 
 let windows = {};
 let windowZCounter = 200;
 let desktopIconPositions = {};
 
 function initOS() {
+  APPS = buildAppsList(); // load installed apps from localStorage
   updateTaskbarUser();
   renderDesktopIcons();
   renderStartMenu();
@@ -787,7 +833,17 @@ function createWindow(appId, app) {
     notes: [560, 460], music: [340, 520], photos: [600, 450],
     calendar: [500, 520], weather: [480, 500], todo: [400, 480],
     clock: [380, 480], paint: [640, 480], sysinfo: [540, 480],
-    minecraft3d: [900, 580], mattyou2: [860, 560],
+    appstore: [780, 560],
+    minecraft3d: [900, 580], mattyou2site: [860, 560],
+    store_codeeditor: [800, 540], store_sqlpad: [700, 500],
+    store_jsonviewer: [640, 480], store_markdown: [800, 520],
+    store_pomodoro: [340, 420], store_converter: [400, 480],
+    store_password: [420, 400], store_snake: [420, 500],
+    store_2048: [400, 500], store_tictactoe: [360, 440],
+    store_minesweeper: [480, 520], store_codepen: [900, 580],
+    store_excalidraw: [900, 580], store_osm: [860, 560],
+    store_wolfram: [860, 560], store_hn: [800, 560],
+    store_itchio: [900, 580],
   };
   const [w, h] = sizes[appId] || [500, 400];
   const left = 60 + Object.keys(windows).length * 24;
@@ -951,30 +1007,47 @@ function notify(title, msg, icon = 'ti-bell') {
 }
 
 // ===================== APP RENDERERS =====================
+const BUILTIN_RENDERERS = {
+  filemanager: ()=>renderFileManager,
+  editor:      ()=>renderEditor,
+  terminal:    ()=>renderTerminal,
+  browser:     ()=>renderBrowser,
+  calculator:  ()=>renderCalculator,
+  settings:    ()=>renderSettings,
+  notes:       ()=>renderNotes,
+  music:       ()=>renderMusic,
+  photos:      ()=>renderPhotos,
+  calendar:    ()=>renderCalendar,
+  weather:     ()=>renderWeather,
+  todo:        ()=>renderTodo,
+  clock:       ()=>renderClock,
+  paint:       ()=>renderPaint,
+  sysinfo:     ()=>renderSysinfo,
+  appstore:    ()=>renderAppStore,
+  // Store built-in renderers
+  store_codeeditor: ()=>renderCodeEditor,
+  store_sqlpad:     ()=>renderSqlPad,
+  store_jsonviewer: ()=>renderJsonViewer,
+  store_markdown:   ()=>renderMarkdownPrev,
+  store_pomodoro:   ()=>renderPomodoro,
+  store_converter:  ()=>renderConverter,
+  store_password:   ()=>renderPassGen,
+  store_snake:      ()=>renderSnake,
+  store_2048:       ()=>render2048,
+  store_tictactoe:  ()=>renderTicTacToe,
+  store_minesweeper:()=>renderMinesweeper,
+};
+
 function renderApp(appId, body) {
-  const renderers = {
-    filemanager: renderFileManager,
-    editor: renderEditor,
-    terminal: renderTerminal,
-    browser: renderBrowser,
-    calculator: renderCalculator,
-    settings: renderSettings,
-    notes: renderNotes,
-    music: renderMusic,
-    photos: renderPhotos,
-    calendar: renderCalendar,
-    weather: renderWeather,
-    todo: renderTodo,
-    clock: renderClock,
-    paint: renderPaint,
-    sysinfo: renderSysinfo,
-  };
-  if (renderers[appId]) {
-    renderers[appId](body);
-  } else {
-    // Check if it's an iframe app
-    const app = APPS.find(a => a.id === appId);
-    if (app && app.iframe) renderIframeApp(body, app);
+  const fn = BUILTIN_RENDERERS[appId];
+  if (fn) { fn()(body); return; }
+  // Installed store app with iframe or br
+  const app = APPS.find(a => a.id === appId);
+  if (!app) return;
+  if (app.iframe) { renderIframeApp(body, app); return; }
+  if (app.br) {
+    const brFn = window[app.br];
+    if (brFn) { brFn(body); return; }
   }
 }
 
@@ -2334,6 +2407,744 @@ document.getElementById('reg-name').addEventListener('keydown', e => { if (e.key
 document.getElementById('reg-user').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('reg-pass').focus(); });
 document.getElementById('reg-pass').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('reg-pass2').focus(); });
 document.getElementById('reg-pass2').addEventListener('keydown', e => { if (e.key === 'Enter') doRegister(); });
+
+// ===================== APP STORE =====================
+function renderAppStore(body) {
+  let cat = 'Alle', q = '';
+
+  function installed() { return getInstalledIds(); }
+
+  function renderGrid() {
+    const ids = installed();
+    const filtered = STORE_CATALOG.filter(a =>
+      (cat === 'Alle' || a.cat === cat) &&
+      (!q || a.name.toLowerCase().includes(q.toLowerCase()) || a.desc.toLowerCase().includes(q.toLowerCase()))
+    );
+    const grid = document.getElementById('as-grid');
+    if (!grid) return;
+    grid.innerHTML = filtered.map(a => {
+      const inst = ids.includes(a.id);
+      const isBuiltin = BUILTIN_APPS.some(b => b.id === a.id);
+      const badge = a.iframe ? `<span style="font-size:10px;padding:1px 6px;border-radius:10px;background:rgba(99,102,241,0.15);color:var(--accent2);">Web</span>`
+                             : `<span style="font-size:10px;padding:1px 6px;border-radius:10px;background:rgba(34,197,94,0.12);color:#4ade80;">Ingebouwd</span>`;
+      return `<div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px;transition:border-color .15s;" onmouseenter="this.style.borderColor='rgba(99,102,241,0.35)'" onmouseleave="this.style.borderColor='rgba(255,255,255,0.08)'">
+        <div style="display:flex;align-items:flex-start;gap:12px;">
+          <div style="width:48px;height:48px;border-radius:12px;background:${a.color}22;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <i class="ti ${a.icon}" style="font-size:24px;color:${a.color}"></i>
+          </div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:14px;font-weight:600;">${a.name}</div>
+            <div style="font-size:11px;color:var(--text-dim);">${a.cat} &bull; ${a.dev}</div>
+            <div style="margin-top:4px;">${badge}</div>
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.5;flex:1;">${a.desc}</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+          <span style="font-size:11px;color:var(--text-dim);">${a.size}</span>
+          ${isBuiltin ? `<span style="padding:6px 14px;background:rgba(255,255,255,0.05);border-radius:8px;font-size:12px;color:var(--text-dim);">Geïnstalleerd</span>`
+          : inst
+            ? `<button onclick="asUninstall('${a.id}')" style="padding:6px 14px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;color:var(--danger);font-size:12px;cursor:pointer;flex-shrink:0;">Verwijderen</button>`
+            : `<button onclick="asInstall('${a.id}')" style="padding:6px 14px;background:rgba(99,102,241,0.15);border:1px solid rgba(99,102,241,0.35);border-radius:8px;color:var(--accent2);font-size:12px;cursor:pointer;flex-shrink:0;font-weight:600;"><i class="ti ti-download"></i> Installeren</button>`}
+        </div>
+      </div>`;
+    }).join('') || `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted);">Geen apps gevonden</div>`;
+  }
+
+  function renderInstalledTab() {
+    const ids = installed();
+    const inst = STORE_CATALOG.filter(a => ids.includes(a.id));
+    const cont = document.getElementById('as-installed-body');
+    if (!cont) return;
+    cont.innerHTML = inst.length === 0
+      ? `<div style="text-align:center;padding:40px;color:var(--text-muted);"><i class="ti ti-package" style="font-size:48px;display:block;margin-bottom:12px;color:var(--text-dim);"></i>Nog geen apps geïnstalleerd.<br>Ga naar <b>Ontdekken</b>!</div>`
+      : inst.map(a => `<div style="display:flex;align-items:center;gap:14px;padding:12px 16px;border-bottom:1px solid var(--border);">
+          <div style="width:40px;height:40px;border-radius:10px;background:${a.color}22;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <i class="ti ${a.icon}" style="font-size:20px;color:${a.color}"></i>
+          </div>
+          <div style="flex:1;">
+            <div style="font-size:14px;font-weight:500;">${a.name}</div>
+            <div style="font-size:11px;color:var(--text-dim);">${a.cat} &bull; ${a.dev}</div>
+          </div>
+          <button onclick="openApp('${a.id}')" style="padding:5px 12px;background:rgba(99,102,241,0.15);border:1px solid rgba(99,102,241,0.3);border-radius:7px;color:var(--accent2);font-size:12px;cursor:pointer;margin-right:6px;"><i class="ti ti-player-play"></i></button>
+          <button onclick="asUninstall('${a.id}')" style="padding:5px 10px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:7px;color:var(--danger);font-size:12px;cursor:pointer;"><i class="ti ti-trash"></i></button>
+        </div>`).join('');
+  }
+
+  body.innerHTML = `<div style="display:flex;flex-direction:column;height:100%;">
+    <!-- Header -->
+    <div style="padding:12px 16px 0;border-bottom:1px solid var(--border);flex-shrink:0;background:rgba(0,0,0,0.12);">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+        <i class="ti ti-building-store" style="font-size:22px;color:var(--accent2)"></i>
+        <div style="font-size:16px;font-weight:700;">My-OS App Store</div>
+        <div style="margin-left:auto;font-size:12px;color:var(--text-muted);" id="as-count"></div>
+      </div>
+      <!-- Tabs -->
+      <div style="display:flex;gap:0;">
+        <div id="as-tab-disc" onclick="asTab('discover')" style="padding:8px 18px;font-size:13px;cursor:pointer;border-bottom:2px solid var(--accent);color:var(--text);">Ontdekken</div>
+        <div id="as-tab-inst" onclick="asTab('installed')" style="padding:8px 18px;font-size:13px;cursor:pointer;border-bottom:2px solid transparent;color:var(--text-muted);">Geïnstalleerd</div>
+      </div>
+    </div>
+
+    <!-- Discover panel -->
+    <div id="as-discover" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+      <div style="padding:10px 14px;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:center;flex-shrink:0;flex-wrap:wrap;">
+        <input id="as-search" placeholder="Zoek apps..." value="${q}"
+          style="flex:1;min-width:140px;background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:8px;padding:7px 12px;color:var(--text);font-size:13px;outline:none;"
+          oninput="asSearch(this.value)">
+        <div style="display:flex;gap:4px;overflow-x:auto;flex-wrap:nowrap;">
+          ${['Alle','Games','Ontwikkeling','Ontwerp','Productiviteit','Kaarten','Wetenschap','Nieuws','Websites'].map(c =>
+            `<div onclick="asCat('${c}')" id="as-cat-${c.replace(/\s/g,'_')}" style="padding:5px 11px;border-radius:20px;font-size:12px;cursor:pointer;white-space:nowrap;flex-shrink:0;${cat===c?'background:var(--accent);color:#fff;':'background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--text-muted);'}">${c}</div>`
+          ).join('')}
+        </div>
+      </div>
+      <div id="as-grid" style="flex:1;overflow-y:auto;padding:14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;align-content:start;"></div>
+    </div>
+
+    <!-- Installed panel -->
+    <div id="as-installed" style="flex:1;display:none;flex-direction:column;overflow:hidden;">
+      <div style="flex:1;overflow-y:auto;" id="as-installed-body"></div>
+    </div>
+  </div>`;
+
+  window.asTab = (t) => {
+    const disc = document.getElementById('as-discover');
+    const inst = document.getElementById('as-installed');
+    const td = document.getElementById('as-tab-disc');
+    const ti = document.getElementById('as-tab-inst');
+    if (t === 'discover') {
+      disc.style.display = 'flex'; inst.style.display = 'none';
+      td.style.cssText = 'padding:8px 18px;font-size:13px;cursor:pointer;border-bottom:2px solid var(--accent);color:var(--text);';
+      ti.style.cssText = 'padding:8px 18px;font-size:13px;cursor:pointer;border-bottom:2px solid transparent;color:var(--text-muted);';
+      renderGrid();
+    } else {
+      disc.style.display = 'none'; inst.style.display = 'flex';
+      td.style.cssText = 'padding:8px 18px;font-size:13px;cursor:pointer;border-bottom:2px solid transparent;color:var(--text-muted);';
+      ti.style.cssText = 'padding:8px 18px;font-size:13px;cursor:pointer;border-bottom:2px solid var(--accent);color:var(--text);';
+      renderInstalledTab();
+    }
+    updateCount();
+  };
+  window.asCat = (c) => { cat = c; renderGrid(); };
+  window.asSearch = (v) => { q = v; renderGrid(); };
+  window.asInstall = (id) => {
+    const s = STORE_CATALOG.find(a => a.id === id);
+    if (!s) return;
+    const ids = getInstalledIds();
+    if (!ids.includes(id)) { ids.push(id); saveInstalledIds(ids); }
+    refreshApps();
+    renderGrid();
+    updateCount();
+    notify('App Store', `'${s.name}' geïnstalleerd!`, 'ti-package');
+  };
+  window.asUninstall = (id) => {
+    const s = STORE_CATALOG.find(a => a.id === id);
+    if (!s || !confirm(`'${s.name}' verwijderen?`)) return;
+    const ids = getInstalledIds().filter(i => i !== id);
+    saveInstalledIds(ids);
+    if (windows[id]) closeWindow(id);
+    refreshApps();
+    renderGrid();
+    renderInstalledTab();
+    updateCount();
+    notify('App Store', `'${s.name}' verwijderd`, 'ti-trash');
+  };
+
+  function updateCount() {
+    const el = document.getElementById('as-count');
+    if (el) el.textContent = getInstalledIds().length + ' geïnstalleerd';
+  }
+
+  renderGrid();
+  updateCount();
+}
+
+// ===================== CODE EDITOR APP =====================
+function renderCodeEditor(body) {
+  const langs = ['html','css','javascript','python','json','markdown'];
+  let activeLang = 'html', tabs = { html:'<!DOCTYPE html>\n<html>\n<head>\n  <title>Mijn Pagina</title>\n</head>\n<body>\n  <h1>Hallo wereld!</h1>\n</body>\n</html>', css:'body {\n  font-family: sans-serif;\n  background: #f0f0f0;\n  margin: 0;\n  padding: 20px;\n}', javascript:'// JavaScript\nconsole.log("Hallo!");\n\nfunction greet(name) {\n  return `Hallo, ${name}!`;\n}\n', python:'# Python code\ndef hallo(naam):\n    print(f"Hallo, {naam}!")\n\nhallo("Wereld")\n', json:'{\n  "naam": "My-OS",\n  "versie": "2.0",\n  "features": ["editor","terminal","browser"]\n}', markdown:'# Hallo Markdown\n\nDit is een **vet** woord en dit is *cursief*.\n\n## Lijst\n- Item 1\n- Item 2\n\n```js\nconsole.log("code");\n```\n' };
+  const colors = { html:'#f97316', css:'#3b82f6', javascript:'#f59e0b', python:'#22c55e', json:'#14b8a6', markdown:'#a78bfa' };
+
+  function render() {
+    body.innerHTML = `<div style="display:flex;flex-direction:column;height:100%;">
+      <div style="display:flex;gap:0;border-bottom:1px solid var(--border);background:rgba(0,0,0,0.2);flex-shrink:0;overflow-x:auto;">
+        ${langs.map(l => `<div onclick="ceTab('${l}')" style="padding:8px 14px;font-size:12px;cursor:pointer;border-bottom:2px solid ${l===activeLang?colors[l]:'transparent'};color:${l===activeLang?'var(--text)':'var(--text-muted)'};white-space:nowrap;flex-shrink:0;font-family:monospace;">${l}</div>`).join('')}
+        <div style="flex:1;"></div>
+        <div style="display:flex;gap:6px;align-items:center;padding:0 10px;">
+          <button onclick="ceRun()" style="padding:4px 12px;background:var(--accent);border:none;border-radius:6px;color:#fff;font-size:12px;cursor:pointer;"><i class="ti ti-player-play"></i> Uitvoeren</button>
+          <button onclick="ceCopy()" style="padding:4px 10px;background:rgba(255,255,255,0.07);border:1px solid var(--border);border-radius:6px;color:var(--text-muted);font-size:12px;cursor:pointer;"><i class="ti ti-copy"></i></button>
+          <button onclick="ceSave()" style="padding:4px 10px;background:rgba(255,255,255,0.07);border:1px solid var(--border);border-radius:6px;color:var(--text-muted);font-size:12px;cursor:pointer;"><i class="ti ti-download"></i></button>
+        </div>
+      </div>
+      <div style="display:flex;flex:1;overflow:hidden;">
+        <div style="flex:1;display:flex;flex-direction:column;position:relative;min-width:0;">
+          <div style="display:flex;gap:0;position:relative;flex:1;overflow:hidden;">
+            <div id="ce-lines" style="padding:12px 8px;background:rgba(0,0,0,0.3);font-family:monospace;font-size:13px;line-height:1.6;color:var(--text-dim);text-align:right;user-select:none;min-width:36px;overflow:hidden;border-right:1px solid var(--border);"></div>
+            <textarea id="ce-area" spellcheck="false"
+              style="flex:1;padding:12px;background:transparent;border:none;outline:none;font-family:'Courier New',monospace;font-size:13px;line-height:1.6;color:var(--text);resize:none;tab-size:2;white-space:pre;"
+              oninput="ceInput()" onkeydown="ceKey(event)">${tabs[activeLang]}</textarea>
+          </div>
+          <div id="ce-statusbar" style="padding:3px 12px;border-top:1px solid var(--border);font-size:11px;color:var(--text-dim);flex-shrink:0;display:flex;gap:16px;">
+            <span id="ce-pos">Ln 1, Kl 1</span>
+            <span style="color:${colors[activeLang]};font-weight:600;">${activeLang.toUpperCase()}</span>
+            <span>UTF-8</span>
+          </div>
+        </div>
+        <div id="ce-preview" style="flex:1;border-left:1px solid var(--border);display:${activeLang==='html'?'flex':'none'};flex-direction:column;min-width:0;">
+          <div style="padding:4px 12px;border-bottom:1px solid var(--border);font-size:11px;color:var(--text-dim);flex-shrink:0;">Preview</div>
+          <iframe id="ce-iframe" style="flex:1;border:none;background:#fff;"></iframe>
+        </div>
+      </div>
+    </div>`;
+    ceUpdateLines();
+    if (activeLang === 'html') ceUpdatePreview();
+  }
+
+  window.ceTab = (l) => { tabs[activeLang] = document.getElementById('ce-area')?.value || tabs[activeLang]; activeLang = l; render(); };
+  window.ceInput = () => {
+    const area = document.getElementById('ce-area');
+    if (area) tabs[activeLang] = area.value;
+    ceUpdateLines();
+    if (activeLang === 'html') ceUpdatePreview();
+    const pos = document.getElementById('ce-pos');
+    if (pos && area) {
+      const text = area.value.substring(0, area.selectionStart);
+      const lines = text.split('\n');
+      pos.textContent = `Ln ${lines.length}, Kl ${lines[lines.length-1].length+1}`;
+    }
+  };
+  window.ceKey = (e) => {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const area = document.getElementById('ce-area');
+      const s = area.selectionStart, end = area.selectionEnd;
+      area.value = area.value.substring(0,s) + '  ' + area.value.substring(end);
+      area.selectionStart = area.selectionEnd = s + 2;
+      ceInput();
+    }
+  };
+  function ceUpdateLines() {
+    const area = document.getElementById('ce-area');
+    const lines = document.getElementById('ce-lines');
+    if (!area || !lines) return;
+    const n = (area.value.match(/\n/g)||[]).length + 1;
+    lines.innerHTML = Array.from({length:n},(_,i)=>`<div>${i+1}</div>`).join('');
+    lines.scrollTop = area.scrollTop;
+  }
+  function ceUpdatePreview() {
+    const iframe = document.getElementById('ce-iframe');
+    if (!iframe) return;
+    const doc = iframe.contentDocument || iframe.contentWindow.document;
+    doc.open(); doc.write(tabs['html']); doc.close();
+  }
+  window.ceRun = () => {
+    if (activeLang === 'html') { ceUpdatePreview(); return; }
+    if (activeLang === 'javascript') {
+      try { const r = new Function(tabs['javascript'])(); if (r !== undefined) notify('Code Editor', String(r), 'ti-code'); }
+      catch(e) { notify('Code Editor', 'Fout: ' + e.message, 'ti-alert-circle'); }
+    } else { notify('Code Editor', activeLang + ' kan niet direct worden uitgevoerd in de browser.', 'ti-info-circle'); }
+  };
+  window.ceCopy = () => { navigator.clipboard?.writeText(tabs[activeLang]); notify('Code Editor', 'Gekopieerd!', 'ti-copy'); };
+  window.ceSave = () => {
+    const ext = {html:'html',css:'css',javascript:'js',python:'py',json:'json',markdown:'md'}[activeLang];
+    const a = document.createElement('a');
+    a.href = 'data:text/plain;charset=utf-8,' + encodeURIComponent(tabs[activeLang]);
+    a.download = 'code.' + ext; a.click();
+  };
+  render();
+}
+
+// ===================== SQL PAD =====================
+function renderSqlPad(body) {
+  let db = { users:[{id:1,naam:'Alice',email:'alice@example.com',leeftijd:28},{id:2,naam:'Bob',email:'bob@example.com',leeftijd:34},{id:3,naam:'Charlie',email:'charlie@example.com',leeftijd:22}], producten:[{id:1,naam:'Laptop',prijs:999.99,voorraad:15},{id:2,naam:'Muis',prijs:29.99,voorraad:87},{id:3,naam:'Toetsenbord',prijs:79.99,voorraad:43}] };
+  let query = 'SELECT * FROM users;';
+  body.innerHTML = `<div style="display:flex;flex-direction:column;height:100%;">
+    <div style="padding:8px 12px;border-bottom:1px solid var(--border);font-size:12px;color:var(--text-muted);flex-shrink:0;background:rgba(0,0,0,0.15);">
+      Tabellen: <b style="color:var(--accent2)">users</b> (id, naam, email, leeftijd) &nbsp;|&nbsp; <b style="color:var(--accent2)">producten</b> (id, naam, prijs, voorraad)
+    </div>
+    <div style="flex:0 0 140px;display:flex;flex-direction:column;border-bottom:1px solid var(--border);">
+      <textarea id="sql-input" spellcheck="false" style="flex:1;background:rgba(0,0,0,0.2);border:none;outline:none;padding:12px;font-family:monospace;font-size:13px;color:var(--text);resize:none;">${query}</textarea>
+      <div style="padding:6px 10px;display:flex;gap:8px;background:rgba(0,0,0,0.1);flex-shrink:0;">
+        <button onclick="sqlRun()" style="padding:5px 16px;background:var(--accent);border:none;border-radius:7px;color:#fff;font-size:13px;cursor:pointer;"><i class="ti ti-player-play"></i> Uitvoeren</button>
+        <button onclick="sqlClear()" style="padding:5px 12px;background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:7px;color:var(--text-muted);font-size:13px;cursor:pointer;">Wis</button>
+        <span style="font-size:11px;color:var(--text-dim);margin-left:auto;align-self:center;">Ctrl+Enter om uit te voeren</span>
+      </div>
+    </div>
+    <div id="sql-result" style="flex:1;overflow:auto;padding:10px;font-size:13px;"></div>
+  </div>`;
+
+  document.getElementById('sql-input').addEventListener('keydown', e => { if (e.ctrlKey && e.key === 'Enter') { e.preventDefault(); sqlRun(); } });
+
+  window.sqlRun = () => {
+    const q = document.getElementById('sql-input').value.trim().toLowerCase();
+    const res = document.getElementById('sql-result');
+    try {
+      if (q.startsWith('select')) {
+        const match = q.match(/from\s+(\w+)/); if (!match) throw new Error('Geen geldige tabel');
+        const tbl = match[1];
+        if (!db[tbl]) throw new Error(`Tabel '${tbl}' bestaat niet`);
+        let rows = [...db[tbl]];
+        const whereM = q.match(/where\s+(\w+)\s*(=|>|<|>=|<=|!=)\s*'?([^'\s]+)'?/);
+        if (whereM) {
+          const [,col,op,val] = whereM;
+          rows = rows.filter(r => { const v = r[col]; const n = parseFloat(val);
+            if (op==='=') return String(v)===val||v==n; if (op==='>') return v>n; if (op==='<') return v<n;
+            if (op==='>=') return v>=n; if (op==='<=') return v<=n; if (op==='!=') return String(v)!==val; return true; });
+        }
+        const limitM = q.match(/limit\s+(\d+)/);
+        if (limitM) rows = rows.slice(0, parseInt(limitM[1]));
+        if (!rows.length) { res.innerHTML = `<div style="color:var(--text-muted);padding:12px;">Geen resultaten.</div>`; return; }
+        const cols = Object.keys(rows[0]);
+        res.innerHTML = `<div style="font-size:11px;color:var(--text-dim);margin-bottom:6px;">${rows.length} rij(en)</div>
+          <table style="width:100%;border-collapse:collapse;font-size:12px;">
+            <thead><tr>${cols.map(c=>`<th style="text-align:left;padding:7px 10px;background:rgba(99,102,241,0.1);border-bottom:1px solid var(--border);color:var(--accent2);font-weight:600;">${c}</th>`).join('')}</tr></thead>
+            <tbody>${rows.map((r,i)=>`<tr style="background:${i%2?'rgba(255,255,255,0.02)':'transparent'}">${cols.map(c=>`<td style="padding:7px 10px;border-bottom:1px solid var(--border);color:var(--text);">${r[c]}</td>`).join('')}</tr>`).join('')}</tbody>
+          </table>`;
+      } else { res.innerHTML = `<div style="color:var(--warning);padding:12px;">Alleen SELECT wordt ondersteund in deze demo.</div>`; }
+    } catch(e) { res.innerHTML = `<div style="color:var(--danger);padding:12px;"><b>Fout:</b> ${e.message}</div>`; }
+  };
+  window.sqlClear = () => { document.getElementById('sql-result').innerHTML = ''; };
+  sqlRun();
+}
+
+// ===================== JSON VIEWER =====================
+function renderJsonViewer(body) {
+  body.innerHTML = `<div style="display:flex;flex-direction:column;height:100%;">
+    <div style="display:flex;gap:8px;padding:8px 10px;border-bottom:1px solid var(--border);flex-shrink:0;">
+      <button onclick="jsonParse()" style="padding:5px 14px;background:var(--accent);border:none;border-radius:7px;color:#fff;font-size:12px;cursor:pointer;"><i class="ti ti-check"></i> Valideren</button>
+      <button onclick="jsonFormat()" style="padding:5px 14px;background:rgba(255,255,255,0.07);border:1px solid var(--border);border-radius:7px;color:var(--text-muted);font-size:12px;cursor:pointer;">Formatteren</button>
+      <button onclick="jsonMinify()" style="padding:5px 14px;background:rgba(255,255,255,0.07);border:1px solid var(--border);border-radius:7px;color:var(--text-muted);font-size:12px;cursor:pointer;">Minify</button>
+      <input id="json-search" placeholder="Zoek sleutel..." style="flex:1;background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:7px;padding:5px 10px;color:var(--text);font-size:12px;outline:none;">
+    </div>
+    <div style="display:flex;flex:1;overflow:hidden;">
+      <textarea id="json-input" spellcheck="false" placeholder='Plak hier JSON...' style="flex:1;padding:12px;background:rgba(0,0,0,0.2);border:none;border-right:1px solid var(--border);outline:none;font-family:monospace;font-size:13px;color:var(--text);resize:none;">{"naam":"My-OS","versie":"2.0","apps":["Browser","Terminal","Editor"],"stats":{"windows":0,"users":1}}</textarea>
+      <div id="json-tree" style="flex:1;overflow:auto;padding:12px;font-family:monospace;font-size:13px;line-height:1.6;"></div>
+    </div>
+    <div id="json-status" style="padding:4px 12px;border-top:1px solid var(--border);font-size:11px;color:var(--text-dim);flex-shrink:0;"></div>
+  </div>`;
+
+  function buildTree(val, indent=0) {
+    if (val === null) return `<span style="color:#ef4444;">null</span>`;
+    if (typeof val === 'boolean') return `<span style="color:#f59e0b;">${val}</span>`;
+    if (typeof val === 'number') return `<span style="color:#22c55e;">${val}</span>`;
+    if (typeof val === 'string') return `<span style="color:#a78bfa;">"${val}"</span>`;
+    if (Array.isArray(val)) {
+      if (!val.length) return `<span style="color:var(--text-muted);">[]</span>`;
+      const items = val.map((v,i)=>`<div style="padding-left:20px;">${buildTree(v, indent+1)}${i<val.length-1?',':''}</div>`).join('');
+      return `<details open><summary style="cursor:pointer;color:var(--text-muted);">[ ${val.length} items ]</summary>${items}</details>`;
+    }
+    if (typeof val === 'object') {
+      const keys = Object.keys(val);
+      if (!keys.length) return `<span style="color:var(--text-muted);">{}</span>`;
+      const items = keys.map((k,i)=>`<div style="padding-left:20px;"><span style="color:#60a5fa;">"${k}"</span>: ${buildTree(val[k], indent+1)}${i<keys.length-1?',':''}</div>`).join('');
+      return `<details open><summary style="cursor:pointer;color:var(--text-muted);">{ ${keys.length} sleutels }</summary>${items}</details>`;
+    }
+    return String(val);
+  }
+
+  window.jsonParse = () => {
+    try {
+      const v = JSON.parse(document.getElementById('json-input').value);
+      document.getElementById('json-tree').innerHTML = buildTree(v);
+      document.getElementById('json-status').innerHTML = '<span style="color:var(--success);">✓ Geldige JSON</span>';
+    } catch(e) { document.getElementById('json-status').innerHTML = `<span style="color:var(--danger);">✗ ${e.message}</span>`; document.getElementById('json-tree').innerHTML=''; }
+  };
+  window.jsonFormat = () => {
+    try { const v = JSON.parse(document.getElementById('json-input').value); document.getElementById('json-input').value = JSON.stringify(v,null,2); jsonParse(); } catch(e) {}
+  };
+  window.jsonMinify = () => {
+    try { const v = JSON.parse(document.getElementById('json-input').value); document.getElementById('json-input').value = JSON.stringify(v); jsonParse(); } catch(e) {}
+  };
+  jsonParse();
+}
+
+// ===================== MARKDOWN PREVIEW =====================
+function renderMarkdownPrev(body) {
+  body.innerHTML = `<div style="display:flex;height:100%;">
+    <textarea id="md-input" spellcheck="false" style="flex:1;padding:14px;background:rgba(0,0,0,0.2);border:none;border-right:1px solid var(--border);outline:none;font-family:monospace;font-size:13px;color:var(--text);resize:none;line-height:1.6;" oninput="mdRender()" placeholder="Typ Markdown hier...">## Welkom bij Markdown Preview
+
+Schrijf **Markdown** hier en zie de *preview* rechts!
+
+### Features
+- **Vet** tekst
+- *Cursief* tekst
+- \`inline code\`
+- [Links](https://example.com)
+
+\`\`\`javascript
+console.log("Hallo!");
+\`\`\`
+
+> Dit is een blockquote
+
+---
+
+| Kolom 1 | Kolom 2 |
+|---------|---------|
+| Cel A   | Cel B   |
+</textarea>
+    <div id="md-preview" style="flex:1;padding:14px;overflow-y:auto;background:rgba(255,255,255,0.02);font-size:14px;line-height:1.7;color:var(--text);">
+      <style>#md-preview h1,#md-preview h2,#md-preview h3{margin:16px 0 8px;font-weight:700}#md-preview h1{font-size:22px}#md-preview h2{font-size:18px;border-bottom:1px solid var(--border);padding-bottom:6px}#md-preview h3{font-size:15px}#md-preview code{background:rgba(99,102,241,0.12);padding:1px 6px;border-radius:4px;font-family:monospace;font-size:12px;color:var(--accent2)}#md-preview pre{background:rgba(0,0,0,0.3);padding:12px;border-radius:8px;overflow-x:auto;margin:10px 0}#md-preview pre code{background:none;padding:0;color:var(--text)}#md-preview blockquote{border-left:3px solid var(--accent);padding-left:12px;color:var(--text-muted);margin:8px 0}#md-preview table{width:100%;border-collapse:collapse;margin:10px 0}#md-preview td,#md-preview th{padding:7px 12px;border:1px solid var(--border)}#md-preview th{background:rgba(99,102,241,0.1)}#md-preview hr{border:none;border-top:1px solid var(--border);margin:16px 0}#md-preview ul,#md-preview ol{padding-left:20px;margin:6px 0}#md-preview li{margin-bottom:3px}#md-preview a{color:var(--accent2)}</style>
+    </div>
+  </div>`;
+
+  window.mdRender = () => {
+    const raw = document.getElementById('md-input')?.value || '';
+    let html = raw
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/^#{3} (.+)$/gm,'<h3>$1</h3>')
+      .replace(/^#{2} (.+)$/gm,'<h2>$1</h2>')
+      .replace(/^# (.+)$/gm,'<h1>$1</h1>')
+      .replace(/\*\*(.+?)\*\*/g,'<b>$1</b>')
+      .replace(/\*(.+?)\*/g,'<i>$1</i>')
+      .replace(/`{3}[\w]*\n?([\s\S]*?)`{3}/g,'<pre><code>$1</code></pre>')
+      .replace(/`(.+?)`/g,'<code>$1</code>')
+      .replace(/\[(.+?)\]\((.+?)\)/g,'<a href="$2" target="_blank">$1</a>')
+      .replace(/^> (.+)$/gm,'<blockquote>$1</blockquote>')
+      .replace(/^---$/gm,'<hr>')
+      .replace(/^\- (.+)$/gm,'<li>$1</li>')
+      .replace(/(<li>.*<\/li>\n?)+/g,'<ul>$&</ul>')
+      .replace(/^\d+\. (.+)$/gm,'<li>$1</li>')
+      .replace(/\|(.+)\|\n\|[-| ]+\|\n((?:\|.+\|\n?)*)/g, (m,hdr,rows) => {
+        const hs = hdr.split('|').filter(Boolean).map(h=>`<th>${h.trim()}</th>`).join('');
+        const rs = rows.trim().split('\n').map(r=>`<tr>${r.split('|').filter(Boolean).map(c=>`<td>${c.trim()}</td>`).join('')}</tr>`).join('');
+        return `<table><thead><tr>${hs}</tr></thead><tbody>${rs}</tbody></table>`;
+      })
+      .split('\n').map(l => (l.startsWith('<')||!l.trim()) ? l : `<p>${l}</p>`).join('\n');
+    const prev = document.getElementById('md-preview');
+    if (prev) prev.innerHTML = '<style>#md-preview h1,#md-preview h2,#md-preview h3{margin:16px 0 8px;font-weight:700}#md-preview h1{font-size:22px}#md-preview h2{font-size:18px;border-bottom:1px solid var(--border);padding-bottom:6px}#md-preview h3{font-size:15px}#md-preview code{background:rgba(99,102,241,0.12);padding:1px 6px;border-radius:4px;font-family:monospace;font-size:12px;color:var(--accent2)}#md-preview pre{background:rgba(0,0,0,0.3);padding:12px;border-radius:8px;overflow-x:auto;margin:10px 0}#md-preview pre code{background:none;padding:0;color:var(--text)}#md-preview blockquote{border-left:3px solid var(--accent);padding-left:12px;color:var(--text-muted);margin:8px 0}#md-preview table{width:100%;border-collapse:collapse;margin:10px 0}#md-preview td,#md-preview th{padding:7px 12px;border:1px solid var(--border)}#md-preview th{background:rgba(99,102,241,0.1)}#md-preview hr{border:none;border-top:1px solid var(--border);margin:16px 0}#md-preview ul,#md-preview ol{padding-left:20px;margin:6px 0}#md-preview li{margin-bottom:3px}#md-preview a{color:var(--accent2)}</style>' + html;
+  };
+  mdRender();
+}
+
+// ===================== POMODORO =====================
+function renderPomodoro(body) {
+  let mode='work', running=false, secs=25*60, interval=null;
+  const modes = { work:25*60, short:5*60, long:15*60 };
+  function fmt(s){return `${Math.floor(s/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`;}
+  function render(){
+    body.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:20px;background:linear-gradient(160deg,${mode==='work'?'#1a0a0a,#0f0f1a':'#0a1a0a,#0f0f1a'});">
+      <div style="display:flex;gap:6px;">
+        ${[['work','Werk','#ef4444'],['short','Korte pauze','#22c55e'],['long','Lange pauze','#3b82f6']].map(([m,l,c])=>`<button onclick="pomMode('${m}')" style="padding:6px 14px;border:none;border-radius:8px;font-size:12px;cursor:pointer;background:${mode===m?c:'rgba(255,255,255,0.07)'};color:${mode===m?'#fff':'var(--text-muted)'};">${l}</button>`).join('')}
+      </div>
+      <svg viewBox="0 0 200 200" width="180" height="180">
+        <circle cx="100" cy="100" r="88" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="8"/>
+        <circle cx="100" cy="100" r="88" fill="none" stroke="${mode==='work'?'#ef4444':mode==='short'?'#22c55e':'#3b82f6'}" stroke-width="8"
+          stroke-dasharray="${2*Math.PI*88}" stroke-dashoffset="${2*Math.PI*88*(1-secs/modes[mode])}"
+          stroke-linecap="round" transform="rotate(-90 100 100)" style="transition:stroke-dashoffset .5s;"/>
+        <text x="100" y="108" text-anchor="middle" fill="white" font-size="36" font-weight="200" font-family="sans-serif">${fmt(secs)}</text>
+      </svg>
+      <div style="font-size:14px;color:var(--text-muted);">${mode==='work'?'Focustijd':'Pauzetijd'}</div>
+      <div style="display:flex;gap:12px;">
+        <button onclick="pomToggle()" style="width:56px;height:56px;border-radius:50%;background:${mode==='work'?'#ef4444':mode==='short'?'#22c55e':'#3b82f6'};border:none;color:#fff;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+          <i class="ti ti-${running?'player-pause':'player-play'}"></i>
+        </button>
+        <button onclick="pomReset()" style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.07);border:1px solid var(--border);color:var(--text-muted);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+          <i class="ti ti-refresh"></i>
+        </button>
+      </div>
+      <div id="pom-sessions" style="font-size:12px;color:var(--text-dim);">Sessies: ${LS.get('pom_sessions')||0}</div>
+    </div>`;
+  }
+  window.pomMode=(m)=>{clearInterval(interval);running=false;mode=m;secs=modes[m];render();};
+  window.pomToggle=()=>{
+    running=!running;
+    if(running){interval=setInterval(()=>{secs--;if(secs<=0){clearInterval(interval);running=false;if(mode==='work'){const s=(LS.get('pom_sessions')||0)+1;LS.set('pom_sessions',s);}notify('Pomodoro',mode==='work'?'Tijd voor een pauze!':'Pauze klaar, ga werken!','ti-clock');pomReset();}else render();},1000);}
+    else clearInterval(interval);
+    render();
+  };
+  window.pomReset=()=>{clearInterval(interval);running=false;secs=modes[mode];render();};
+  render();
+}
+
+// ===================== EENHEDEN OMREKENEN =====================
+function renderConverter(body) {
+  const units = {
+    Lengte:{m:1,km:0.001,cm:100,mm:1000,inch:39.3701,ft:3.28084,yard:1.09361,mijl:0.000621371},
+    Gewicht:{kg:1,g:1000,mg:1e6,lb:2.20462,oz:35.274,ton:0.001},
+    Temperatuur:{special:true},
+    Oppervlakte:{'m²':1,'km²':1e-6,'cm²':10000,'ha':0.0001,'ft²':10.7639,'acre':0.000247105},
+    Snelheid:{'m/s':1,'km/u':3.6,'mph':2.23694,'knot':1.94384},
+  };
+  let cat='Lengte', from='m', to='km', val=1;
+  function convert(v,f,t,c){
+    if(c==='Temperatuur'){
+      const inC=f==='°C'?v:f==='°F'?(v-32)*5/9:v-273.15;
+      return t==='°C'?inC:t==='°F'?inC*9/5+32:inC+273.15;
+    }
+    return v/units[c][f]*units[c][t];
+  }
+  function render(){
+    const cu=cat==='Temperatuur'?{...{'°C':1,'°F':1,'K':1}}:units[cat];
+    const ks=Object.keys(cu);
+    if(!ks.includes(from))from=ks[0]; if(!ks.includes(to))to=ks[1]||ks[0];
+    const result=convert(val,from,to,cat);
+    body.innerHTML=`<div style="display:flex;flex-direction:column;height:100%;padding:20px;gap:16px;overflow-y:auto;">
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        ${Object.keys(units).map(c=>`<button onclick="convCat('${c}')" style="padding:6px 14px;border:none;border-radius:8px;font-size:12px;cursor:pointer;background:${cat===c?'var(--accent)':'rgba(255,255,255,0.07)'};color:${cat===c?'#fff':'var(--text-muted)'};">${c}</button>`).join('')}
+      </div>
+      <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:end;">
+        <div>
+          <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:5px;">Van</label>
+          <select id="conv-from" onchange="convFrom(this.value)" style="width:100%;background:var(--bg-dark);border:1px solid var(--border);border-radius:8px;padding:8px;color:var(--text);font-size:14px;outline:none;margin-bottom:8px;">
+            ${ks.map(k=>`<option value="${k}"${k===from?' selected':''}>${k}</option>`).join('')}
+          </select>
+          <input id="conv-val" type="number" value="${val}" oninput="convVal(this.value)"
+            style="width:100%;background:var(--bg-dark);border:1px solid var(--accent);border-radius:8px;padding:10px 12px;color:var(--text);font-size:18px;outline:none;">
+        </div>
+        <div style="font-size:24px;color:var(--text-dim);padding-bottom:10px;">→</div>
+        <div>
+          <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:5px;">Naar</label>
+          <select id="conv-to" onchange="convTo(this.value)" style="width:100%;background:var(--bg-dark);border:1px solid var(--border);border-radius:8px;padding:8px;color:var(--text);font-size:14px;outline:none;margin-bottom:8px;">
+            ${ks.map(k=>`<option value="${k}"${k===to?' selected':''}>${k}</option>`).join('')}
+          </select>
+          <div style="background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.2);border-radius:8px;padding:10px 12px;font-size:18px;font-weight:500;color:var(--accent2);">${isNaN(result)?'–':parseFloat(result.toFixed(8))}</div>
+        </div>
+      </div>
+      <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:14px;">
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px;font-weight:600;">Alle conversies</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px;">
+          ${ks.map(k=>{const r=convert(val,from,k,cat);return`<div style="padding:7px 10px;background:rgba(255,255,255,0.03);border-radius:7px;font-size:12px;"><span style="color:var(--text-muted);">${k}:</span> <span style="color:var(--text);font-weight:500;">${isNaN(r)?'–':parseFloat(r.toFixed(6))}</span></div>`;}).join('')}
+        </div>
+      </div>
+    </div>`;
+  }
+  window.convCat=(c)=>{cat=c;render();};
+  window.convFrom=(v)=>{from=v;render();};
+  window.convTo=(v)=>{to=v;render();};
+  window.convVal=(v)=>{val=parseFloat(v)||0;render();};
+  render();
+}
+
+// ===================== WACHTWOORD GENERATOR =====================
+function renderPassGen(body) {
+  body.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:16px;padding:20px;">
+    <div style="font-size:16px;font-weight:600;">Wachtwoord Generator</div>
+    <div id="pg-result" style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:10px;padding:14px 20px;font-family:monospace;font-size:18px;color:var(--accent2);word-break:break-all;text-align:center;min-height:54px;width:100%;max-width:400px;cursor:pointer;" onclick="pgCopy()" title="Klik om te kopiëren"></div>
+    <div style="color:var(--text-dim);font-size:11px;">Klik op het wachtwoord om te kopiëren</div>
+    <div style="width:100%;max-width:400px;display:flex;flex-direction:column;gap:10px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <label style="font-size:13px;">Lengte: <span id="pg-len-label">16</span></label>
+        <input type="range" id="pg-len" min="6" max="64" value="16" oninput="document.getElementById('pg-len-label').textContent=this.value;pgGen();" style="width:180px;">
+      </div>
+      ${[['pg-upper','Hoofdletters (A-Z)',true],['pg-lower','Kleine letters (a-z)',true],['pg-nums','Cijfers (0-9)',true],['pg-syms','Symbolen (!@#$...)',true]].map(([id,label,checked])=>`
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;">
+          <input type="checkbox" id="${id}" ${checked?'checked':''} onchange="pgGen()" style="width:16px;height:16px;cursor:pointer;">
+          ${label}
+        </label>`).join('')}
+      <button onclick="pgGen()" style="padding:10px;background:var(--accent);border:none;border-radius:9px;color:#fff;font-size:14px;cursor:pointer;margin-top:4px;"><i class="ti ti-refresh"></i> Nieuw wachtwoord</button>
+    </div>
+    <div id="pg-strength" style="font-size:12px;"></div>
+  </div>`;
+  window.pgGen=()=>{
+    const len=parseInt(document.getElementById('pg-len')?.value||16);
+    let chars='';
+    if(document.getElementById('pg-upper')?.checked) chars+='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    if(document.getElementById('pg-lower')?.checked) chars+='abcdefghijklmnopqrstuvwxyz';
+    if(document.getElementById('pg-nums')?.checked) chars+='0123456789';
+    if(document.getElementById('pg-syms')?.checked) chars+='!@#$%^&*()_+-=[]{}|;:,.<>?';
+    if(!chars) chars='abcdefghijklmnopqrstuvwxyz';
+    let pw='';
+    const arr=new Uint32Array(len); crypto.getRandomValues(arr);
+    arr.forEach(n=>{ pw+=chars[n%chars.length]; });
+    document.getElementById('pg-result').textContent=pw;
+    const s=len<8?'Zwak':len<12?'Matig':len<16?'Sterk':'Zeer sterk';
+    const c=len<8?'var(--danger)':len<12?'var(--warning)':len<16?'var(--success)':'#22c55e';
+    document.getElementById('pg-strength').innerHTML=`Sterkte: <b style="color:${c}">${s}</b>`;
+  };
+  window.pgCopy=()=>{const t=document.getElementById('pg-result')?.textContent;if(t){navigator.clipboard?.writeText(t);notify('Wachtwoord Generator','Gekopieerd naar klembord!','ti-copy');}};
+  pgGen();
+}
+
+// ===================== SNAKE =====================
+function renderSnake(body) {
+  body.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:10px;background:#0a0a0f;">
+    <div style="display:flex;justify-content:space-between;width:320px;">
+      <span style="font-size:13px;color:var(--text-muted);">Score: <b id="snake-score" style="color:var(--text);">0</b></span>
+      <span style="font-size:13px;color:var(--text-muted);">Record: <b id="snake-hi" style="color:var(--accent2);">${LS.get('snake_hi')||0}</b></span>
+    </div>
+    <canvas id="snake-canvas" width="320" height="320" style="border:2px solid rgba(99,102,241,0.3);border-radius:8px;image-rendering:pixelated;"></canvas>
+    <div style="font-size:12px;color:var(--text-dim);">Pijltjestoetsen of WASD &bull; Spatiebalk om te pauzeren</div>
+    <button id="snake-start-btn" onclick="snakeStart()" style="padding:8px 20px;background:var(--accent);border:none;border-radius:8px;color:#fff;font-size:13px;cursor:pointer;">Starten</button>
+  </div>`;
+  const CELL=20, COLS=16, ROWS=16;
+  const canvas=document.getElementById('snake-canvas');
+  const ctx=canvas.getContext('2d');
+  let snake,dir,food,score,running,loop,paused=false;
+  function draw(){
+    ctx.fillStyle='#0a0a0f'; ctx.fillRect(0,0,320,320);
+    snake.forEach((s,i)=>{ctx.fillStyle=i===0?'#22c55e':'#16a34a';ctx.fillRect(s.x*CELL+1,s.y*CELL+1,CELL-2,CELL-2);});
+    ctx.fillStyle='#ef4444'; ctx.beginPath(); ctx.arc(food.x*CELL+CELL/2,food.y*CELL+CELL/2,CELL/2-2,0,Math.PI*2); ctx.fill();
+  }
+  function randomFood(){return{x:Math.floor(Math.random()*COLS),y:Math.floor(Math.random()*ROWS)};}
+  window.snakeStart=()=>{
+    snake=[{x:8,y:8},{x:7,y:8},{x:6,y:8}]; dir={x:1,y:0}; food=randomFood(); score=0; running=true; paused=false;
+    document.getElementById('snake-start-btn').style.display='none';
+    clearInterval(loop);
+    loop=setInterval(()=>{
+      if(paused)return;
+      const head={x:snake[0].x+dir.x,y:snake[0].y+dir.y};
+      if(head.x<0||head.x>=COLS||head.y<0||head.y>=ROWS||snake.some(s=>s.x===head.x&&s.y===head.y)){
+        clearInterval(loop); running=false;
+        const hi=Math.max(score,LS.get('snake_hi')||0); LS.set('snake_hi',hi);
+        ctx.fillStyle='rgba(0,0,0,0.7)';ctx.fillRect(0,0,320,320);
+        ctx.fillStyle='#fff';ctx.font='20px sans-serif';ctx.textAlign='center';ctx.fillText('Game Over!',160,150);
+        ctx.font='14px sans-serif';ctx.fillStyle='#94a3b8';ctx.fillText('Score: '+score,160,175);
+        document.getElementById('snake-start-btn').style.display=''; document.getElementById('snake-hi').textContent=hi;
+        return;
+      }
+      snake.unshift(head);
+      if(head.x===food.x&&head.y===food.y){score++;document.getElementById('snake-score').textContent=score;food=randomFood();}
+      else snake.pop();
+      draw();
+    },120);
+    draw();
+  };
+  ctx.fillStyle='#0a0a0f';ctx.fillRect(0,0,320,320);
+  ctx.fillStyle='rgba(99,102,241,0.3)';ctx.font='18px sans-serif';ctx.textAlign='center';ctx.fillText('Druk op Starten',160,165);
+  const keyH=e=>{
+    if(!running)return;
+    if(e.key===' '){paused=!paused;return;}
+    const map={'ArrowUp':{x:0,y:-1},'ArrowDown':{x:0,y:1},'ArrowLeft':{x:-1,y:0},'ArrowRight':{x:1,y:0},'w':{x:0,y:-1},'s':{x:0,y:1},'a':{x:-1,y:0},'d':{x:1,y:0}};
+    const nd=map[e.key]; if(nd&&!(nd.x===-dir.x&&nd.y===-dir.y)){dir=nd;e.preventDefault();}
+  };
+  document.addEventListener('keydown',keyH);
+  // Cleanup when window closes
+  const origClose=window.closeWindow;
+  window.closeWindow=(id)=>{if(id==='store_snake'){clearInterval(loop);document.removeEventListener('keydown',keyH);}origClose(id);};
+}
+
+// ===================== 2048 =====================
+function render2048(body) {
+  let grid,score,best=LS.get('2048_best')||0;
+  function newGrid(){return Array.from({length:4},()=>[0,0,0,0]);}
+  function addRandom(g){const empty=[];g.forEach((r,i)=>r.forEach((v,j)=>{if(!v)empty.push([i,j]);}));if(!empty.length)return;const[r,c]=empty[Math.floor(Math.random()*empty.length)];g[r][c]=Math.random()<0.9?2:4;}
+  function init(){grid=newGrid();score=0;addRandom(grid);addRandom(grid);render2048UI();}
+  const COLS=['#cdc1b4','#eee4da','#ede0c8','#f2b179','#f59563','#f67c5f','#f65e3b','#edcf72','#edcc61','#edc850','#edc53f','#edc22e'];
+  function tileColor(v){const i=Math.log2(v||1);return COLS[Math.min(i,COLS.length-1)]||'#3c3a32';}
+  function tileText(v){return v>0?v:'';}
+  function render2048UI(){
+    best=Math.max(score,best);LS.set('2048_best',best);
+    body.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;gap:12px;padding:16px;height:100%;justify-content:center;background:#faf8ef;">
+      <div style="display:flex;gap:10px;align-items:center;width:300px;justify-content:space-between;">
+        <div style="font-size:26px;font-weight:800;color:#776e65;">2048</div>
+        <div style="display:flex;gap:8px;">
+          <div style="background:#bbada0;border-radius:6px;padding:6px 12px;text-align:center;"><div style="font-size:10px;color:#eee4da;font-weight:700;">SCORE</div><div style="font-size:16px;font-weight:700;color:#fff;">${score}</div></div>
+          <div style="background:#bbada0;border-radius:6px;padding:6px 12px;text-align:center;"><div style="font-size:10px;color:#eee4da;font-weight:700;">BEST</div><div style="font-size:16px;font-weight:700;color:#fff;">${best}</div></div>
+        </div>
+      </div>
+      <div style="background:#bbada0;border-radius:8px;padding:8px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;width:300px;">
+        ${grid.flat().map(v=>`<div style="aspect-ratio:1;background:${tileColor(v)};border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:${v>99?v>999?18:22:28}px;font-weight:800;color:${v<=4?'#776e65':'#f9f6f2'};transition:all .1s;">${tileText(v)}</div>`).join('')}
+      </div>
+      <button onclick="init2048()" style="padding:8px 20px;background:#8f7a66;border:none;border-radius:8px;color:#fff;font-size:13px;cursor:pointer;font-weight:600;">Nieuw spel</button>
+      <div style="font-size:12px;color:#776e65;">Pijltjestoetsen of WASD</div>
+    </div>`;
+  }
+  function slide(row){let r=row.filter(v=>v),merged=false,res=[];
+    for(let i=0;i<r.length;i++){if(!merged&&i+1<r.length&&r[i]===r[i+1]){res.push(r[i]*2);score+=r[i]*2;i++;merged=false;}else{res.push(r[i]);}}
+    while(res.length<4)res.push(0);return res;}
+  function move(dir){
+    let moved=false;
+    const ng=grid.map(r=>[...r]);
+    if(dir==='left')ng.forEach((r,i)=>{const s=slide(r);if(s.join()!==r.join())moved=true;ng[i]=s;});
+    else if(dir==='right')ng.forEach((r,i)=>{const s=slide([...r].reverse()).reverse();if(s.join()!==r.join())moved=true;ng[i]=s;});
+    else if(dir==='up'||dir==='down'){
+      for(let c=0;c<4;c++){let col=ng.map(r=>r[c]);if(dir==='down')col.reverse();const s=slide(col);if(dir==='down')s.reverse();if(s.join()!==col.join())moved=true;ng.forEach((r,i)=>r[c]=s[i]);}
+    }
+    if(moved){grid=ng;addRandom(grid);render2048UI();}
+  }
+  window.init2048=init;
+  const keyH=e=>{const map={'ArrowLeft':'left','ArrowRight':'right','ArrowUp':'up','ArrowDown':'down','a':'left','d':'right','w':'up','s':'down'};const d=map[e.key];if(d){e.preventDefault();move(d);}};
+  document.addEventListener('keydown',keyH);
+  const origClose=window.closeWindow;
+  window.closeWindow=(id)=>{if(id==='store_2048')document.removeEventListener('keydown',keyH);origClose(id);};
+  init();
+}
+
+// ===================== BOTER KAAS & EIEREN =====================
+function renderTicTacToe(body) {
+  let board=Array(9).fill(''), player='X', gameOver=false;
+  function checkWin(b,p){const wins=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];return wins.some(([a,c,d])=>b[a]===p&&b[c]===p&&b[d]===p);}
+  function aiMove(){
+    const empty=board.map((v,i)=>v?null:i).filter(v=>v!==null);
+    // Try to win
+    for(const i of empty){const t=[...board];t[i]='O';if(checkWin(t,'O'))return i;}
+    // Block player
+    for(const i of empty){const t=[...board];t[i]='X';if(checkWin(t,'X'))return i;}
+    // Center or random
+    return board[4]===''?4:empty[Math.floor(Math.random()*empty.length)];
+  }
+  function render(){
+    body.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:16px;">
+      <div style="font-size:18px;font-weight:600;" id="ttt-status">${gameOver?'':'Jij bent X, computer is O'}</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:240px;">
+        ${board.map((v,i)=>`<button onclick="tttPlay(${i})" style="height:74px;background:${v==='X'?'rgba(99,102,241,0.15)':v==='O'?'rgba(239,68,68,0.1)':'rgba(255,255,255,0.04)'};border:1px solid var(--border);border-radius:10px;font-size:32px;font-weight:700;color:${v==='X'?'var(--accent2)':'var(--danger)'};cursor:pointer;">${v}</button>`).join('')}
+      </div>
+      <button onclick="tttReset()" style="padding:8px 20px;background:var(--accent);border:none;border-radius:8px;color:#fff;font-size:13px;cursor:pointer;">Nieuw spel</button>
+    </div>`;
+  }
+  window.tttPlay=(i)=>{
+    if(board[i]||gameOver)return;
+    board[i]='X'; player='O';
+    if(checkWin(board,'X')){gameOver=true;render();document.getElementById('ttt-status').textContent='🎉 Jij wint!';return;}
+    if(board.every(v=>v)){gameOver=true;render();document.getElementById('ttt-status').textContent='Gelijkspel!';return;}
+    const ai=aiMove(); board[ai]='O'; player='X';
+    if(checkWin(board,'O')){gameOver=true;render();document.getElementById('ttt-status').textContent='💻 Computer wint!';return;}
+    if(board.every(v=>v)){gameOver=true;render();document.getElementById('ttt-status').textContent='Gelijkspel!';return;}
+    render();
+  };
+  window.tttReset=()=>{board=Array(9).fill('');player='X';gameOver=false;render();};
+  render();
+}
+
+// ===================== MINESWEEPER =====================
+function renderMinesweeper(body) {
+  const ROWS=9,COLS=9,MINES=10;
+  let grid,revealed,flagged,gameOver,firstClick;
+  function init(){
+    grid=Array.from({length:ROWS},()=>Array(COLS).fill(0));
+    revealed=Array.from({length:ROWS},()=>Array(COLS).fill(false));
+    flagged=Array.from({length:ROWS},()=>Array(COLS).fill(false));
+    gameOver=false;firstClick=true;renderMS();
+  }
+  function placeMines(sr,sc){
+    let placed=0;while(placed<MINES){const r=Math.floor(Math.random()*ROWS),c=Math.floor(Math.random()*COLS);if(grid[r][c]!=-1&&!(r===sr&&c===sc)){grid[r][c]=-1;placed++;}}
+    for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(grid[r][c]!==-1){let cnt=0;for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){const nr=r+dr,nc=c+dc;if(nr>=0&&nr<ROWS&&nc>=0&&nc<COLS&&grid[nr][nc]===-1)cnt++;}grid[r][c]=cnt;}}
+  function reveal(r,c){if(r<0||r>=ROWS||c<0||c>=COLS||revealed[r][c]||flagged[r][c])return;revealed[r][c]=true;if(grid[r][c]===0){for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++)reveal(r+dr,c+dc);}}
+  function numColor(n){return['','#3b82f6','#22c55e','#ef4444','#6366f1','#f59e0b','#14b8a6','#ec4899','#64748b'][n]||'var(--text)';}
+  function renderMS(){
+    const remaining=MINES-flagged.flat().filter(Boolean).length;
+    body.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:12px;height:100%;justify-content:center;background:#0f0f1a;">
+      <div style="display:flex;gap:20px;align-items:center;">
+        <span style="font-size:20px;">💣 ${remaining}</span>
+        <button onclick="msInit()" style="padding:6px 16px;background:rgba(255,255,255,0.07);border:1px solid var(--border);border-radius:8px;color:var(--text);cursor:pointer;font-size:16px;">🙂</button>
+        <span style="font-size:13px;color:var(--text-muted);">Rechts: vlag</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(${COLS},1fr);gap:2px;background:rgba(255,255,255,0.05);padding:4px;border-radius:8px;">
+        ${Array.from({length:ROWS},(_,r)=>Array.from({length:COLS},(_,c)=>{
+          const rev=revealed[r][c],flag=flagged[r][c],val=grid[r][c];
+          let content='',bg='rgba(255,255,255,0.07)',color='var(--text)';
+          if(flag){content='🚩';}
+          else if(rev){bg=val===-1?'rgba(239,68,68,0.3)':'rgba(0,0,0,0.3)';content=val===-1?'💣':val>0?val:'';color=numColor(val);}
+          return`<button onclick="msClick(${r},${c})" oncontextmenu="msFlag(event,${r},${c})"
+            style="width:30px;height:30px;background:${bg};border:1px solid rgba(255,255,255,0.05);border-radius:4px;font-size:14px;color:${color};font-weight:700;cursor:pointer;">${content}</button>`;
+        }).join('')).join('')}
+      </div>
+    </div>`;
+  }
+  window.msInit=init;
+  window.msClick=(r,c)=>{
+    if(gameOver||flagged[r][c])return;
+    if(firstClick){placeMines(r,c);firstClick=false;}
+    if(grid[r][c]===-1){revealed[r][c]=true;gameOver=true;revealed.forEach((row,ri)=>row.forEach((_,ci)=>{if(grid[ri][ci]===-1)revealed[ri][ci]=true;}));renderMS();notify('Minesweeper','💥 Boem! Game over.','ti-bomb');return;}
+    reveal(r,c);
+    const won=revealed.flat().filter(Boolean).length===ROWS*COLS-MINES;
+    if(won){gameOver=true;notify('Minesweeper','🎉 Gewonnen!','ti-trophy');}
+    renderMS();
+  };
+  window.msFlag=(e,r,c)=>{e.preventDefault();if(gameOver||revealed[r][c])return;flagged[r][c]=!flagged[r][c];renderMS();};
+  init();
+}
+
 </script>
 </body>
 </html>
