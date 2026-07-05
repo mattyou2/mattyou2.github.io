@@ -12,21 +12,15 @@
     <h1>BEVEILIGINGSLINK CONTROLEREN...</h1>
 
     <script>
-        // 1. Jouw exacte GitHub domeinnaam (ZONDER mappen of schuine strepen!)
         const TOEGESTANE_URL = "https://mattyou2.github.io"; 
 
-        // 2. De verplichte 2e code (moet hetzelfde zijn als in os.html)
         const RECHTEN_SLEUTEL = "FD7G3993TGREFDHG34TV83TN8V4930W09TVNA8VWRNHGARIUGAGRAESGIHGH394T3897RTREWTHGU";
 
-        // We halen een eventuele schuine streep aan het einde weg voor de zekerheid
         const huidigeLocatie = window.location.origin.replace(/\/$/, "");
 
-        // Controleer of de bezoeker op jouw echte domein zit
         if (huidigeLocatie === TOEGESTANE_URL.replace(/\/$/, "")) {
-            // Succes! Stuur door naar os.html in dezelfde map en geef de sleutel mee
             window.location.href = "os.html?key=" + btoa(RECHTEN_SLEUTEL);
         } else {
-            // Mocht iemand het downloaden, dan blokkeert het hier direct
             document.body.innerHTML = "<h1>[ TOEGANG GEWEIGERD ]</h1><p>Dit systeem draait op een illegale URL of locatie.</p>";
         }
     </script>
