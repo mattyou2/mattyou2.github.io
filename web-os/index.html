@@ -30,7 +30,6 @@
             document.getElementById("security-msg").style.display = "block";
         }
 
-        // --- STRIKE & BLOCK CHECK ---
         if (localStorage.getItem("os_hard_blocked") === "true") {
             toonBlokkade();
         } else {
@@ -38,13 +37,11 @@
 
             if (huidigeLocatie === TOEGESTANE_URL.replace(/\/$/, "")) {
                 
-                // Haal de gecodeerde code stiekem op uit os.html
                 const mapPad = window.location.pathname.replace("index.html", "");
                 
                 fetch(mapPad + "os.html")
                     .then(response => response.text())
                     .then(data => {
-                        // We zoeken de Base64 brij tussen de speciale tags in os.html
                         const startTag = "";
                         const eindTag = "";
                         
@@ -54,18 +51,15 @@
                         if (startIndex > -1 && eindIndex > -1) {
                             const gecodeerdeBrij = data.substring(startIndex, eindIndex).trim();
                             
-                            // Decoden naar echte HTML
                             const echteHTML = decodeURIComponent(atob(gecodeerdeBrij).split('').map(function(c) {
                                 return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
                             }).join(''));
                             
-                            // Laad het OS direct in de pagina zelf!
                             document.getElementById("loading-txt").style.display = "none";
                             
                             const container = document.getElementById("os-container");
                             container.innerHTML = echteHTML;
                             
-                            // Zorg dat scripts in jouw OS ook echt worden uitgevoerd
                             const scripts = container.querySelectorAll("script");
                             scripts.forEach(oldScript => {
                                 const newScript = document.createElement("script");
@@ -79,7 +73,6 @@
                         }
                     })
                     .catch(err => {
-                        // Als er met os.html geknoeid is
                         triggerStrike();
                     });
 
@@ -97,7 +90,6 @@
             toonBlokkade();
         }
 
-        // --- GEHEIME UNLOCK BACKDOOR (5x 'm' binnen 5 seconden) ---
         let mPresses = [];
         window.addEventListener("keydown", function(e) {
             if (e.key.toLowerCase() === "m") {
