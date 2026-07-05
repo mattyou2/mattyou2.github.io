@@ -1,110 +1,3150 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-    <meta charset="UTF-8">
-    <title>My-OS</title>
-    <style>
-        html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; font-family: monospace; }
-        #security-msg { display: none; color: #ff0000; text-align: center; padding-top: 100px; max-width: 600px; margin: 0 auto; line-height: 1.6; padding: 20px; }
-        #loading-txt { color: #ff0000; text-align: center; padding-top: 100px; }
-        #os-container { width: 100%; height: 100%; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My-OS</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+:root {
+  --taskbar-h: 48px;
+  --accent: #6366f1;
+  --accent2: #818cf8;
+  --bg-dark: #0f0f1a;
+  --bg-mid: #1a1a2e;
+  --bg-panel: #16213e;
+  --bg-card: #1e2a45;
+  --border: rgba(255,255,255,0.08);
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --info: #3b82f6;
+  --radius: 10px;
+  --radius-lg: 16px;
+  --shadow: 0 8px 32px rgba(0,0,0,0.5);
+  --window-z: 100;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg-dark); color: var(--text); overflow: hidden; height: 100vh; width: 100vw; user-select: none; }
+
+/* ===== AUTH SCREEN ===== */
+#auth-screen {
+  position: fixed; inset: 0; background: var(--bg-dark);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 9999; flex-direction: column; gap: 24px;
+}
+.auth-logo { font-size: 42px; font-weight: 800; background: linear-gradient(135deg, #6366f1, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -1px; }
+.auth-sub { color: var(--text-muted); font-size: 14px; margin-top: -16px; }
+.auth-card { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 32px; width: 360px; }
+.auth-tabs { display: flex; gap: 0; margin-bottom: 24px; background: var(--bg-dark); border-radius: 8px; padding: 3px; }
+.auth-tab { flex: 1; padding: 8px; text-align: center; border-radius: 6px; cursor: pointer; font-size: 14px; color: var(--text-muted); transition: all .2s; }
+.auth-tab.active { background: var(--accent); color: #fff; }
+.auth-field { margin-bottom: 14px; }
+.auth-field label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; }
+.auth-field input { width: 100%; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; color: var(--text); font-size: 14px; outline: none; transition: border .2s; }
+.auth-field input:focus { border-color: var(--accent); }
+.auth-btn { width: 100%; padding: 11px; background: var(--accent); border: none; border-radius: 8px; color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; transition: opacity .2s; margin-top: 4px; }
+.auth-btn:hover { opacity: .9; }
+.auth-error { color: var(--danger); font-size: 13px; text-align: center; margin-top: 8px; min-height: 20px; }
+.auth-users { margin-top: 20px; }
+.auth-users-title { font-size: 12px; color: var(--text-muted); margin-bottom: 10px; }
+.auth-user-chip { display: flex; align-items: center; gap: 10px; padding: 10px; background: var(--bg-dark); border-radius: 8px; cursor: pointer; margin-bottom: 6px; transition: background .2s; }
+.auth-user-chip:hover { background: var(--bg-card); }
+.auth-avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #fff; }
+
+/* ===== DESKTOP ===== */
+#desktop { position: fixed; inset: 0; bottom: var(--taskbar-h); background: var(--bg-dark); overflow: hidden; }
+#wallpaper { position: absolute; inset: 0; background: radial-gradient(ellipse at 20% 50%, #1a0533 0%, transparent 60%), radial-gradient(ellipse at 80% 20%, #0a1a3d 0%, transparent 60%), radial-gradient(ellipse at 50% 80%, #0d1f3c 0%, transparent 50%), var(--bg-dark); }
+.desktop-icon { position: absolute; width: 76px; text-align: center; cursor: pointer; padding: 8px 4px; border-radius: 10px; transition: background .15s; }
+.desktop-icon:hover { background: rgba(255,255,255,0.07); }
+.desktop-icon .icon-img { font-size: 36px; display: block; margin: 0 auto 6px; }
+.desktop-icon .icon-label { font-size: 11px; color: var(--text); text-shadow: 0 1px 3px rgba(0,0,0,0.8); word-break: break-word; }
+
+/* ===== TASKBAR ===== */
+#taskbar { position: fixed; bottom: 0; left: 0; right: 0; height: var(--taskbar-h); background: rgba(15,15,26,0.85); backdrop-filter: blur(20px); border-top: 1px solid var(--border); display: flex; align-items: center; padding: 0 12px; gap: 8px; z-index: 9000; }
+.taskbar-start { width: 32px; height: 32px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; flex-shrink: 0; }
+.taskbar-divider { width: 1px; height: 24px; background: var(--border); flex-shrink: 0; }
+.taskbar-apps { display: flex; gap: 4px; flex: 1; overflow: hidden; }
+.taskbar-app { display: flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 7px; cursor: pointer; font-size: 12px; max-width: 140px; background: rgba(255,255,255,0.05); transition: background .15s; border: 1px solid transparent; overflow: hidden; }
+.taskbar-app.active { background: rgba(99,102,241,0.2); border-color: var(--accent); }
+.taskbar-app:hover { background: rgba(255,255,255,0.1); }
+.taskbar-app-icon { font-size: 14px; flex-shrink: 0; }
+.taskbar-app-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); }
+.taskbar-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.taskbar-clock { font-size: 12px; color: var(--text); text-align: right; cursor: pointer; }
+.taskbar-user { display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 4px 8px; border-radius: 7px; }
+.taskbar-user:hover { background: rgba(255,255,255,0.07); }
+
+/* ===== START MENU ===== */
+#start-menu { position: fixed; bottom: calc(var(--taskbar-h) + 8px); left: 12px; width: 320px; max-height: 500px; background: rgba(22,33,62,0.97); backdrop-filter: blur(30px); border: 1px solid var(--border); border-radius: var(--radius-lg); z-index: 8999; display: none; flex-direction: column; overflow: hidden; }
+#start-menu.open { display: flex; }
+.sm-header { padding: 16px; border-bottom: 1px solid var(--border); }
+.sm-search { width: 100%; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; color: var(--text); font-size: 13px; outline: none; }
+.sm-search:focus { border-color: var(--accent); }
+.sm-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 12px; overflow-y: auto; }
+.sm-app { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 8px; border-radius: 8px; cursor: pointer; transition: background .15s; }
+.sm-app:hover { background: rgba(255,255,255,0.07); }
+.sm-app-icon { font-size: 26px; }
+.sm-app-name { font-size: 11px; color: var(--text-muted); text-align: center; }
+.sm-footer { padding: 12px 16px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+.sm-user-info { display: flex; align-items: center; gap: 10px; }
+.sm-power { display: flex; gap: 8px; }
+.sm-power-btn { padding: 6px 10px; background: transparent; border: 1px solid var(--border); border-radius: 7px; color: var(--text-muted); cursor: pointer; font-size: 16px; transition: background .15s; }
+.sm-power-btn:hover { background: rgba(255,255,255,0.07); color: var(--text); }
+
+/* ===== WINDOWS ===== */
+.window { position: absolute; background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow); display: flex; flex-direction: column; min-width: 300px; min-height: 200px; z-index: var(--window-z); }
+.window.focused { border-color: rgba(99,102,241,0.4); box-shadow: 0 8px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(99,102,241,0.15); }
+.window.minimized { display: none !important; }
+.window.maximized { top: 0 !important; left: 0 !important; width: 100% !important; height: calc(100vh - var(--taskbar-h)) !important; border-radius: 0 !important; }
+.win-titlebar { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: rgba(255,255,255,0.03); border-bottom: 1px solid var(--border); border-radius: var(--radius-lg) var(--radius-lg) 0 0; cursor: move; flex-shrink: 0; }
+.win-icon { font-size: 16px; }
+.win-title { flex: 1; font-size: 13px; font-weight: 500; color: var(--text); }
+.win-controls { display: flex; gap: 6px; }
+.win-btn { width: 26px; height: 26px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 12px; transition: opacity .2s; }
+.win-btn-min { background: #f59e0b; color: #78350f; }
+.win-btn-max { background: #22c55e; color: #14532d; }
+.win-btn-close { background: #ef4444; color: #7f1d1d; }
+.win-btn:hover { opacity: .8; }
+.win-body { flex: 1; overflow: hidden; display: flex; flex-direction: column; border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
+.win-resize { position: absolute; bottom: 0; right: 0; width: 16px; height: 16px; cursor: nwse-resize; }
+
+/* ===== CONTEXT MENU ===== */
+#ctx-menu { position: fixed; background: rgba(22,33,62,0.97); backdrop-filter: blur(20px); border: 1px solid var(--border); border-radius: 10px; min-width: 180px; z-index: 99999; display: none; padding: 4px; box-shadow: var(--shadow); }
+.ctx-item { padding: 8px 14px; border-radius: 7px; cursor: pointer; font-size: 13px; display: flex; align-items: center; gap: 10px; color: var(--text); }
+.ctx-item:hover { background: rgba(99,102,241,0.15); }
+.ctx-item.danger { color: var(--danger); }
+.ctx-sep { height: 1px; background: var(--border); margin: 4px 0; }
+
+/* ===== NOTIFICATION ===== */
+#notifications { position: fixed; top: 16px; right: 16px; z-index: 99998; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+.notif { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; min-width: 240px; max-width: 320px; display: flex; gap: 12px; align-items: flex-start; pointer-events: all; animation: slideIn .3s ease; box-shadow: var(--shadow); }
+@keyframes slideIn { from { transform: translateX(40px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+.notif-icon { font-size: 20px; flex-shrink: 0; }
+.notif-body { flex: 1; }
+.notif-title { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+.notif-msg { font-size: 12px; color: var(--text-muted); }
+
+/* ===== APPS ===== */
+/* Filemanager */
+.fm-wrap { display: flex; height: 100%; }
+.fm-sidebar { width: 160px; background: rgba(0,0,0,0.2); border-right: 1px solid var(--border); padding: 8px; flex-shrink: 0; overflow-y: auto; }
+.fm-sidebar-item { display: flex; align-items: center; gap: 8px; padding: 7px 8px; border-radius: 7px; cursor: pointer; font-size: 13px; color: var(--text-muted); }
+.fm-sidebar-item:hover, .fm-sidebar-item.active { background: rgba(99,102,241,0.15); color: var(--text); }
+.fm-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.fm-toolbar { padding: 8px 12px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.fm-btn { padding: 5px 10px; background: rgba(255,255,255,0.06); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+.fm-btn:hover { background: rgba(99,102,241,0.15); }
+.fm-path { flex: 1; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; font-size: 12px; color: var(--text-muted); }
+.fm-files { flex: 1; overflow-y: auto; padding: 12px; display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 8px; align-content: start; }
+.fm-file { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 6px; border-radius: 8px; cursor: pointer; transition: background .15s; text-align: center; }
+.fm-file:hover { background: rgba(255,255,255,0.06); }
+.fm-file.selected { background: rgba(99,102,241,0.2); }
+.fm-file-icon { font-size: 32px; }
+.fm-file-name { font-size: 11px; color: var(--text); word-break: break-all; max-height: 32px; overflow: hidden; }
+
+/* Text Editor */
+.editor-wrap { display: flex; flex-direction: column; height: 100%; }
+.editor-menubar { padding: 6px 12px; border-bottom: 1px solid var(--border); display: flex; gap: 6px; flex-wrap: wrap; flex-shrink: 0; }
+.editor-mb-btn { padding: 3px 10px; background: transparent; border: 1px solid transparent; border-radius: 5px; color: var(--text-muted); font-size: 12px; cursor: pointer; }
+.editor-mb-btn:hover { background: rgba(255,255,255,0.06); border-color: var(--border); color: var(--text); }
+.editor-toolbar { padding: 4px 10px; border-bottom: 1px solid var(--border); display: flex; gap: 4px; align-items: center; flex-shrink: 0; flex-wrap: wrap; }
+.editor-tb-btn { width: 28px; height: 28px; background: transparent; border: none; border-radius: 5px; color: var(--text-muted); font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.editor-tb-btn:hover { background: rgba(255,255,255,0.07); color: var(--text); }
+.editor-tb-sep { width: 1px; height: 20px; background: var(--border); margin: 0 2px; }
+.editor-area { flex: 1; padding: 16px 20px; outline: none; font-size: 14px; line-height: 1.7; color: var(--text); overflow-y: auto; background: transparent; min-height: 0; }
+.editor-statusbar { padding: 4px 12px; border-top: 1px solid var(--border); display: flex; gap: 16px; font-size: 11px; color: var(--text-dim); flex-shrink: 0; }
+
+/* Terminal */
+.terminal-wrap { display: flex; flex-direction: column; height: 100%; background: #0a0a0f; border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
+.terminal-output { flex: 1; padding: 12px 14px; font-family: 'Courier New', monospace; font-size: 13px; overflow-y: auto; line-height: 1.6; }
+.terminal-line { margin-bottom: 2px; white-space: pre-wrap; word-break: break-all; }
+.terminal-line.cmd { color: #a78bfa; }
+.terminal-line.out { color: #e2e8f0; }
+.terminal-line.err { color: #f87171; }
+.terminal-line.success { color: #4ade80; }
+.terminal-line.info { color: #60a5fa; }
+.terminal-input-row { display: flex; align-items: center; padding: 8px 14px; border-top: 1px solid rgba(255,255,255,0.05); flex-shrink: 0; }
+.terminal-prompt { color: #a78bfa; font-family: monospace; font-size: 13px; margin-right: 6px; white-space: nowrap; }
+.terminal-input { flex: 1; background: transparent; border: none; outline: none; color: #e2e8f0; font-family: 'Courier New', monospace; font-size: 13px; }
+
+/* Browser */
+.browser-wrap { display: flex; flex-direction: column; height: 100%; }
+.browser-bar { padding: 8px 10px; border-bottom: 1px solid var(--border); display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+.browser-nav-btn { width: 28px; height: 28px; background: rgba(255,255,255,0.05); border: none; border-radius: 6px; color: var(--text-muted); cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; }
+.browser-nav-btn:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+.browser-url { flex: 1; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 20px; padding: 6px 14px; font-size: 13px; color: var(--text); outline: none; }
+.browser-url:focus { border-color: var(--accent); }
+.browser-content { flex: 1; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 12px; }
+.browser-home { text-align: center; padding: 32px; }
+.browser-home-logo { font-size: 48px; font-weight: 800; background: linear-gradient(135deg, #6366f1, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 8px; }
+.browser-search-row { display: flex; gap: 8px; width: 100%; max-width: 400px; }
+.browser-search-input { flex: 1; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 10px; padding: 10px 16px; color: var(--text); font-size: 14px; outline: none; }
+.browser-search-input:focus { border-color: var(--accent); }
+.browser-search-btn { padding: 10px 16px; background: var(--accent); border: none; border-radius: 10px; color: #fff; cursor: pointer; font-size: 14px; }
+.browser-bookmarks { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 16px; }
+.browser-bookmark { padding: 8px 14px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 8px; font-size: 12px; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; gap: 6px; }
+.browser-bookmark:hover { background: rgba(99,102,241,0.15); color: var(--text); }
+
+/* Calculator */
+.calc-wrap { padding: 16px; display: flex; flex-direction: column; gap: 10px; background: var(--bg-dark); height: 100%; border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
+.calc-display { background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; text-align: right; }
+.calc-expr { font-size: 12px; color: var(--text-muted); min-height: 18px; margin-bottom: 4px; }
+.calc-val { font-size: 32px; font-weight: 300; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; flex: 1; }
+.calc-btn { border: none; border-radius: 10px; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 500; transition: transform .1s, opacity .15s; }
+.calc-btn:active { transform: scale(.94); }
+.calc-btn.num { background: rgba(255,255,255,0.07); color: var(--text); }
+.calc-btn.num:hover { background: rgba(255,255,255,0.12); }
+.calc-btn.op { background: rgba(99,102,241,0.2); color: var(--accent2); }
+.calc-btn.op:hover { background: rgba(99,102,241,0.35); }
+.calc-btn.eq { background: var(--accent); color: #fff; }
+.calc-btn.eq:hover { opacity: .9; }
+.calc-btn.fn { background: rgba(255,255,255,0.04); color: var(--text-muted); font-size: 13px; }
+.calc-btn.fn:hover { background: rgba(255,255,255,0.09); }
+.calc-btn.span2 { grid-column: span 2; }
+
+/* Settings */
+.settings-wrap { display: flex; height: 100%; }
+.settings-nav { width: 180px; background: rgba(0,0,0,0.2); border-right: 1px solid var(--border); padding: 8px; flex-shrink: 0; overflow-y: auto; }
+.settings-nav-item { padding: 8px 10px; border-radius: 7px; cursor: pointer; font-size: 13px; color: var(--text-muted); display: flex; align-items: center; gap: 8px; margin-bottom: 2px; }
+.settings-nav-item:hover { background: rgba(255,255,255,0.05); color: var(--text); }
+.settings-nav-item.active { background: rgba(99,102,241,0.15); color: var(--text); }
+.settings-body { flex: 1; overflow-y: auto; padding: 20px 24px; }
+.settings-section-title { font-size: 18px; font-weight: 600; margin-bottom: 20px; }
+.settings-group { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 16px; }
+.settings-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--border); }
+.settings-row:last-child { border-bottom: none; }
+.settings-row-info { flex: 1; }
+.settings-row-label { font-size: 14px; font-weight: 500; }
+.settings-row-desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.settings-toggle { width: 42px; height: 24px; background: var(--border); border-radius: 12px; cursor: pointer; position: relative; transition: background .2s; flex-shrink: 0; }
+.settings-toggle.on { background: var(--accent); }
+.settings-toggle::after { content:''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; background: #fff; border-radius: 50%; transition: transform .2s; }
+.settings-toggle.on::after { transform: translateX(18px); }
+.settings-input { background: var(--bg-dark); border: 1px solid var(--border); border-radius: 7px; padding: 6px 10px; color: var(--text); font-size: 13px; outline: none; }
+.settings-input:focus { border-color: var(--accent); }
+.settings-select { background: var(--bg-dark); border: 1px solid var(--border); border-radius: 7px; padding: 6px 10px; color: var(--text); font-size: 13px; outline: none; cursor: pointer; }
+.settings-color-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.settings-color-chip { width: 32px; height: 32px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: transform .15s; }
+.settings-color-chip:hover { transform: scale(1.15); }
+.settings-color-chip.selected { border-color: #fff; }
+.settings-save-btn { padding: 8px 20px; background: var(--accent); border: none; border-radius: 8px; color: #fff; font-size: 13px; cursor: pointer; margin-top: 4px; }
+.settings-save-btn:hover { opacity: .9; }
+
+/* Notes */
+.notes-wrap { display: flex; height: 100%; }
+.notes-list { width: 200px; background: rgba(0,0,0,0.2); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; }
+.notes-list-header { padding: 10px 12px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.notes-list-title { font-size: 13px; font-weight: 600; }
+.notes-add-btn { width: 24px; height: 24px; background: var(--accent); border: none; border-radius: 6px; color: #fff; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; }
+.notes-items { flex: 1; overflow-y: auto; padding: 6px; }
+.notes-item { padding: 8px 10px; border-radius: 7px; cursor: pointer; margin-bottom: 3px; }
+.notes-item:hover { background: rgba(255,255,255,0.05); }
+.notes-item.active { background: rgba(99,102,241,0.15); }
+.notes-item-title { font-size: 13px; font-weight: 500; color: var(--text); }
+.notes-item-preview { font-size: 11px; color: var(--text-muted); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; margin-top: 2px; }
+.notes-item-date { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
+.notes-editor { flex: 1; display: flex; flex-direction: column; }
+.notes-title-input { padding: 14px 16px; background: transparent; border: none; border-bottom: 1px solid var(--border); outline: none; font-size: 16px; font-weight: 600; color: var(--text); }
+.notes-body-input { flex: 1; padding: 14px 16px; background: transparent; border: none; outline: none; font-size: 13px; color: var(--text); line-height: 1.7; resize: none; font-family: inherit; }
+.notes-footer { padding: 6px 12px; border-top: 1px solid var(--border); font-size: 11px; color: var(--text-dim); display: flex; justify-content: space-between; }
+
+/* Music Player */
+.music-wrap { display: flex; flex-direction: column; height: 100%; padding: 16px; gap: 12px; background: linear-gradient(160deg, #1a0533, #0a1a3d); border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
+.music-cover { width: 120px; height: 120px; background: rgba(255,255,255,0.07); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-size: 48px; flex-shrink: 0; }
+.music-info { text-align: center; }
+.music-title { font-size: 16px; font-weight: 600; }
+.music-artist { font-size: 13px; color: var(--text-muted); }
+.music-progress { display: flex; flex-direction: column; gap: 6px; }
+.music-slider { width: 100%; -webkit-appearance: none; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; outline: none; cursor: pointer; }
+.music-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; background: var(--accent); border-radius: 50%; }
+.music-time { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); }
+.music-controls { display: flex; align-items: center; justify-content: center; gap: 16px; }
+.music-ctrl-btn { background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 20px; padding: 6px; border-radius: 50%; transition: color .15s; }
+.music-ctrl-btn:hover { color: var(--text); }
+.music-ctrl-btn.play { background: var(--accent); color: #fff; width: 48px; height: 48px; border-radius: 50%; font-size: 22px; display: flex; align-items: center; justify-content: center; }
+.music-ctrl-btn.play:hover { opacity: .9; }
+.music-playlist { flex: 1; overflow-y: auto; }
+.music-pl-title { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
+.music-pl-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; cursor: pointer; }
+.music-pl-item:hover { background: rgba(255,255,255,0.05); }
+.music-pl-item.active { background: rgba(99,102,241,0.15); }
+.music-pl-num { font-size: 12px; color: var(--text-dim); width: 20px; text-align: center; flex-shrink: 0; }
+.music-pl-info { flex: 1; }
+.music-pl-name { font-size: 13px; }
+.music-pl-art { font-size: 11px; color: var(--text-muted); }
+.music-pl-dur { font-size: 12px; color: var(--text-muted); }
+
+/* Photos */
+.photos-wrap { height: 100%; display: flex; flex-direction: column; }
+.photos-toolbar { padding: 8px 12px; border-bottom: 1px solid var(--border); display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+.photos-grid { flex: 1; overflow-y: auto; padding: 12px; display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; align-content: start; }
+.photos-item { aspect-ratio: 1; border-radius: 8px; overflow: hidden; cursor: pointer; background: rgba(255,255,255,0.04); display: flex; align-items: center; justify-content: center; font-size: 36px; border: 1px solid var(--border); transition: transform .15s; }
+.photos-item:hover { transform: scale(1.03); }
+.photos-lightbox { position: absolute; inset: 0; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; z-index: 10; border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
+.photos-lightbox-close { position: absolute; top: 12px; right: 12px; width: 32px; height: 32px; background: rgba(255,255,255,0.1); border: none; border-radius: 50%; color: #fff; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; }
+.photos-lightbox-img { max-width: 90%; max-height: 90%; border-radius: 8px; font-size: 80px; }
+
+/* Calendar */
+.calendar-wrap { height: 100%; display: flex; flex-direction: column; padding: 16px; gap: 12px; }
+.calendar-header { display: flex; align-items: center; justify-content: space-between; }
+.calendar-month { font-size: 18px; font-weight: 600; }
+.calendar-nav-btn { background: rgba(255,255,255,0.06); border: none; border-radius: 7px; color: var(--text); cursor: pointer; padding: 6px 10px; font-size: 14px; }
+.calendar-nav-btn:hover { background: rgba(255,255,255,0.12); }
+.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.calendar-day-label { text-align: center; font-size: 11px; color: var(--text-muted); padding: 4px; font-weight: 500; }
+.calendar-cell { aspect-ratio: 1; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 13px; cursor: pointer; transition: background .15s; flex-direction: column; gap: 2px; }
+.calendar-cell:hover { background: rgba(255,255,255,0.06); }
+.calendar-cell.other-month { color: var(--text-dim); }
+.calendar-cell.today { background: rgba(99,102,241,0.15); color: var(--accent2); font-weight: 600; }
+.calendar-cell.has-event::after { content:''; width: 4px; height: 4px; background: var(--accent); border-radius: 50%; }
+.calendar-cell.selected { background: var(--accent) !important; color: #fff; }
+.calendar-events { flex: 1; overflow-y: auto; }
+.calendar-events-title { font-size: 13px; font-weight: 600; margin-bottom: 8px; }
+.calendar-event-item { background: rgba(99,102,241,0.1); border-left: 3px solid var(--accent); border-radius: 0 7px 7px 0; padding: 8px 12px; margin-bottom: 6px; }
+.calendar-event-name { font-size: 13px; font-weight: 500; }
+.calendar-event-time { font-size: 11px; color: var(--text-muted); }
+.calendar-add-row { display: flex; gap: 6px; margin-top: 8px; }
+.calendar-add-input { flex: 1; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 7px; padding: 7px 10px; color: var(--text); font-size: 13px; outline: none; }
+.calendar-add-btn { padding: 7px 12px; background: var(--accent); border: none; border-radius: 7px; color: #fff; font-size: 13px; cursor: pointer; }
+
+/* Weather */
+.weather-wrap { padding: 20px; height: 100%; overflow-y: auto; }
+.weather-location { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+.weather-main { display: flex; align-items: center; gap: 16px; margin: 16px 0; }
+.weather-icon { font-size: 64px; }
+.weather-temp { font-size: 64px; font-weight: 200; }
+.weather-desc { font-size: 16px; color: var(--text-muted); }
+.weather-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 16px; }
+.weather-stat { background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 10px; padding: 12px; text-align: center; }
+.weather-stat-val { font-size: 18px; font-weight: 500; }
+.weather-stat-label { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.weather-forecast { margin-top: 16px; }
+.weather-fc-title { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
+.weather-fc-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.weather-fc-day { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 8px 4px; text-align: center; }
+.weather-fc-day-label { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
+.weather-fc-day-icon { font-size: 20px; margin-bottom: 4px; }
+.weather-fc-day-temp { font-size: 13px; font-weight: 500; }
+
+/* Todo */
+.todo-wrap { display: flex; flex-direction: column; height: 100%; padding: 16px; gap: 12px; }
+.todo-add-row { display: flex; gap: 8px; }
+.todo-add-input { flex: 1; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; color: var(--text); font-size: 14px; outline: none; }
+.todo-add-input:focus { border-color: var(--accent); }
+.todo-add-btn { padding: 9px 16px; background: var(--accent); border: none; border-radius: 8px; color: #fff; font-size: 14px; cursor: pointer; }
+.todo-filters { display: flex; gap: 6px; }
+.todo-filter { padding: 4px 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 20px; font-size: 12px; color: var(--text-muted); cursor: pointer; }
+.todo-filter.active { background: rgba(99,102,241,0.2); border-color: var(--accent); color: var(--text); }
+.todo-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
+.todo-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; }
+.todo-check { width: 20px; height: 20px; border: 2px solid var(--border); border-radius: 50%; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: background .15s, border-color .15s; }
+.todo-check.done { background: var(--success); border-color: var(--success); }
+.todo-check.done::after { content: '✓'; color: #fff; font-size: 11px; }
+.todo-text { flex: 1; font-size: 14px; }
+.todo-text.done { text-decoration: line-through; color: var(--text-dim); }
+.todo-delete { background: transparent; border: none; color: var(--text-dim); cursor: pointer; font-size: 16px; padding: 2px 6px; border-radius: 5px; }
+.todo-delete:hover { color: var(--danger); background: rgba(239,68,68,0.1); }
+.todo-stats { font-size: 12px; color: var(--text-muted); text-align: right; }
+
+/* Clock */
+.clock-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 16px; padding: 20px; }
+.clock-analog { width: 180px; height: 180px; }
+.clock-digital { font-size: 48px; font-weight: 200; letter-spacing: -1px; }
+.clock-date { font-size: 16px; color: var(--text-muted); }
+.clock-alarm-section { width: 100%; max-width: 300px; }
+.clock-alarm-title { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; font-weight: 600; }
+.clock-alarm-row { display: flex; gap: 6px; margin-bottom: 8px; }
+.clock-alarm-input { flex: 1; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 7px; padding: 6px 10px; color: var(--text); font-size: 13px; outline: none; }
+.clock-alarm-btn { padding: 6px 12px; background: var(--accent); border: none; border-radius: 7px; color: #fff; font-size: 13px; cursor: pointer; }
+.clock-alarm-list { display: flex; flex-direction: column; gap: 5px; }
+.clock-alarm-item { display: flex; align-items: center; justify-content: space-between; padding: 7px 10px; background: rgba(255,255,255,0.04); border-radius: 7px; font-size: 13px; }
+.clock-alarm-del { background: transparent; border: none; color: var(--text-dim); cursor: pointer; font-size: 14px; }
+.clock-alarm-del:hover { color: var(--danger); }
+
+/* Paint */
+.paint-wrap { display: flex; flex-direction: column; height: 100%; }
+.paint-toolbar { padding: 6px 10px; border-bottom: 1px solid var(--border); display: flex; gap: 8px; align-items: center; flex-shrink: 0; flex-wrap: wrap; }
+.paint-tool-btn { padding: 5px 10px; background: rgba(255,255,255,0.05); border: 1px solid transparent; border-radius: 6px; color: var(--text-muted); font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+.paint-tool-btn.active { background: rgba(99,102,241,0.2); border-color: var(--accent); color: var(--text); }
+.paint-color-row { display: flex; gap: 4px; align-items: center; }
+.paint-color-swatch { width: 22px; height: 22px; border-radius: 4px; cursor: pointer; border: 2px solid transparent; transition: transform .15s; }
+.paint-color-swatch:hover { transform: scale(1.2); }
+.paint-color-swatch.selected { border-color: #fff; }
+.paint-size-slider { width: 80px; }
+.paint-canvas-wrap { flex: 1; overflow: hidden; display: flex; }
+.paint-canvas { cursor: crosshair; display: block; background: #fff; }
+
+/* System info */
+.sysinfo-wrap { padding: 16px; height: 100%; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
+.sysinfo-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.sysinfo-card { background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+.sysinfo-card-title { font-size: 11px; color: var(--text-muted); margin-bottom: 8px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
+.sysinfo-card-val { font-size: 22px; font-weight: 600; }
+.sysinfo-card-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.sysinfo-bar { height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; margin-top: 8px; overflow: hidden; }
+.sysinfo-bar-fill { height: 100%; border-radius: 3px; background: var(--accent); transition: width 1s; }
+.sysinfo-process-list { }
+.sysinfo-proc-item { display: flex; align-items: center; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+.sysinfo-proc-item:last-child { border-bottom: none; }
+
+/* Scrollbars */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.18); }
+</style>
 </head>
 <body>
 
-    <h1 id="loading-txt">MY-OS: SYSTEM BOOTING...</h1>
+<!-- AUTH -->
+<div id="auth-screen">
+  <div class="auth-logo">My-OS</div>
+  <div class="auth-sub">Jouw persoonlijk besturingssysteem</div>
+  <div class="auth-card">
+    <div class="auth-tabs">
+      <div class="auth-tab active" onclick="authTab('login')">Inloggen</div>
+      <div class="auth-tab" onclick="authTab('register')">Registreren</div>
+    </div>
+    <div id="auth-login-form">
+      <div class="auth-field"><label>Gebruikersnaam</label><input id="login-user" type="text" placeholder="jouw-naam" autocomplete="username"></div>
+      <div class="auth-field"><label>Wachtwoord</label><input id="login-pass" type="password" placeholder="••••••••" autocomplete="current-password"></div>
+      <button class="auth-btn" onclick="doLogin()">Inloggen</button>
+      <div class="auth-error" id="login-error"></div>
+    </div>
+    <div id="auth-register-form" style="display:none">
+      <div class="auth-field"><label>Volledige naam</label><input id="reg-name" type="text" placeholder="Jan de Vries"></div>
+      <div class="auth-field"><label>Gebruikersnaam</label><input id="reg-user" type="text" placeholder="jan-de-vries"></div>
+      <div class="auth-field"><label>Wachtwoord</label><input id="reg-pass" type="password" placeholder="••••••••"></div>
+      <div class="auth-field"><label>Bevestig wachtwoord</label><input id="reg-pass2" type="password" placeholder="••••••••"></div>
+      <button class="auth-btn" onclick="doRegister()">Account aanmaken</button>
+      <div class="auth-error" id="reg-error"></div>
+    </div>
+    <div class="auth-users" id="auth-users-list"></div>
+  </div>
+</div>
 
-    <div id="security-msg">
-        <h2>[ SECURITY ALERT ]</h2>
-        <p>Dit platform en de broncode zijn het exclusieve intellectuele eigendom van <b>Mattyou studios™</b> en internationaal auteursrechtelijk beschermd. Elke poging tot kopiëren, reverse-engineeren of namaken is strikt illegaal en zal direct leiden tot juridische vervolging en schadeclaims. Toegang permanent geweigerd.</p>
+<!-- DESKTOP -->
+<div id="desktop" style="display:none">
+  <div id="wallpaper"></div>
+  <div id="desktop-icons"></div>
+</div>
+
+<!-- TASKBAR -->
+<div id="taskbar" style="display:none">
+  <div class="taskbar-start" onclick="toggleStartMenu()" title="Start menu"><i class="ti ti-layout-grid"></i></div>
+  <div class="taskbar-divider"></div>
+  <div class="taskbar-apps" id="taskbar-apps"></div>
+  <div class="taskbar-right">
+    <div class="taskbar-clock" id="taskbar-clock" onclick="openApp('clock')"></div>
+    <div class="taskbar-user" onclick="toggleStartMenu()">
+      <div class="auth-avatar" id="taskbar-avatar" style="width:28px;height:28px;font-size:12px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- START MENU -->
+<div id="start-menu">
+  <div class="sm-header">
+    <input class="sm-search" id="sm-search" placeholder="Zoek apps..." oninput="filterStartMenu(this.value)">
+  </div>
+  <div class="sm-grid" id="sm-grid"></div>
+  <div class="sm-footer">
+    <div class="sm-user-info">
+      <div class="auth-avatar" id="sm-avatar" style="width:32px;height:32px;font-size:13px;"></div>
+      <div>
+        <div style="font-size:13px;font-weight:500" id="sm-username"></div>
+        <div style="font-size:11px;color:var(--text-muted)">My-OS</div>
+      </div>
+    </div>
+    <div class="sm-power">
+      <button class="sm-power-btn" title="Vergrendelen" onclick="lockScreen()"><i class="ti ti-lock"></i></button>
+      <button class="sm-power-btn" title="Uitloggen" onclick="logout()"><i class="ti ti-logout"></i></button>
+    </div>
+  </div>
+</div>
+
+<!-- CONTEXT MENU -->
+<div id="ctx-menu"></div>
+
+<!-- NOTIFICATIONS -->
+<div id="notifications"></div>
+
+<script>
+// ===================== STORAGE =====================
+const LS = {
+  get: (k) => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
+  set: (k, v) => localStorage.setItem(k, JSON.stringify(v)),
+  del: (k) => localStorage.removeItem(k)
+};
+
+// ===================== AUTH =====================
+let currentUser = null;
+
+function getUsers() { return LS.get('myos_users') || {}; }
+function saveUsers(u) { LS.set('myos_users', u); }
+function getUserData(username) { return LS.get('myos_ud_' + username) || {}; }
+function saveUserData(username, data) { LS.set('myos_ud_' + username, data); }
+
+function authTab(tab) {
+  document.querySelectorAll('.auth-tab').forEach(t => t.classList.toggle('active', t.textContent === (tab === 'login' ? 'Inloggen' : 'Registreren')));
+  document.getElementById('auth-login-form').style.display = tab === 'login' ? '' : 'none';
+  document.getElementById('auth-register-form').style.display = tab === 'register' ? '' : 'none';
+}
+
+function renderAuthUsers() {
+  const users = getUsers();
+  const list = document.getElementById('auth-users-list');
+  const keys = Object.keys(users);
+  if (!keys.length) { list.innerHTML = ''; return; }
+  list.innerHTML = '<div class="auth-users-title">Recente gebruikers</div>' +
+    keys.map(u => `<div class="auth-user-chip" onclick="quickLogin('${u}')">
+      <div class="auth-avatar" style="background:${users[u].color||'#6366f1'};width:32px;height:32px;font-size:13px;">${(users[u].name||u).charAt(0).toUpperCase()}</div>
+      <div><div style="font-size:13px;font-weight:500">${users[u].name||u}</div><div style="font-size:11px;color:var(--text-muted)">@${u}</div></div>
+    </div>`).join('');
+}
+
+function quickLogin(username) {
+  document.getElementById('login-user').value = username;
+  document.getElementById('login-pass').focus();
+  authTab('login');
+}
+
+function doLogin() {
+  const u = document.getElementById('login-user').value.trim();
+  const p = document.getElementById('login-pass').value;
+  const err = document.getElementById('login-error');
+  const users = getUsers();
+  if (!users[u]) { err.textContent = 'Gebruiker niet gevonden.'; return; }
+  if (users[u].password !== hashPass(p)) { err.textContent = 'Wachtwoord onjuist.'; return; }
+  err.textContent = '';
+  loginSuccess(u, users[u]);
+}
+
+function doRegister() {
+  const name = document.getElementById('reg-name').value.trim();
+  const u = document.getElementById('reg-user').value.trim().toLowerCase().replace(/\s+/g, '-');
+  const p = document.getElementById('reg-pass').value;
+  const p2 = document.getElementById('reg-pass2').value;
+  const err = document.getElementById('reg-error');
+  if (!name || !u || !p) { err.textContent = 'Vul alle velden in.'; return; }
+  if (p !== p2) { err.textContent = 'Wachtwoorden komen niet overeen.'; return; }
+  if (p.length < 4) { err.textContent = 'Wachtwoord minimaal 4 tekens.'; return; }
+  const users = getUsers();
+  if (users[u]) { err.textContent = 'Gebruikersnaam al in gebruik.'; return; }
+  const colors = ['#6366f1','#22c55e','#ef4444','#f59e0b','#3b82f6','#ec4899','#14b8a6'];
+  const color = colors[Object.keys(users).length % colors.length];
+  users[u] = { name, password: hashPass(p), color, created: Date.now() };
+  saveUsers(users);
+  // Default user data
+  saveUserData(u, {
+    notes: [{ id: 1, title: 'Welkom bij My-OS!', body: 'Dit is jouw persoonlijke notitie. Bewerk me!', created: Date.now() }],
+    todos: [{ id: 1, text: 'My-OS verkennen', done: true }, { id: 2, text: 'Notities maken', done: false }, { id: 3, text: 'Rekenmachine uitproberen', done: false }],
+    calendarEvents: [],
+    alarms: [],
+    desktopIcons: null,
+    wallpaper: null,
+    accentColor: '#6366f1',
+    fontSize: 'medium',
+    taskbarPos: 'bottom'
+  });
+  err.textContent = '';
+  notify('Account aangemaakt', `Welkom, ${name}!`, 'ti-user');
+  loginSuccess(u, users[u]);
+}
+
+function hashPass(p) {
+  let h = 0;
+  for (let i = 0; i < p.length; i++) h = Math.imul(31, h) + p.charCodeAt(i) | 0;
+  return h.toString(36);
+}
+
+function loginSuccess(username, userObj) {
+  currentUser = { username, ...userObj };
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('desktop').style.display = 'block';
+  document.getElementById('taskbar').style.display = 'flex';
+  initOS();
+}
+
+function logout() {
+  closeAllWindows();
+  currentUser = null;
+  document.getElementById('auth-screen').style.display = 'flex';
+  document.getElementById('desktop').style.display = 'none';
+  document.getElementById('taskbar').style.display = 'none';
+  document.getElementById('start-menu').classList.remove('open');
+  renderAuthUsers();
+}
+
+function lockScreen() {
+  document.getElementById('start-menu').classList.remove('open');
+  const lock = document.createElement('div');
+  lock.id = 'lock-screen';
+  lock.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(10,10,20,0.95);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;';
+  lock.innerHTML = `
+    <div style="font-size:48px;color:var(--text-muted)"><i class="ti ti-lock"></i></div>
+    <div style="font-size:18px;font-weight:600">${currentUser.name}</div>
+    <input type="password" id="lock-pass" placeholder="Wachtwoord" style="background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;padding:10px 18px;color:var(--text);font-size:15px;outline:none;width:260px;text-align:center;" onkeydown="if(event.key==='Enter')unlockScreen()">
+    <button onclick="unlockScreen()" style="padding:10px 28px;background:var(--accent);border:none;border-radius:9px;color:#fff;font-size:14px;cursor:pointer;">Ontgrendelen</button>
+    <div id="lock-err" style="color:var(--danger);font-size:13px;"></div>`;
+  document.body.appendChild(lock);
+  setTimeout(() => lock.querySelector('input').focus(), 100);
+}
+
+function unlockScreen() {
+  const p = document.getElementById('lock-pass').value;
+  const users = getUsers();
+  if (users[currentUser.username].password === hashPass(p)) {
+    document.getElementById('lock-screen').remove();
+  } else {
+    document.getElementById('lock-err').textContent = 'Wachtwoord onjuist.';
+  }
+}
+
+// ===================== OS INIT =====================
+// Ingebouwde apps (altijd aanwezig, niet verwijderbaar)
+const BUILTIN_APPS = [
+  { id: 'filemanager', name: 'Bestanden',      icon: 'ti-folder',         color: '#f59e0b' },
+  { id: 'editor',      name: 'Tekstverwerker', icon: 'ti-file-text',      color: '#3b82f6' },
+  { id: 'terminal',    name: 'Terminal',        icon: 'ti-terminal-2',     color: '#22c55e' },
+  { id: 'browser',     name: 'Browser',         icon: 'ti-world',          color: '#6366f1' },
+  { id: 'calculator',  name: 'Rekenmachine',    icon: 'ti-calculator',     color: '#ec4899' },
+  { id: 'settings',    name: 'Instellingen',    icon: 'ti-settings',       color: '#94a3b8' },
+  { id: 'notes',       name: 'Notities',        icon: 'ti-notebook',       color: '#f59e0b' },
+  { id: 'music',       name: 'Muziek',          icon: 'ti-music',          color: '#a78bfa' },
+  { id: "photos",      name: "Foto's",          icon: 'ti-photo',          color: '#14b8a6' },
+  { id: 'calendar',    name: 'Agenda',          icon: 'ti-calendar',       color: '#ef4444' },
+  { id: 'weather',     name: 'Weer',            icon: 'ti-cloud',          color: '#60a5fa' },
+  { id: 'todo',        name: "To-do's",         icon: 'ti-checklist',      color: '#22c55e' },
+  { id: 'clock',       name: 'Klok',            icon: 'ti-clock',          color: '#f59e0b' },
+  { id: 'paint',       name: 'Tekenen',         icon: 'ti-brush',          color: '#ec4899' },
+  { id: 'sysinfo',     name: 'Systeeminfo',     icon: 'ti-cpu',            color: '#6366f1' },
+  { id: 'appstore',    name: 'App Store',       icon: 'ti-building-store', color: '#a78bfa' },
+];
+
+// App Store catalogus
+const STORE_CATALOG = [
+  { id:'minecraft3d',      name:'Minecraft 3D',        cat:'Games',         dev:'mattyou2',       desc:'Speel Minecraft 3D in My-OS - gemaakt door mattyou2!', icon:'ti-cube',             color:'#22c55e', iframe:'https://mattyou2.github.io/mc/3D/light/v3/', size:'Web' },
+  { id:'mattyou2site',     name:'mattyou2.github.io',  cat:'Websites',      dev:'mattyou2',       desc:'Persoonlijke website en portfolio van mattyou2.',       icon:'ti-brand-github',     color:'#a78bfa', iframe:'https://mattyou2.github.io', size:'Web' },
+  { id:'store_codeeditor', name:'Code Editor',          cat:'Ontwikkeling',  dev:'My-OS Team',     desc:'Code-editor met syntax highlighting voor HTML, CSS, JS, Python en meer. Met meerdere tabbladen en autocompletion.', icon:'ti-code',         color:'#3b82f6', br:'renderCodeEditor',  size:'0 KB' },
+  { id:'store_sqlpad',     name:'SQL Pad',              cat:'Ontwikkeling',  dev:'My-OS Team',     desc:'Schrijf en voer SQL-queries uit in de browser met in-memory database en tabelweergave.', icon:'ti-database',     color:'#f59e0b', br:'renderSqlPad',      size:'0 KB' },
+  { id:'store_jsonviewer', name:'JSON Viewer',          cat:'Ontwikkeling',  dev:'My-OS Team',     desc:'Plak JSON en bekijk het als opvouwbare boomstructuur met zoekfunctie.', icon:'ti-braces',       color:'#14b8a6', br:'renderJsonViewer',  size:'0 KB' },
+  { id:'store_markdown',   name:'Markdown Editor',      cat:'Ontwikkeling',  dev:'My-OS Team',     desc:'Schrijf Markdown links en zie rechts een live HTML-preview.', icon:'ti-markdown',     color:'#6366f1', br:'renderMarkdownPrev', size:'0 KB' },
+  { id:'store_pomodoro',   name:'Pomodoro Timer',       cat:'Productiviteit',dev:'My-OS Team',     desc:'Focus-timer op basis van de Pomodoro-techniek: 25 min werken, 5 min pauze.', icon:'ti-clock-play',  color:'#ef4444', br:'renderPomodoro',    size:'0 KB' },
+  { id:'store_converter',  name:'Eenheden Omrekenen',   cat:'Productiviteit',dev:'My-OS Team',     desc:'Reken lengte, gewicht, temperatuur, oppervlakte en meer om.', icon:'ti-transform',    color:'#22c55e', br:'renderConverter',   size:'0 KB' },
+  { id:'store_password',   name:'Wachtwoord Generator', cat:'Productiviteit',dev:'My-OS Team',     desc:'Genereer sterke willekeurige wachtwoorden met instelbare opties.', icon:'ti-lock-password',color:'#ec4899', br:'renderPassGen',     size:'0 KB' },
+  { id:'store_snake',      name:'Snake',                cat:'Games',         dev:'My-OS Team',     desc:'Het klassieke Snake-spel. Gebruik pijltjestoetsen of WASD.', icon:'ti-circles-relation',color:'#22c55e', br:'renderSnake',       size:'0 KB' },
+  { id:'store_2048',       name:'2048',                 cat:'Games',         dev:'My-OS Team',     desc:'Schuif tegels en bereik 2048!', icon:'ti-th',              color:'#f59e0b', br:'render2048',        size:'0 KB' },
+  { id:'store_tictactoe',  name:'Boter Kaas & Eieren',  cat:'Games',         dev:'My-OS Team',     desc:'Klassiek 3x3 spel tegen de computer.', icon:'ti-grid-3x3',     color:'#ec4899', br:'renderTicTacToe',   size:'0 KB' },
+  { id:'store_minesweeper',name:'Minesweeper',           cat:'Games',         dev:'My-OS Team',     desc:'Zoek alle mijnen zonder ze te raken!', icon:'ti-bomb',         color:'#64748b', br:'renderMinesweeper', size:'0 KB' },
+  { id:'store_codepen',    name:'CodePen',              cat:'Ontwikkeling',  dev:'CodePen',        desc:'Online HTML/CSS/JS sandbox rechtstreeks in My-OS.', icon:'ti-brand-codepen',color:'#47cf73', iframe:'https://codepen.io', size:'Web' },
+  { id:'store_excalidraw', name:'Excalidraw',           cat:'Ontwerp',       dev:'Excalidraw Team',desc:'Handgetekende stijl whiteboard en diagramtool.', icon:'ti-pencil',       color:'#6366f1', iframe:'https://excalidraw.com', size:'Web' },
+  { id:'store_osm',        name:'OpenStreetMap',        cat:'Kaarten',       dev:'OSM',            desc:'Gratis open-source kaartservice van de hele wereld.', icon:'ti-map-2',        color:'#22c55e', iframe:'https://www.openstreetmap.org', size:'Web' },
+  { id:'store_wolfram',    name:'WolframAlpha',         cat:'Wetenschap',    dev:'Wolfram',        desc:'Wiskundige en wetenschappelijke vragen, directe antwoorden.', icon:'ti-math-function',color:'#f97316', iframe:'https://www.wolframalpha.com', size:'Web' },
+  { id:'store_hn',         name:'Hacker News',          cat:'Nieuws',        dev:'YCombinator',    desc:'Tech-nieuws en startups.', icon:'ti-news',         color:'#f59e0b', iframe:'https://news.ycombinator.com', size:'Web' },
+  { id:'store_itchio',     name:'itch.io',              cat:'Games',         dev:'itch.io',        desc:'Platform vol indie-games die je in de browser speelt.', icon:'ti-device-gamepad',color:'#fa5c5c', iframe:'https://itch.io', size:'Web' },
+];
+const STORE_CATS = ['Alle','Games','Ontwikkeling','Ontwerp','Productiviteit','Kaarten','Wetenschap','Nieuws','Websites'];
+
+// localStorage slaat alleen de IDs op van geinstalleerde store-apps
+function getInstalledIds() { return LS.get('myos_installed') || []; }
+function saveInstalledIds(arr) { LS.set('myos_installed', arr); }
+function isInstalled(id) { return BUILTIN_APPS.some(a=>a.id===id) || getInstalledIds().includes(id); }
+
+function buildAppsList() {
+  const ids = getInstalledIds();
+  const extra = STORE_CATALOG.filter(s => ids.includes(s.id)).map(s => ({
+    id: s.id, name: s.name, icon: s.icon, color: s.color,
+    iframe: s.iframe || null, br: s.br || null,
+  }));
+  return [...BUILTIN_APPS, ...extra];
+}
+let APPS = buildAppsList();
+
+function refreshApps() {
+  APPS = buildAppsList();
+  renderDesktopIcons();
+  renderStartMenu();
+}
+
+let windows = {};
+let windowZCounter = 200;
+let desktopIconPositions = {};
+
+function initOS() {
+  APPS = buildAppsList(); // load installed apps from localStorage
+  updateTaskbarUser();
+  renderDesktopIcons();
+  renderStartMenu();
+  startClock();
+  loadUserSettings();
+  renderAuthUsers();
+  notify('Welkom terug', `Hoi ${currentUser.name}! My-OS is klaar.`, 'ti-device-laptop');
+}
+
+function loadUserSettings() {
+  const ud = getUserData(currentUser.username);
+  if (ud.accentColor) document.documentElement.style.setProperty('--accent', ud.accentColor);
+  desktopIconPositions = ud.desktopIconPositions || {};
+}
+
+function saveUserSetting(key, val) {
+  const ud = getUserData(currentUser.username);
+  ud[key] = val;
+  saveUserData(currentUser.username, ud);
+}
+
+function updateTaskbarUser() {
+  const av = document.getElementById('taskbar-avatar');
+  const sav = document.getElementById('sm-avatar');
+  const sun = document.getElementById('sm-username');
+  const initials = currentUser.name.charAt(0).toUpperCase();
+  const style = `background:${currentUser.color};`;
+  av.style.cssText += style;
+  av.textContent = initials;
+  sav.style.cssText += style;
+  sav.textContent = initials;
+  sun.textContent = currentUser.name;
+}
+
+// ===================== DESKTOP ICONS =====================
+function renderDesktopIcons() {
+  const container = document.getElementById('desktop-icons');
+  container.innerHTML = '';
+  APPS.forEach((app, i) => {
+    const col = Math.floor(i / 6);
+    const row = i % 6;
+    const pos = desktopIconPositions[app.id] || { left: 20 + col * 90, top: 20 + row * 90 };
+    const el = document.createElement('div');
+    el.className = 'desktop-icon';
+    el.id = 'di-' + app.id;
+    el.style.cssText = `left:${pos.left}px;top:${pos.top}px;`;
+    el.innerHTML = `<i class="ti ${app.icon} icon-img" style="color:${app.color}"></i><div class="icon-label">${app.name}</div>`;
+    el.addEventListener('dblclick', () => openApp(app.id));
+    el.addEventListener('contextmenu', e => { e.preventDefault(); showCtxMenu(e, [
+      { label: 'Openen', icon: 'ti-external-link', action: () => openApp(app.id) },
+    ]); });
+    makeDraggableIcon(el, app.id);
+    container.appendChild(el);
+  });
+}
+
+function makeDraggableIcon(el, appId) {
+  let startX, startY, startLeft, startTop, dragging = false, clicks = 0;
+  el.addEventListener('mousedown', e => {
+    if (e.button !== 0) return;
+    startX = e.clientX; startY = e.clientY;
+    const rect = el.getBoundingClientRect();
+    startLeft = rect.left; startTop = rect.top;
+    dragging = false;
+    const move = (e2) => {
+      if (Math.abs(e2.clientX - startX) > 5 || Math.abs(e2.clientY - startY) > 5) dragging = true;
+      if (!dragging) return;
+      el.style.left = (startLeft + e2.clientX - startX) + 'px';
+      el.style.top = (startTop + e2.clientY - startY) + 'px';
+    };
+    const up = () => {
+      document.removeEventListener('mousemove', move);
+      document.removeEventListener('mouseup', up);
+      if (dragging) {
+        desktopIconPositions[appId] = { left: parseInt(el.style.left), top: parseInt(el.style.top) };
+        saveUserSetting('desktopIconPositions', desktopIconPositions);
+      }
+    };
+    document.addEventListener('mousemove', move);
+    document.addEventListener('mouseup', up);
+  });
+}
+
+// ===================== START MENU =====================
+function renderStartMenu() {
+  const grid = document.getElementById('sm-grid');
+  grid.innerHTML = APPS.map(a => `<div class="sm-app" onclick="openApp('${a.id}');toggleStartMenu()">
+    <i class="ti ${a.icon} sm-app-icon" style="color:${a.color}"></i>
+    <span class="sm-app-name">${a.name}</span>
+  </div>`).join('');
+}
+
+function filterStartMenu(q) {
+  const grid = document.getElementById('sm-grid');
+  const filtered = APPS.filter(a => a.name.toLowerCase().includes(q.toLowerCase()));
+  grid.innerHTML = filtered.map(a => `<div class="sm-app" onclick="openApp('${a.id}');toggleStartMenu()">
+    <i class="ti ${a.icon} sm-app-icon" style="color:${a.color}"></i>
+    <span class="sm-app-name">${a.name}</span>
+  </div>`).join('');
+}
+
+function toggleStartMenu() {
+  const sm = document.getElementById('start-menu');
+  sm.classList.toggle('open');
+  if (sm.classList.contains('open')) {
+    setTimeout(() => document.getElementById('sm-search').focus(), 50);
+  }
+}
+
+document.addEventListener('click', e => {
+  const sm = document.getElementById('start-menu');
+  if (!sm.contains(e.target) && !e.target.closest('.taskbar-start') && !e.target.closest('.taskbar-user')) {
+    sm.classList.remove('open');
+  }
+  hideCtxMenu();
+});
+
+// ===================== CLOCK =====================
+function startClock() {
+  function update() {
+    const now = new Date();
+    const h = now.getHours().toString().padStart(2,'0');
+    const m = now.getMinutes().toString().padStart(2,'0');
+    document.getElementById('taskbar-clock').innerHTML = `<div style="font-weight:500">${h}:${m}</div><div style="font-size:10px;color:var(--text-muted)">${now.toLocaleDateString('nl-NL',{weekday:'short',day:'numeric',month:'short'})}</div>`;
+  }
+  update();
+  setInterval(update, 30000);
+}
+
+// ===================== WINDOW SYSTEM =====================
+function openApp(appId) {
+  if (windows[appId]) {
+    focusWindow(appId);
+    if (windows[appId].minimized) {
+      windows[appId].minimized = false;
+      document.getElementById('win-' + appId).classList.remove('minimized');
+    }
+    return;
+  }
+  const app = APPS.find(a => a.id === appId);
+  if (!app) return;
+  createWindow(appId, app);
+}
+
+function createWindow(appId, app) {
+  const desktop = document.getElementById('desktop');
+  const win = document.createElement('div');
+  win.className = 'window focused';
+  win.id = 'win-' + appId;
+  const sizes = {
+    filemanager: [700, 480], editor: [660, 480], terminal: [580, 400],
+    browser: [900, 580], calculator: [300, 460], settings: [620, 480],
+    notes: [560, 460], music: [340, 520], photos: [600, 450],
+    calendar: [500, 520], weather: [480, 500], todo: [400, 480],
+    clock: [380, 480], paint: [640, 480], sysinfo: [540, 480],
+    appstore: [780, 560],
+    minecraft3d: [900, 580], mattyou2site: [860, 560],
+    store_codeeditor: [800, 540], store_sqlpad: [700, 500],
+    store_jsonviewer: [640, 480], store_markdown: [800, 520],
+    store_pomodoro: [340, 420], store_converter: [400, 480],
+    store_password: [420, 400], store_snake: [420, 500],
+    store_2048: [400, 500], store_tictactoe: [360, 440],
+    store_minesweeper: [480, 520], store_codepen: [900, 580],
+    store_excalidraw: [900, 580], store_osm: [860, 560],
+    store_wolfram: [860, 560], store_hn: [800, 560],
+    store_itchio: [900, 580],
+  };
+  const [w, h] = sizes[appId] || [500, 400];
+  const left = 60 + Object.keys(windows).length * 24;
+  const top = 40 + Object.keys(windows).length * 24;
+  win.style.cssText = `left:${left}px;top:${top}px;width:${w}px;height:${h}px;`;
+
+  win.innerHTML = `
+    <div class="win-titlebar" id="winbar-${appId}">
+      <i class="ti ${app.icon} win-icon" style="color:${app.color}"></i>
+      <div class="win-title" id="wintitle-${appId}">${app.name}</div>
+      <div class="win-controls">
+        <button class="win-btn win-btn-min" onclick="minimizeWindow('${appId}')" title="Minimaliseren"><i class="ti ti-minus" style="font-size:10px"></i></button>
+        <button class="win-btn win-btn-max" onclick="maximizeWindow('${appId}')" title="Maximaliseren"><i class="ti ti-arrows-maximize" style="font-size:10px"></i></button>
+        <button class="win-btn win-btn-close" onclick="closeWindow('${appId}')" title="Sluiten"><i class="ti ti-x" style="font-size:10px"></i></button>
+      </div>
+    </div>
+    <div class="win-body" id="winbody-${appId}"></div>
+    <div class="win-resize" id="winresize-${appId}"></div>`;
+
+  desktop.appendChild(win);
+  windows[appId] = { minimized: false, maximized: false, el: win };
+  makeDraggable(win, appId);
+  makeResizable(win, appId);
+  renderApp(appId, document.getElementById('winbody-' + appId));
+  updateTaskbarApps();
+  focusWindow(appId);
+}
+
+function focusWindow(appId) {
+  Object.keys(windows).forEach(id => {
+    const w = document.getElementById('win-' + id);
+    if (w) w.classList.remove('focused');
+  });
+  const w = document.getElementById('win-' + appId);
+  if (w) { w.classList.add('focused'); w.style.zIndex = ++windowZCounter; }
+  updateTaskbarApps(appId);
+}
+
+function minimizeWindow(appId) {
+  windows[appId].minimized = true;
+  document.getElementById('win-' + appId).classList.add('minimized');
+  updateTaskbarApps();
+}
+
+function maximizeWindow(appId) {
+  const win = document.getElementById('win-' + appId);
+  windows[appId].maximized = !windows[appId].maximized;
+  win.classList.toggle('maximized', windows[appId].maximized);
+}
+
+function closeWindow(appId) {
+  const win = document.getElementById('win-' + appId);
+  if (win) win.remove();
+  delete windows[appId];
+  updateTaskbarApps();
+  // cleanup intervals
+  if (appId === 'clock' && window._clockInterval) clearInterval(window._clockInterval);
+  if (appId === 'sysinfo' && window._sysinfoInterval) clearInterval(window._sysinfoInterval);
+  if (appId === 'music' && window._musicInterval) clearInterval(window._musicInterval);
+}
+
+function closeAllWindows() {
+  Object.keys(windows).forEach(id => closeWindow(id));
+}
+
+function updateTaskbarApps(activeId) {
+  const container = document.getElementById('taskbar-apps');
+  container.innerHTML = '';
+  Object.keys(windows).forEach(id => {
+    const app = APPS.find(a => a.id === id);
+    if (!app) return;
+    const div = document.createElement('div');
+    div.className = 'taskbar-app' + (id === activeId ? ' active' : '');
+    div.innerHTML = `<i class="ti ${app.icon} taskbar-app-icon" style="color:${app.color}"></i><span class="taskbar-app-name">${app.name}</span>`;
+    div.onclick = () => {
+      if (windows[id].minimized) { windows[id].minimized = false; document.getElementById('win-' + id).classList.remove('minimized'); focusWindow(id); }
+      else if (id === activeId) { minimizeWindow(id); }
+      else focusWindow(id);
+    };
+    container.appendChild(div);
+  });
+}
+
+function makeDraggable(win, appId) {
+  const bar = document.getElementById('winbar-' + appId);
+  let startX, startY, startLeft, startTop;
+  bar.addEventListener('mousedown', e => {
+    if (e.target.closest('.win-controls')) return;
+    if (windows[appId].maximized) return;
+    startX = e.clientX; startY = e.clientY;
+    const r = win.getBoundingClientRect();
+    startLeft = r.left; startTop = r.top;
+    focusWindow(appId);
+    const move = e2 => {
+      win.style.left = Math.max(0, startLeft + e2.clientX - startX) + 'px';
+      win.style.top = Math.max(0, startTop + e2.clientY - startY) + 'px';
+    };
+    const up = () => { document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', up); };
+    document.addEventListener('mousemove', move);
+    document.addEventListener('mouseup', up);
+  });
+  win.addEventListener('mousedown', () => focusWindow(appId));
+}
+
+function makeResizable(win, appId) {
+  const handle = document.getElementById('winresize-' + appId);
+  handle.addEventListener('mousedown', e => {
+    e.stopPropagation();
+    const startX = e.clientX, startY = e.clientY;
+    const startW = win.offsetWidth, startH = win.offsetHeight;
+    const move = e2 => {
+      win.style.width = Math.max(300, startW + e2.clientX - startX) + 'px';
+      win.style.height = Math.max(200, startH + e2.clientY - startY) + 'px';
+    };
+    const up = () => { document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', up); };
+    document.addEventListener('mousemove', move);
+    document.addEventListener('mouseup', up);
+  });
+}
+
+// ===================== CONTEXT MENU =====================
+function showCtxMenu(e, items) {
+  const menu = document.getElementById('ctx-menu');
+  menu.innerHTML = items.map((item, i) => item.sep
+    ? '<div class="ctx-sep"></div>'
+    : `<div class="ctx-item${item.danger?' danger':''}" data-idx="${i}"><i class="ti ${item.icon||'ti-dot'}" style="font-size:14px"></i>${item.label}</div>`
+  ).join('');
+  menu.querySelectorAll('.ctx-item').forEach(el => {
+    const idx = parseInt(el.dataset.idx);
+    if (items[idx]) el.onclick = () => { hideCtxMenu(); items[idx].action(); };
+  });
+  const x = Math.min(e.clientX, window.innerWidth - 200);
+  const y = Math.min(e.clientY, window.innerHeight - (items.length * 36 + 16));
+  menu.style.cssText = `display:block;left:${x}px;top:${y}px;`;
+}
+
+function hideCtxMenu() {
+  document.getElementById('ctx-menu').style.display = 'none';
+}
+
+document.getElementById('desktop').addEventListener('contextmenu', e => {
+  e.preventDefault();
+  showCtxMenu(e, [
+    { label: 'Vernieuwen', icon: 'ti-refresh', action: () => renderDesktopIcons() },
+    { label: 'Iconen schikken', icon: 'ti-layout-grid', action: () => { desktopIconPositions = {}; saveUserSetting('desktopIconPositions', {}); renderDesktopIcons(); } },
+    { sep: true },
+    { label: 'Nieuw tekstbestand', icon: 'ti-file-plus', action: () => openApp('editor') },
+    { label: 'Instellingen', icon: 'ti-settings', action: () => openApp('settings') },
+  ]);
+});
+
+// ===================== NOTIFICATIONS =====================
+function notify(title, msg, icon = 'ti-bell') {
+  const container = document.getElementById('notifications');
+  const n = document.createElement('div');
+  n.className = 'notif';
+  n.innerHTML = `<i class="ti ${icon} notif-icon" style="color:var(--accent2)"></i><div class="notif-body"><div class="notif-title">${title}</div><div class="notif-msg">${msg}</div></div>`;
+  container.appendChild(n);
+  setTimeout(() => n.style.opacity = '0', 3500);
+  setTimeout(() => n.remove(), 4000);
+}
+
+// ===================== APP RENDERERS =====================
+const BUILTIN_RENDERERS = {
+  filemanager: ()=>renderFileManager,
+  editor:      ()=>renderEditor,
+  terminal:    ()=>renderTerminal,
+  browser:     ()=>renderBrowser,
+  calculator:  ()=>renderCalculator,
+  settings:    ()=>renderSettings,
+  notes:       ()=>renderNotes,
+  music:       ()=>renderMusic,
+  photos:      ()=>renderPhotos,
+  calendar:    ()=>renderCalendar,
+  weather:     ()=>renderWeather,
+  todo:        ()=>renderTodo,
+  clock:       ()=>renderClock,
+  paint:       ()=>renderPaint,
+  sysinfo:     ()=>renderSysinfo,
+  appstore:    ()=>renderAppStore,
+  // Store built-in renderers
+  store_codeeditor: ()=>renderCodeEditor,
+  store_sqlpad:     ()=>renderSqlPad,
+  store_jsonviewer: ()=>renderJsonViewer,
+  store_markdown:   ()=>renderMarkdownPrev,
+  store_pomodoro:   ()=>renderPomodoro,
+  store_converter:  ()=>renderConverter,
+  store_password:   ()=>renderPassGen,
+  store_snake:      ()=>renderSnake,
+  store_2048:       ()=>render2048,
+  store_tictactoe:  ()=>renderTicTacToe,
+  store_minesweeper:()=>renderMinesweeper,
+};
+
+function renderApp(appId, body) {
+  const fn = BUILTIN_RENDERERS[appId];
+  if (fn) { fn()(body); return; }
+  // Installed store app with iframe or br
+  const app = APPS.find(a => a.id === appId);
+  if (!app) return;
+  if (app.iframe) { renderIframeApp(body, app); return; }
+  if (app.br) {
+    const brFn = window[app.br];
+    if (brFn) { brFn(body); return; }
+  }
+}
+
+// ===== IFRAME APP RENDERER =====
+function renderIframeApp(body, app) {
+  body.style.height = '100%';
+  body.innerHTML = `
+    <div style="display:flex;flex-direction:column;height:100%;">
+      <div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:rgba(0,0,0,0.25);border-bottom:1px solid var(--border);flex-shrink:0;">
+        <i class="ti ${app.icon}" style="color:${app.color};font-size:16px;"></i>
+        <span style="font-size:12px;font-weight:600;color:var(--text);">${app.name}</span>
+        <span style="font-size:11px;color:var(--text-dim);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${app.iframe}</span>
+        <button onclick="window.open('${app.iframe}','_blank')" title="Openen in nieuw tabblad"
+          style="padding:3px 9px;background:rgba(255,255,255,0.07);border:1px solid var(--border);border-radius:6px;color:var(--text-muted);font-size:12px;cursor:pointer;flex-shrink:0;">
+          <i class="ti ti-external-link"></i>
+        </button>
+      </div>
+      <iframe
+        src="${app.iframe}"
+        style="flex:1;border:none;width:100%;display:block;"
+        allowfullscreen
+        allow="fullscreen; autoplay; clipboard-write; encrypted-media; picture-in-picture"
+        loading="lazy"
+        id="iframe-${app.id}"
+      ></iframe>
+    </div>`;
+}
+
+// ===== FILE MANAGER =====
+function renderFileManager(body) {
+  const ud = getUserData(currentUser.username);
+  if (!ud.files) { ud.files = {
+    'Documenten': { type: 'folder', children: { 'readme.txt': { type: 'file', content: 'Welkom bij My-OS!', modified: Date.now() } } },
+    'Afbeeldingen': { type: 'folder', children: {} },
+    'Downloads': { type: 'folder', children: {} },
+    'Muziek': { type: 'folder', children: {} }
+  }; saveUserData(currentUser.username, ud); }
+  let currentPath = [];
+
+  function getNode(path) {
+    let node = { children: ud.files };
+    for (const p of path) node = node.children[p];
+    return node;
+  }
+
+  function render() {
+    const node = currentPath.length ? getNode(currentPath) : { children: ud.files };
+    const pathStr = '/' + currentPath.join('/');
+    body.innerHTML = `<div class="fm-wrap">
+      <div class="fm-sidebar">
+        <div class="fm-sidebar-item${currentPath.length===0?' active':''}" onclick=""><i class="ti ti-home"></i> Home</div>
+        ${Object.keys(ud.files).map(k=>`<div class="fm-sidebar-item" id="fmsb-${k}"><i class="ti ti-folder"></i> ${k}</div>`).join('')}
+      </div>
+      <div class="fm-main">
+        <div class="fm-toolbar">
+          <button class="fm-btn" id="fm-back"><i class="ti ti-arrow-left"></i></button>
+          <div class="fm-path">${pathStr}</div>
+          <button class="fm-btn" id="fm-newfolder"><i class="ti ti-folder-plus"></i> Map</button>
+          <button class="fm-btn" id="fm-newfile"><i class="ti ti-file-plus"></i> Bestand</button>
+        </div>
+        <div class="fm-files" id="fm-files-grid"></div>
+      </div>
+    </div>`;
+    // sidebar clicks
+    Object.keys(ud.files).forEach(k => {
+      const el = document.getElementById('fmsb-' + k);
+      if (el) el.onclick = () => { currentPath = [k]; render(); };
+    });
+    body.querySelector('#fm-back').onclick = () => { if (currentPath.length > 0) { currentPath.pop(); render(); } };
+    body.querySelector('#fm-newfolder').onclick = () => {
+      const n = prompt('Mapnaam:'); if (!n) return;
+      const nd = getNode(currentPath);
+      nd.children[n] = { type: 'folder', children: {} };
+      saveUserData(currentUser.username, ud); render();
+    };
+    body.querySelector('#fm-newfile').onclick = () => {
+      const n = prompt('Bestandsnaam:'); if (!n) return;
+      const nd = getNode(currentPath);
+      nd.children[n] = { type: 'file', content: '', modified: Date.now() };
+      saveUserData(currentUser.username, ud); render();
+    };
+    const grid = document.getElementById('fm-files-grid');
+    const children = node.children || {};
+    grid.innerHTML = Object.keys(children).map(name => {
+      const child = children[name];
+      const icon = child.type === 'folder' ? 'ti-folder' : getFileIcon(name);
+      const color = child.type === 'folder' ? '#f59e0b' : '#94a3b8';
+      return `<div class="fm-file" data-name="${name}" data-type="${child.type}">
+        <i class="ti ${icon} fm-file-icon" style="color:${color}"></i>
+        <div class="fm-file-name">${name}</div>
+      </div>`;
+    }).join('') || '<div style="padding:20px;color:var(--text-muted);font-size:13px;grid-column:1/-1;">Lege map</div>';
+    grid.querySelectorAll('.fm-file').forEach(el => {
+      el.addEventListener('dblclick', () => {
+        const name = el.dataset.name;
+        const child = children[name];
+        if (child.type === 'folder') { currentPath.push(name); render(); }
+        else { openFileEditor(name, child, currentPath, ud); }
+      });
+      el.addEventListener('contextmenu', e => {
+        e.preventDefault();
+        const name = el.dataset.name;
+        showCtxMenu(e, [
+          { label: 'Verwijderen', icon: 'ti-trash', danger: true, action: () => {
+            if (confirm(`'${name}' verwijderen?`)) { delete children[name]; saveUserData(currentUser.username, ud); render(); }
+          }},
+          { label: 'Hernoemen', icon: 'ti-edit', action: () => {
+            const nn = prompt('Nieuwe naam:', name); if (!nn || nn === name) return;
+            children[nn] = children[name]; delete children[name];
+            saveUserData(currentUser.username, ud); render();
+          }}
+        ]);
+      });
+    });
+  }
+  render();
+}
+
+function getFileIcon(name) {
+  const ext = name.split('.').pop().toLowerCase();
+  const map = { txt: 'ti-file-text', md: 'ti-markdown', js: 'ti-brand-javascript', html: 'ti-brand-html5', css: 'ti-file-code', json: 'ti-braces', png: 'ti-photo', jpg: 'ti-photo', gif: 'ti-photo', mp3: 'ti-music', mp4: 'ti-video', pdf: 'ti-file-type-pdf', zip: 'ti-file-zip' };
+  return map[ext] || 'ti-file';
+}
+
+function openFileEditor(name, fileObj, path, ud) {
+  openApp('editor');
+  setTimeout(() => {
+    const body = document.getElementById('winbody-editor');
+    if (body) {
+      document.getElementById('wintitle-editor').textContent = 'Tekstverwerker – ' + name;
+      const area = body.querySelector('.editor-area');
+      if (area) { area.innerHTML = fileObj.content || ''; area.dataset.filename = name; area.dataset.path = JSON.stringify(path); }
+    }
+  }, 100);
+}
+
+// ===== TEXT EDITOR =====
+function renderEditor(body) {
+  body.innerHTML = `<div class="editor-wrap">
+    <div class="editor-menubar">
+      <button class="editor-mb-btn" onclick="editorNew()">Nieuw</button>
+      <button class="editor-mb-btn" onclick="editorSave()">Opslaan</button>
+      <button class="editor-mb-btn" onclick="editorExport()">Exporteren</button>
+    </div>
+    <div class="editor-toolbar">
+      <button class="editor-tb-btn" onclick="edExec('bold')" title="Vet"><i class="ti ti-bold"></i></button>
+      <button class="editor-tb-btn" onclick="edExec('italic')" title="Cursief"><i class="ti ti-italic"></i></button>
+      <button class="editor-tb-btn" onclick="edExec('underline')" title="Onderstrepen"><i class="ti ti-underline"></i></button>
+      <div class="editor-tb-sep"></div>
+      <button class="editor-tb-btn" onclick="edExec('justifyLeft')"><i class="ti ti-align-left"></i></button>
+      <button class="editor-tb-btn" onclick="edExec('justifyCenter')"><i class="ti ti-align-center"></i></button>
+      <button class="editor-tb-btn" onclick="edExec('justifyRight')"><i class="ti ti-align-right"></i></button>
+      <div class="editor-tb-sep"></div>
+      <button class="editor-tb-btn" onclick="edExec('insertUnorderedList')"><i class="ti ti-list"></i></button>
+      <button class="editor-tb-btn" onclick="edExec('insertOrderedList')"><i class="ti ti-list-numbers"></i></button>
+      <div class="editor-tb-sep"></div>
+      <select class="editor-tb-btn" onchange="edExec('fontSize',this.value)" style="width:auto;padding:0 6px;font-size:12px;">
+        <option value="2">Klein</option>
+        <option value="3" selected>Normaal</option>
+        <option value="4">Groot</option>
+        <option value="5">Groter</option>
+        <option value="6">Enorm</option>
+      </select>
+      <input type="color" value="#e2e8f0" onchange="edExec('foreColor',this.value)" style="width:28px;height:28px;border:none;background:none;cursor:pointer;" title="Tekstkleur">
+    </div>
+    <div class="editor-area" id="editor-area" contenteditable="true" spellcheck="true" oninput="updateEditorStatus()">Begin hier met typen...</div>
+    <div class="editor-statusbar">
+      <span id="editor-words">0 woorden</span>
+      <span id="editor-chars">0 tekens</span>
+      <span>UTF-8</span>
+    </div>
+  </div>`;
+  updateEditorStatus();
+}
+
+function edExec(cmd, val) { document.execCommand(cmd, false, val || null); document.getElementById('editor-area')?.focus(); }
+
+function updateEditorStatus() {
+  const area = document.getElementById('editor-area');
+  if (!area) return;
+  const text = area.innerText || '';
+  const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+  const wEl = document.getElementById('editor-words');
+  const cEl = document.getElementById('editor-chars');
+  if (wEl) wEl.textContent = words + ' woorden';
+  if (cEl) cEl.textContent = text.length + ' tekens';
+}
+
+function editorNew() {
+  const area = document.getElementById('editor-area');
+  if (area) { if (confirm('Nieuw document? Niet-opgeslagen wijzigingen gaan verloren.')) { area.innerHTML = ''; updateEditorStatus(); } }
+}
+
+function editorSave() {
+  const area = document.getElementById('editor-area');
+  if (!area) return;
+  const name = prompt('Bestandsnaam:', area.dataset.filename || 'document.txt');
+  if (!name) return;
+  const ud = getUserData(currentUser.username);
+  if (!ud.files) ud.files = {};
+  if (!ud.files['Documenten']) ud.files['Documenten'] = { type: 'folder', children: {} };
+  ud.files['Documenten'].children[name] = { type: 'file', content: area.innerHTML, modified: Date.now() };
+  saveUserData(currentUser.username, ud);
+  notify('Opgeslagen', `'${name}' opgeslagen in Documenten`, 'ti-check');
+}
+
+function editorExport() {
+  const area = document.getElementById('editor-area');
+  if (!area) return;
+  const blob = new Blob([area.innerText], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'document.txt';
+  a.click();
+}
+
+// ===== TERMINAL =====
+const termHistory = [];
+let termHistoryIdx = -1;
+let termCurrentDir = '~';
+const termFS = {};
+
+function renderTerminal(body) {
+  body.innerHTML = `<div class="terminal-wrap">
+    <div class="terminal-output" id="term-output">
+      <div class="terminal-line info">My-OS Terminal v2.0 — type 'help' voor commando's</div>
+      <div class="terminal-line info">Ingelogd als ${currentUser.name} (@${currentUser.username})</div>
+      <div class="terminal-line"> </div>
+    </div>
+    <div class="terminal-input-row">
+      <div class="terminal-prompt" id="term-prompt">${currentUser.username}@my-os:${termCurrentDir}$</div>
+      <input class="terminal-input" id="term-input" type="text" autocomplete="off" spellcheck="false">
+    </div>
+  </div>`;
+  const input = document.getElementById('term-input');
+  input.focus();
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { runTerminalCmd(input.value.trim()); input.value = ''; termHistoryIdx = -1; }
+    else if (e.key === 'ArrowUp') { if (termHistoryIdx < termHistory.length - 1) { termHistoryIdx++; input.value = termHistory[termHistoryIdx]; } e.preventDefault(); }
+    else if (e.key === 'ArrowDown') { if (termHistoryIdx > 0) { termHistoryIdx--; input.value = termHistory[termHistoryIdx]; } else { termHistoryIdx = -1; input.value = ''; } e.preventDefault(); }
+  });
+}
+
+function termPrint(text, cls = 'out') {
+  const out = document.getElementById('term-output');
+  if (!out) return;
+  const div = document.createElement('div');
+  div.className = 'terminal-line ' + cls;
+  div.textContent = text;
+  out.appendChild(div);
+  out.scrollTop = out.scrollHeight;
+}
+
+function runTerminalCmd(cmd) {
+  if (!cmd) return;
+  termHistory.unshift(cmd);
+  termPrint(`${currentUser.username}@my-os:${termCurrentDir}$ ${cmd}`, 'cmd');
+  const parts = cmd.split(' ');
+  const c = parts[0].toLowerCase();
+  const args = parts.slice(1);
+
+  const cmds = {
+    help: () => {
+      ['Beschikbare commando\'s:', 'help      - deze hulp', 'whoami    - wie ben ik', 'date      - huidige datum/tijd', 'echo      - tekst weergeven', 'clear     - scherm wissen', 'ls        - bestanden tonen', 'mkdir     - map aanmaken', 'touch     - bestand aanmaken', 'cat       - bestand tonen', 'rm        - bestand verwijderen', 'pwd       - huidige map', 'uptime    - systeemtijd', 'neofetch  - systeeminfo', 'calc      - snel rekenen', 'open      - app openen', 'exit      - terminal sluiten']
+        .forEach(l => termPrint(l, l.startsWith('Beschikbaar') ? 'info' : 'out'));
+    },
+    whoami: () => termPrint(`${currentUser.name} (@${currentUser.username})`, 'success'),
+    date: () => termPrint(new Date().toString(), 'out'),
+    echo: () => termPrint(args.join(' '), 'out'),
+    clear: () => { const out = document.getElementById('term-output'); if (out) out.innerHTML = ''; },
+    pwd: () => termPrint('/home/' + currentUser.username + '/' + termCurrentDir.replace('~',''), 'out'),
+    uptime: () => termPrint('System up: ' + Math.floor(performance.now()/1000) + 's', 'out'),
+    ls: () => {
+      const ud = getUserData(currentUser.username);
+      const items = Object.keys(ud.files || {});
+      termPrint(items.join('   ') || '(leeg)', 'out');
+    },
+    mkdir: () => {
+      if (!args[0]) { termPrint('Gebruik: mkdir <naam>', 'err'); return; }
+      const ud = getUserData(currentUser.username);
+      ud.files = ud.files || {};
+      ud.files[args[0]] = { type: 'folder', children: {} };
+      saveUserData(currentUser.username, ud);
+      termPrint(`Map '${args[0]}' aangemaakt.`, 'success');
+    },
+    touch: () => {
+      if (!args[0]) { termPrint('Gebruik: touch <naam>', 'err'); return; }
+      const ud = getUserData(currentUser.username);
+      if (!ud.files) ud.files = {};
+      if (!ud.files['Documenten']) ud.files['Documenten'] = { type: 'folder', children: {} };
+      ud.files['Documenten'].children[args[0]] = { type: 'file', content: '', modified: Date.now() };
+      saveUserData(currentUser.username, ud);
+      termPrint(`Bestand '${args[0]}' aangemaakt.`, 'success');
+    },
+    calc: () => {
+      try { const r = Function('"use strict";return (' + args.join(' ') + ')')(); termPrint('= ' + r, 'success'); }
+      catch { termPrint('Ongeldige expressie', 'err'); }
+    },
+    open: () => {
+      const appName = args[0];
+      const found = APPS.find(a => a.id === appName || a.name.toLowerCase() === appName?.toLowerCase());
+      if (found) { openApp(found.id); termPrint(`${found.name} geopend.`, 'success'); }
+      else termPrint(`App '${appName}' niet gevonden.`, 'err');
+    },
+    neofetch: () => {
+      ['', '   ███╗   ███╗██╗   ██╗   ██████╗ ███████╗', '   ████╗ ████║╚██╗ ██╔╝  ██╔═══██╗██╔════╝', '   ██╔████╔██║ ╚████╔╝   ██║   ██║███████╗', '   ██║╚██╔╝██║  ╚██╔╝    ██║   ██║╚════██║', '   ██║ ╚═╝ ██║   ██║     ╚██████╔╝███████║', '   ╚═╝     ╚═╝   ╚═╝      ╚═════╝ ╚══════╝', '',
+       `   Gebruiker  : ${currentUser.name} (@${currentUser.username})`,
+       `   OS         : My-OS 2.0`,
+       `   Kernel     : WebKit/Blink`,
+       `   Browser    : ${navigator.userAgent.split(' ').pop()}`,
+       `   Resolutie  : ${screen.width}x${screen.height}`,
+       `   Taal       : ${navigator.language}`,
+       `   Platform   : ${navigator.platform}`,
+       ''].forEach((l, i) => termPrint(l, i < 8 ? 'info' : 'out'));
+    },
+    exit: () => closeWindow('terminal'),
+  };
+
+  if (cmds[c]) cmds[c]();
+  else termPrint(`Commando niet gevonden: '${c}'. Type 'help'.`, 'err');
+  document.getElementById('term-prompt').textContent = `${currentUser.username}@my-os:${termCurrentDir}$ `;
+}
+
+// ===== BROWSER =====
+let _browserHistory = [];
+let _browserHistIdx = -1;
+
+function renderBrowser(body) {
+  const ud = getUserData(currentUser.username);
+  if (!ud.bookmarks) {
+    ud.bookmarks = [
+      { label: 'Google', url: 'https://www.google.com', icon: 'ti-brand-google' },
+      { label: 'YouTube', url: 'https://www.youtube.com', icon: 'ti-brand-youtube' },
+      { label: 'mattyou2', url: 'https://mattyou2.github.io', icon: 'ti-brand-github' },
+      { label: 'Minecraft 3D', url: 'https://mattyou2.github.io/mc/3D/light/v3/', icon: 'ti-cube' },
+      { label: 'Wikipedia', url: 'https://nl.wikipedia.org', icon: 'ti-book' },
+      { label: 'GitHub', url: 'https://github.com', icon: 'ti-brand-github' },
+    ];
+    saveUserData(currentUser.username, ud);
+  }
+
+  body.style.height = '100%';
+  body.innerHTML = `
+    <div style="display:flex;flex-direction:column;height:100%;">
+
+      <!-- Address bar -->
+      <div class="browser-bar" style="flex-shrink:0;">
+        <button class="browser-nav-btn" id="br-back"  onclick="_brBack()"    title="Terug"><i class="ti ti-arrow-left"></i></button>
+        <button class="browser-nav-btn" id="br-fwd"   onclick="_brForward()" title="Vooruit"><i class="ti ti-arrow-right"></i></button>
+        <button class="browser-nav-btn"               onclick="_brReload()"  title="Herladen"><i class="ti ti-refresh"></i></button>
+        <button class="browser-nav-btn"               onclick="_brHome()"    title="Startpagina"><i class="ti ti-home"></i></button>
+        <input class="browser-url" id="browser-url" type="text" placeholder="URL of zoekterm..."
+          onkeydown="if(event.key==='Enter')_brNavigate(this.value)" onfocus="this.select()">
+        <button class="browser-nav-btn" onclick="_brNavigate(document.getElementById('browser-url').value)" title="Ga"><i class="ti ti-arrow-right" style="color:var(--accent)"></i></button>
+        <button class="browser-nav-btn" onclick="_brBookmark()" title="Bladwijzer"><i class="ti ti-bookmark"></i></button>
+        <button class="browser-nav-btn" onclick="_brExternal()" title="Open in nieuw tabblad"><i class="ti ti-external-link"></i></button>
+      </div>
+
+      <!-- Main area: home page OR iframe -->
+      <div style="flex:1;position:relative;overflow:hidden;">
+
+        <!-- HOME PAGE -->
+        <div id="br-home" style="height:100%;overflow-y:auto;display:flex;align-items:flex-start;justify-content:center;">
+          <div style="padding:40px 20px;width:100%;max-width:560px;display:flex;flex-direction:column;gap:20px;align-items:center;">
+            <div style="font-size:38px;font-weight:800;background:linear-gradient(135deg,#6366f1,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">My-OS Browser</div>
+            <div style="display:flex;gap:8px;width:100%;">
+              <input id="br-home-q" style="flex:1;background:rgba(255,255,255,0.07);border:1px solid var(--border);border-radius:10px;padding:11px 16px;color:var(--text);font-size:14px;outline:none;"
+                placeholder="Zoek of voer URL in..." onkeydown="if(event.key==='Enter')_brNavigate(this.value)">
+              <button onclick="_brNavigate(document.getElementById('br-home-q').value)"
+                style="padding:11px 16px;background:var(--accent);border:none;border-radius:10px;color:#fff;cursor:pointer;font-size:14px;"><i class="ti ti-search"></i></button>
+            </div>
+            <div style="width:100%;">
+              <div style="font-size:11px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">Bladwijzers</div>
+              <div id="br-bookmarks-wrap" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;"></div>
+            </div>
+            <div style="width:100%;">
+              <div style="font-size:11px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">Snel naar</div>
+              <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                ${[
+                  ['https://www.google.com','ti-brand-google','Google'],
+                  ['https://translate.google.com','ti-language','Vertalen'],
+                  ['https://www.youtube.com','ti-brand-youtube','YouTube'],
+                  ['https://github.com','ti-brand-github','GitHub'],
+                  ['https://mattyou2.github.io','ti-cube','mattyou2'],
+                  ['https://mattyou2.github.io/mc/3D/light/v3/','ti-cube','MC 3D'],
+                  ['https://codepen.io','ti-brand-codepen','CodePen'],
+                  ['https://developer.mozilla.org','ti-code','MDN'],
+                ].map(([url,ic,lbl])=>`
+                  <div onclick="_brNavigate('${url}')" style="display:flex;align-items:center;gap:6px;padding:6px 12px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:12px;color:var(--text-muted);">
+                    <i class="ti ${ic}" style="color:var(--accent2)"></i>${lbl}
+                  </div>`).join('')}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- IFRAME (hidden until navigation) -->
+        <iframe id="br-iframe"
+          style="display:none;position:absolute;inset:0;width:100%;height:100%;border:none;"
+          allowfullscreen
+          allow="fullscreen; autoplay; clipboard-write; encrypted-media; gamepad; picture-in-picture"
+          sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-pointer-lock allow-top-navigation-by-user-activation"
+        ></iframe>
+
+        <!-- BLOCKED page (shown when iframe fails/blocks) -->
+        <div id="br-blocked" style="display:none;position:absolute;inset:0;overflow-y:auto;padding:40px;background:var(--bg-panel);">
+          <div style="max-width:440px;margin:0 auto;text-align:center;">
+            <i class="ti ti-shield-x" style="font-size:56px;color:var(--text-dim);"></i>
+            <div style="font-size:18px;font-weight:600;margin:16px 0 8px;">Website blokkeert inbedden</div>
+            <div style="font-size:13px;color:var(--text-muted);margin-bottom:20px;" id="br-blocked-url"></div>
+            <div style="font-size:13px;color:var(--text-muted);margin-bottom:20px;">
+              Deze website stuurt een <code>X-Frame-Options</code> of <code>Content-Security-Policy</code> header
+              waardoor browsers het laden in een iframe verbieden. My-OS kan dit niet omzeilen — dit is een beveiliging van die website zelf.
+            </div>
+            <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:16px;">
+              <a id="br-blocked-link" href="#" target="_blank"
+                style="padding:10px 20px;background:var(--accent);border-radius:9px;color:#fff;text-decoration:none;font-size:13px;display:inline-flex;align-items:center;gap:6px;">
+                <i class="ti ti-external-link"></i> Openen in nieuw tabblad
+              </a>
+              <button onclick="_brHome()"
+                style="padding:10px 20px;background:rgba(255,255,255,0.07);border:1px solid var(--border);border-radius:9px;color:var(--text);font-size:13px;cursor:pointer;">
+                ← Startpagina
+              </button>
+            </div>
+            <div style="padding:14px 16px;background:rgba(99,102,241,0.07);border:1px solid rgba(99,102,241,0.2);border-radius:10px;font-size:12px;color:var(--text-muted);text-align:left;line-height:1.6;">
+              <b style="color:var(--accent2)">💡 Websites die wél werken in My-OS Browser:</b><br>
+              mattyou2.github.io, GitHub Pages sites, CodePen, Wikipedia, OpenStreetMap, Itch.io games, kleine persoonlijke sites, en de meeste GitHub Pages projecten.
+              <br><br>Sites zoals Google, YouTube en Twitter blokkeren iframes altijd.
+            </div>
+          </div>
+        </div>
+
+        <!-- LOADING overlay -->
+        <div id="br-loading" style="display:none;position:absolute;inset:0;background:rgba(15,15,26,0.7);backdrop-filter:blur(4px);align-items:center;justify-content:center;flex-direction:column;gap:12px;">
+          <div style="width:40px;height:40px;border:3px solid rgba(255,255,255,0.1);border-top-color:var(--accent);border-radius:50%;animation:brSpin 0.8s linear infinite;"></div>
+          <div style="font-size:13px;color:var(--text-muted);" id="br-loading-url">Laden...</div>
+        </div>
+
+      </div>
+
+      <!-- Status bar -->
+      <div id="br-status" style="padding:3px 12px;border-top:1px solid var(--border);font-size:11px;color:var(--text-dim);flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Klaar</div>
+    </div>
+    <style>@keyframes brSpin{to{transform:rotate(360deg)}}</style>`;
+
+  _brRenderBookmarks();
+  setTimeout(() => document.getElementById('br-home-q')?.focus(), 60);
+}
+
+function _brRenderBookmarks() {
+  const ud = getUserData(currentUser.username);
+  const wrap = document.getElementById('br-bookmarks-wrap');
+  if (!wrap) return;
+  wrap.innerHTML = (ud.bookmarks || []).map((b, i) => `
+    <div style="position:relative;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:12px 8px;text-align:center;cursor:pointer;"
+      onclick="_brNavigate('${b.url}')">
+      <i class="ti ${b.icon || 'ti-world'}" style="font-size:22px;color:var(--accent2);display:block;margin-bottom:5px;"></i>
+      <div style="font-size:11px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${b.label}</div>
+      <button onclick="event.stopPropagation();_brDelBookmark(${i})"
+        style="position:absolute;top:4px;right:4px;background:transparent;border:none;color:var(--text-dim);cursor:pointer;font-size:11px;padding:2px;border-radius:4px;line-height:1;">✕</button>
+    </div>`).join('') + `
+    <div onclick="_brAddBookmark()" style="background:rgba(255,255,255,0.02);border:1px dashed var(--border);border-radius:10px;padding:12px 8px;text-align:center;cursor:pointer;">
+      <i class="ti ti-plus" style="font-size:22px;color:var(--text-dim);display:block;margin-bottom:5px;"></i>
+      <div style="font-size:11px;color:var(--text-dim);">Toevoegen</div>
+    </div>`;
+}
+
+function _brNavigate(input) {
+  if (!input || !input.trim()) return;
+  input = input.trim();
+
+  let url;
+  if (input.startsWith('my-os://')) { _brHome(); return; }
+  if (/^https?:\/\//i.test(input)) {
+    url = input;
+  } else if (input.includes('.') && !input.includes(' ')) {
+    url = 'https://' + input;
+  } else {
+    url = 'https://www.google.com/search?q=' + encodeURIComponent(input);
+  }
+
+  // Push history
+  _browserHistory = _browserHistory.slice(0, _browserHistIdx + 1);
+  _browserHistory.push(url);
+  _browserHistIdx = _browserHistory.length - 1;
+
+  _brLoad(url);
+}
+
+function _brLoad(url) {
+  const iframe    = document.getElementById('br-iframe');
+  const home      = document.getElementById('br-home');
+  const blocked   = document.getElementById('br-blocked');
+  const loading   = document.getElementById('br-loading');
+  const urlInput  = document.getElementById('browser-url');
+  const status    = document.getElementById('br-status');
+  const loadingTxt= document.getElementById('br-loading-url');
+  if (!iframe) return;
+
+  // Update address bar
+  if (urlInput) urlInput.value = url;
+
+  // Show loading overlay
+  home.style.display = 'none';
+  blocked.style.display = 'none';
+  if (loading) { loading.style.display = 'flex'; if (loadingTxt) loadingTxt.textContent = url; }
+  iframe.style.display = 'block';
+  if (status) status.textContent = 'Laden: ' + url;
+
+  // We try to detect X-Frame-Options blocks via a HEAD fetch first (best effort)
+  // Many servers don't send CORS headers so fetch will fail — that's fine, we still try the iframe
+  let frameLoaded = false;
+  const TIMEOUT = 10000; // 10 seconds
+
+  const hideLoading = () => { if (loading) loading.style.display = 'none'; };
+
+  const onLoad = () => {
+    frameLoaded = true;
+    hideLoading();
+    if (status) status.textContent = url;
+    // Try to read title (only works same-origin)
+    try {
+      const t = iframe.contentDocument?.title;
+      if (t && document.getElementById('wintitle-browser')) document.getElementById('wintitle-browser').textContent = 'Browser — ' + t;
+    } catch {}
+  };
+
+  const onError = () => {
+    frameLoaded = true;
+    hideLoading();
+    _brShowBlocked(url);
+  };
+
+  iframe.onload = onLoad;
+  iframe.onerror = onError;
+  iframe.src = url;
+
+  // Fallback: if after 10s the iframe is "loaded" but shows blank (cross-origin block)
+  // we can't reliably detect this without server-side help, so we just trust the load event.
+  // If user sees blank, the "Openen in nieuw tabblad" button is always available.
+  setTimeout(() => {
+    if (!frameLoaded) {
+      hideLoading();
+      if (status) status.textContent = 'Timeout — ' + url;
+    }
+  }, TIMEOUT);
+}
+
+function _brShowBlocked(url) {
+  const iframe  = document.getElementById('br-iframe');
+  const blocked = document.getElementById('br-blocked');
+  const urlEl   = document.getElementById('br-blocked-url');
+  const linkEl  = document.getElementById('br-blocked-link');
+  if (iframe) iframe.style.display = 'none';
+  if (blocked) blocked.style.display = 'block';
+  if (urlEl) urlEl.textContent = url;
+  if (linkEl) { linkEl.href = url; }
+}
+
+function _brHome() {
+  const iframe  = document.getElementById('br-iframe');
+  const home    = document.getElementById('br-home');
+  const blocked = document.getElementById('br-blocked');
+  const loading = document.getElementById('br-loading');
+  const urlInput= document.getElementById('browser-url');
+  const status  = document.getElementById('br-status');
+  if (iframe)  { iframe.src = 'about:blank'; iframe.style.display = 'none'; }
+  if (blocked) blocked.style.display = 'none';
+  if (loading) loading.style.display = 'none';
+  if (home)    home.style.display = 'flex';
+  if (urlInput) urlInput.value = '';
+  if (status)  status.textContent = 'Startpagina';
+  _brRenderBookmarks();
+  setTimeout(() => document.getElementById('br-home-q')?.focus(), 60);
+}
+
+function _brBack() {
+  if (_browserHistIdx > 0) { _browserHistIdx--; _brLoad(_browserHistory[_browserHistIdx]); }
+  else _brHome();
+}
+function _brForward() {
+  if (_browserHistIdx < _browserHistory.length - 1) { _browserHistIdx++; _brLoad(_browserHistory[_browserHistIdx]); }
+}
+function _brReload() {
+  const iframe = document.getElementById('br-iframe');
+  if (iframe && iframe.src && iframe.src !== 'about:blank' && iframe.style.display !== 'none') {
+    const url = iframe.src; iframe.src = 'about:blank'; setTimeout(() => { iframe.src = url; }, 50);
+  }
+}
+function _brExternal() {
+  const url = document.getElementById('browser-url')?.value;
+  if (url && url !== '' && !url.startsWith('my-os://')) window.open(url, '_blank');
+}
+function _brBookmark() {
+  const url = document.getElementById('browser-url')?.value;
+  if (!url || url === '' || url.startsWith('my-os://')) { _brAddBookmark(); return; }
+  const label = prompt('Naam voor bladwijzer:', url.replace(/^https?:\/\//,'').split('/')[0]);
+  if (!label) return;
+  const ud = getUserData(currentUser.username);
+  ud.bookmarks = ud.bookmarks || [];
+  ud.bookmarks.push({ label, url, icon: 'ti-bookmark' });
+  saveUserData(currentUser.username, ud);
+  notify('Browser', `'${label}' toegevoegd als bladwijzer`, 'ti-bookmark');
+}
+function _brAddBookmark() {
+  const url   = prompt('URL:', 'https://'); if (!url) return;
+  const label = prompt('Naam:', url.replace(/^https?:\/\//,'').split('/')[0]); if (!label) return;
+  const ud = getUserData(currentUser.username);
+  ud.bookmarks = ud.bookmarks || [];
+  ud.bookmarks.push({ label, url, icon: 'ti-bookmark' });
+  saveUserData(currentUser.username, ud);
+  _brRenderBookmarks();
+}
+function _brDelBookmark(idx) {
+  const ud = getUserData(currentUser.username);
+  ud.bookmarks.splice(idx, 1);
+  saveUserData(currentUser.username, ud);
+  _brRenderBookmarks();
+}
+
+// Legacy aliases (used by old bookmarks in start menu)
+function browserNavigate(url) { _brNavigate(url); }
+function browserSearch(q) { _brNavigate(q); }
+function browserReload() { _brReload(); }
+
+// ===== CALCULATOR =====
+let calcState = { expr: '', val: '0', lastOp: null, waitNew: false };
+
+function renderCalculator(body) {
+  body.innerHTML = `<div class="calc-wrap">
+    <div class="calc-display">
+      <div class="calc-expr" id="calc-expr"></div>
+      <div class="calc-val" id="calc-val">0</div>
+    </div>
+    <div class="calc-grid">
+      ${[
+        ['C','fn','%','÷'],
+        ['7','8','9','×'],
+        ['4','5','6','−'],
+        ['1','2','3','+'],
+        ['±','0','.','=']
+      ].map(row => row.map(b => {
+        const cls = b === '=' ? 'eq' : ['÷','×','−','+'].includes(b) ? 'op' : ['C','%','±','fn'].includes(b) ? 'fn' : 'num';
+        const sp = b === '0' ? ' span2' : '';
+        return `<button class="calc-btn ${cls}${sp}" onclick="calcPress('${b}')">${b}</button>`;
+      }).join('')).join('')}
+    </div>
+  </div>`;
+}
+
+function calcPress(btn) {
+  const s = calcState;
+  if (btn === 'C') { s.expr = ''; s.val = '0'; s.waitNew = false; }
+  else if (btn === '±') { s.val = (parseFloat(s.val) * -1).toString(); }
+  else if (btn === '%') { s.val = (parseFloat(s.val) / 100).toString(); }
+  else if (btn === '=') {
+    try {
+      const expr = s.expr + s.val;
+      const result = Function('"use strict";return (' + expr.replace(/÷/g,'/').replace(/×/g,'*').replace(/−/g,'-') + ')')();
+      s.expr = '';
+      s.val = parseFloat(result.toFixed(10)).toString();
+      s.waitNew = true;
+    } catch { s.val = 'Fout'; }
+  } else if (['÷','×','−','+'].includes(btn)) {
+    s.expr += s.val + btn;
+    s.waitNew = true;
+  } else if (btn === '.') {
+    if (!s.val.includes('.')) s.val += '.';
+  } else {
+    if (s.waitNew) { s.val = btn; s.waitNew = false; }
+    else s.val = s.val === '0' ? btn : s.val + btn;
+  }
+  document.getElementById('calc-val').textContent = s.val;
+  document.getElementById('calc-expr').textContent = s.expr;
+}
+
+// ===== SETTINGS =====
+function renderSettings(body) {
+  const ud = getUserData(currentUser.username);
+  const sections = ['Persoonlijk','Uiterlijk','Systeem','Account'];
+  let active = 'Persoonlijk';
+
+  function render() {
+    body.innerHTML = `<div class="settings-wrap">
+      <div class="settings-nav">
+        ${sections.map(s => `<div class="settings-nav-item${s===active?' active':''}" onclick="settingsNav('${s}')">${s}</div>`).join('')}
+      </div>
+      <div class="settings-body" id="settings-body"></div>
+    </div>`;
+    body.querySelectorAll('.settings-nav-item').forEach(el => {
+      el.onclick = () => { active = el.textContent; render(); };
+    });
+    renderSettingsSection(document.getElementById('settings-body'), active, ud);
+  }
+  render();
+  window.settingsNav = (s) => { active = s; render(); };
+}
+
+function renderSettingsSection(el, section, ud) {
+  if (section === 'Persoonlijk') {
+    el.innerHTML = `<div class="settings-section-title">Persoonlijke gegevens</div>
+      <div class="settings-group">
+        <div class="settings-row"><div class="settings-row-info"><div class="settings-row-label">Naam</div></div>
+          <input class="settings-input" id="set-name" value="${currentUser.name}"></div>
+        <div class="settings-row"><div class="settings-row-info"><div class="settings-row-label">Gebruikersnaam</div></div>
+          <span style="font-size:13px;color:var(--text-muted)">@${currentUser.username}</span></div>
+        <div class="settings-row"><div class="settings-row-info"><div class="settings-row-label">Wachtwoord wijzigen</div></div>
+          <input class="settings-input" id="set-pass" type="password" placeholder="Nieuw wachtwoord"></div>
+      </div>
+      <button class="settings-save-btn" onclick="settingsSavePersonal()">Opslaan</button>`;
+  } else if (section === 'Uiterlijk') {
+    const colors = ['#6366f1','#22c55e','#ef4444','#f59e0b','#3b82f6','#ec4899','#14b8a6','#f97316'];
+    el.innerHTML = `<div class="settings-section-title">Uiterlijk</div>
+      <div class="settings-group">
+        <div class="settings-row"><div class="settings-row-info"><div class="settings-row-label">Accentkleur</div><div class="settings-row-desc">Hoofdkleur van het systeem</div></div></div>
+        <div style="padding:0 16px 16px">
+          <div class="settings-color-row">
+            ${colors.map(c=>`<div class="settings-color-chip${(ud.accentColor||'#6366f1')===c?' selected':''}" style="background:${c}" onclick="settingsSetAccent('${c}')"></div>`).join('')}
+          </div>
+        </div>
+        <div class="settings-row"><div class="settings-row-info"><div class="settings-row-label">Lettergrootte</div></div>
+          <select class="settings-select" onchange="settingsFontSize(this.value)">
+            <option value="small"${ud.fontSize==='small'?' selected':''}>Klein</option>
+            <option value="medium"${(!ud.fontSize||ud.fontSize==='medium')?' selected':''}>Normaal</option>
+            <option value="large"${ud.fontSize==='large'?' selected':''}>Groot</option>
+          </select>
+        </div>
+      </div>`;
+  } else if (section === 'Systeem') {
+    el.innerHTML = `<div class="settings-section-title">Systeem</div>
+      <div class="settings-group">
+        <div class="settings-row"><div class="settings-row-info"><div class="settings-row-label">Versie</div></div><span style="font-size:13px;color:var(--text-muted)">My-OS 2.0</span></div>
+        <div class="settings-row"><div class="settings-row-info"><div class="settings-row-label">Build</div></div><span style="font-size:13px;color:var(--text-muted)">2025.01</span></div>
+        <div class="settings-row"><div class="settings-row-info"><div class="settings-row-label">Browser</div></div><span style="font-size:13px;color:var(--text-muted)">${navigator.userAgent.split('/')[0]}</span></div>
+        <div class="settings-row"><div class="settings-row-info"><div class="settings-row-label">Schermresolutie</div></div><span style="font-size:13px;color:var(--text-muted)">${screen.width}×${screen.height}</span></div>
+        <div class="settings-row"><div class="settings-row-info"><div class="settings-row-label">Taal</div></div><span style="font-size:13px;color:var(--text-muted)">${navigator.language}</span></div>
+      </div>
+      <div class="settings-group">
+        <div class="settings-row"><div class="settings-row-info"><div class="settings-row-label">Alle gegevens verwijderen</div><div class="settings-row-desc">Wis al jouw My-OS data</div></div>
+          <button onclick="clearAllData()" style="padding:6px 12px;background:rgba(239,68,68,0.1);border:1px solid var(--danger);border-radius:7px;color:var(--danger);font-size:13px;cursor:pointer;">Wissen</button>
+        </div>
+      </div>`;
+  } else if (section === 'Account') {
+    const users = getUsers();
+    el.innerHTML = `<div class="settings-section-title">Accountbeheer</div>
+      <div class="settings-group">
+        ${Object.keys(users).map(u => `
+          <div class="settings-row">
+            <div class="settings-row-info" style="display:flex;align-items:center;gap:10px;">
+              <div style="width:32px;height:32px;border-radius:50%;background:${users[u].color};display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:13px;">${(users[u].name||u).charAt(0).toUpperCase()}</div>
+              <div><div class="settings-row-label">${users[u].name}</div><div class="settings-row-desc">@${u}</div></div>
+            </div>
+            ${u === currentUser.username ? '<span style="font-size:11px;color:var(--accent2);background:rgba(99,102,241,0.1);padding:2px 8px;border-radius:5px;">Huidig</span>' :
+              `<button onclick="deleteAccount('${u}')" style="padding:5px 10px;background:rgba(239,68,68,0.1);border:1px solid var(--danger);border-radius:6px;color:var(--danger);font-size:12px;cursor:pointer;">Verwijderen</button>`}
+          </div>`).join('')}
+      </div>`;
+  }
+}
+
+function settingsSavePersonal() {
+  const name = document.getElementById('set-name')?.value.trim();
+  const pass = document.getElementById('set-pass')?.value;
+  const users = getUsers();
+  if (name && name !== currentUser.name) { users[currentUser.username].name = name; currentUser.name = name; saveUsers(users); }
+  if (pass && pass.length >= 4) { users[currentUser.username].password = hashPass(pass); saveUsers(users); }
+  notify('Instellingen', 'Persoonlijke gegevens opgeslagen', 'ti-check');
+  updateTaskbarUser();
+}
+
+function settingsSetAccent(color) {
+  document.documentElement.style.setProperty('--accent', color);
+  saveUserSetting('accentColor', color);
+  const ud = getUserData(currentUser.username);
+  ud.accentColor = color;
+  saveUserData(currentUser.username, ud);
+  renderSettings(document.getElementById('winbody-settings'));
+}
+
+function settingsFontSize(size) {
+  const map = { small: '13px', medium: '16px', large: '18px' };
+  document.body.style.fontSize = map[size] || '16px';
+  saveUserSetting('fontSize', size);
+}
+
+function clearAllData() {
+  if (!confirm('Weet je zeker dat je ALLE My-OS data wil wissen? Dit kan niet ongedaan worden.')) return;
+  const u = currentUser.username;
+  logout();
+  LS.del('myos_ud_' + u);
+  notify('Systeem', 'Alle data gewist.', 'ti-trash');
+}
+
+function deleteAccount(username) {
+  if (!confirm(`Account @${username} verwijderen?`)) return;
+  const users = getUsers();
+  delete users[username];
+  saveUsers(users);
+  LS.del('myos_ud_' + username);
+  renderSettings(document.getElementById('winbody-settings'));
+  notify('Account', `@${username} verwijderd`, 'ti-user-minus');
+}
+
+// ===== NOTES =====
+function renderNotes(body) {
+  const ud = getUserData(currentUser.username);
+  if (!ud.notes) ud.notes = [];
+  let activeNote = ud.notes[0] || null;
+
+  function render() {
+    body.innerHTML = `<div class="notes-wrap">
+      <div class="notes-list">
+        <div class="notes-list-header">
+          <span class="notes-list-title">Notities</span>
+          <button class="notes-add-btn" onclick="notesAdd()"><i class="ti ti-plus"></i></button>
+        </div>
+        <div class="notes-items" id="notes-items">
+          ${ud.notes.map(n => `
+            <div class="notes-item${activeNote&&activeNote.id===n.id?' active':''}" data-id="${n.id}">
+              <div class="notes-item-title">${n.title||'Naamloos'}</div>
+              <div class="notes-item-preview">${(n.body||'').substring(0,40)}</div>
+              <div class="notes-item-date">${new Date(n.created).toLocaleDateString('nl-NL')}</div>
+            </div>`).join('')}
+        </div>
+      </div>
+      <div class="notes-editor">
+        ${activeNote ? `
+          <input class="notes-title-input" id="notes-title" value="${activeNote.title||''}" placeholder="Titel...">
+          <textarea class="notes-body-input" id="notes-body" placeholder="Begin met typen...">${activeNote.body||''}</textarea>
+          <div class="notes-footer">
+            <span>${new Date(activeNote.created).toLocaleString('nl-NL')}</span>
+            <button onclick="notesDelete(${activeNote.id})" style="background:transparent;border:none;color:var(--danger);cursor:pointer;font-size:12px;"><i class="ti ti-trash"></i> Verwijderen</button>
+          </div>` : '<div style="flex:1;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:14px;">Selecteer of maak een notitie</div>'}
+      </div>
+    </div>`;
+    document.querySelectorAll('.notes-item').forEach(el => {
+      el.onclick = () => {
+        saveActiveNote();
+        activeNote = ud.notes.find(n => n.id === parseInt(el.dataset.id));
+        render();
+      };
+    });
+    const titleInput = document.getElementById('notes-title');
+    const bodyInput = document.getElementById('notes-body');
+    if (titleInput) titleInput.addEventListener('input', () => { if (activeNote) activeNote.title = titleInput.value; });
+    if (bodyInput) bodyInput.addEventListener('input', () => { if (activeNote) { activeNote.body = bodyInput.value; saveActiveNote(); } });
+  }
+
+  function saveActiveNote() {
+    if (!activeNote) return;
+    const t = document.getElementById('notes-title')?.value;
+    const b = document.getElementById('notes-body')?.value;
+    if (t !== undefined) activeNote.title = t;
+    if (b !== undefined) activeNote.body = b;
+    const idx = ud.notes.findIndex(n => n.id === activeNote.id);
+    if (idx >= 0) ud.notes[idx] = activeNote;
+    saveUserData(currentUser.username, ud);
+  }
+
+  window.notesAdd = () => {
+    saveActiveNote();
+    const n = { id: Date.now(), title: 'Nieuwe notitie', body: '', created: Date.now() };
+    ud.notes.unshift(n);
+    activeNote = n;
+    saveUserData(currentUser.username, ud);
+    render();
+  };
+  window.notesDelete = (id) => {
+    if (!confirm('Notitie verwijderen?')) return;
+    ud.notes = ud.notes.filter(n => n.id !== id);
+    activeNote = ud.notes[0] || null;
+    saveUserData(currentUser.username, ud);
+    render();
+  };
+  render();
+}
+
+// ===== MUSIC =====
+function renderMusic(body) {
+  const songs = [
+    { title: 'Neon Dreams', artist: 'Synthwave Kings', dur: '3:45', emoji: '🎵' },
+    { title: 'Midnight Coding', artist: 'Dev Mode', dur: '4:12', emoji: '🎶' },
+    { title: 'Binary Sunset', artist: 'Pixel Sound', dur: '3:58', emoji: '🎸' },
+    { title: 'Async Vibes', artist: 'Loop Station', dur: '5:01', emoji: '🎹' },
+    { title: 'Dark Matter', artist: 'Vaporwave Inc', dur: '3:33', emoji: '🎼' },
+    { title: 'Electric Rain', artist: 'Cloudburst', dur: '4:27', emoji: '🥁' },
+    { title: 'Recursion', artist: 'Stack Overflow', dur: '3:15', emoji: '🎻' },
+  ];
+  let currentSong = 0, playing = false, progress = 0;
+
+  function render() {
+    const s = songs[currentSong];
+    body.innerHTML = `<div class="music-wrap">
+      <div class="music-cover">${s.emoji}</div>
+      <div class="music-info">
+        <div class="music-title">${s.title}</div>
+        <div class="music-artist">${s.artist}</div>
+      </div>
+      <div class="music-progress">
+        <input type="range" class="music-slider" id="music-slider" min="0" max="100" value="${progress}">
+        <div class="music-time"><span id="music-cur">0:00</span><span>${s.dur}</span></div>
+      </div>
+      <div class="music-controls">
+        <button class="music-ctrl-btn" onclick="musicShuffle()" title="Shuffle"><i class="ti ti-arrows-shuffle"></i></button>
+        <button class="music-ctrl-btn" onclick="musicPrev()" title="Vorige"><i class="ti ti-player-skip-back"></i></button>
+        <button class="music-ctrl-btn play" onclick="musicToggle()" id="music-play-btn"><i class="ti ti-${playing?'player-pause':'player-play'}"></i></button>
+        <button class="music-ctrl-btn" onclick="musicNext()" title="Volgende"><i class="ti ti-player-skip-forward"></i></button>
+        <button class="music-ctrl-btn" title="Herhalen"><i class="ti ti-repeat"></i></button>
+      </div>
+      <div class="music-playlist">
+        <div class="music-pl-title">Afspeellijst</div>
+        ${songs.map((song, i) => `
+          <div class="music-pl-item${i===currentSong?' active':''}" onclick="musicSelect(${i})">
+            <div class="music-pl-num">${i===currentSong&&playing?'▶':i+1}</div>
+            <div class="music-pl-info"><div class="music-pl-name">${song.title}</div><div class="music-pl-art">${song.artist}</div></div>
+            <div class="music-pl-dur">${song.dur}</div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  window.musicToggle = () => { playing = !playing; render(); if (playing) startMusicTick(); else clearInterval(window._musicInterval); };
+  window.musicNext = () => { currentSong = (currentSong + 1) % songs.length; progress = 0; render(); if (playing) startMusicTick(); };
+  window.musicPrev = () => { currentSong = (currentSong - 1 + songs.length) % songs.length; progress = 0; render(); };
+  window.musicSelect = (i) => { currentSong = i; progress = 0; playing = true; render(); startMusicTick(); };
+  window.musicShuffle = () => { currentSong = Math.floor(Math.random() * songs.length); progress = 0; render(); };
+
+  function startMusicTick() {
+    clearInterval(window._musicInterval);
+    window._musicInterval = setInterval(() => {
+      if (!playing) return;
+      progress = Math.min(100, progress + 0.3);
+      const slider = document.getElementById('music-slider');
+      const cur = document.getElementById('music-cur');
+      if (slider) slider.value = progress;
+      if (cur) {
+        const secs = Math.floor(progress / 100 * 240);
+        cur.textContent = Math.floor(secs/60) + ':' + (secs%60).toString().padStart(2,'0');
+      }
+      if (progress >= 100) { window.musicNext(); }
+    }, 300);
+  }
+  render();
+}
+
+// ===== PHOTOS =====
+function renderPhotos(body) {
+  const photos = [
+    { emoji: '🌅', label: 'Zonsopgang' }, { emoji: '🏙️', label: 'Stad' }, { emoji: '🌊', label: 'Zee' },
+    { emoji: '🏔️', label: 'Bergen' }, { emoji: '🌸', label: 'Bloemen' }, { emoji: '🌉', label: 'Brug' },
+    { emoji: '🦋', label: 'Vlinder' }, { emoji: '🌿', label: 'Natuur' }, { emoji: '🏡', label: 'Huis' },
+    { emoji: '⭐', label: 'Sterren' }, { emoji: '🌈', label: 'Regenboog' }, { emoji: '🦅', label: 'Arend' },
+  ];
+  body.innerHTML = `<div class="photos-wrap">
+    <div class="photos-toolbar">
+      <button class="fm-btn"><i class="ti ti-upload"></i> Importeren</button>
+      <button class="fm-btn"><i class="ti ti-grid"></i> Raster</button>
+      <button class="fm-btn"><i class="ti ti-list"></i> Lijst</button>
+    </div>
+    <div class="photos-grid" id="photos-grid">
+      ${photos.map((p,i) => `<div class="photos-item" onclick="photosOpen(${i})">${p.emoji}</div>`).join('')}
+    </div>
+  </div>`;
+  window.photosOpen = (i) => {
+    const lightbox = document.createElement('div');
+    lightbox.className = 'photos-lightbox';
+    lightbox.innerHTML = `<button class="photos-lightbox-close" onclick="this.parentElement.remove()"><i class="ti ti-x"></i></button>
+      <div class="photos-lightbox-img">${photos[i].emoji}</div>`;
+    document.getElementById('winbody-photos').querySelector('.photos-wrap').appendChild(lightbox);
+  };
+}
+
+// ===== CALENDAR =====
+function renderCalendar(body) {
+  const ud = getUserData(currentUser.username);
+  if (!ud.calendarEvents) ud.calendarEvents = [];
+  let now = new Date();
+  let viewYear = now.getFullYear(), viewMonth = now.getMonth();
+  let selectedDate = null;
+
+  function render() {
+    const firstDay = new Date(viewYear, viewMonth, 1);
+    const lastDay = new Date(viewYear, viewMonth + 1, 0);
+    const startDow = (firstDay.getDay() + 6) % 7;
+    const days = ['Ma','Di','Wo','Do','Vr','Za','Zo'];
+    const months = ['Januari','Februari','Maart','April','Mei','Juni','Juli','Augustus','September','Oktober','November','December'];
+
+    let cells = [];
+    for (let i = 0; i < startDow; i++) {
+      const d = new Date(viewYear, viewMonth, -startDow + i + 1);
+      cells.push({ date: d, other: true });
+    }
+    for (let d = 1; d <= lastDay.getDate(); d++) cells.push({ date: new Date(viewYear, viewMonth, d), other: false });
+    while (cells.length % 7 !== 0) {
+      const last = cells[cells.length-1].date;
+      cells.push({ date: new Date(last.getTime() + 86400000), other: true });
+    }
+
+    const selEvents = selectedDate ? ud.calendarEvents.filter(e => e.date === selectedDate) : [];
+
+    body.innerHTML = `<div class="calendar-wrap">
+      <div class="calendar-header">
+        <button class="calendar-nav-btn" onclick="calNav(-1)">‹</button>
+        <div class="calendar-month">${months[viewMonth]} ${viewYear}</div>
+        <button class="calendar-nav-btn" onclick="calNav(1)">›</button>
+      </div>
+      <div class="calendar-grid">
+        ${days.map(d=>`<div class="calendar-day-label">${d}</div>`).join('')}
+        ${cells.map(c => {
+          const ds = `${c.date.getFullYear()}-${(c.date.getMonth()+1).toString().padStart(2,'0')}-${c.date.getDate().toString().padStart(2,'0')}`;
+          const isToday = c.date.toDateString() === now.toDateString();
+          const hasBe = ud.calendarEvents.some(e => e.date === ds);
+          const isSel = ds === selectedDate;
+          return `<div class="calendar-cell${c.other?' other-month':''}${isToday?' today':''}${hasBe?' has-event':''}${isSel?' selected':''}" onclick="calSelect('${ds}')">${c.date.getDate()}</div>`;
+        }).join('')}
+      </div>
+      <div class="calendar-events">
+        <div class="calendar-events-title">${selectedDate ? `Afspraken op ${selectedDate}` : 'Selecteer een datum'}</div>
+        ${selEvents.map(e=>`<div class="calendar-event-item"><div class="calendar-event-name">${e.name}</div><div class="calendar-event-time">${e.time||''}</div></div>`).join('')}
+        ${selectedDate ? `<div class="calendar-add-row">
+          <input class="calendar-add-input" id="cal-event-name" placeholder="Nieuwe afspraak...">
+          <input class="calendar-add-input" id="cal-event-time" placeholder="Tijd" style="width:80px;">
+          <button class="calendar-add-btn" onclick="calAddEvent()">+</button>
+        </div>` : ''}
+      </div>
+    </div>`;
+  }
+
+  window.calNav = (d) => {
+    viewMonth += d;
+    if (viewMonth > 11) { viewMonth = 0; viewYear++; }
+    if (viewMonth < 0) { viewMonth = 11; viewYear--; }
+    render();
+  };
+  window.calSelect = (ds) => { selectedDate = ds; render(); };
+  window.calAddEvent = () => {
+    const name = document.getElementById('cal-event-name')?.value.trim();
+    const time = document.getElementById('cal-event-time')?.value.trim();
+    if (!name) return;
+    ud.calendarEvents.push({ date: selectedDate, name, time, id: Date.now() });
+    saveUserData(currentUser.username, ud);
+    render();
+  };
+  render();
+}
+
+// ===== WEATHER =====
+function renderWeather(body) {
+  const forecasts = [
+    { day:'Zo', icon:'☀️', temp:19 }, { day:'Ma', icon:'⛅', temp:17 }, { day:'Di', icon:'🌧️', temp:14 },
+    { day:'Wo', icon:'🌦️', temp:15 }, { day:'Do', icon:'☀️', temp:21 }, { day:'Vr', icon:'⛅', temp:18 }, { day:'Za', icon:'☀️', temp:22 }
+  ];
+  body.innerHTML = `<div class="weather-wrap">
+    <div class="weather-location"><i class="ti ti-map-pin"></i> Den Haag, Nederland</div>
+    <div style="font-size:12px;color:var(--text-muted)">Bijgewerkt: ${new Date().toLocaleTimeString('nl-NL')}</div>
+    <div class="weather-main">
+      <div class="weather-icon">⛅</div>
+      <div>
+        <div class="weather-temp">17°C</div>
+        <div class="weather-desc">Gedeeltelijk bewolkt</div>
+      </div>
+    </div>
+    <div class="weather-stats">
+      <div class="weather-stat"><div class="weather-stat-val">68%</div><div class="weather-stat-label">Vochtigheid</div></div>
+      <div class="weather-stat"><div class="weather-stat-val">14 km/u</div><div class="weather-stat-label">Wind</div></div>
+      <div class="weather-stat"><div class="weather-stat-val">12°C</div><div class="weather-stat-label">Gevoelstemperatuur</div></div>
+      <div class="weather-stat"><div class="weather-stat-val">82%</div><div class="weather-stat-label">Bewolking</div></div>
+      <div class="weather-stat"><div class="weather-stat-val">1013 hPa</div><div class="weather-stat-label">Luchtdruk</div></div>
+      <div class="weather-stat"><div class="weather-stat-val">8 km</div><div class="weather-stat-label">Zicht</div></div>
+    </div>
+    <div class="weather-forecast">
+      <div class="weather-fc-title">7-daagse verwachting</div>
+      <div class="weather-fc-grid">
+        ${forecasts.map(f=>`<div class="weather-fc-day">
+          <div class="weather-fc-day-label">${f.day}</div>
+          <div class="weather-fc-day-icon">${f.icon}</div>
+          <div class="weather-fc-day-temp">${f.temp}°</div>
+        </div>`).join('')}
+      </div>
+    </div>
+  </div>`;
+}
+
+// ===== TODO =====
+function renderTodo(body) {
+  const ud = getUserData(currentUser.username);
+  if (!ud.todos) ud.todos = [];
+  let filter = 'all';
+
+  function render() {
+    const filtered = ud.todos.filter(t => filter === 'all' || (filter === 'open' && !t.done) || (filter === 'done' && t.done));
+    const doneCount = ud.todos.filter(t => t.done).length;
+    body.innerHTML = `<div class="todo-wrap">
+      <div class="todo-add-row">
+        <input class="todo-add-input" id="todo-input" placeholder="Nieuwe taak toevoegen..." onkeydown="if(event.key==='Enter')todoAdd()">
+        <button class="todo-add-btn" onclick="todoAdd()"><i class="ti ti-plus"></i></button>
+      </div>
+      <div class="todo-filters">
+        <div class="todo-filter${filter==='all'?' active':''}" onclick="todoFilter('all')">Alles (${ud.todos.length})</div>
+        <div class="todo-filter${filter==='open'?' active':''}" onclick="todoFilter('open')">Open</div>
+        <div class="todo-filter${filter==='done'?' active':''}" onclick="todoFilter('done')">Klaar</div>
+      </div>
+      <div class="todo-list">
+        ${filtered.map(t=>`<div class="todo-item">
+          <div class="todo-check${t.done?' done':''}" onclick="todoToggle(${t.id})"></div>
+          <div class="todo-text${t.done?' done':''}">${t.text}</div>
+          <button class="todo-delete" onclick="todoDelete(${t.id})"><i class="ti ti-x"></i></button>
+        </div>`).join('') || '<div style="text-align:center;color:var(--text-muted);padding:20px;font-size:14px;">Geen taken</div>'}
+      </div>
+      <div class="todo-stats">${doneCount}/${ud.todos.length} voltooid</div>
+    </div>`;
+  }
+
+  window.todoAdd = () => {
+    const input = document.getElementById('todo-input');
+    if (!input?.value.trim()) return;
+    ud.todos.push({ id: Date.now(), text: input.value.trim(), done: false });
+    saveUserData(currentUser.username, ud);
+    render();
+  };
+  window.todoToggle = (id) => {
+    const t = ud.todos.find(t => t.id === id);
+    if (t) { t.done = !t.done; saveUserData(currentUser.username, ud); render(); }
+  };
+  window.todoDelete = (id) => {
+    ud.todos = ud.todos.filter(t => t.id !== id);
+    saveUserData(currentUser.username, ud);
+    render();
+  };
+  window.todoFilter = (f) => { filter = f; render(); };
+  render();
+}
+
+// ===== CLOCK =====
+function renderClock(body) {
+  const ud = getUserData(currentUser.username);
+  if (!ud.alarms) ud.alarms = [];
+
+  function render() {
+    body.innerHTML = `<div class="clock-wrap">
+      <svg class="clock-analog" viewBox="0 0 200 200" id="clock-svg">
+        <circle cx="100" cy="100" r="95" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+        ${Array.from({length:12},(_,i)=>{const a=(i*30-90)*Math.PI/180;return `<line x1="${100+80*Math.cos(a)}" y1="${100+80*Math.sin(a)}" x2="${100+90*Math.cos(a)}" y2="${100+90*Math.sin(a)}" stroke="rgba(255,255,255,0.3)" stroke-width="2"/>`}).join('')}
+        <line id="ch" x1="100" y1="100" x2="100" y2="50" stroke="var(--text)" stroke-width="3" stroke-linecap="round"/>
+        <line id="cm" x1="100" y1="100" x2="100" y2="35" stroke="var(--text)" stroke-width="2" stroke-linecap="round"/>
+        <line id="cs" x1="100" y1="100" x2="100" y2="25" stroke="var(--accent2)" stroke-width="1" stroke-linecap="round"/>
+        <circle cx="100" cy="100" r="4" fill="var(--accent)"/>
+      </svg>
+      <div class="clock-digital" id="clock-digital">00:00:00</div>
+      <div class="clock-date" id="clock-date"></div>
+      <div class="clock-alarm-section">
+        <div class="clock-alarm-title">Alarmen</div>
+        <div class="clock-alarm-row">
+          <input type="time" class="clock-alarm-input" id="alarm-input">
+          <button class="clock-alarm-btn" onclick="addAlarm()">Instellen</button>
+        </div>
+        <div class="clock-alarm-list" id="alarm-list">
+          ${ud.alarms.map(a=>`<div class="clock-alarm-item"><span>⏰ ${a.time}</span><span style="font-size:11px;color:var(--text-muted)">${a.active?'Actief':'Uit'}</span><button class="clock-alarm-del" onclick="delAlarm(${a.id})"><i class="ti ti-x"></i></button></div>`).join('')}
+        </div>
+      </div>
+    </div>`;
+  }
+
+  function tick() {
+    const now = new Date();
+    const h = now.getHours(), m = now.getMinutes(), s = now.getSeconds();
+    const ha = (h % 12 + m / 60) * 30 - 90;
+    const ma = (m + s / 60) * 6 - 90;
+    const sa = s * 6 - 90;
+    const toXY = (a, r) => [100 + r * Math.cos(a * Math.PI / 180), 100 + r * Math.sin(a * Math.PI / 180)];
+    const ch = document.getElementById('ch'), cm = document.getElementById('cm'), cs = document.getElementById('cs');
+    if (ch) { const p = toXY(ha, 50); ch.setAttribute('x2', p[0]); ch.setAttribute('y2', p[1]); }
+    if (cm) { const p = toXY(ma, 65); cm.setAttribute('x2', p[0]); cm.setAttribute('y2', p[1]); }
+    if (cs) { const p = toXY(sa, 75); cs.setAttribute('x2', p[0]); cs.setAttribute('y2', p[1]); }
+    const dEl = document.getElementById('clock-digital');
+    if (dEl) dEl.textContent = [h,m,s].map(v=>v.toString().padStart(2,'0')).join(':');
+    const dtEl = document.getElementById('clock-date');
+    if (dtEl) dtEl.textContent = now.toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    // Check alarms
+    const timeStr = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
+    ud.alarms.forEach(a => { if (a.active && a.time === timeStr && s === 0) notify('⏰ Alarm', `Alarm om ${a.time}!`, 'ti-alarm'); });
+  }
+
+  window.addAlarm = () => {
+    const t = document.getElementById('alarm-input')?.value;
+    if (!t) return;
+    ud.alarms.push({ id: Date.now(), time: t, active: true });
+    saveUserData(currentUser.username, ud);
+    render();
+    startClockTick();
+  };
+  window.delAlarm = (id) => { ud.alarms = ud.alarms.filter(a => a.id !== id); saveUserData(currentUser.username, ud); render(); startClockTick(); };
+
+  function startClockTick() {
+    clearInterval(window._clockInterval);
+    window._clockInterval = setInterval(tick, 1000);
+    tick();
+  }
+
+  render();
+  startClockTick();
+}
+
+// ===== PAINT =====
+function renderPaint(body) {
+  body.innerHTML = `<div class="paint-wrap">
+    <div class="paint-toolbar">
+      <button class="paint-tool-btn active" id="ptool-pen" onclick="paintTool('pen')"><i class="ti ti-pencil"></i> Pen</button>
+      <button class="paint-tool-btn" id="ptool-eraser" onclick="paintTool('eraser')"><i class="ti ti-eraser"></i> Gum</button>
+      <button class="paint-tool-btn" id="ptool-line" onclick="paintTool('line')"><i class="ti ti-minus"></i> Lijn</button>
+      <button class="paint-tool-btn" id="ptool-rect" onclick="paintTool('rect')"><i class="ti ti-square"></i> Rechthoek</button>
+      <button class="paint-tool-btn" id="ptool-circle" onclick="paintTool('circle')"><i class="ti ti-circle"></i> Cirkel</button>
+      <button class="paint-tool-btn" id="ptool-fill" onclick="paintTool('fill')"><i class="ti ti-bucket"></i> Vullen</button>
+      <div class="paint-color-row">
+        ${['#000000','#ffffff','#ef4444','#f59e0b','#22c55e','#3b82f6','#6366f1','#ec4899','#14b8a6','#f97316'].map(c=>`<div class="paint-color-swatch${c==='#000000'?' selected':''}" style="background:${c}" onclick="paintColor('${c}')"></div>`).join('')}
+        <input type="color" id="paint-custom-color" style="width:22px;height:22px;border:none;background:none;cursor:pointer;padding:0;" onchange="paintColor(this.value)">
+      </div>
+      <input type="range" class="paint-size-slider" id="paint-size" min="1" max="40" value="4">
+      <button class="paint-tool-btn" onclick="paintClear()"><i class="ti ti-trash"></i> Wis</button>
+      <button class="paint-tool-btn" onclick="paintSave()"><i class="ti ti-download"></i></button>
+    </div>
+    <div class="paint-canvas-wrap">
+      <canvas class="paint-canvas" id="paint-canvas"></canvas>
+    </div>
+  </div>`;
+
+  const canvas = document.getElementById('paint-canvas');
+  const wrap = body.querySelector('.paint-canvas-wrap');
+  canvas.width = wrap.offsetWidth || 600;
+  canvas.height = wrap.offsetHeight || 400;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  let tool = 'pen', color = '#000000', size = 4;
+  let drawing = false, startX, startY, snapshot;
+
+  canvas.addEventListener('mousedown', e => {
+    drawing = true;
+    const r = canvas.getBoundingClientRect();
+    startX = e.clientX - r.left; startY = e.clientY - r.top;
+    snapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    if (tool === 'pen' || tool === 'eraser') { ctx.beginPath(); ctx.moveTo(startX, startY); }
+  });
+
+  canvas.addEventListener('mousemove', e => {
+    if (!drawing) return;
+    const r = canvas.getBoundingClientRect();
+    const x = e.clientX - r.left, y = e.clientY - r.top;
+    ctx.putImageData(snapshot, 0, 0);
+    ctx.strokeStyle = tool === 'eraser' ? '#ffffff' : color;
+    ctx.lineWidth = tool === 'eraser' ? size * 3 : size;
+    ctx.lineCap = 'round';
+    if (tool === 'pen' || tool === 'eraser') { ctx.lineTo(x, y); ctx.stroke(); }
+    else if (tool === 'line') { ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(x, y); ctx.stroke(); }
+    else if (tool === 'rect') { ctx.strokeRect(startX, startY, x-startX, y-startY); }
+    else if (tool === 'circle') { ctx.beginPath(); ctx.ellipse((startX+x)/2,(startY+y)/2,Math.abs(x-startX)/2,Math.abs(y-startY)/2,0,0,Math.PI*2); ctx.stroke(); }
+  });
+
+  canvas.addEventListener('mouseup', () => { drawing = false; });
+
+  window.paintTool = (t) => {
+    tool = t;
+    document.querySelectorAll('.paint-tool-btn').forEach(b => b.classList.remove('active'));
+    const btn = document.getElementById('ptool-' + t);
+    if (btn) btn.classList.add('active');
+    if (t === 'fill') {
+      ctx.fillStyle = color;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+  };
+  window.paintColor = (c) => {
+    color = c;
+    document.querySelectorAll('.paint-color-swatch').forEach(s => s.classList.remove('selected'));
+  };
+  window.paintClear = () => { ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, canvas.width, canvas.height); };
+  window.paintSave = () => {
+    const a = document.createElement('a');
+    a.download = 'my-os-tekening.png';
+    a.href = canvas.toDataURL();
+    a.click();
+  };
+  document.getElementById('paint-size').addEventListener('input', e => size = parseInt(e.target.value));
+}
+
+// ===== SYSINFO =====
+function renderSysinfo(body) {
+  function render() {
+    const mem = Math.floor(Math.random() * 30 + 40);
+    const cpu = Math.floor(Math.random() * 40 + 10);
+    const ud = getUserData(currentUser.username);
+    const fileCount = Object.keys(ud.files || {}).length;
+    const noteCount = (ud.notes || []).length;
+    const todoCount = (ud.todos || []).length;
+    body.innerHTML = `<div class="sysinfo-wrap">
+      <div style="font-size:16px;font-weight:600;margin-bottom:4px">Systeeminformatie</div>
+      <div style="font-size:12px;color:var(--text-muted)">My-OS 2.0 — Live statistieken</div>
+      <div class="sysinfo-grid">
+        <div class="sysinfo-card">
+          <div class="sysinfo-card-title">CPU Gebruik</div>
+          <div class="sysinfo-card-val">${cpu}%</div>
+          <div class="sysinfo-card-sub">JavaScript Engine</div>
+          <div class="sysinfo-bar"><div class="sysinfo-bar-fill" style="width:${cpu}%;background:${cpu>70?'var(--danger)':'var(--accent)'}"></div></div>
+        </div>
+        <div class="sysinfo-card">
+          <div class="sysinfo-card-title">Geheugen</div>
+          <div class="sysinfo-card-val">${mem}%</div>
+          <div class="sysinfo-card-sub">Browser Heap</div>
+          <div class="sysinfo-bar"><div class="sysinfo-bar-fill" style="width:${mem}%"></div></div>
+        </div>
+        <div class="sysinfo-card">
+          <div class="sysinfo-card-title">Actieve Vensters</div>
+          <div class="sysinfo-card-val">${Object.keys(windows).length}</div>
+          <div class="sysinfo-card-sub">geopend</div>
+        </div>
+        <div class="sysinfo-card">
+          <div class="sysinfo-card-title">Opslag Gebruikt</div>
+          <div class="sysinfo-card-val">${(JSON.stringify(localStorage).length / 1024).toFixed(1)} KB</div>
+          <div class="sysinfo-card-sub">localStorage</div>
+        </div>
+      </div>
+      <div style="font-size:13px;font-weight:600;margin:4px 0 8px">Gebruikersgegevens</div>
+      <div class="sysinfo-grid">
+        <div class="sysinfo-card"><div class="sysinfo-card-title">Bestanden</div><div class="sysinfo-card-val">${fileCount}</div></div>
+        <div class="sysinfo-card"><div class="sysinfo-card-title">Notities</div><div class="sysinfo-card-val">${noteCount}</div></div>
+        <div class="sysinfo-card"><div class="sysinfo-card-title">Taken</div><div class="sysinfo-card-val">${todoCount}</div></div>
+        <div class="sysinfo-card"><div class="sysinfo-card-title">Accounts</div><div class="sysinfo-card-val">${Object.keys(getUsers()).length}</div></div>
+      </div>
+      <div style="font-size:13px;font-weight:600;margin:4px 0 8px">Systeemprocessen</div>
+      <div class="settings-group">
+        <div class="sysinfo-process-list" style="padding:8px 16px;">
+          ${[['my-os-kernel','Kern','2.1 MB'],['window-manager','Vensterbeheer','1.4 MB'],['auth-service','Authenticatie','0.8 MB'],['file-system','Bestandssysteem','1.2 MB'],['notification-daemon','Meldingen','0.3 MB'],['clock-service','Klok','0.1 MB']]
+            .map(([n,l,m])=>`<div class="sysinfo-proc-item"><span style="color:var(--accent2);font-family:monospace;font-size:12px">${n}</span><span style="color:var(--text-muted);font-size:12px">${l}</span><span style="color:var(--text-muted);font-size:12px">${m}</span></div>`).join('')}
+        </div>
+      </div>
+    </div>`;
+  }
+  render();
+  window._sysinfoInterval = setInterval(render, 2000);
+}
+
+// ===================== KEYBOARD SHORTCUTS =====================
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    document.getElementById('start-menu').classList.remove('open');
+    hideCtxMenu();
+  }
+  if (e.ctrlKey && e.key === ' ') { e.preventDefault(); toggleStartMenu(); }
+});
+
+// ===================== INIT AUTH =====================
+renderAuthUsers();
+
+// Enter key support
+document.getElementById('login-user').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('login-pass').focus(); });
+document.getElementById('login-pass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+document.getElementById('reg-name').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('reg-user').focus(); });
+document.getElementById('reg-user').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('reg-pass').focus(); });
+document.getElementById('reg-pass').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('reg-pass2').focus(); });
+document.getElementById('reg-pass2').addEventListener('keydown', e => { if (e.key === 'Enter') doRegister(); });
+
+// ===================== APP STORE =====================
+function renderAppStore(body) {
+  let cat = 'Alle', q = '';
+
+  function installed() { return getInstalledIds(); }
+
+  function renderGrid() {
+    const ids = installed();
+    const filtered = STORE_CATALOG.filter(a =>
+      (cat === 'Alle' || a.cat === cat) &&
+      (!q || a.name.toLowerCase().includes(q.toLowerCase()) || a.desc.toLowerCase().includes(q.toLowerCase()))
+    );
+    const grid = document.getElementById('as-grid');
+    if (!grid) return;
+    grid.innerHTML = filtered.map(a => {
+      const inst = ids.includes(a.id);
+      const isBuiltin = BUILTIN_APPS.some(b => b.id === a.id);
+      const badge = a.iframe ? `<span style="font-size:10px;padding:1px 6px;border-radius:10px;background:rgba(99,102,241,0.15);color:var(--accent2);">Web</span>`
+                             : `<span style="font-size:10px;padding:1px 6px;border-radius:10px;background:rgba(34,197,94,0.12);color:#4ade80;">Ingebouwd</span>`;
+      return `<div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px;transition:border-color .15s;" onmouseenter="this.style.borderColor='rgba(99,102,241,0.35)'" onmouseleave="this.style.borderColor='rgba(255,255,255,0.08)'">
+        <div style="display:flex;align-items:flex-start;gap:12px;">
+          <div style="width:48px;height:48px;border-radius:12px;background:${a.color}22;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <i class="ti ${a.icon}" style="font-size:24px;color:${a.color}"></i>
+          </div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:14px;font-weight:600;">${a.name}</div>
+            <div style="font-size:11px;color:var(--text-dim);">${a.cat} &bull; ${a.dev}</div>
+            <div style="margin-top:4px;">${badge}</div>
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.5;flex:1;">${a.desc}</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+          <span style="font-size:11px;color:var(--text-dim);">${a.size}</span>
+          ${isBuiltin ? `<span style="padding:6px 14px;background:rgba(255,255,255,0.05);border-radius:8px;font-size:12px;color:var(--text-dim);">Geïnstalleerd</span>`
+          : inst
+            ? `<button onclick="asUninstall('${a.id}')" style="padding:6px 14px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;color:var(--danger);font-size:12px;cursor:pointer;flex-shrink:0;">Verwijderen</button>`
+            : `<button onclick="asInstall('${a.id}')" style="padding:6px 14px;background:rgba(99,102,241,0.15);border:1px solid rgba(99,102,241,0.35);border-radius:8px;color:var(--accent2);font-size:12px;cursor:pointer;flex-shrink:0;font-weight:600;"><i class="ti ti-download"></i> Installeren</button>`}
+        </div>
+      </div>`;
+    }).join('') || `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted);">Geen apps gevonden</div>`;
+  }
+
+  function renderInstalledTab() {
+    const ids = installed();
+    const inst = STORE_CATALOG.filter(a => ids.includes(a.id));
+    const cont = document.getElementById('as-installed-body');
+    if (!cont) return;
+    cont.innerHTML = inst.length === 0
+      ? `<div style="text-align:center;padding:40px;color:var(--text-muted);"><i class="ti ti-package" style="font-size:48px;display:block;margin-bottom:12px;color:var(--text-dim);"></i>Nog geen apps geïnstalleerd.<br>Ga naar <b>Ontdekken</b>!</div>`
+      : inst.map(a => `<div style="display:flex;align-items:center;gap:14px;padding:12px 16px;border-bottom:1px solid var(--border);">
+          <div style="width:40px;height:40px;border-radius:10px;background:${a.color}22;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <i class="ti ${a.icon}" style="font-size:20px;color:${a.color}"></i>
+          </div>
+          <div style="flex:1;">
+            <div style="font-size:14px;font-weight:500;">${a.name}</div>
+            <div style="font-size:11px;color:var(--text-dim);">${a.cat} &bull; ${a.dev}</div>
+          </div>
+          <button onclick="openApp('${a.id}')" style="padding:5px 12px;background:rgba(99,102,241,0.15);border:1px solid rgba(99,102,241,0.3);border-radius:7px;color:var(--accent2);font-size:12px;cursor:pointer;margin-right:6px;"><i class="ti ti-player-play"></i></button>
+          <button onclick="asUninstall('${a.id}')" style="padding:5px 10px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:7px;color:var(--danger);font-size:12px;cursor:pointer;"><i class="ti ti-trash"></i></button>
+        </div>`).join('');
+  }
+
+  body.innerHTML = `<div style="display:flex;flex-direction:column;height:100%;">
+    <!-- Header -->
+    <div style="padding:12px 16px 0;border-bottom:1px solid var(--border);flex-shrink:0;background:rgba(0,0,0,0.12);">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+        <i class="ti ti-building-store" style="font-size:22px;color:var(--accent2)"></i>
+        <div style="font-size:16px;font-weight:700;">My-OS App Store</div>
+        <div style="margin-left:auto;font-size:12px;color:var(--text-muted);" id="as-count"></div>
+      </div>
+      <!-- Tabs -->
+      <div style="display:flex;gap:0;">
+        <div id="as-tab-disc" onclick="asTab('discover')" style="padding:8px 18px;font-size:13px;cursor:pointer;border-bottom:2px solid var(--accent);color:var(--text);">Ontdekken</div>
+        <div id="as-tab-inst" onclick="asTab('installed')" style="padding:8px 18px;font-size:13px;cursor:pointer;border-bottom:2px solid transparent;color:var(--text-muted);">Geïnstalleerd</div>
+      </div>
     </div>
 
-    <div id="os-container"></div>
+    <!-- Discover panel -->
+    <div id="as-discover" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+      <div style="padding:10px 14px;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:center;flex-shrink:0;flex-wrap:wrap;">
+        <input id="as-search" placeholder="Zoek apps..." value="${q}"
+          style="flex:1;min-width:140px;background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:8px;padding:7px 12px;color:var(--text);font-size:13px;outline:none;"
+          oninput="asSearch(this.value)">
+        <div style="display:flex;gap:4px;overflow-x:auto;flex-wrap:nowrap;">
+          ${['Alle','Games','Ontwikkeling','Ontwerp','Productiviteit','Kaarten','Wetenschap','Nieuws','Websites'].map(c =>
+            `<div onclick="asCat('${c}')" id="as-cat-${c.replace(/\s/g,'_')}" style="padding:5px 11px;border-radius:20px;font-size:12px;cursor:pointer;white-space:nowrap;flex-shrink:0;${cat===c?'background:var(--accent);color:#fff;':'background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--text-muted);'}">${c}</div>`
+          ).join('')}
+        </div>
+      </div>
+      <div id="as-grid" style="flex:1;overflow-y:auto;padding:14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;align-content:start;"></div>
+    </div>
 
-    <script>
-        const TOEGESTANE_URL = "https://mattyou2.github.io"; 
+    <!-- Installed panel -->
+    <div id="as-installed" style="flex:1;display:none;flex-direction:column;overflow:hidden;">
+      <div style="flex:1;overflow-y:auto;" id="as-installed-body"></div>
+    </div>
+  </div>`;
 
-        function toonBlokkade() {
-            document.getElementById("loading-txt").style.display = "none";
-            document.getElementById("os-container").remove(); 
-            document.getElementById("security-msg").style.display = "block";
+  window.asTab = (t) => {
+    const disc = document.getElementById('as-discover');
+    const inst = document.getElementById('as-installed');
+    const td = document.getElementById('as-tab-disc');
+    const ti = document.getElementById('as-tab-inst');
+    if (t === 'discover') {
+      disc.style.display = 'flex'; inst.style.display = 'none';
+      td.style.cssText = 'padding:8px 18px;font-size:13px;cursor:pointer;border-bottom:2px solid var(--accent);color:var(--text);';
+      ti.style.cssText = 'padding:8px 18px;font-size:13px;cursor:pointer;border-bottom:2px solid transparent;color:var(--text-muted);';
+      renderGrid();
+    } else {
+      disc.style.display = 'none'; inst.style.display = 'flex';
+      td.style.cssText = 'padding:8px 18px;font-size:13px;cursor:pointer;border-bottom:2px solid transparent;color:var(--text-muted);';
+      ti.style.cssText = 'padding:8px 18px;font-size:13px;cursor:pointer;border-bottom:2px solid var(--accent);color:var(--text);';
+      renderInstalledTab();
+    }
+    updateCount();
+  };
+  window.asCat = (c) => { cat = c; renderGrid(); };
+  window.asSearch = (v) => { q = v; renderGrid(); };
+  window.asInstall = (id) => {
+    const s = STORE_CATALOG.find(a => a.id === id);
+    if (!s) return;
+    const ids = getInstalledIds();
+    if (!ids.includes(id)) { ids.push(id); saveInstalledIds(ids); }
+    refreshApps();
+    renderGrid();
+    updateCount();
+    notify('App Store', `'${s.name}' geïnstalleerd!`, 'ti-package');
+  };
+  window.asUninstall = (id) => {
+    const s = STORE_CATALOG.find(a => a.id === id);
+    if (!s || !confirm(`'${s.name}' verwijderen?`)) return;
+    const ids = getInstalledIds().filter(i => i !== id);
+    saveInstalledIds(ids);
+    if (windows[id]) closeWindow(id);
+    refreshApps();
+    renderGrid();
+    renderInstalledTab();
+    updateCount();
+    notify('App Store', `'${s.name}' verwijderd`, 'ti-trash');
+  };
+
+  function updateCount() {
+    const el = document.getElementById('as-count');
+    if (el) el.textContent = getInstalledIds().length + ' geïnstalleerd';
+  }
+
+  renderGrid();
+  updateCount();
+}
+
+// ===================== CODE EDITOR APP =====================
+function renderCodeEditor(body) {
+  const langs = ['html','css','javascript','python','json','markdown'];
+  let activeLang = 'html', tabs = { html:'<!DOCTYPE html>\n<html>\n<head>\n  <title>Mijn Pagina</title>\n</head>\n<body>\n  <h1>Hallo wereld!</h1>\n</body>\n</html>', css:'body {\n  font-family: sans-serif;\n  background: #f0f0f0;\n  margin: 0;\n  padding: 20px;\n}', javascript:'// JavaScript\nconsole.log("Hallo!");\n\nfunction greet(name) {\n  return `Hallo, ${name}!`;\n}\n', python:'# Python code\ndef hallo(naam):\n    print(f"Hallo, {naam}!")\n\nhallo("Wereld")\n', json:'{\n  "naam": "My-OS",\n  "versie": "2.0",\n  "features": ["editor","terminal","browser"]\n}', markdown:'# Hallo Markdown\n\nDit is een **vet** woord en dit is *cursief*.\n\n## Lijst\n- Item 1\n- Item 2\n\n```js\nconsole.log("code");\n```\n' };
+  const colors = { html:'#f97316', css:'#3b82f6', javascript:'#f59e0b', python:'#22c55e', json:'#14b8a6', markdown:'#a78bfa' };
+
+  function render() {
+    body.innerHTML = `<div style="display:flex;flex-direction:column;height:100%;">
+      <div style="display:flex;gap:0;border-bottom:1px solid var(--border);background:rgba(0,0,0,0.2);flex-shrink:0;overflow-x:auto;">
+        ${langs.map(l => `<div onclick="ceTab('${l}')" style="padding:8px 14px;font-size:12px;cursor:pointer;border-bottom:2px solid ${l===activeLang?colors[l]:'transparent'};color:${l===activeLang?'var(--text)':'var(--text-muted)'};white-space:nowrap;flex-shrink:0;font-family:monospace;">${l}</div>`).join('')}
+        <div style="flex:1;"></div>
+        <div style="display:flex;gap:6px;align-items:center;padding:0 10px;">
+          <button onclick="ceRun()" style="padding:4px 12px;background:var(--accent);border:none;border-radius:6px;color:#fff;font-size:12px;cursor:pointer;"><i class="ti ti-player-play"></i> Uitvoeren</button>
+          <button onclick="ceCopy()" style="padding:4px 10px;background:rgba(255,255,255,0.07);border:1px solid var(--border);border-radius:6px;color:var(--text-muted);font-size:12px;cursor:pointer;"><i class="ti ti-copy"></i></button>
+          <button onclick="ceSave()" style="padding:4px 10px;background:rgba(255,255,255,0.07);border:1px solid var(--border);border-radius:6px;color:var(--text-muted);font-size:12px;cursor:pointer;"><i class="ti ti-download"></i></button>
+        </div>
+      </div>
+      <div style="display:flex;flex:1;overflow:hidden;">
+        <div style="flex:1;display:flex;flex-direction:column;position:relative;min-width:0;">
+          <div style="display:flex;gap:0;position:relative;flex:1;overflow:hidden;">
+            <div id="ce-lines" style="padding:12px 8px;background:rgba(0,0,0,0.3);font-family:monospace;font-size:13px;line-height:1.6;color:var(--text-dim);text-align:right;user-select:none;min-width:36px;overflow:hidden;border-right:1px solid var(--border);"></div>
+            <textarea id="ce-area" spellcheck="false"
+              style="flex:1;padding:12px;background:transparent;border:none;outline:none;font-family:'Courier New',monospace;font-size:13px;line-height:1.6;color:var(--text);resize:none;tab-size:2;white-space:pre;"
+              oninput="ceInput()" onkeydown="ceKey(event)">${tabs[activeLang]}</textarea>
+          </div>
+          <div id="ce-statusbar" style="padding:3px 12px;border-top:1px solid var(--border);font-size:11px;color:var(--text-dim);flex-shrink:0;display:flex;gap:16px;">
+            <span id="ce-pos">Ln 1, Kl 1</span>
+            <span style="color:${colors[activeLang]};font-weight:600;">${activeLang.toUpperCase()}</span>
+            <span>UTF-8</span>
+          </div>
+        </div>
+        <div id="ce-preview" style="flex:1;border-left:1px solid var(--border);display:${activeLang==='html'?'flex':'none'};flex-direction:column;min-width:0;">
+          <div style="padding:4px 12px;border-bottom:1px solid var(--border);font-size:11px;color:var(--text-dim);flex-shrink:0;">Preview</div>
+          <iframe id="ce-iframe" style="flex:1;border:none;background:#fff;"></iframe>
+        </div>
+      </div>
+    </div>`;
+    ceUpdateLines();
+    if (activeLang === 'html') ceUpdatePreview();
+  }
+
+  window.ceTab = (l) => { tabs[activeLang] = document.getElementById('ce-area')?.value || tabs[activeLang]; activeLang = l; render(); };
+  window.ceInput = () => {
+    const area = document.getElementById('ce-area');
+    if (area) tabs[activeLang] = area.value;
+    ceUpdateLines();
+    if (activeLang === 'html') ceUpdatePreview();
+    const pos = document.getElementById('ce-pos');
+    if (pos && area) {
+      const text = area.value.substring(0, area.selectionStart);
+      const lines = text.split('\n');
+      pos.textContent = `Ln ${lines.length}, Kl ${lines[lines.length-1].length+1}`;
+    }
+  };
+  window.ceKey = (e) => {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const area = document.getElementById('ce-area');
+      const s = area.selectionStart, end = area.selectionEnd;
+      area.value = area.value.substring(0,s) + '  ' + area.value.substring(end);
+      area.selectionStart = area.selectionEnd = s + 2;
+      ceInput();
+    }
+  };
+  function ceUpdateLines() {
+    const area = document.getElementById('ce-area');
+    const lines = document.getElementById('ce-lines');
+    if (!area || !lines) return;
+    const n = (area.value.match(/\n/g)||[]).length + 1;
+    lines.innerHTML = Array.from({length:n},(_,i)=>`<div>${i+1}</div>`).join('');
+    lines.scrollTop = area.scrollTop;
+  }
+  function ceUpdatePreview() {
+    const iframe = document.getElementById('ce-iframe');
+    if (!iframe) return;
+    const doc = iframe.contentDocument || iframe.contentWindow.document;
+    doc.open(); doc.write(tabs['html']); doc.close();
+  }
+  window.ceRun = () => {
+    if (activeLang === 'html') { ceUpdatePreview(); return; }
+    if (activeLang === 'javascript') {
+      try { const r = new Function(tabs['javascript'])(); if (r !== undefined) notify('Code Editor', String(r), 'ti-code'); }
+      catch(e) { notify('Code Editor', 'Fout: ' + e.message, 'ti-alert-circle'); }
+    } else { notify('Code Editor', activeLang + ' kan niet direct worden uitgevoerd in de browser.', 'ti-info-circle'); }
+  };
+  window.ceCopy = () => { navigator.clipboard?.writeText(tabs[activeLang]); notify('Code Editor', 'Gekopieerd!', 'ti-copy'); };
+  window.ceSave = () => {
+    const ext = {html:'html',css:'css',javascript:'js',python:'py',json:'json',markdown:'md'}[activeLang];
+    const a = document.createElement('a');
+    a.href = 'data:text/plain;charset=utf-8,' + encodeURIComponent(tabs[activeLang]);
+    a.download = 'code.' + ext; a.click();
+  };
+  render();
+}
+
+// ===================== SQL PAD =====================
+function renderSqlPad(body) {
+  let db = { users:[{id:1,naam:'Alice',email:'alice@example.com',leeftijd:28},{id:2,naam:'Bob',email:'bob@example.com',leeftijd:34},{id:3,naam:'Charlie',email:'charlie@example.com',leeftijd:22}], producten:[{id:1,naam:'Laptop',prijs:999.99,voorraad:15},{id:2,naam:'Muis',prijs:29.99,voorraad:87},{id:3,naam:'Toetsenbord',prijs:79.99,voorraad:43}] };
+  let query = 'SELECT * FROM users;';
+  body.innerHTML = `<div style="display:flex;flex-direction:column;height:100%;">
+    <div style="padding:8px 12px;border-bottom:1px solid var(--border);font-size:12px;color:var(--text-muted);flex-shrink:0;background:rgba(0,0,0,0.15);">
+      Tabellen: <b style="color:var(--accent2)">users</b> (id, naam, email, leeftijd) &nbsp;|&nbsp; <b style="color:var(--accent2)">producten</b> (id, naam, prijs, voorraad)
+    </div>
+    <div style="flex:0 0 140px;display:flex;flex-direction:column;border-bottom:1px solid var(--border);">
+      <textarea id="sql-input" spellcheck="false" style="flex:1;background:rgba(0,0,0,0.2);border:none;outline:none;padding:12px;font-family:monospace;font-size:13px;color:var(--text);resize:none;">${query}</textarea>
+      <div style="padding:6px 10px;display:flex;gap:8px;background:rgba(0,0,0,0.1);flex-shrink:0;">
+        <button onclick="sqlRun()" style="padding:5px 16px;background:var(--accent);border:none;border-radius:7px;color:#fff;font-size:13px;cursor:pointer;"><i class="ti ti-player-play"></i> Uitvoeren</button>
+        <button onclick="sqlClear()" style="padding:5px 12px;background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:7px;color:var(--text-muted);font-size:13px;cursor:pointer;">Wis</button>
+        <span style="font-size:11px;color:var(--text-dim);margin-left:auto;align-self:center;">Ctrl+Enter om uit te voeren</span>
+      </div>
+    </div>
+    <div id="sql-result" style="flex:1;overflow:auto;padding:10px;font-size:13px;"></div>
+  </div>`;
+
+  document.getElementById('sql-input').addEventListener('keydown', e => { if (e.ctrlKey && e.key === 'Enter') { e.preventDefault(); sqlRun(); } });
+
+  window.sqlRun = () => {
+    const q = document.getElementById('sql-input').value.trim().toLowerCase();
+    const res = document.getElementById('sql-result');
+    try {
+      if (q.startsWith('select')) {
+        const match = q.match(/from\s+(\w+)/); if (!match) throw new Error('Geen geldige tabel');
+        const tbl = match[1];
+        if (!db[tbl]) throw new Error(`Tabel '${tbl}' bestaat niet`);
+        let rows = [...db[tbl]];
+        const whereM = q.match(/where\s+(\w+)\s*(=|>|<|>=|<=|!=)\s*'?([^'\s]+)'?/);
+        if (whereM) {
+          const [,col,op,val] = whereM;
+          rows = rows.filter(r => { const v = r[col]; const n = parseFloat(val);
+            if (op==='=') return String(v)===val||v==n; if (op==='>') return v>n; if (op==='<') return v<n;
+            if (op==='>=') return v>=n; if (op==='<=') return v<=n; if (op==='!=') return String(v)!==val; return true; });
         }
+        const limitM = q.match(/limit\s+(\d+)/);
+        if (limitM) rows = rows.slice(0, parseInt(limitM[1]));
+        if (!rows.length) { res.innerHTML = `<div style="color:var(--text-muted);padding:12px;">Geen resultaten.</div>`; return; }
+        const cols = Object.keys(rows[0]);
+        res.innerHTML = `<div style="font-size:11px;color:var(--text-dim);margin-bottom:6px;">${rows.length} rij(en)</div>
+          <table style="width:100%;border-collapse:collapse;font-size:12px;">
+            <thead><tr>${cols.map(c=>`<th style="text-align:left;padding:7px 10px;background:rgba(99,102,241,0.1);border-bottom:1px solid var(--border);color:var(--accent2);font-weight:600;">${c}</th>`).join('')}</tr></thead>
+            <tbody>${rows.map((r,i)=>`<tr style="background:${i%2?'rgba(255,255,255,0.02)':'transparent'}">${cols.map(c=>`<td style="padding:7px 10px;border-bottom:1px solid var(--border);color:var(--text);">${r[c]}</td>`).join('')}</tr>`).join('')}</tbody>
+          </table>`;
+      } else { res.innerHTML = `<div style="color:var(--warning);padding:12px;">Alleen SELECT wordt ondersteund in deze demo.</div>`; }
+    } catch(e) { res.innerHTML = `<div style="color:var(--danger);padding:12px;"><b>Fout:</b> ${e.message}</div>`; }
+  };
+  window.sqlClear = () => { document.getElementById('sql-result').innerHTML = ''; };
+  sqlRun();
+}
 
-        if (localStorage.getItem("os_hard_blocked") === "true") {
-            toonBlokkade();
-        } else {
-            const huidigeLocatie = window.location.origin.replace(/\/$/, "");
+// ===================== JSON VIEWER =====================
+function renderJsonViewer(body) {
+  body.innerHTML = `<div style="display:flex;flex-direction:column;height:100%;">
+    <div style="display:flex;gap:8px;padding:8px 10px;border-bottom:1px solid var(--border);flex-shrink:0;">
+      <button onclick="jsonParse()" style="padding:5px 14px;background:var(--accent);border:none;border-radius:7px;color:#fff;font-size:12px;cursor:pointer;"><i class="ti ti-check"></i> Valideren</button>
+      <button onclick="jsonFormat()" style="padding:5px 14px;background:rgba(255,255,255,0.07);border:1px solid var(--border);border-radius:7px;color:var(--text-muted);font-size:12px;cursor:pointer;">Formatteren</button>
+      <button onclick="jsonMinify()" style="padding:5px 14px;background:rgba(255,255,255,0.07);border:1px solid var(--border);border-radius:7px;color:var(--text-muted);font-size:12px;cursor:pointer;">Minify</button>
+      <input id="json-search" placeholder="Zoek sleutel..." style="flex:1;background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:7px;padding:5px 10px;color:var(--text);font-size:12px;outline:none;">
+    </div>
+    <div style="display:flex;flex:1;overflow:hidden;">
+      <textarea id="json-input" spellcheck="false" placeholder='Plak hier JSON...' style="flex:1;padding:12px;background:rgba(0,0,0,0.2);border:none;border-right:1px solid var(--border);outline:none;font-family:monospace;font-size:13px;color:var(--text);resize:none;">{"naam":"My-OS","versie":"2.0","apps":["Browser","Terminal","Editor"],"stats":{"windows":0,"users":1}}</textarea>
+      <div id="json-tree" style="flex:1;overflow:auto;padding:12px;font-family:monospace;font-size:13px;line-height:1.6;"></div>
+    </div>
+    <div id="json-status" style="padding:4px 12px;border-top:1px solid var(--border);font-size:11px;color:var(--text-dim);flex-shrink:0;"></div>
+  </div>`;
 
-            if (huidigeLocatie === TOEGESTANE_URL.replace(/\/$/, "")) {
-                
-                const mapPad = window.location.pathname.replace("index.html", "");
-                
-                fetch(mapPad + "os.html")
-                    .then(response => response.text())
-                    .then(data => {
-                        const startTag = "";
-                        const eindTag = "";
-                        
-                        const startIndex = data.indexOf(startTag) + startTag.length;
-                        const eindIndex = data.indexOf(eindTag);
-                        
-                        if (startIndex > -1 && eindIndex > -1) {
-                            const gecodeerdeBrij = data.substring(startIndex, eindIndex).trim();
-                            
-                            const echteHTML = decodeURIComponent(atob(gecodeerdeBrij).split('').map(function(c) {
-                                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-                            }).join(''));
-                            
-                            document.getElementById("loading-txt").style.display = "none";
-                            
-                            const container = document.getElementById("os-container");
-                            container.innerHTML = echteHTML;
-                            
-                            const scripts = container.querySelectorAll("script");
-                            scripts.forEach(oldScript => {
-                                const newScript = document.createElement("script");
-                                Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
-                                newScript.appendChild(document.createTextNode(oldScript.innerHTML));
-                                oldScript.parentNode.replaceChild(newScript, oldScript);
-                            });
-                            
-                        } else {
-                            throw new Error();
-                        }
-                    })
-                    .catch(err => {
-                        triggerStrike();
-                    });
+  function buildTree(val, indent=0) {
+    if (val === null) return `<span style="color:#ef4444;">null</span>`;
+    if (typeof val === 'boolean') return `<span style="color:#f59e0b;">${val}</span>`;
+    if (typeof val === 'number') return `<span style="color:#22c55e;">${val}</span>`;
+    if (typeof val === 'string') return `<span style="color:#a78bfa;">"${val}"</span>`;
+    if (Array.isArray(val)) {
+      if (!val.length) return `<span style="color:var(--text-muted);">[]</span>`;
+      const items = val.map((v,i)=>`<div style="padding-left:20px;">${buildTree(v, indent+1)}${i<val.length-1?',':''}</div>`).join('');
+      return `<details open><summary style="cursor:pointer;color:var(--text-muted);">[ ${val.length} items ]</summary>${items}</details>`;
+    }
+    if (typeof val === 'object') {
+      const keys = Object.keys(val);
+      if (!keys.length) return `<span style="color:var(--text-muted);">{}</span>`;
+      const items = keys.map((k,i)=>`<div style="padding-left:20px;"><span style="color:#60a5fa;">"${k}"</span>: ${buildTree(val[k], indent+1)}${i<keys.length-1?',':''}</div>`).join('');
+      return `<details open><summary style="cursor:pointer;color:var(--text-muted);">{ ${keys.length} sleutels }</summary>${items}</details>`;
+    }
+    return String(val);
+  }
 
-            } else {
-                triggerStrike();
-            }
-        }
+  window.jsonParse = () => {
+    try {
+      const v = JSON.parse(document.getElementById('json-input').value);
+      document.getElementById('json-tree').innerHTML = buildTree(v);
+      document.getElementById('json-status').innerHTML = '<span style="color:var(--success);">✓ Geldige JSON</span>';
+    } catch(e) { document.getElementById('json-status').innerHTML = `<span style="color:var(--danger);">✗ ${e.message}</span>`; document.getElementById('json-tree').innerHTML=''; }
+  };
+  window.jsonFormat = () => {
+    try { const v = JSON.parse(document.getElementById('json-input').value); document.getElementById('json-input').value = JSON.stringify(v,null,2); jsonParse(); } catch(e) {}
+  };
+  window.jsonMinify = () => {
+    try { const v = JSON.parse(document.getElementById('json-input').value); document.getElementById('json-input').value = JSON.stringify(v); jsonParse(); } catch(e) {}
+  };
+  jsonParse();
+}
 
-        function triggerStrike() {
-            let strikes = parseInt(localStorage.getItem("os_strikes") || "0") + 1;
-            localStorage.setItem("os_strikes", strikes);
-            if (strikes >= 3) {
-                localStorage.setItem("os_hard_blocked", "true");
-            }
-            toonBlokkade();
-        }
+// ===================== MARKDOWN PREVIEW =====================
+function renderMarkdownPrev(body) {
+  body.innerHTML = `<div style="display:flex;height:100%;">
+    <textarea id="md-input" spellcheck="false" style="flex:1;padding:14px;background:rgba(0,0,0,0.2);border:none;border-right:1px solid var(--border);outline:none;font-family:monospace;font-size:13px;color:var(--text);resize:none;line-height:1.6;" oninput="mdRender()" placeholder="Typ Markdown hier...">## Welkom bij Markdown Preview
 
-        let mPresses = [];
-        window.addEventListener("keydown", function(e) {
-            if (e.key.toLowerCase() === "m") {
-                const nu = Date.now();
-                mPresses.push(nu);
-                mPresses = mPresses.filter(tijd => nu - tijd < 5000);
+Schrijf **Markdown** hier en zie de *preview* rechts!
 
-                if (mPresses.length >= 5) {
-                    localStorage.removeItem("os_hard_blocked");
-                    localStorage.setItem("os_strikes", "0");
-                    alert("Systeem gedeblokkeerd! Pagina herladen...");
-                    window.location.reload();
-                }
-            }
-        });
-    </script>
+### Features
+- **Vet** tekst
+- *Cursief* tekst
+- \`inline code\`
+- [Links](https://example.com)
+
+\`\`\`javascript
+console.log("Hallo!");
+\`\`\`
+
+> Dit is een blockquote
+
+---
+
+| Kolom 1 | Kolom 2 |
+|---------|---------|
+| Cel A   | Cel B   |
+</textarea>
+    <div id="md-preview" style="flex:1;padding:14px;overflow-y:auto;background:rgba(255,255,255,0.02);font-size:14px;line-height:1.7;color:var(--text);">
+      <style>#md-preview h1,#md-preview h2,#md-preview h3{margin:16px 0 8px;font-weight:700}#md-preview h1{font-size:22px}#md-preview h2{font-size:18px;border-bottom:1px solid var(--border);padding-bottom:6px}#md-preview h3{font-size:15px}#md-preview code{background:rgba(99,102,241,0.12);padding:1px 6px;border-radius:4px;font-family:monospace;font-size:12px;color:var(--accent2)}#md-preview pre{background:rgba(0,0,0,0.3);padding:12px;border-radius:8px;overflow-x:auto;margin:10px 0}#md-preview pre code{background:none;padding:0;color:var(--text)}#md-preview blockquote{border-left:3px solid var(--accent);padding-left:12px;color:var(--text-muted);margin:8px 0}#md-preview table{width:100%;border-collapse:collapse;margin:10px 0}#md-preview td,#md-preview th{padding:7px 12px;border:1px solid var(--border)}#md-preview th{background:rgba(99,102,241,0.1)}#md-preview hr{border:none;border-top:1px solid var(--border);margin:16px 0}#md-preview ul,#md-preview ol{padding-left:20px;margin:6px 0}#md-preview li{margin-bottom:3px}#md-preview a{color:var(--accent2)}</style>
+    </div>
+  </div>`;
+
+  window.mdRender = () => {
+    const raw = document.getElementById('md-input')?.value || '';
+    let html = raw
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/^#{3} (.+)$/gm,'<h3>$1</h3>')
+      .replace(/^#{2} (.+)$/gm,'<h2>$1</h2>')
+      .replace(/^# (.+)$/gm,'<h1>$1</h1>')
+      .replace(/\*\*(.+?)\*\*/g,'<b>$1</b>')
+      .replace(/\*(.+?)\*/g,'<i>$1</i>')
+      .replace(/`{3}[\w]*\n?([\s\S]*?)`{3}/g,'<pre><code>$1</code></pre>')
+      .replace(/`(.+?)`/g,'<code>$1</code>')
+      .replace(/\[(.+?)\]\((.+?)\)/g,'<a href="$2" target="_blank">$1</a>')
+      .replace(/^> (.+)$/gm,'<blockquote>$1</blockquote>')
+      .replace(/^---$/gm,'<hr>')
+      .replace(/^\- (.+)$/gm,'<li>$1</li>')
+      .replace(/(<li>.*<\/li>\n?)+/g,'<ul>$&</ul>')
+      .replace(/^\d+\. (.+)$/gm,'<li>$1</li>')
+      .replace(/\|(.+)\|\n\|[-| ]+\|\n((?:\|.+\|\n?)*)/g, (m,hdr,rows) => {
+        const hs = hdr.split('|').filter(Boolean).map(h=>`<th>${h.trim()}</th>`).join('');
+        const rs = rows.trim().split('\n').map(r=>`<tr>${r.split('|').filter(Boolean).map(c=>`<td>${c.trim()}</td>`).join('')}</tr>`).join('');
+        return `<table><thead><tr>${hs}</tr></thead><tbody>${rs}</tbody></table>`;
+      })
+      .split('\n').map(l => (l.startsWith('<')||!l.trim()) ? l : `<p>${l}</p>`).join('\n');
+    const prev = document.getElementById('md-preview');
+    if (prev) prev.innerHTML = '<style>#md-preview h1,#md-preview h2,#md-preview h3{margin:16px 0 8px;font-weight:700}#md-preview h1{font-size:22px}#md-preview h2{font-size:18px;border-bottom:1px solid var(--border);padding-bottom:6px}#md-preview h3{font-size:15px}#md-preview code{background:rgba(99,102,241,0.12);padding:1px 6px;border-radius:4px;font-family:monospace;font-size:12px;color:var(--accent2)}#md-preview pre{background:rgba(0,0,0,0.3);padding:12px;border-radius:8px;overflow-x:auto;margin:10px 0}#md-preview pre code{background:none;padding:0;color:var(--text)}#md-preview blockquote{border-left:3px solid var(--accent);padding-left:12px;color:var(--text-muted);margin:8px 0}#md-preview table{width:100%;border-collapse:collapse;margin:10px 0}#md-preview td,#md-preview th{padding:7px 12px;border:1px solid var(--border)}#md-preview th{background:rgba(99,102,241,0.1)}#md-preview hr{border:none;border-top:1px solid var(--border);margin:16px 0}#md-preview ul,#md-preview ol{padding-left:20px;margin:6px 0}#md-preview li{margin-bottom:3px}#md-preview a{color:var(--accent2)}</style>' + html;
+  };
+  mdRender();
+}
+
+// ===================== POMODORO =====================
+function renderPomodoro(body) {
+  let mode='work', running=false, secs=25*60, interval=null;
+  const modes = { work:25*60, short:5*60, long:15*60 };
+  function fmt(s){return `${Math.floor(s/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`;}
+  function render(){
+    body.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:20px;background:linear-gradient(160deg,${mode==='work'?'#1a0a0a,#0f0f1a':'#0a1a0a,#0f0f1a'});">
+      <div style="display:flex;gap:6px;">
+        ${[['work','Werk','#ef4444'],['short','Korte pauze','#22c55e'],['long','Lange pauze','#3b82f6']].map(([m,l,c])=>`<button onclick="pomMode('${m}')" style="padding:6px 14px;border:none;border-radius:8px;font-size:12px;cursor:pointer;background:${mode===m?c:'rgba(255,255,255,0.07)'};color:${mode===m?'#fff':'var(--text-muted)'};">${l}</button>`).join('')}
+      </div>
+      <svg viewBox="0 0 200 200" width="180" height="180">
+        <circle cx="100" cy="100" r="88" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="8"/>
+        <circle cx="100" cy="100" r="88" fill="none" stroke="${mode==='work'?'#ef4444':mode==='short'?'#22c55e':'#3b82f6'}" stroke-width="8"
+          stroke-dasharray="${2*Math.PI*88}" stroke-dashoffset="${2*Math.PI*88*(1-secs/modes[mode])}"
+          stroke-linecap="round" transform="rotate(-90 100 100)" style="transition:stroke-dashoffset .5s;"/>
+        <text x="100" y="108" text-anchor="middle" fill="white" font-size="36" font-weight="200" font-family="sans-serif">${fmt(secs)}</text>
+      </svg>
+      <div style="font-size:14px;color:var(--text-muted);">${mode==='work'?'Focustijd':'Pauzetijd'}</div>
+      <div style="display:flex;gap:12px;">
+        <button onclick="pomToggle()" style="width:56px;height:56px;border-radius:50%;background:${mode==='work'?'#ef4444':mode==='short'?'#22c55e':'#3b82f6'};border:none;color:#fff;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+          <i class="ti ti-${running?'player-pause':'player-play'}"></i>
+        </button>
+        <button onclick="pomReset()" style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.07);border:1px solid var(--border);color:var(--text-muted);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+          <i class="ti ti-refresh"></i>
+        </button>
+      </div>
+      <div id="pom-sessions" style="font-size:12px;color:var(--text-dim);">Sessies: ${LS.get('pom_sessions')||0}</div>
+    </div>`;
+  }
+  window.pomMode=(m)=>{clearInterval(interval);running=false;mode=m;secs=modes[m];render();};
+  window.pomToggle=()=>{
+    running=!running;
+    if(running){interval=setInterval(()=>{secs--;if(secs<=0){clearInterval(interval);running=false;if(mode==='work'){const s=(LS.get('pom_sessions')||0)+1;LS.set('pom_sessions',s);}notify('Pomodoro',mode==='work'?'Tijd voor een pauze!':'Pauze klaar, ga werken!','ti-clock');pomReset();}else render();},1000);}
+    else clearInterval(interval);
+    render();
+  };
+  window.pomReset=()=>{clearInterval(interval);running=false;secs=modes[mode];render();};
+  render();
+}
+
+// ===================== EENHEDEN OMREKENEN =====================
+function renderConverter(body) {
+  const units = {
+    Lengte:{m:1,km:0.001,cm:100,mm:1000,inch:39.3701,ft:3.28084,yard:1.09361,mijl:0.000621371},
+    Gewicht:{kg:1,g:1000,mg:1e6,lb:2.20462,oz:35.274,ton:0.001},
+    Temperatuur:{special:true},
+    Oppervlakte:{'m²':1,'km²':1e-6,'cm²':10000,'ha':0.0001,'ft²':10.7639,'acre':0.000247105},
+    Snelheid:{'m/s':1,'km/u':3.6,'mph':2.23694,'knot':1.94384},
+  };
+  let cat='Lengte', from='m', to='km', val=1;
+  function convert(v,f,t,c){
+    if(c==='Temperatuur'){
+      const inC=f==='°C'?v:f==='°F'?(v-32)*5/9:v-273.15;
+      return t==='°C'?inC:t==='°F'?inC*9/5+32:inC+273.15;
+    }
+    return v/units[c][f]*units[c][t];
+  }
+  function render(){
+    const cu=cat==='Temperatuur'?{...{'°C':1,'°F':1,'K':1}}:units[cat];
+    const ks=Object.keys(cu);
+    if(!ks.includes(from))from=ks[0]; if(!ks.includes(to))to=ks[1]||ks[0];
+    const result=convert(val,from,to,cat);
+    body.innerHTML=`<div style="display:flex;flex-direction:column;height:100%;padding:20px;gap:16px;overflow-y:auto;">
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        ${Object.keys(units).map(c=>`<button onclick="convCat('${c}')" style="padding:6px 14px;border:none;border-radius:8px;font-size:12px;cursor:pointer;background:${cat===c?'var(--accent)':'rgba(255,255,255,0.07)'};color:${cat===c?'#fff':'var(--text-muted)'};">${c}</button>`).join('')}
+      </div>
+      <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:end;">
+        <div>
+          <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:5px;">Van</label>
+          <select id="conv-from" onchange="convFrom(this.value)" style="width:100%;background:var(--bg-dark);border:1px solid var(--border);border-radius:8px;padding:8px;color:var(--text);font-size:14px;outline:none;margin-bottom:8px;">
+            ${ks.map(k=>`<option value="${k}"${k===from?' selected':''}>${k}</option>`).join('')}
+          </select>
+          <input id="conv-val" type="number" value="${val}" oninput="convVal(this.value)"
+            style="width:100%;background:var(--bg-dark);border:1px solid var(--accent);border-radius:8px;padding:10px 12px;color:var(--text);font-size:18px;outline:none;">
+        </div>
+        <div style="font-size:24px;color:var(--text-dim);padding-bottom:10px;">→</div>
+        <div>
+          <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:5px;">Naar</label>
+          <select id="conv-to" onchange="convTo(this.value)" style="width:100%;background:var(--bg-dark);border:1px solid var(--border);border-radius:8px;padding:8px;color:var(--text);font-size:14px;outline:none;margin-bottom:8px;">
+            ${ks.map(k=>`<option value="${k}"${k===to?' selected':''}>${k}</option>`).join('')}
+          </select>
+          <div style="background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.2);border-radius:8px;padding:10px 12px;font-size:18px;font-weight:500;color:var(--accent2);">${isNaN(result)?'–':parseFloat(result.toFixed(8))}</div>
+        </div>
+      </div>
+      <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:14px;">
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px;font-weight:600;">Alle conversies</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px;">
+          ${ks.map(k=>{const r=convert(val,from,k,cat);return`<div style="padding:7px 10px;background:rgba(255,255,255,0.03);border-radius:7px;font-size:12px;"><span style="color:var(--text-muted);">${k}:</span> <span style="color:var(--text);font-weight:500;">${isNaN(r)?'–':parseFloat(r.toFixed(6))}</span></div>`;}).join('')}
+        </div>
+      </div>
+    </div>`;
+  }
+  window.convCat=(c)=>{cat=c;render();};
+  window.convFrom=(v)=>{from=v;render();};
+  window.convTo=(v)=>{to=v;render();};
+  window.convVal=(v)=>{val=parseFloat(v)||0;render();};
+  render();
+}
+
+// ===================== WACHTWOORD GENERATOR =====================
+function renderPassGen(body) {
+  body.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:16px;padding:20px;">
+    <div style="font-size:16px;font-weight:600;">Wachtwoord Generator</div>
+    <div id="pg-result" style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:10px;padding:14px 20px;font-family:monospace;font-size:18px;color:var(--accent2);word-break:break-all;text-align:center;min-height:54px;width:100%;max-width:400px;cursor:pointer;" onclick="pgCopy()" title="Klik om te kopiëren"></div>
+    <div style="color:var(--text-dim);font-size:11px;">Klik op het wachtwoord om te kopiëren</div>
+    <div style="width:100%;max-width:400px;display:flex;flex-direction:column;gap:10px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <label style="font-size:13px;">Lengte: <span id="pg-len-label">16</span></label>
+        <input type="range" id="pg-len" min="6" max="64" value="16" oninput="document.getElementById('pg-len-label').textContent=this.value;pgGen();" style="width:180px;">
+      </div>
+      ${[['pg-upper','Hoofdletters (A-Z)',true],['pg-lower','Kleine letters (a-z)',true],['pg-nums','Cijfers (0-9)',true],['pg-syms','Symbolen (!@#$...)',true]].map(([id,label,checked])=>`
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;">
+          <input type="checkbox" id="${id}" ${checked?'checked':''} onchange="pgGen()" style="width:16px;height:16px;cursor:pointer;">
+          ${label}
+        </label>`).join('')}
+      <button onclick="pgGen()" style="padding:10px;background:var(--accent);border:none;border-radius:9px;color:#fff;font-size:14px;cursor:pointer;margin-top:4px;"><i class="ti ti-refresh"></i> Nieuw wachtwoord</button>
+    </div>
+    <div id="pg-strength" style="font-size:12px;"></div>
+  </div>`;
+  window.pgGen=()=>{
+    const len=parseInt(document.getElementById('pg-len')?.value||16);
+    let chars='';
+    if(document.getElementById('pg-upper')?.checked) chars+='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    if(document.getElementById('pg-lower')?.checked) chars+='abcdefghijklmnopqrstuvwxyz';
+    if(document.getElementById('pg-nums')?.checked) chars+='0123456789';
+    if(document.getElementById('pg-syms')?.checked) chars+='!@#$%^&*()_+-=[]{}|;:,.<>?';
+    if(!chars) chars='abcdefghijklmnopqrstuvwxyz';
+    let pw='';
+    const arr=new Uint32Array(len); crypto.getRandomValues(arr);
+    arr.forEach(n=>{ pw+=chars[n%chars.length]; });
+    document.getElementById('pg-result').textContent=pw;
+    const s=len<8?'Zwak':len<12?'Matig':len<16?'Sterk':'Zeer sterk';
+    const c=len<8?'var(--danger)':len<12?'var(--warning)':len<16?'var(--success)':'#22c55e';
+    document.getElementById('pg-strength').innerHTML=`Sterkte: <b style="color:${c}">${s}</b>`;
+  };
+  window.pgCopy=()=>{const t=document.getElementById('pg-result')?.textContent;if(t){navigator.clipboard?.writeText(t);notify('Wachtwoord Generator','Gekopieerd naar klembord!','ti-copy');}};
+  pgGen();
+}
+
+// ===================== SNAKE =====================
+function renderSnake(body) {
+  body.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:10px;background:#0a0a0f;">
+    <div style="display:flex;justify-content:space-between;width:320px;">
+      <span style="font-size:13px;color:var(--text-muted);">Score: <b id="snake-score" style="color:var(--text);">0</b></span>
+      <span style="font-size:13px;color:var(--text-muted);">Record: <b id="snake-hi" style="color:var(--accent2);">${LS.get('snake_hi')||0}</b></span>
+    </div>
+    <canvas id="snake-canvas" width="320" height="320" style="border:2px solid rgba(99,102,241,0.3);border-radius:8px;image-rendering:pixelated;"></canvas>
+    <div style="font-size:12px;color:var(--text-dim);">Pijltjestoetsen of WASD &bull; Spatiebalk om te pauzeren</div>
+    <button id="snake-start-btn" onclick="snakeStart()" style="padding:8px 20px;background:var(--accent);border:none;border-radius:8px;color:#fff;font-size:13px;cursor:pointer;">Starten</button>
+  </div>`;
+  const CELL=20, COLS=16, ROWS=16;
+  const canvas=document.getElementById('snake-canvas');
+  const ctx=canvas.getContext('2d');
+  let snake,dir,food,score,running,loop,paused=false;
+  function draw(){
+    ctx.fillStyle='#0a0a0f'; ctx.fillRect(0,0,320,320);
+    snake.forEach((s,i)=>{ctx.fillStyle=i===0?'#22c55e':'#16a34a';ctx.fillRect(s.x*CELL+1,s.y*CELL+1,CELL-2,CELL-2);});
+    ctx.fillStyle='#ef4444'; ctx.beginPath(); ctx.arc(food.x*CELL+CELL/2,food.y*CELL+CELL/2,CELL/2-2,0,Math.PI*2); ctx.fill();
+  }
+  function randomFood(){return{x:Math.floor(Math.random()*COLS),y:Math.floor(Math.random()*ROWS)};}
+  window.snakeStart=()=>{
+    snake=[{x:8,y:8},{x:7,y:8},{x:6,y:8}]; dir={x:1,y:0}; food=randomFood(); score=0; running=true; paused=false;
+    document.getElementById('snake-start-btn').style.display='none';
+    clearInterval(loop);
+    loop=setInterval(()=>{
+      if(paused)return;
+      const head={x:snake[0].x+dir.x,y:snake[0].y+dir.y};
+      if(head.x<0||head.x>=COLS||head.y<0||head.y>=ROWS||snake.some(s=>s.x===head.x&&s.y===head.y)){
+        clearInterval(loop); running=false;
+        const hi=Math.max(score,LS.get('snake_hi')||0); LS.set('snake_hi',hi);
+        ctx.fillStyle='rgba(0,0,0,0.7)';ctx.fillRect(0,0,320,320);
+        ctx.fillStyle='#fff';ctx.font='20px sans-serif';ctx.textAlign='center';ctx.fillText('Game Over!',160,150);
+        ctx.font='14px sans-serif';ctx.fillStyle='#94a3b8';ctx.fillText('Score: '+score,160,175);
+        document.getElementById('snake-start-btn').style.display=''; document.getElementById('snake-hi').textContent=hi;
+        return;
+      }
+      snake.unshift(head);
+      if(head.x===food.x&&head.y===food.y){score++;document.getElementById('snake-score').textContent=score;food=randomFood();}
+      else snake.pop();
+      draw();
+    },120);
+    draw();
+  };
+  ctx.fillStyle='#0a0a0f';ctx.fillRect(0,0,320,320);
+  ctx.fillStyle='rgba(99,102,241,0.3)';ctx.font='18px sans-serif';ctx.textAlign='center';ctx.fillText('Druk op Starten',160,165);
+  const keyH=e=>{
+    if(!running)return;
+    if(e.key===' '){paused=!paused;return;}
+    const map={'ArrowUp':{x:0,y:-1},'ArrowDown':{x:0,y:1},'ArrowLeft':{x:-1,y:0},'ArrowRight':{x:1,y:0},'w':{x:0,y:-1},'s':{x:0,y:1},'a':{x:-1,y:0},'d':{x:1,y:0}};
+    const nd=map[e.key]; if(nd&&!(nd.x===-dir.x&&nd.y===-dir.y)){dir=nd;e.preventDefault();}
+  };
+  document.addEventListener('keydown',keyH);
+  // Cleanup when window closes
+  const origClose=window.closeWindow;
+  window.closeWindow=(id)=>{if(id==='store_snake'){clearInterval(loop);document.removeEventListener('keydown',keyH);}origClose(id);};
+}
+
+// ===================== 2048 =====================
+function render2048(body) {
+  let grid,score,best=LS.get('2048_best')||0;
+  function newGrid(){return Array.from({length:4},()=>[0,0,0,0]);}
+  function addRandom(g){const empty=[];g.forEach((r,i)=>r.forEach((v,j)=>{if(!v)empty.push([i,j]);}));if(!empty.length)return;const[r,c]=empty[Math.floor(Math.random()*empty.length)];g[r][c]=Math.random()<0.9?2:4;}
+  function init(){grid=newGrid();score=0;addRandom(grid);addRandom(grid);render2048UI();}
+  const COLS=['#cdc1b4','#eee4da','#ede0c8','#f2b179','#f59563','#f67c5f','#f65e3b','#edcf72','#edcc61','#edc850','#edc53f','#edc22e'];
+  function tileColor(v){const i=Math.log2(v||1);return COLS[Math.min(i,COLS.length-1)]||'#3c3a32';}
+  function tileText(v){return v>0?v:'';}
+  function render2048UI(){
+    best=Math.max(score,best);LS.set('2048_best',best);
+    body.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;gap:12px;padding:16px;height:100%;justify-content:center;background:#faf8ef;">
+      <div style="display:flex;gap:10px;align-items:center;width:300px;justify-content:space-between;">
+        <div style="font-size:26px;font-weight:800;color:#776e65;">2048</div>
+        <div style="display:flex;gap:8px;">
+          <div style="background:#bbada0;border-radius:6px;padding:6px 12px;text-align:center;"><div style="font-size:10px;color:#eee4da;font-weight:700;">SCORE</div><div style="font-size:16px;font-weight:700;color:#fff;">${score}</div></div>
+          <div style="background:#bbada0;border-radius:6px;padding:6px 12px;text-align:center;"><div style="font-size:10px;color:#eee4da;font-weight:700;">BEST</div><div style="font-size:16px;font-weight:700;color:#fff;">${best}</div></div>
+        </div>
+      </div>
+      <div style="background:#bbada0;border-radius:8px;padding:8px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;width:300px;">
+        ${grid.flat().map(v=>`<div style="aspect-ratio:1;background:${tileColor(v)};border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:${v>99?v>999?18:22:28}px;font-weight:800;color:${v<=4?'#776e65':'#f9f6f2'};transition:all .1s;">${tileText(v)}</div>`).join('')}
+      </div>
+      <button onclick="init2048()" style="padding:8px 20px;background:#8f7a66;border:none;border-radius:8px;color:#fff;font-size:13px;cursor:pointer;font-weight:600;">Nieuw spel</button>
+      <div style="font-size:12px;color:#776e65;">Pijltjestoetsen of WASD</div>
+    </div>`;
+  }
+  function slide(row){let r=row.filter(v=>v),merged=false,res=[];
+    for(let i=0;i<r.length;i++){if(!merged&&i+1<r.length&&r[i]===r[i+1]){res.push(r[i]*2);score+=r[i]*2;i++;merged=false;}else{res.push(r[i]);}}
+    while(res.length<4)res.push(0);return res;}
+  function move(dir){
+    let moved=false;
+    const ng=grid.map(r=>[...r]);
+    if(dir==='left')ng.forEach((r,i)=>{const s=slide(r);if(s.join()!==r.join())moved=true;ng[i]=s;});
+    else if(dir==='right')ng.forEach((r,i)=>{const s=slide([...r].reverse()).reverse();if(s.join()!==r.join())moved=true;ng[i]=s;});
+    else if(dir==='up'||dir==='down'){
+      for(let c=0;c<4;c++){let col=ng.map(r=>r[c]);if(dir==='down')col.reverse();const s=slide(col);if(dir==='down')s.reverse();if(s.join()!==col.join())moved=true;ng.forEach((r,i)=>r[c]=s[i]);}
+    }
+    if(moved){grid=ng;addRandom(grid);render2048UI();}
+  }
+  window.init2048=init;
+  const keyH=e=>{const map={'ArrowLeft':'left','ArrowRight':'right','ArrowUp':'up','ArrowDown':'down','a':'left','d':'right','w':'up','s':'down'};const d=map[e.key];if(d){e.preventDefault();move(d);}};
+  document.addEventListener('keydown',keyH);
+  const origClose=window.closeWindow;
+  window.closeWindow=(id)=>{if(id==='store_2048')document.removeEventListener('keydown',keyH);origClose(id);};
+  init();
+}
+
+// ===================== BOTER KAAS & EIEREN =====================
+function renderTicTacToe(body) {
+  let board=Array(9).fill(''), player='X', gameOver=false;
+  function checkWin(b,p){const wins=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];return wins.some(([a,c,d])=>b[a]===p&&b[c]===p&&b[d]===p);}
+  function aiMove(){
+    const empty=board.map((v,i)=>v?null:i).filter(v=>v!==null);
+    // Try to win
+    for(const i of empty){const t=[...board];t[i]='O';if(checkWin(t,'O'))return i;}
+    // Block player
+    for(const i of empty){const t=[...board];t[i]='X';if(checkWin(t,'X'))return i;}
+    // Center or random
+    return board[4]===''?4:empty[Math.floor(Math.random()*empty.length)];
+  }
+  function render(){
+    body.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:16px;">
+      <div style="font-size:18px;font-weight:600;" id="ttt-status">${gameOver?'':'Jij bent X, computer is O'}</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:240px;">
+        ${board.map((v,i)=>`<button onclick="tttPlay(${i})" style="height:74px;background:${v==='X'?'rgba(99,102,241,0.15)':v==='O'?'rgba(239,68,68,0.1)':'rgba(255,255,255,0.04)'};border:1px solid var(--border);border-radius:10px;font-size:32px;font-weight:700;color:${v==='X'?'var(--accent2)':'var(--danger)'};cursor:pointer;">${v}</button>`).join('')}
+      </div>
+      <button onclick="tttReset()" style="padding:8px 20px;background:var(--accent);border:none;border-radius:8px;color:#fff;font-size:13px;cursor:pointer;">Nieuw spel</button>
+    </div>`;
+  }
+  window.tttPlay=(i)=>{
+    if(board[i]||gameOver)return;
+    board[i]='X'; player='O';
+    if(checkWin(board,'X')){gameOver=true;render();document.getElementById('ttt-status').textContent='🎉 Jij wint!';return;}
+    if(board.every(v=>v)){gameOver=true;render();document.getElementById('ttt-status').textContent='Gelijkspel!';return;}
+    const ai=aiMove(); board[ai]='O'; player='X';
+    if(checkWin(board,'O')){gameOver=true;render();document.getElementById('ttt-status').textContent='💻 Computer wint!';return;}
+    if(board.every(v=>v)){gameOver=true;render();document.getElementById('ttt-status').textContent='Gelijkspel!';return;}
+    render();
+  };
+  window.tttReset=()=>{board=Array(9).fill('');player='X';gameOver=false;render();};
+  render();
+}
+
+// ===================== MINESWEEPER =====================
+function renderMinesweeper(body) {
+  const ROWS=9,COLS=9,MINES=10;
+  let grid,revealed,flagged,gameOver,firstClick;
+  function init(){
+    grid=Array.from({length:ROWS},()=>Array(COLS).fill(0));
+    revealed=Array.from({length:ROWS},()=>Array(COLS).fill(false));
+    flagged=Array.from({length:ROWS},()=>Array(COLS).fill(false));
+    gameOver=false;firstClick=true;renderMS();
+  }
+  function placeMines(sr,sc){
+    let placed=0;while(placed<MINES){const r=Math.floor(Math.random()*ROWS),c=Math.floor(Math.random()*COLS);if(grid[r][c]!=-1&&!(r===sr&&c===sc)){grid[r][c]=-1;placed++;}}
+    for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(grid[r][c]!==-1){let cnt=0;for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){const nr=r+dr,nc=c+dc;if(nr>=0&&nr<ROWS&&nc>=0&&nc<COLS&&grid[nr][nc]===-1)cnt++;}grid[r][c]=cnt;}}
+  function reveal(r,c){if(r<0||r>=ROWS||c<0||c>=COLS||revealed[r][c]||flagged[r][c])return;revealed[r][c]=true;if(grid[r][c]===0){for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++)reveal(r+dr,c+dc);}}
+  function numColor(n){return['','#3b82f6','#22c55e','#ef4444','#6366f1','#f59e0b','#14b8a6','#ec4899','#64748b'][n]||'var(--text)';}
+  function renderMS(){
+    const remaining=MINES-flagged.flat().filter(Boolean).length;
+    body.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:12px;height:100%;justify-content:center;background:#0f0f1a;">
+      <div style="display:flex;gap:20px;align-items:center;">
+        <span style="font-size:20px;">💣 ${remaining}</span>
+        <button onclick="msInit()" style="padding:6px 16px;background:rgba(255,255,255,0.07);border:1px solid var(--border);border-radius:8px;color:var(--text);cursor:pointer;font-size:16px;">🙂</button>
+        <span style="font-size:13px;color:var(--text-muted);">Rechts: vlag</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(${COLS},1fr);gap:2px;background:rgba(255,255,255,0.05);padding:4px;border-radius:8px;">
+        ${Array.from({length:ROWS},(_,r)=>Array.from({length:COLS},(_,c)=>{
+          const rev=revealed[r][c],flag=flagged[r][c],val=grid[r][c];
+          let content='',bg='rgba(255,255,255,0.07)',color='var(--text)';
+          if(flag){content='🚩';}
+          else if(rev){bg=val===-1?'rgba(239,68,68,0.3)':'rgba(0,0,0,0.3)';content=val===-1?'💣':val>0?val:'';color=numColor(val);}
+          return`<button onclick="msClick(${r},${c})" oncontextmenu="msFlag(event,${r},${c})"
+            style="width:30px;height:30px;background:${bg};border:1px solid rgba(255,255,255,0.05);border-radius:4px;font-size:14px;color:${color};font-weight:700;cursor:pointer;">${content}</button>`;
+        }).join('')).join('')}
+      </div>
+    </div>`;
+  }
+  window.msInit=init;
+  window.msClick=(r,c)=>{
+    if(gameOver||flagged[r][c])return;
+    if(firstClick){placeMines(r,c);firstClick=false;}
+    if(grid[r][c]===-1){revealed[r][c]=true;gameOver=true;revealed.forEach((row,ri)=>row.forEach((_,ci)=>{if(grid[ri][ci]===-1)revealed[ri][ci]=true;}));renderMS();notify('Minesweeper','💥 Boem! Game over.','ti-bomb');return;}
+    reveal(r,c);
+    const won=revealed.flat().filter(Boolean).length===ROWS*COLS-MINES;
+    if(won){gameOver=true;notify('Minesweeper','🎉 Gewonnen!','ti-trophy');}
+    renderMS();
+  };
+  window.msFlag=(e,r,c)=>{e.preventDefault();if(gameOver||revealed[r][c])return;flagged[r][c]=!flagged[r][c];renderMS();};
+  init();
+}
+
+</script>
 </body>
 </html>
