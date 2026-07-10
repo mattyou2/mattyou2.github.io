@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Designer - Mattyou Studios™</title>
+    <!-- Tailwind CSS voor een ultra-modern design -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons voor prachtige iconen -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <!-- Three.js & OrbitControls -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 overflow-hidden font-['Inter']">
+
+    <!-- Top Navigation Bar -->
+    <header class="h-16 border-b border-slate-800 bg-slate-900/80 backdrop-blur-md flex items-center justify-between px-6 z-10 relative">
+        <div class="flex items-center gap-3">
+            <div class="bg-indigo-600 p-2 rounded-lg text-white shadow-lg shadow-indigo-500/30">
+                <i data-lucide="box" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <h1 class="text-lg font-bold tracking-tight bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">Designer</h1>
+                <p class="text-[10px] text-slate-400 uppercase tracking-widest font-semibold">Made by Mattyou Studios™</p>
+            </div>
+        </div>
+        
+        <div class="flex items-center gap-4">
+            <button id="btn-play-preview" class="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg font-medium text-sm transition shadow-lg shadow-emerald-500/20">
+                <i data-lucide="play" class="w-4 h-4"></i> Speel Animatie
+            </button>
+            <button id="btn-export" class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg font-medium text-sm transition shadow-lg shadow-indigo-500/20">
+                <i data-lucide="download" class="w-4 h-4"></i> Exporteer Website
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="flex h-[calc(100vh-4rem)] w-full overflow-hidden">
+        
+        <!-- Left Sidebar: Library, Templates & 2D Menus -->
+        <aside class="w-80 border-r border-slate-800 bg-slate-900/50 flex flex-col h-full">
+            <!-- Primitives & Special Objects -->
+            <div class="p-4 border-b border-slate-800">
+                <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <i data-lucide="shapes" class="w-4 h-4 text-indigo-400"></i> Objecten & Tools
+                </h2>
+                <div class="grid grid-cols-2 gap-2 mb-3">
+                    <button onclick="addObject('cube')" class="flex flex-col items-center justify-center p-2.5 rounded-lg bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 hover:border-indigo-500/50 transition group">
+                        <i data-lucide="square" class="w-5 h-5 text-slate-400 group-hover:text-indigo-400 mb-1"></i>
+                        <span class="text-[11px]">Kubus</span>
+                    </button>
+                    <button onclick="addObject('sphere')" class="flex flex-col items-center justify-center p-2.5 rounded-lg bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 hover:border-indigo-500/50 transition group">
+                        <i data-lucide="circle" class="w-5 h-5 text-slate-400 group-hover:text-indigo-400 mb-1"></i>
+                        <span class="text-[11px]">Bol</span>
+                    </button>
+                    <button onclick="addObject('3dtext')" class="flex flex-col items-center justify-center p-2.5 rounded-lg bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 hover:border-indigo-500/50 transition group">
+                        <i data-lucide="type" class="w-5 h-5 text-slate-400 group-hover:text-indigo-400 mb-1"></i>
+                        <span class="text-[11px]">3D Tekst</span>
+                    </button>
+                    <button onclick="addObject('camera')" class="flex flex-col items-center justify-center p-2.5 rounded-lg bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 hover:border-indigo-500/50 transition group">
+                        <i data-lucide="video" class="w-5 h-5 text-slate-400 group-hover:text-indigo-400 mb-1"></i>
+                        <span class="text-[11px]">Camera</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 2D Overlay Menu Builder -->
+            <div class="p-4 border-b border-slate-800 bg-slate-900/30">
+                <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3 flex items-center justify-between">
+                    <span class="flex items-center gap-2"><i data-lucide="layout" class="w-4 h-4 text-cyan-400"></i> 2D Overlay Menu's</span>
+                    <button onclick="createNewMenu()" class="text-xs text-indigo-400 hover:text-indigo-300 font-medium">+ Nieuw</button>
+                </h2>
+                <div id="menus-list" class="space-y-1.5 max-h-40 overflow-y-auto pr-1">
+                    <!-- Dynamische lijst van 2D overlays -->
+                </div>
+            </div>
+
+            <!-- Premium Templates Section -->
+            <div class="p-4 flex-1 overflow-y-auto">
+                <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <i data-lucide="sparkles" class="w-4 h-4 text-amber-400"></i> Premium Templates
+                </h2>
+                <div class="space-y-2">
+                    <button onclick="addTemplate('cow')" class="w-full flex items-center gap-3 p-2.5 rounded-lg bg-slate-800/30 hover:bg-slate-800 border border-slate-700/30 hover:border-amber-500/50 transition text-left group">
+                        <div class="p-1.5 rounded bg-amber-500/10 text-amber-400 group-hover:bg-amber-500/20">
+                            <i data-lucide="dog" class="w-4 h-4"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs font-medium">3D Voxel Koe</div>
+                        </div>
+                    </button>
+                    <button onclick="addTemplate('house')" class="w-full flex items-center gap-3 p-2.5 rounded-lg bg-slate-800/30 hover:bg-slate-800 border border-slate-700/30 hover:border-amber-500/50 transition text-left group">
+                        <div class="p-1.5 rounded bg-blue-500/10 text-blue-400 group-hover:bg-blue-500/20">
+                            <i data-lucide="home" class="w-4 h-4"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs font-medium">Modern Huis</div>
+                        </div>
+                    </button>
+                    <button onclick="addTemplate('tree')" class="w-full flex items-center gap-3 p-2.5 rounded-lg bg-slate-800/30 hover:bg-slate-800 border border-slate-700/30 hover:border-amber-500/50 transition text-left group">
+                        <div class="p-1.5 rounded bg-emerald-500/10 text-emerald-400 group-hover:bg-emerald-500/20">
+                            <i data-lucide="trees" class="w-4 h-4"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs font-medium">Natuur Boom</div>
+                        </div>
+                    </button>
+                    <button onclick="addTemplate('grass')" class="w-full flex items-center gap-3 p-2.5 rounded-lg bg-slate-800/30 hover:bg-slate-800 border border-slate-700/30 hover:border-amber-500/50 transition text-left group">
+                        <div class="p-1.5 rounded bg-green-500/10 text-green-400 group-hover:bg-green-500/20">
+                            <i data-lucide="leaf" class="w-4 h-4"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs font-medium">Grasveld Patch</div>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Active Objects List -->
+            <div class="p-4 border-t border-slate-800 bg-slate-900/80 h-40 flex flex-col">
+                <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 flex items-center justify-between">
+                    <span>Scène Objecten</span>
+                    <span id="object-count" class="text-indigo-400">0</span>
+                </h2>
+                <div id="objects-list" class="flex-1 overflow-y-auto space-y-1 pr-1">
+                    <!-- Dynamisch gevuld -->
+                </div>
+            </div>
+        </aside>
+
+        <!-- Center Area: Viewport & Timeline -->
+        <section class="flex-1 flex flex-col h-full relative">
+            <!-- 3D Canvas Container -->
+            <div id="canvas-container" class="flex-1 w-full h-full relative">
+                <!-- Viewport Controls Overlay -->
+                <div class="absolute top-4 left-4 z-10 flex gap-2 bg-slate-900/80 p-1.5 rounded-lg border border-slate-800 backdrop-blur-sm">
+                    <button onclick="resetCamera()" class="p-2 hover:bg-slate-800 rounded text-slate-300 hover:text-white transition" title="Reset Camera">
+                        <i data-lucide="video" class="w-4 h-4"></i>
+                    </button>
+                    <button onclick="clearScene()" class="p-2 hover:bg-red-950/50 rounded text-red-400 hover:text-red-300 transition" title="Leeg Scène">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                </div>
+
+                <!-- 2D Overlay Preview Container (Zichtbaar tijdens bewerken) -->
+                <div id="overlay-preview-container" class="absolute inset-0 pointer-events-none flex items-center justify-center z-20 hidden">
+                    <div id="overlay-preview-box" class="bg-slate-900/95 border border-slate-700 p-6 rounded-xl shadow-2xl max-w-md w-full text-center relative pointer-events-auto">
+                        <button onclick="closeOverlayPreview()" class="absolute top-3 right-3 text-slate-400 hover:text-white">
+                            <i data-lucide="x" class="w-4 h-4"></i>
+                        </button>
+                        <h3 id="preview-menu-title" class="text-xl font-bold text-indigo-400 mb-2">Menu Titel</h3>
+                        <p id="preview-menu-content" class="text-sm text-slate-300">Menu inhoud komt hier...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Timeline Panel -->
+            <div class="h-56 border-t border-slate-800 bg-slate-900/90 backdrop-blur-md flex flex-col p-4">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-4">
+                        <span class="text-sm font-semibold text-slate-300">Animatie Tijdlijn</span>
+                        <div class="flex items-center gap-1 bg-slate-800 rounded-lg p-1 border border-slate-700">
+                            <button id="btn-prev-frame" class="p-1.5 hover:bg-slate-700 rounded text-slate-300"><i data-lucide="skip-back" class="w-4 h-4"></i></button>
+                            <button id="btn-play" class="p-1.5 hover:bg-slate-700 rounded text-slate-300"><i data-lucide="play" class="w-4 h-4"></i></button>
+                            <button id="btn-next-frame" class="p-1.5 hover:bg-slate-700 rounded text-slate-300"><i data-lucide="skip-forward" class="w-4 h-4"></i></button>
+                        </div>
+                        <span class="text-xs text-slate-400">Huidig Frame: <strong id="current-frame-display" class="text-indigo-400">0</strong> / 100</span>
+                    </div>
+                    <button id="btn-add-keyframe" class="flex items-center gap-1.5 bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-300 border border-indigo-500/30 px-3 py-1.5 rounded-lg text-xs font-medium transition">
+                        <i data-lucide="key" class="w-3.5 h-3.5"></i> Voeg Keyframe Toe
+                    </button>
+                </div>
+
+                <!-- Timeline Slider & Track -->
+                <div class="flex-1 flex flex-col justify-center relative">
+                    <div class="relative w-full h-12 bg-slate-950 rounded-lg border border-slate-800/80 overflow-hidden flex flex-col justify-between">
+                        <div class="absolute inset-0 flex justify-between px-2 pointer-events-none opacity-20">
+                            <span class="text-[10px]">0</span>
+                            <span class="text-[10px]">10</span>
+                            <span class="text-[10px]">20</span>
+                            <span class="text-[10px]">30</span>
+                            <span class="text-[10px]">40</span>
+                            <span class="text-[10px]">50</span>
+                            <span class="text-[10px]">60</span>
+                            <span class="text-[10px]">70</span>
+                            <span class="text-[10px]">80</span>
+                            <span class="text-[10px]">90</span>
+                            <span class="text-[10px]">100</span>
+                        </div>
+                        <div id="keyframe-track" class="absolute inset-x-0 top-4 h-4 pointer-events-none"></div>
+                        <input type="range" id="timeline-slider" min="0" max="100" value="0" class="w-full h-full opacity-70 hover:opacity-100 cursor-pointer accent-indigo-500 bg-transparent relative z-10">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Right Sidebar: Properties, Interactivity & Scene Settings -->
+        <aside class="w-80 border-l border-slate-800 bg-slate-900/50 flex flex-col h-full overflow-y-auto">
+            <!-- Global Scene Settings -->
+            <div class="p-4 border-b border-slate-800 bg-slate-900/30">
+                <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <i data-lucide="globe" class="w-4 h-4 text-indigo-400"></i> Omgevingsinstellingen
+                </h2>
+                <div class="space-y-3 text-xs">
+                    <div class="flex justify-between items-center">
+                        <span>Lucht Kleur</span>
+                        <input type="color" id="scene-sky-color" value="#0f172a" class="w-6 h-6 rounded cursor-pointer bg-transparent border-0">
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span>Grond Kleur</span>
+                        <input type="color" id="scene-ground-color" value="#22c55e" class="w-6 h-6 rounded cursor-pointer bg-transparent border-0">
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span>Toon Grid (Editor)</span>
+                        <input type="checkbox" id="scene-show-grid" checked class="accent-indigo-500">
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span>Toon Grid (Export)</span>
+                        <input type="checkbox" id="scene-export-grid" class="accent-indigo-500">
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span>Blokkeer Camera Rotatie</span>
+                        <input type="checkbox" id="scene-lock-camera" class="accent-indigo-500">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Object Properties -->
+            <div class="p-4 border-b border-slate-800">
+                <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                    <i data-lucide="sliders" class="w-4 h-4 text-indigo-400"></i> Object Eigenschappen
+                </h2>
+                
+                <div id="no-selection-msg" class="text-center py-8 text-slate-500 text-sm">
+                    <i data-lucide="info" class="w-8 h-8 mx-auto mb-2 opacity-50"></i>
+                    Selecteer een object om eigenschappen te wijzigen.
+                </div>
+
+                <!-- Properties Form -->
+                <div id="properties-panel" class="hidden space-y-4">
+                    <div>
+                        <label class="text-xs text-slate-400 block mb-1">Object Naam</label>
+                        <input type="text" id="prop-name" class="w-full bg-slate-800 border border-slate-700 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-indigo-500">
+                    </div>
+
+                    <!-- Custom Text Input (Alleen zichtbaar voor 3D Text) -->
+                    <div id="prop-text-container" class="hidden">
+                        <label class="text-xs text-slate-400 block mb-1">Tekst Inhoud</label>
+                        <input type="text" id="prop-text-val" class="w-full bg-slate-800 border border-slate-700 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-indigo-500">
+                    </div>
+
+                    <!-- Transform: Position -->
+                    <div>
+                        <label class="text-xs text-slate-400 block mb-1">Positie (X, Y, Z)</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <input type="number" step="0.1" id="prop-pos-x" class="bg-slate-800 border border-slate-700 rounded px-2 py-1 text-xs text-center">
+                            <input type="number" step="0.1" id="prop-pos-y" class="bg-slate-800 border border-slate-700 rounded px-2 py-1 text-xs text-center">
+                            <input type="number" step="0.1" id="prop-pos-z" class="bg-slate-800 border border-slate-700 rounded px-2 py-1 text-xs text-center">
+                        </div>
+                    </div>
+
+                    <!-- Transform: Rotation -->
+                    <div>
+                        <label class="text-xs text-slate-400 block mb-1">Rotatie (Graden X, Y, Z)</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <input type="number" id="prop-rot-x" class="bg-slate-800 border border-slate-700 rounded px-2 py-1 text-xs text-center">
+                            <input type="number" id="prop-rot-y" class="bg-slate-800 border border-slate-700 rounded px-2 py-1 text-xs text-center">
+                            <input type="number" id="prop-rot-z" class="bg-slate-800 border border-slate-700 rounded px-2 py-1 text-xs text-center">
+                        </div>
+                    </div>
+
+                    <!-- Transform: Scale -->
+                    <div>
+                        <label class="text-xs text-slate-400 block mb-1">Grootte (X, Y, Z)</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <input type="number" step="0.1" id="prop-scale-x" class="bg-slate-800 border border-slate-700 rounded px-2 py-1 text-xs text-center">
+                            <input type="number" step="0.1" id="prop-scale-y" class="bg-slate-800 border border-slate-700 rounded px-2 py-1 text-xs text-center">
+                            <input type="number" step="0.1" id="prop-scale-z" class="bg-slate-800 border border-slate-700 rounded px-2 py-1 text-xs text-center">
+                        </div>
+                    </div>
+
+                    <!-- Appearance -->
+                    <div class="grid grid-cols-2 gap-4 pt-2 border-t border-slate-800/80">
+                        <div>
+                            <label class="text-xs text-slate-400 block mb-1">Kleur</label>
+                            <div class="flex items-center gap-2">
+                                <input type="color" id="prop-color" class="w-8 h-8 rounded cursor-pointer bg-transparent border-0">
+                                <span id="color-hex" class="text-xs font-mono text-slate-400">#ffffff</span>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-xs text-slate-400 block mb-1">Opacity (<span id="opacity-val">100</span>%)</label>
+                            <input type="range" id="prop-opacity" min="0" max="100" value="100" class="w-full accent-indigo-500">
+                        </div>
+                    </div>
+
+                    <!-- Interactivity (Klik actie) -->
+                    <div class="pt-2 border-t border-slate-800/80">
+                        <label class="text-xs text-slate-400 block mb-1">Interactie (Bij Klik)</label>
+                        <select id="prop-click-action" class="w-full bg-slate-800 border border-slate-700 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-indigo-500">
+                            <option value="none">Geen actie</option>
+                            <!-- Wordt dynamisch gevuld met gemaakte 2D menu's -->
+                        </select>
+                    </div>
+
+                    <!-- Delete Object Button -->
+                    <button id="btn-delete-object" class="w-full mt-4 flex items-center justify-center gap-2 bg-red-950/40 hover:bg-red-900/40 text-red-400 border border-red-900/50 py-2 rounded-lg text-sm font-medium transition">
+                        <i data-lucide="trash" class="w-4 h-4"></i> Verwijder Object
+                    </button>
+                </div>
+            </div>
+
+            <!-- Keyframes List for Selected Object -->
+            <div class="p-4 flex-1 flex flex-col">
+                <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <i data-lucide="key" class="w-4 h-4 text-indigo-400"></i> Geregistreerde Keyframes
+                </h2>
+                <div id="keyframes-list" class="flex-1 overflow-y-auto space-y-2 text-xs text-slate-400">
+                    <!-- Dynamisch gevuld -->
+                </div>
+            </div>
+        </aside>
+    </main>
+
+    <!-- 2D Overlay Menu Editor Modal -->
+    <div id="menu-editor-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-50 hidden">
+        <div class="bg-slate-900 border border-slate-800 p-6 rounded-xl max-w-md w-full shadow-2xl">
+            <h3 class="text-lg font-bold text-slate-100 mb-4">Bewerk 2D Overlay Menu</h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="text-xs text-slate-400 block mb-1">Menu ID / Naam</label>
+                    <input type="text" id="edit-menu-id" class="w-full bg-slate-800 border border-slate-700 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-indigo-500" placeholder="bijv. contact_popup">
+                </div>
+                <div>
+                    <label class="text-xs text-slate-400 block mb-1">Titel</label>
+                    <input type="text" id="edit-menu-title" class="w-full bg-slate-800 border border-slate-700 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="text-xs text-slate-400 block mb-1">Inhoud (HTML ondersteund)</label>
+                    <textarea id="edit-menu-content" rows="4" class="w-full bg-slate-800 border border-slate-700 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-indigo-500"></textarea>
+                </div>
+            </div>
+            <div class="flex justify-end gap-3 mt-6">
+                <button onclick="closeMenuEditor()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-sm transition">Annuleren</button>
+                <button onclick="saveMenuData()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm transition font-medium">Opslaan</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        // Initialiseer Lucide Icons
+        lucide.createIcons();
+    </script>
+
+    <!-- Toegevoegd voor verzoek: kan je ook maken dat je 2D knoppen kan toevoegen die er gewoon altijd zijn(ik bedoel dat ze niet in het 2D menu zitten maar gewoon dat ie in je scherm staat en bijv dat als je er op klikt er een menu opent of dat ie een link opent maak dat je dat zelf kan kiezen en in kan stellen maak ook een handige manier om een menu te laten openen waneer je ergens op klikt dus een manier om dat in te stellen) maak ook dat je objecen enz kan selecteren en dat je een lijstje hebt met alle objecten en dat heb je bijv template: cow en daar zitten alle objecten van de cow in  dus mappen enz maak dat je ook met rechtermuisknop in dat lijstje kan kliken op objecten of groepen en dat je ze dan kan verwijderen of dupliceren of kopieren of knippen maak ook dat je dat in de editor zelf ook kan doen en dat je ook meerdere objecten kan selecteren door bijv shift ingerdukt te houden terwijl je ze selecteerd en dat je dan ook op de volgende kan klikken en dat ze dan allebij geselecteerd zijn maak dat je objecten of gewoon voledige groepen kan verplaatsen draaien en grooter maken maak ook dat je een klein menutje hebt waar je huidige ding in staat dus daar staat de knop rotate en de knop move en de knop cursor (waarmee je dingen makelijk kan selecteren ook door een muisknop ingedrukt te houden en dan naar een andere plek met je muis je snapt wel) en andere dingen brijd het zo ver uit als je kan maak dat je ook projecten aan kan maken en dat hij alles opslaat in je local storage dus welke objecten in welke groep en waar ze zitten enz -->
+    <div class="p-4 bg-zinc-800 text-white rounded">Dynamische Content voor: kan je ook maken dat je 2D knoppen kan toevoegen die er gewoon altijd zijn(ik bedoel dat ze niet in het 2D menu zitten maar gewoon dat ie in je scherm staat en bijv dat als je er op klikt er een menu opent of dat ie een link opent maak dat je dat zelf kan kiezen en in kan stellen maak ook een handige manier om een menu te laten openen waneer je ergens op klikt dus een manier om dat in te stellen) maak ook dat je objecen enz kan selecteren en dat je een lijstje hebt met alle objecten en dat heb je bijv template: cow en daar zitten alle objecten van de cow in  dus mappen enz maak dat je ook met rechtermuisknop in dat lijstje kan kliken op objecten of groepen en dat je ze dan kan verwijderen of dupliceren of kopieren of knippen maak ook dat je dat in de editor zelf ook kan doen en dat je ook meerdere objecten kan selecteren door bijv shift ingerdukt te houden terwijl je ze selecteerd en dat je dan ook op de volgende kan klikken en dat ze dan allebij geselecteerd zijn maak dat je objecten of gewoon voledige groepen kan verplaatsen draaien en grooter maken maak ook dat je een klein menutje hebt waar je huidige ding in staat dus daar staat de knop rotate en de knop move en de knop cursor (waarmee je dingen makelijk kan selecteren ook door een muisknop ingedrukt te houden en dan naar een andere plek met je muis je snapt wel) en andere dingen brijd het zo ver uit als je kan maak dat je ook projecten aan kan maken en dat hij alles opslaat in je local storage dus welke objecten in welke groep en waar ze zitten enz</div>
+</body>
+</html>
