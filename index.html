@@ -182,6 +182,63 @@ nav.mc-nav{
   background:rgba(255,255,255,0.07); padding:9px 14px; border-radius:100px; border:1px solid var(--glass-border);
   display:flex; align-items:center; gap:6px;
 }
+.balance-pill{
+  font-family:var(--font-display); font-size:13px; font-weight:700; color:#fff;
+  background:linear-gradient(135deg, rgba(240,200,105,0.22), rgba(240,200,105,0.08));
+  padding:9px 14px; border-radius:100px; border:1px solid rgba(240,200,105,0.4);
+  display:flex; align-items:center; gap:6px; position:relative; overflow:visible;
+}
+.balance-pop{
+  position:absolute; top:-6px; right:6px; font-size:11px; font-weight:700; color:var(--accent-cyan);
+  animation:balancePop 1.1s ease forwards; pointer-events:none;
+}
+@keyframes balancePop{ 0%{ opacity:0; transform:translateY(0);} 15%{opacity:1;} 100%{ opacity:0; transform:translateY(-18px);} }
+
+/* ---------- Instellingen / wallet ---------- */
+.wallet-hero{
+  background:linear-gradient(135deg, rgba(240,200,105,0.14), rgba(155,126,240,0.10));
+  border:1px solid rgba(240,200,105,0.3); border-radius:var(--radius-lg);
+  padding:32px; margin-bottom:34px; position:relative; overflow:hidden;
+}
+.wallet-hero .label{ font-size:13px; color:var(--text-dim); font-weight:600; text-transform:uppercase; letter-spacing:0.06em; }
+.wallet-hero .amount{
+  font-family:var(--font-display); font-size:44px; font-weight:800; color:#fff; margin:8px 0 4px;
+  background:linear-gradient(135deg,#fff, var(--accent-gold)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+}
+.wallet-hero .sub{ font-size:14px; color:var(--text-dim); }
+.settings-block{ margin-bottom:38px; }
+.settings-block h3{ font-size:18px; color:#fff; margin:0 0 6px; }
+.settings-block .hint{ font-size:14px; color:var(--text-dim); margin:0 0 18px; }
+.cursor-shop-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:16px; }
+.cursor-card{
+  background:var(--glass-bg); border:1px solid var(--glass-border); border-radius:var(--radius-md);
+  padding:20px; text-align:center;
+}
+.cursor-card .preview{ width:44px; height:44px; margin:0 auto 12px; border-radius:50%; background:radial-gradient(circle, rgba(255,255,255,0.25), transparent 70%); display:flex; align-items:center; justify-content:center; font-size:20px; }
+.cursor-card h4{ font-size:14px; color:#fff; margin:0 0 4px; }
+.cursor-card p{ font-size:12.5px; color:var(--text-dim); margin:0 0 12px; line-height:1.4; min-height:34px; }
+.cursor-card .price{ font-family:var(--font-display); font-weight:700; color:var(--accent-gold); font-size:13px; margin-bottom:10px; }
+.account-info-row{ display:flex; gap:14px; flex-wrap:wrap; margin-bottom:10px; }
+.account-info-row .mc-panel{ flex:1; min-width:200px; padding:20px; }
+.account-info-row .mc-panel .label{ font-size:12px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:6px; }
+.account-info-row .mc-panel .value{ font-family:var(--font-display); font-size:18px; font-weight:700; color:#fff; }
+
+/* ---------- Custom cursor ---------- */
+.custom-cursor{ position:fixed; top:0; left:0; pointer-events:none; z-index:9999; will-change:transform; }
+.cc-glow{
+  width:34px; height:34px; margin:-17px 0 0 -17px; border-radius:50%;
+  background:radial-gradient(circle, rgba(91,141,239,0.55), rgba(155,126,240,0.15) 60%, transparent 75%);
+  filter:blur(1px);
+}
+.cc-diamond{
+  width:14px; height:14px; margin:-7px 0 0 -7px; background:linear-gradient(135deg, var(--accent-cyan), var(--accent-violet));
+  transform:rotate(45deg); box-shadow:0 0 14px rgba(87,230,201,0.8); animation:diamondSpin 2.4s linear infinite;
+}
+@keyframes diamondSpin{ from{ filter:hue-rotate(0deg);} to{ filter:hue-rotate(360deg);} }
+.cc-comet-dot{
+  width:8px; height:8px; margin:-4px 0 0 -4px; border-radius:50%;
+  background:var(--accent-pink); box-shadow:0 0 10px 2px rgba(244,114,182,0.8);
+}
 
 main{ flex:1; padding:40px 24px 80px; max-width:1180px; margin:0 auto; width:100%; }
 
@@ -397,6 +454,7 @@ footer b{ color:var(--text); font-family:var(--font-display); font-size:14px; di
       <button class="nav-btn" data-nav="games">Games</button>
       <button class="nav-btn" data-nav="projects">Projects</button>
       <button class="nav-btn" data-nav="files">Files</button>
+      <button class="nav-btn" data-nav="settings">Instellingen</button>
     </div>
     <div class="nav-account" id="nav-account"></div>
   </nav>
@@ -459,6 +517,13 @@ footer b{ color:var(--text); font-family:var(--font-display); font-size:14px; di
       <h2 class="section-title">🗂️ Files</h2>
       <p class="section-sub">Alle bestanden per categorie. Gebruik de Projects-pagina om hier snel naartoe te springen.</p>
       <div id="files-list"></div>
+    </section>
+
+    <!-- ---------- SETTINGS ---------- -->
+    <section class="page" id="page-settings">
+      <h2 class="section-title">⚙️ Instellingen</h2>
+      <p class="section-sub">Beheer je account, bekijk je saldo en geef het uit in de shop.</p>
+      <div id="settings-content"></div>
     </section>
 
   </main>
@@ -572,17 +637,26 @@ function obfuscate(str){ try{ return btoa(unescape(encodeURIComponent(str))); }c
    1. DATA — GAMES / PROJECT-CATEGORIEEN / FILES
 --------------------------------------------------------- */
 const GAMES = [
-  { id:'snake',    title:'Neon Snake',      icon:'🐍', desc:'De klassieke slang-actie in een strak, modern jasje. Eet orbs op, groei en bots niet tegen jezelf.', tags:['Arcade','1 speler'] },
-  { id:'breakout',  title:'Glass Breaker',   icon:'🧱', desc:'Sloop rijen van glazen tegels met je bal en paddle. Verlies geen levens!', tags:['Arcade','Reflexen'] },
-  { id:'memory',    title:'Memory Match',    icon:'🧠', desc:'Draai kaarten om en vind alle paren met zo min mogelijk zetten.', tags:['Puzzel','Rustig'] },
-  { id:'reaction',  title:'Flash Tap',       icon:'⚡', desc:'Tegels lichten kort op — tik ze weg voor ze verdwijnen. 30 seconden, zoveel mogelijk punten.', tags:['Reflexen','30 sec'] }
+  /* instant mini-games — spelen direct in een popup op deze site */
+  { id:'snake',    title:'Neon Snake',      icon:'🐍', desc:'De klassieke slang-actie in een strak, modern jasje. Eet orbs op, groei en bots niet tegen jezelf.', tags:['Arcade','1 speler'], kind:'instant' },
+  { id:'breakout',  title:'Glass Breaker',   icon:'🧱', desc:'Sloop rijen van glazen tegels met je bal en paddle. Verlies geen levens!', tags:['Arcade','Reflexen'], kind:'instant' },
+  { id:'memory',    title:'Memory Match',    icon:'🧠', desc:'Draai kaarten om en vind alle paren met zo min mogelijk zetten.', tags:['Puzzel','Rustig'], kind:'instant' },
+  { id:'reaction',  title:'Flash Tap',       icon:'⚡', desc:'Tegels lichten kort op — tik ze weg voor ze verdwijnen. 30 seconden, zoveel mogelijk punten.', tags:['Reflexen','30 sec'], kind:'instant' },
+
+  /* echte Mattyou Studios-games — linken door naar hun eigen pagina */
+  { id:'mc3d',      title:'Minecraft 3D (Mattyou Edition)', icon:'🌍', desc:'Een volledig 3D Minecraft, gebouwd met Three.js. Plaats en breek blokken in een oneindige 3D-ruimte.', tags:['3D','Sandbox'], kind:'external', href:'mc/3D/light/v3' },
+  { id:'mc2d',      title:'Minecraft 2D Sandbox',           icon:'🧱', desc:'Een klassieke 2D side-scrolling sandbox game met physics, block mining en inventory-systemen.', tags:['2D','Sandbox'], kind:'external', href:'mc/2D/v1' },
+  { id:'survival',  title:'Survival World',                 icon:'🏝️', desc:'Overleef op een eiland in de wilde natuur! Verzamel grondstoffen en bouw je eigen veilige haven.', tags:['Survival'], kind:'external', href:'game/survival' },
+  { id:'garden',    title:'Grow a Garden',                  icon:'🌱', desc:'Groei planten in een tuin en verkoop ze!', tags:['Casual'], kind:'external', href:'game/grow-a-garden' },
+  { id:'crystalpvp', title:'Crystal PVP',                   icon:'💎', desc:'Speel met explosies!', tags:['PVP'], kind:'external', href:'pvp/crystal', comingSoon:true }
 ];
 
 const PROJECT_CATEGORIES = [
   { id:'minecraft',     title:'Minecraft',       icon:'⛏️', desc:'Clients, launchers en de kernspel-bestanden zelf.' },
   { id:'mods',          title:'Mods',            icon:'⚙️', desc:'Uitbreidingen die het spel nieuwe mechanics geven.' },
   { id:'resourcepacks', title:'Resource Packs',  icon:'🎨', desc:'Nieuwe texturen, geluiden en sfeer voor je wereld.' },
-  { id:'datapacks',     title:'Datapacks',       icon:'📦', desc:'Aanpassingen aan spelregels en recepten, zonder mods.' }
+  { id:'datapacks',     title:'Datapacks',       icon:'📦', desc:'Aanpassingen aan spelregels en recepten, zonder mods.' },
+  { id:'webos',         title:'Web OS & Apps',   icon:'🖥️', desc:'Browser-apps en tools binnen het Mattyou-ecosysteem.' }
 ];
 
 const FILES = [
@@ -600,7 +674,11 @@ const FILES = [
 
   { id:'f10', cat:'datapacks', icon:'⚗️', name:'Ores+', desc:'Voegt extra ertsen en bijbehorende recepten toe.', size:'1.1 MB', version:'1.21' },
   { id:'f11', cat:'datapacks', icon:'🍳', name:'Betere Recepten', desc:'Herbalanceert crafting-recepten voor survival.', size:'0.4 MB', version:'1.20+' },
-  { id:'f12', cat:'datapacks', icon:'🏆', name:'Uitdagingen Pack', desc:'Nieuwe progressie-advancements met beloningen.', size:'0.7 MB', version:'1.21' }
+  { id:'f12', cat:'datapacks', icon:'🏆', name:'Uitdagingen Pack', desc:'Nieuwe progressie-advancements met beloningen.', size:'0.7 MB', version:'1.21' },
+
+  { id:'a1', cat:'webos', icon:'☁️', name:'Mattyou Cloud', desc:'Sla bestanden op en deel ze binnen je account, overal toegankelijk.', size:'Web-app', version:'Live', href:'/cloud' },
+  { id:'a2', cat:'webos', icon:'🎨', name:'Designer', desc:'Ontwerp texture packs, banners en logo\u2019s rechtstreeks in de browser.', size:'Web-app', version:'Live', href:'/designer' },
+  { id:'a3', cat:'webos', icon:'📖', name:'Minecraft Wiki', desc:'Alle documentatie, handleidingen en gidsen voor Mattyou-projecten.', size:'Website', version:'Live', href:'/wiki' }
 ];
 
 /* ---------------------------------------------------------
@@ -637,7 +715,10 @@ function registerUser(username, password, password2){
   if(password !== password2) return { ok:false, msg:'Wachtwoorden komen niet overeen.' };
   const users = loadUsers();
   if(users[username]) return { ok:false, msg:'Deze gebruikersnaam bestaat al.' };
-  users[username] = { pass:obfuscate(password), favorites:[], createdAt:Date.now() };
+  users[username] = {
+    pass:obfuscate(password), favorites:[], createdAt:Date.now(),
+    balance:25, ownedCursors:['default'], activeCursor:'default'
+  };
   saveUsers(users);
   setSession(username);
   return { ok:true };
@@ -656,6 +737,72 @@ function logoutUser(){
   renderAccountBar();
   renderHomeFavorites();
   renderGames();
+  applyCursorTheme();
+}
+
+/* ---------------------------------------------------------
+   2b. SALDO-SYSTEEM (Mattyou Balance — nep-valuta)
+--------------------------------------------------------- */
+const CURSOR_SHOP = [
+  { id:'default', name:'Standaard', price:0,  desc:'De gewone systeemcursor.' },
+  { id:'glow',    name:'Glow Orb',  price:15, desc:'Een zachte, gloeiende cursor die je muis volgt.' },
+  { id:'comet',   name:'Comet Trail', price:40, desc:'Laat een vervagend deeltjes-spoor achter je muis achter.' },
+  { id:'diamond', name:'Diamond',   price:75, desc:'Een sprankelende, ronddraaiende diamant-cursor.' }
+];
+function formatEuro(n){
+  return '\u20ac' + (Math.round(n*100)/100).toLocaleString('nl-NL', { minimumFractionDigits:2, maximumFractionDigits:2 });
+}
+function getBalance(){
+  const u = currentUser();
+  return u ? (u.balance || 0) : 0;
+}
+function addBalance(amount){
+  const name = getSession();
+  if(!name) return;
+  const users = loadUsers();
+  const u = users[name];
+  if(!u) return;
+  u.balance = Math.round(((u.balance||0) + amount) * 100) / 100;
+  saveUsers(users);
+}
+function spendBalance(amount){
+  const name = getSession();
+  if(!name) return false;
+  const users = loadUsers();
+  const u = users[name];
+  if(!u || (u.balance||0) < amount) return false;
+  u.balance = Math.round(((u.balance||0) - amount) * 100) / 100;
+  saveUsers(users);
+  return true;
+}
+function buyCursor(cursorId){
+  const item = CURSOR_SHOP.find(c=>c.id===cursorId);
+  if(!item) return;
+  const name = getSession();
+  if(!name){ openAuth('login'); return; }
+  const users = loadUsers();
+  const u = users[name];
+  if(u.ownedCursors && u.ownedCursors.includes(cursorId)){ toast('Je hebt deze al.', 'info'); return; }
+  if(!spendBalance(item.price)){ toast('Niet genoeg saldo.', 'error'); return; }
+  const users2 = loadUsers();
+  const u2 = users2[name];
+  u2.ownedCursors = u2.ownedCursors || ['default'];
+  u2.ownedCursors.push(cursorId);
+  saveUsers(users2);
+  toast(item.name + ' gekocht!', 'success');
+  renderAccountBar(); renderSettings();
+}
+function equipCursor(cursorId){
+  const name = getSession();
+  if(!name) return;
+  const users = loadUsers();
+  const u = users[name];
+  if(!u.ownedCursors || !u.ownedCursors.includes(cursorId)) return;
+  u.activeCursor = cursorId;
+  saveUsers(users);
+  applyCursorTheme();
+  renderSettings();
+  toast('Cursor uitgerust: ' + (CURSOR_SHOP.find(c=>c.id===cursorId)||{}).name, 'success');
 }
 
 /* ---------------------------------------------------------
@@ -721,9 +868,12 @@ function renderAccountBar(){
   holder.innerHTML = '';
   const u = currentUser();
   if(u){
+    const balPill = el('div', { class:'balance-pill', id:'balance-pill' });
+    balPill.innerHTML = '💶 ' + formatEuro(u.balance || 0);
     const pill = el('div', { class:'acc-pill' });
     pill.innerHTML = '👤 ' + u.username;
     const logoutBtn = el('button', { class:'mc-btn small red', text:'Uitloggen', onclick:logoutUser });
+    holder.appendChild(balPill);
     holder.appendChild(pill);
     holder.appendChild(logoutBtn);
   } else {
@@ -733,6 +883,40 @@ function renderAccountBar(){
     holder.appendChild(registerBtn);
   }
 }
+function bumpBalancePill(amount){
+  const pill = $('#balance-pill');
+  if(!pill) return;
+  const u = currentUser();
+  pill.innerHTML = '💶 ' + formatEuro(u ? u.balance : 0);
+  const pop = el('div', { class:'balance-pop', text:'+' + formatEuro(amount) });
+  pill.appendChild(pop);
+  setTimeout(()=> pop.remove(), 1150);
+}
+
+function gameCardHTML(g, favActive){
+  const comingSoon = !!g.comingSoon;
+  const btnLabel = comingSoon ? 'Binnenkort' : (g.kind === 'external' ? 'Speel nu ↗' : '▶ Speel');
+  const btnAttrs = comingSoon
+    ? `disabled title="Binnenkort beschikbaar"`
+    : (g.kind === 'external' ? `data-open="${g.href}"` : `data-play="${g.id}"`);
+  return `
+    <div class="top-row">
+      <div class="ic">${g.icon}</div>
+      <button class="fav-btn ${favActive ? 'active':''}" data-fav="${g.id}" title="Favoriet">${favActive ? '★' : '☆'}</button>
+    </div>
+    <h3${comingSoon ? ' style="color:var(--text-dim);"' : ''}>${g.title}</h3>
+    <p>${g.desc}</p>
+    <div class="meta">${g.tags.map(t=>`<span class="tag">${t}</span>`).join('')}${comingSoon ? '<span class="tag" style="border-color:var(--accent-gold);color:var(--accent-gold);">Binnenkort</span>':''}</div>
+    <div class="actions">
+      <button class="mc-btn small ${comingSoon ? 'stone':''}" ${btnAttrs} style="flex:1;">${btnLabel}</button>
+    </div>
+  `;
+}
+function wireGameCardButtons(scope){
+  $all('[data-fav]', scope).forEach(b => b.addEventListener('click', ()=> toggleFavorite(b.dataset.fav)));
+  $all('[data-play]', scope).forEach(b => b.addEventListener('click', ()=> startGame(b.dataset.play)));
+  $all('[data-open]', scope).forEach(b => b.addEventListener('click', ()=> { location.href = b.dataset.open; }));
+}
 
 /* ---------------------------------------------------------
    6. RENDER: GAMES
@@ -741,24 +925,11 @@ function renderGames(){
   const grid = $('#games-grid');
   grid.innerHTML = '';
   GAMES.forEach(g=>{
-    const fav = isFavorite(g.id);
     const card = el('div', { class:'card' });
-    card.innerHTML = `
-      <div class="top-row">
-        <div class="ic">${g.icon}</div>
-        <button class="fav-btn ${fav ? 'active':''}" data-fav="${g.id}" title="Favoriet">${fav ? '★' : '☆'}</button>
-      </div>
-      <h3>${g.title}</h3>
-      <p>${g.desc}</p>
-      <div class="meta">${g.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>
-      <div class="actions">
-        <button class="mc-btn small" data-play="${g.id}" style="flex:1;">▶ Speel</button>
-      </div>
-    `;
+    card.innerHTML = gameCardHTML(g, isFavorite(g.id));
     grid.appendChild(card);
   });
-  $all('[data-fav]', grid).forEach(b => b.addEventListener('click', ()=> toggleFavorite(b.dataset.fav)));
-  $all('[data-play]', grid).forEach(b => b.addEventListener('click', ()=> startGame(b.dataset.play)));
+  wireGameCardButtons(grid);
 }
 
 /* ---------------------------------------------------------
@@ -782,21 +953,10 @@ function renderHomeFavorites(){
   const grid = $('.grid', holder);
   favGames.forEach(g=>{
     const card = el('div', { class:'card' });
-    card.innerHTML = `
-      <div class="top-row">
-        <div class="ic">${g.icon}</div>
-        <button class="fav-btn active" data-fav="${g.id}">★</button>
-      </div>
-      <h3>${g.title}</h3>
-      <p>${g.desc}</p>
-      <div class="actions">
-        <button class="mc-btn small" data-play="${g.id}" style="flex:1;">▶ Speel</button>
-      </div>
-    `;
+    card.innerHTML = gameCardHTML(g, true);
     grid.appendChild(card);
   });
-  $all('[data-fav]', grid).forEach(b => b.addEventListener('click', ()=> toggleFavorite(b.dataset.fav)));
-  $all('[data-play]', grid).forEach(b => b.addEventListener('click', ()=> startGame(b.dataset.play)));
+  wireGameCardButtons(grid);
 }
 
 /* ---------------------------------------------------------
@@ -831,6 +991,9 @@ function renderFiles(){
     const files = FILES.filter(f=>f.cat===cat.id);
     files.forEach(f=>{
       const row = el('div', { class:'file-row' });
+      const actionBtn = f.href
+        ? `<button class="mc-btn small" data-open="${f.href}">Openen ↗</button>`
+        : `<button class="mc-btn small stone" data-dl="${f.id}">⬇ Download</button>`;
       row.innerHTML = `
         <div class="ic">${f.icon}</div>
         <div class="info">
@@ -840,7 +1003,7 @@ function renderFiles(){
         <div class="side">
           <span class="tag">${f.version}</span>
           <span class="tag">${f.size}</span>
-          <button class="mc-btn small stone" data-dl="${f.id}">⬇ Download</button>
+          ${actionBtn}
         </div>
       `;
       section.appendChild(row);
@@ -853,6 +1016,144 @@ function renderFiles(){
       toast('Demo-download gestart: ' + (f ? f.name : ''), 'success');
     });
   });
+  $all('[data-open]', holder).forEach(b=>{
+    b.addEventListener('click', ()=> { location.href = b.dataset.open; });
+  });
+}
+
+/* ---------------------------------------------------------
+   9b. RENDER: INSTELLINGEN (saldo / cursor-shop / account)
+--------------------------------------------------------- */
+function renderSettings(){
+  const holder = $('#settings-content');
+  holder.innerHTML = '';
+  const u = currentUser();
+  if(!u){
+    holder.appendChild(el('div', { class:'empty-state', html:'<b>NOG NIET INGELOGD</b>Log in of maak een account om je saldo en instellingen te bekijken.' }));
+    return;
+  }
+
+  const walletHero = el('div', { class:'wallet-hero' });
+  walletHero.innerHTML = `
+    <div class="label">Mattyou Balance</div>
+    <div class="amount">${formatEuro(u.balance || 0)}</div>
+    <div class="sub">Je verdient automatisch geld terwijl je op het portal actief bent — geef het uit in de shop hieronder.</div>
+  `;
+  holder.appendChild(walletHero);
+
+  const infoRow = el('div', { class:'account-info-row' });
+  infoRow.innerHTML = `
+    <div class="mc-panel"><div class="label">Gebruikersnaam</div><div class="value">${u.username}</div></div>
+    <div class="mc-panel"><div class="label">Favoriete games</div><div class="value">${(u.favorites||[]).length}</div></div>
+    <div class="mc-panel"><div class="label">Actieve cursor</div><div class="value">${(CURSOR_SHOP.find(c=>c.id===u.activeCursor)||CURSOR_SHOP[0]).name}</div></div>
+  `;
+  holder.appendChild(infoRow);
+
+  const shopBlock = el('div', { class:'settings-block' });
+  shopBlock.innerHTML = `<h3>🖱️ Cursor-shop</h3><p class="hint">Geef je saldo uit aan een nieuwe cursorstijl voor het hele portal.</p>`;
+  const shopGrid = el('div', { class:'cursor-shop-grid' });
+  CURSOR_SHOP.forEach(c=>{
+    const owned = (u.ownedCursors||['default']).includes(c.id);
+    const active = u.activeCursor === c.id;
+    const card = el('div', { class:'cursor-card' });
+    card.innerHTML = `
+      <div class="preview">${c.id==='glow'?'🔵':c.id==='comet'?'☄️':c.id==='diamond'?'💎':'➡️'}</div>
+      <h4>${c.name}</h4>
+      <p>${c.desc}</p>
+      <div class="price">${c.price === 0 ? 'Gratis' : formatEuro(c.price)}</div>
+      <button class="mc-btn small ${active ? 'stone' : ''}" ${active ? 'disabled' : ''} data-cursor-action="${c.id}">
+        ${active ? '✓ Uitgerust' : (owned ? 'Uitrusten' : 'Kopen')}
+      </button>
+    `;
+    shopGrid.appendChild(card);
+  });
+  shopBlock.appendChild(shopGrid);
+  holder.appendChild(shopBlock);
+
+  $all('[data-cursor-action]', shopGrid).forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const id = btn.dataset.cursorAction;
+      const owned = (currentUser().ownedCursors||['default']).includes(id);
+      if(owned) equipCursor(id); else buyCursor(id);
+    });
+  });
+
+  const dangerBlock = el('div', { class:'settings-block' });
+  dangerBlock.innerHTML = `<h3>⚠️ Account</h3><p class="hint">Log uit of wis al je lokale accountdata op dit apparaat.</p>`;
+  const dangerActions = el('div', { style:'display:flex; gap:10px; flex-wrap:wrap;' });
+  const logoutBtn2 = el('button', { class:'mc-btn stone', text:'Uitloggen', onclick:logoutUser });
+  const resetBtn = el('button', { class:'mc-btn red', text:'Alle lokale data wissen', onclick:()=>{
+    if(confirm('Weet je zeker dat je alle accounts en data lokaal wilt wissen? Dit kan niet ongedaan gemaakt worden.')){
+      localStorage.removeItem(LS_USERS); localStorage.removeItem(LS_SESSION);
+      toast('Alle lokale data gewist.', 'info');
+      renderAccountBar(); renderHomeFavorites(); renderGames(); renderSettings(); applyCursorTheme();
+      switchPage('home');
+    }
+  }});
+  dangerActions.appendChild(logoutBtn2); dangerActions.appendChild(resetBtn);
+  dangerBlock.appendChild(dangerActions);
+  holder.appendChild(dangerBlock);
+}
+
+/* ---------------------------------------------------------
+   9c. CUSTOM CURSOR
+--------------------------------------------------------- */
+let customCursorEl = null;
+function applyCursorTheme(){
+  const u = currentUser();
+  const active = u ? (u.activeCursor || 'default') : 'default';
+  if(customCursorEl){ customCursorEl.remove(); customCursorEl = null; }
+  document.body.style.cursor = '';
+  if(active === 'default') return;
+
+  document.body.style.cursor = 'none';
+  customCursorEl = el('div', { class:'custom-cursor' });
+  document.body.appendChild(customCursorEl);
+
+  if(active === 'glow'){
+    customCursorEl.innerHTML = '<div class="cc-glow"></div>';
+  } else if(active === 'diamond'){
+    customCursorEl.innerHTML = '<div class="cc-diamond"></div>';
+  } else if(active === 'comet'){
+    customCursorEl.innerHTML = '<div class="cc-comet-dot"></div>';
+  }
+}
+let lastCometSpawn = 0;
+function onCursorMove(e){
+  if(!customCursorEl) return;
+  customCursorEl.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
+  const u = currentUser();
+  if(u && u.activeCursor === 'comet'){
+    const now = performance.now();
+    if(now - lastCometSpawn > 40){
+      lastCometSpawn = now;
+      const trail = el('div', { class:'custom-cursor' });
+      trail.innerHTML = '<div class="cc-comet-dot" style="opacity:0.6;"></div>';
+      trail.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
+      document.body.appendChild(trail);
+      let op = 0.6;
+      const fade = setInterval(()=>{
+        op -= 0.08;
+        if(op <= 0){ clearInterval(fade); trail.remove(); }
+        else trail.style.opacity = op;
+      }, 30);
+    }
+  }
+}
+document.addEventListener('mousemove', onCursorMove);
+
+/* ---------------------------------------------------------
+   9d. SALDO-TIKKER (verdien geld terwijl je actief bent)
+--------------------------------------------------------- */
+function startBalanceTicker(){
+  setInterval(()=>{
+    const u = currentUser();
+    if(!u || document.hidden) return;
+    const amount = 0.05;
+    addBalance(amount);
+    bumpBalancePill(amount);
+    if(location.hash.replace('#','') === 'settings') renderSettings();
+  }, 3000);
 }
 
 /* ---------------------------------------------------------
@@ -1571,7 +1872,7 @@ function initGlassScene(){
 --------------------------------------------------------- */
 function initRouting(){
   const startPage = (location.hash || '#home').replace('#','');
-  const valid = ['home','games','projects','files'];
+  const valid = ['home','games','projects','files','settings'];
   switchPage(valid.includes(startPage) ? startPage : 'home', { silent:true });
   $all('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.nav === (valid.includes(startPage)?startPage:'home')));
 }
@@ -1582,6 +1883,9 @@ function boot(){
   renderHomeFavorites();
   renderProjects();
   renderFiles();
+  renderSettings();
+  applyCursorTheme();
+  startBalanceTicker();
   initRouting();
   try{ initGlassScene(); }
   catch(e){ console.error('3D-wereld kon niet geladen worden:', e); }
