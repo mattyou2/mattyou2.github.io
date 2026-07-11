@@ -1,0 +1,1595 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mattyou Studios™ — Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+/* =========================================================
+   MATTYOU STUDIOS — PORTAL
+   Premium "liquid glass" ontwerp — donkere achtergrond,
+   vloeiende glazen panelen, zachte kleurverlopen, 3D-orbs.
+   ========================================================= */
+
+:root{
+  --bg-0:#06060b;
+  --bg-1:#0b0c16;
+  --bg-2:#12101f;
+  --accent-blue:#5b8def;
+  --accent-violet:#9b7ef0;
+  --accent-cyan:#57e6c9;
+  --accent-pink:#f472b6;
+  --accent-gold:#f0c869;
+  --danger:#f0576c;
+  --glass-bg:rgba(255,255,255,0.055);
+  --glass-bg-strong:rgba(255,255,255,0.09);
+  --glass-border:rgba(255,255,255,0.14);
+  --glass-border-strong:rgba(255,255,255,0.28);
+  --text:#f3f4fa;
+  --text-dim:#9ea1b8;
+  --text-faint:#6b6e85;
+  --radius-lg:26px;
+  --radius-md:18px;
+  --radius-sm:12px;
+  --font-display:'Sora', 'Inter', sans-serif;
+  --font-body:'Inter', sans-serif;
+  --shadow-glass:0 8px 32px rgba(0,0,0,0.45);
+  --shadow-glow-blue:0 0 40px rgba(91,141,239,0.35);
+}
+
+*{ box-sizing:border-box; }
+html,body{ margin:0; padding:0; height:100%; }
+body{
+  font-family:var(--font-body);
+  font-size:16px;
+  color:var(--text);
+  background:
+    radial-gradient(ellipse 900px 600px at 15% -5%, rgba(91,141,239,0.20), transparent 60%),
+    radial-gradient(ellipse 800px 700px at 100% 10%, rgba(155,126,240,0.16), transparent 55%),
+    radial-gradient(ellipse 700px 600px at 50% 100%, rgba(87,230,201,0.10), transparent 55%),
+    var(--bg-0);
+  overflow-x:hidden;
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3, .display{ font-family:var(--font-display); font-weight:700; letter-spacing:-0.02em; }
+::selection{ background:var(--accent-violet); color:#fff; }
+
+::-webkit-scrollbar{ width:11px; }
+::-webkit-scrollbar-track{ background:transparent; }
+::-webkit-scrollbar-thumb{ background:rgba(255,255,255,0.14); border-radius:8px; }
+::-webkit-scrollbar-thumb:hover{ background:rgba(255,255,255,0.24); }
+
+/* ---------- 3D achtergrond ---------- */
+#bg-canvas{
+  position:fixed; inset:0; width:100%; height:100%;
+  z-index:-1; display:block;
+  cursor:pointer;
+}
+#bg-hint{
+  position:fixed; bottom:22px; left:50%; transform:translateX(-50%);
+  font-family:var(--font-body); font-size:13px; font-weight:500; color:var(--text-dim);
+  background:var(--glass-bg-strong); backdrop-filter:blur(18px) saturate(160%);
+  -webkit-backdrop-filter:blur(18px) saturate(160%);
+  padding:11px 20px; border:1px solid var(--glass-border); border-radius:100px;
+  z-index:5; pointer-events:none; text-align:center; line-height:1.5;
+  transition:opacity .5s, transform .5s; box-shadow:var(--shadow-glass);
+}
+#bg-hint.hide{ opacity:0; transform:translateX(-50%) translateY(10px); }
+
+/* ---------- Glass-knoppen / panelen ---------- */
+.mc-btn{
+  font-family:var(--font-display);
+  font-size:14px; font-weight:600;
+  color:#fff;
+  background:linear-gradient(135deg, var(--accent-blue), var(--accent-violet));
+  border:1px solid rgba(255,255,255,0.25);
+  padding:13px 22px;
+  border-radius:100px;
+  cursor:pointer;
+  position:relative;
+  box-shadow:0 6px 20px rgba(91,141,239,0.35), inset 0 1px 0 rgba(255,255,255,0.3);
+  transition:transform .18s ease, box-shadow .18s ease, filter .18s ease;
+  letter-spacing:-0.01em;
+}
+.mc-btn:hover{ transform:translateY(-2px); box-shadow:0 10px 28px rgba(91,141,239,0.5), inset 0 1px 0 rgba(255,255,255,0.35); }
+.mc-btn:active{ transform:translateY(0); }
+.mc-btn.stone{
+  background:var(--glass-bg-strong); backdrop-filter:blur(14px);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.12), 0 4px 14px rgba(0,0,0,0.3);
+  border:1px solid var(--glass-border-strong); color:var(--text);
+}
+.mc-btn.gold{ background:linear-gradient(135deg, var(--accent-gold), #e0a53e); color:#241a00; box-shadow:0 6px 20px rgba(240,200,105,0.35), inset 0 1px 0 rgba(255,255,255,0.4); }
+.mc-btn.red{ background:linear-gradient(135deg, var(--danger), #c23652); box-shadow:0 6px 20px rgba(240,87,108,0.35), inset 0 1px 0 rgba(255,255,255,0.25); }
+.mc-btn.small{ padding:9px 14px; font-size:12px; }
+.mc-btn:disabled{ opacity:.45; cursor:not-allowed; transform:none; }
+
+.mc-panel{
+  background:var(--glass-bg-strong);
+  backdrop-filter:blur(28px) saturate(180%);
+  -webkit-backdrop-filter:blur(28px) saturate(180%);
+  border:1px solid var(--glass-border-strong);
+  border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-glass), inset 0 1px 0 rgba(255,255,255,0.15);
+  color:var(--text);
+  padding:32px;
+}
+
+.mc-input{
+  font-family:var(--font-body);
+  font-size:15px;
+  padding:13px 15px;
+  border-radius:var(--radius-sm);
+  border:1px solid var(--glass-border);
+  background:rgba(255,255,255,0.06);
+  color:var(--text);
+  width:100%;
+  transition:border-color .15s, background .15s;
+}
+.mc-input::placeholder{ color:var(--text-faint); }
+.mc-input:focus{ outline:none; border-color:var(--accent-blue); background:rgba(255,255,255,0.09); box-shadow:0 0 0 4px rgba(91,141,239,0.18); }
+
+.tag{
+  display:inline-block;
+  font-family:var(--font-body);
+  font-size:11px; font-weight:600;
+  padding:5px 10px;
+  border-radius:100px;
+  background:rgba(255,255,255,0.08);
+  border:1px solid var(--glass-border);
+  color:var(--text-dim);
+}
+
+/* ---------- Layout ---------- */
+.wrap{ position:relative; z-index:1; min-height:100vh; display:flex; flex-direction:column; }
+
+nav.mc-nav{
+  display:flex; align-items:center; justify-content:space-between;
+  gap:16px;
+  background:rgba(10,10,18,0.55);
+  backdrop-filter:blur(22px) saturate(180%);
+  -webkit-backdrop-filter:blur(22px) saturate(180%);
+  border-bottom:1px solid rgba(255,255,255,0.08);
+  padding:14px 28px;
+  flex-wrap:wrap;
+  position:sticky; top:0; z-index:20;
+}
+.logo{
+  display:flex; align-items:center; gap:10px;
+  font-family:var(--font-display); font-size:16px; font-weight:800; color:var(--text);
+  cursor:pointer; user-select:none;
+}
+.logo .block{
+  width:26px; height:26px; border-radius:9px;
+  background:linear-gradient(135deg, var(--accent-blue), var(--accent-violet) 55%, var(--accent-pink));
+  box-shadow:0 0 16px rgba(155,126,240,0.55);
+  display:inline-block;
+}
+.nav-links{ display:flex; gap:4px; flex-wrap:wrap; align-items:center; background:rgba(255,255,255,0.04); padding:5px; border-radius:100px; border:1px solid rgba(255,255,255,0.07); }
+.nav-btn{
+  font-family:var(--font-body); font-size:13.5px; font-weight:600; color:var(--text-dim);
+  background:transparent; border:none; padding:9px 16px; border-radius:100px;
+  cursor:pointer; transition:.18s;
+}
+.nav-btn:hover{ color:#fff; background:rgba(255,255,255,0.07); }
+.nav-btn.active{ color:#fff; background:linear-gradient(135deg, var(--accent-blue), var(--accent-violet)); box-shadow:0 4px 14px rgba(91,141,239,0.4); }
+.nav-account{ display:flex; align-items:center; gap:8px; }
+.acc-pill{
+  font-family:var(--font-body); font-size:13px; font-weight:600; color:#fff;
+  background:rgba(255,255,255,0.07); padding:9px 14px; border-radius:100px; border:1px solid var(--glass-border);
+  display:flex; align-items:center; gap:6px;
+}
+
+main{ flex:1; padding:40px 24px 80px; max-width:1180px; margin:0 auto; width:100%; }
+
+.page{ display:none; animation:fadein .45s cubic-bezier(.2,.8,.2,1); }
+.page.active{ display:block; }
+@keyframes fadein{ from{opacity:0; transform:translateY(14px);} to{opacity:1; transform:translateY(0);} }
+
+.section-title{
+  font-size:28px; color:#fff;
+  margin:6px 0 12px; display:flex; align-items:center; gap:12px;
+}
+.section-sub{ font-size:16px; color:var(--text-dim); margin-bottom:34px; max-width:640px; line-height:1.6; }
+
+/* ---------- Home / hero ---------- */
+.hero{
+  text-align:center; padding:88px 10px 56px; position:relative;
+}
+.hero .eyebrow{
+  display:inline-flex; align-items:center; gap:8px;
+  font-size:13px; font-weight:600; color:var(--accent-cyan);
+  background:rgba(87,230,201,0.1); border:1px solid rgba(87,230,201,0.3);
+  padding:7px 16px; border-radius:100px; margin-bottom:22px;
+}
+.hero h1{
+  font-size:52px; color:#fff; margin:0 0 18px; line-height:1.12; letter-spacing:-0.03em;
+  background:linear-gradient(135deg,#fff 30%, var(--accent-blue) 70%, var(--accent-violet));
+  -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+}
+.hero .tm{ font-size:22px; vertical-align:super; -webkit-text-fill-color:var(--accent-violet); }
+.hero p{ font-size:18px; color:var(--text-dim); max-width:560px; margin:0 auto 34px; line-height:1.6; }
+.hero-cta{ display:flex; gap:14px; justify-content:center; flex-wrap:wrap; }
+
+.quick-grid{
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+  gap:18px; margin-top:56px;
+}
+.quick-card{
+  background:var(--glass-bg); backdrop-filter:blur(20px) saturate(160%); -webkit-backdrop-filter:blur(20px) saturate(160%);
+  border:1px solid var(--glass-border); border-radius:var(--radius-md); padding:26px;
+  transition:.25s cubic-bezier(.2,.8,.2,1); cursor:pointer; text-align:left;
+}
+.quick-card:hover{ transform:translateY(-6px); border-color:var(--glass-border-strong); background:var(--glass-bg-strong); box-shadow:var(--shadow-glow-blue); }
+.quick-card .ic{ font-size:30px; margin-bottom:12px; display:inline-block; }
+.quick-card h3{ font-size:16px; color:#fff; margin:0 0 8px; font-weight:700; }
+.quick-card p{ font-size:14.5px; color:var(--text-dim); margin:0; line-height:1.5; }
+
+.fav-section{ margin-top:64px; }
+.empty-state{
+  background:var(--glass-bg); border:1px dashed var(--glass-border-strong); border-radius:var(--radius-md); padding:42px;
+  text-align:center; color:var(--text-dim); font-size:15px;
+}
+.empty-state b{ color:#fff; font-family:var(--font-display); font-size:16px; display:block; margin-bottom:10px; font-weight:700; }
+
+/* ---------- Grids: games / files / projects ---------- */
+.grid{
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+  gap:20px;
+}
+.card{
+  background:var(--glass-bg); backdrop-filter:blur(20px) saturate(160%); -webkit-backdrop-filter:blur(20px) saturate(160%);
+  border:1px solid var(--glass-border); border-radius:var(--radius-md); color:var(--text);
+  padding:22px; display:flex; flex-direction:column; gap:12px;
+  transition:transform .25s cubic-bezier(.2,.8,.2,1), border-color .25s, box-shadow .25s;
+}
+.card:hover{ transform:translateY(-5px); border-color:var(--glass-border-strong); box-shadow:0 16px 40px rgba(0,0,0,0.35); }
+.card .top-row{ display:flex; justify-content:space-between; align-items:flex-start; }
+.card .ic{
+  width:50px; height:50px; display:flex; align-items:center; justify-content:center;
+  font-size:24px; background:linear-gradient(135deg, rgba(91,141,239,0.25), rgba(155,126,240,0.25));
+  border:1px solid var(--glass-border); border-radius:14px; color:#fff;
+}
+.fav-btn{
+  background:none; border:none; font-size:22px; cursor:pointer; line-height:1;
+  color:var(--text-faint); transition:.2s;
+}
+.fav-btn.active{ color:var(--accent-gold); text-shadow:0 0 14px rgba(240,200,105,0.7); }
+.fav-btn:hover{ transform:scale(1.15); color:var(--accent-gold); }
+.card h3{ font-size:17px; margin:2px 0; color:#fff; font-weight:700; }
+.card p{ font-size:14.5px; color:var(--text-dim); line-height:1.5; margin:0; flex:1; }
+.card .meta{ display:flex; gap:6px; flex-wrap:wrap; }
+.card .actions{ display:flex; gap:8px; margin-top:6px; }
+
+/* Projects category cards */
+.cat-card{ padding:34px 22px; text-align:center; cursor:pointer; align-items:center; }
+.cat-card .ic{ width:64px; height:64px; font-size:30px; margin:0 auto; }
+.cat-card h3{ font-size:17px; margin-top:6px; text-align:center; }
+.cat-card p{ text-align:center; }
+
+/* Files list grouped */
+.file-category{ margin-bottom:46px; scroll-margin-top:120px; }
+.file-category h2{
+  font-size:19px; color:#fff; border-bottom:1px solid rgba(255,255,255,0.1);
+  padding-bottom:14px; margin-bottom:18px; display:flex; align-items:center; gap:10px; font-weight:700;
+}
+.file-row{
+  display:flex; align-items:center; gap:16px;
+  background:var(--glass-bg); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+  border:1px solid var(--glass-border); border-radius:var(--radius-sm); padding:16px 18px; margin-bottom:10px;
+  color:var(--text); transition:.2s;
+}
+.file-row:hover{ background:var(--glass-bg-strong); border-color:var(--glass-border-strong); }
+.file-row .ic{ font-size:22px; width:44px; text-align:center; }
+.file-row .info{ flex:1; min-width:150px; }
+.file-row .info h4{ font-size:15px; margin:0 0 4px; font-family:var(--font-display); font-weight:700; }
+.file-row .info p{ font-size:14px; margin:0; color:var(--text-dim); }
+.file-row .side{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+
+/* ---------- Modals ---------- */
+.overlay{
+  position:fixed; inset:0; background:rgba(4,4,10,0.72); backdrop-filter:blur(6px); z-index:100;
+  display:none; align-items:center; justify-content:center; padding:20px;
+}
+.overlay.open{ display:flex; }
+.modal{ max-width:440px; width:100%; position:relative; animation:modalIn .3s cubic-bezier(.2,.8,.2,1); }
+.modal.wide{ max-width:640px; }
+@keyframes modalIn{ from{ opacity:0; transform:scale(.94) translateY(10px);} to{ opacity:1; transform:scale(1) translateY(0);} }
+.modal-close{
+  position:absolute; top:-16px; right:-16px; width:36px; height:36px; border-radius:50%;
+  background:var(--glass-bg-strong); backdrop-filter:blur(14px); border:1px solid var(--glass-border-strong); color:#fff;
+  font-family:var(--font-body); font-size:15px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; transition:.2s;
+}
+.modal-close:hover{ background:var(--danger); border-color:var(--danger); }
+.modal h2{ font-size:20px; margin:0 0 20px; color:#fff; text-align:center; font-weight:700; }
+.field{ margin-bottom:16px; }
+.field label{ display:block; font-size:13px; font-weight:600; margin-bottom:7px; color:var(--text-dim); }
+.form-error{ color:var(--danger); font-size:13.5px; margin:-8px 0 12px; min-height:18px; }
+.switch-line{ text-align:center; font-size:14px; margin-top:14px; color:var(--text-dim); }
+.switch-line a{ color:var(--accent-cyan); cursor:pointer; text-decoration:none; font-weight:600; }
+.switch-line a:hover{ text-decoration:underline; }
+
+/* game modal */
+#game-modal .modal{ max-width:600px; text-align:center; }
+#game-canvas-holder{
+  background:#050510; border-radius:var(--radius-md); margin:0 auto 16px; overflow:hidden;
+  border:1px solid var(--glass-border);
+  display:flex; align-items:center; justify-content:center; position:relative;
+}
+.game-hud{ display:flex; justify-content:space-between; font-family:var(--font-display); font-size:14px; color:#fff; margin-bottom:12px; font-weight:700; }
+.game-over-msg{
+  position:absolute; inset:0; background:rgba(4,4,10,0.85); backdrop-filter:blur(8px); color:#fff;
+  display:none; flex-direction:column; align-items:center; justify-content:center; gap:16px;
+  font-family:var(--font-display); text-align:center; padding:10px;
+}
+.game-over-msg.show{ display:flex; }
+.game-over-msg .score-big{ font-size:26px; background:linear-gradient(135deg, var(--accent-gold), var(--accent-pink)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+.memory-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:9px; }
+.mem-card{
+  aspect-ratio:1; background:rgba(255,255,255,0.06); border:1px solid var(--glass-border); border-radius:12px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; font-size:24px;
+  transition:.2s; user-select:none;
+}
+.mem-card.flipped, .mem-card.matched{ background:linear-gradient(135deg, rgba(91,141,239,0.3), rgba(155,126,240,0.3)); }
+.mem-card.matched{ opacity:.5; cursor:default; }
+.reaction-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:9px; }
+.reaction-cell{
+  aspect-ratio:1; background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); border-radius:12px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; font-size:0; transition:.15s;
+}
+.reaction-cell.active{ font-size:26px; background:linear-gradient(135deg, var(--accent-pink), var(--accent-violet)); box-shadow:0 0 24px rgba(244,114,182,0.5); }
+
+/* ---------- Toast ---------- */
+#toast-holder{
+  position:fixed; top:90px; right:20px; z-index:200;
+  display:flex; flex-direction:column; gap:10px; max-width:300px;
+}
+.toast{
+  font-family:var(--font-body); font-size:13.5px; font-weight:500; color:#fff;
+  background:rgba(14,14,24,0.85); backdrop-filter:blur(18px) saturate(180%); -webkit-backdrop-filter:blur(18px) saturate(180%);
+  border:1px solid var(--glass-border-strong); border-radius:14px; padding:14px 16px;
+  box-shadow:var(--shadow-glass); animation:toastIn .3s cubic-bezier(.2,.8,.2,1);
+  line-height:1.5;
+}
+.toast.success{ border-left:3px solid var(--accent-cyan); }
+.toast.error{ border-left:3px solid var(--danger); }
+.toast.info{ border-left:3px solid var(--accent-blue); }
+@keyframes toastIn{ from{ transform:translateX(50px); opacity:0;} to{ transform:translateX(0); opacity:1; } }
+.toast.fadeout{ animation:toastOut .3s ease forwards; }
+@keyframes toastOut{ to{ opacity:0; transform:translateX(50px); } }
+
+/* ---------- Footer ---------- */
+footer{
+  border-top:1px solid rgba(255,255,255,0.08);
+  text-align:center; padding:30px 14px; color:var(--text-faint);
+  font-size:13.5px;
+}
+footer b{ color:var(--text); font-family:var(--font-display); font-size:14px; display:block; margin-bottom:6px; font-weight:700; }
+
+/* ---------- Responsive ---------- */
+@media (max-width:640px){
+  .hero h1{ font-size:34px; }
+  .section-title{ font-size:22px; }
+  nav.mc-nav{ flex-direction:column; align-items:stretch; }
+  .nav-links{ justify-content:center; }
+}
+
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+<div id="bg-hint">✨ Klik op Games, Projects of Files en kijk wat er gebeurt</div>
+
+<div id="toast-holder"></div>
+
+<div class="wrap">
+
+  <!-- ================= NAV ================= -->
+  <nav class="mc-nav">
+    <div class="logo" data-nav="home"><span class="block"></span> MATTYOU STUDIOS<span style="font-size:9px;">™</span></div>
+    <div class="nav-links">
+      <button class="nav-btn" data-nav="home">Home</button>
+      <button class="nav-btn" data-nav="games">Games</button>
+      <button class="nav-btn" data-nav="projects">Projects</button>
+      <button class="nav-btn" data-nav="files">Files</button>
+    </div>
+    <div class="nav-account" id="nav-account"></div>
+  </nav>
+
+  <!-- ================= MAIN ================= -->
+  <main>
+
+    <!-- ---------- HOME ---------- -->
+    <section class="page" id="page-home">
+      <div class="hero">
+        <div class="eyebrow">✨ Welkom bij het portal</div>
+        <h1>Mattyou Studios<span class="tm">™</span><br>Alles op één plek</h1>
+        <p>Eén overzichtelijke plek voor games, mods, resource packs en datapacks. Maak een account, sla je favoriete games op en ga direct aan de slag.</p>
+        <div class="hero-cta">
+          <button class="mc-btn" data-nav="games">▶ Speel games</button>
+          <button class="mc-btn stone" data-nav="projects">📦 Bekijk projects</button>
+        </div>
+      </div>
+
+      <div class="quick-grid">
+        <div class="quick-card" data-nav="games">
+          <div class="ic">🎮</div>
+          <h3>GAMES</h3>
+          <p>Speel mini-games rechtstreeks in je browser — geen download nodig.</p>
+        </div>
+        <div class="quick-card" data-nav="projects">
+          <div class="ic">🧭</div>
+          <h3>PROJECTS</h3>
+          <p>Blader door categorieën: Minecraft, Mods, Resource Packs en Datapacks.</p>
+        </div>
+        <div class="quick-card" data-nav="files">
+          <div class="ic">🗂️</div>
+          <h3>FILES</h3>
+          <p>Alle bestanden overzichtelijk gegroepeerd, klaar om te downloaden.</p>
+        </div>
+      </div>
+
+      <div class="fav-section">
+        <h2 class="section-title">⭐ Jouw favorieten</h2>
+        <div id="home-favorites"></div>
+      </div>
+    </section>
+
+    <!-- ---------- GAMES ---------- -->
+    <section class="page" id="page-games">
+      <h2 class="section-title">🎮 Games</h2>
+      <p class="section-sub">Klik op ⭐ om een game aan je favorieten toe te voegen — die verschijnt dan op je homepage. Klik op "Speel" om direct te beginnen.</p>
+      <div class="grid" id="games-grid"></div>
+    </section>
+
+    <!-- ---------- PROJECTS ---------- -->
+    <section class="page" id="page-projects">
+      <h2 class="section-title">🧭 Projects</h2>
+      <p class="section-sub">Kies een categorie. Je springt automatisch naar dat onderdeel van de Files-pagina.</p>
+      <div class="grid" id="projects-grid"></div>
+    </section>
+
+    <!-- ---------- FILES ---------- -->
+    <section class="page" id="page-files">
+      <h2 class="section-title">🗂️ Files</h2>
+      <p class="section-sub">Alle bestanden per categorie. Gebruik de Projects-pagina om hier snel naartoe te springen.</p>
+      <div id="files-list"></div>
+    </section>
+
+  </main>
+
+  <!-- ================= FOOTER ================= -->
+  <footer>
+    <b>Made by Mattyou Studios™</b>
+    Alle rechten voorbehouden.
+  </footer>
+</div>
+
+<!-- ================= AUTH MODAL ================= -->
+<div class="overlay" id="auth-overlay">
+  <div class="modal mc-panel">
+    <button class="modal-close" id="auth-close">X</button>
+
+    <div id="login-form">
+      <h2>🔑 INLOGGEN</h2>
+      <div class="field">
+        <label>Gebruikersnaam</label>
+        <input class="mc-input" id="login-username" type="text" autocomplete="username">
+      </div>
+      <div class="field">
+        <label>Wachtwoord</label>
+        <input class="mc-input" id="login-password" type="password" autocomplete="current-password">
+      </div>
+      <div class="form-error" id="login-error"></div>
+      <button class="mc-btn" style="width:100%" id="login-submit">Inloggen</button>
+      <div class="switch-line">Nog geen account? <a id="show-register">Registreer hier</a></div>
+    </div>
+
+    <div id="register-form" style="display:none;">
+      <h2>📝 ACCOUNT MAKEN</h2>
+      <div class="field">
+        <label>Gebruikersnaam</label>
+        <input class="mc-input" id="register-username" type="text" autocomplete="username">
+      </div>
+      <div class="field">
+        <label>Wachtwoord</label>
+        <input class="mc-input" id="register-password" type="password" autocomplete="new-password">
+      </div>
+      <div class="field">
+        <label>Bevestig wachtwoord</label>
+        <input class="mc-input" id="register-password2" type="password" autocomplete="new-password">
+      </div>
+      <div class="form-error" id="register-error"></div>
+      <button class="mc-btn" style="width:100%" id="register-submit">Account aanmaken</button>
+      <div class="switch-line">Heb je al een account? <a id="show-login">Log hier in</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= GAME MODAL ================= -->
+<div class="overlay" id="game-modal">
+  <div class="modal wide mc-panel">
+    <button class="modal-close" id="game-close">X</button>
+    <h2 id="game-title">GAME</h2>
+    <div class="game-hud">
+      <span id="game-score">Score: 0</span>
+      <span id="game-status"></span>
+    </div>
+    <div id="game-canvas-holder">
+      <div class="game-over-msg" id="game-over">
+        <div>GAME OVER</div>
+        <div class="score-big" id="final-score">Score: 0</div>
+        <button class="mc-btn gold" id="game-restart">🔄 Opnieuw</button>
+      </div>
+    </div>
+    <p id="game-instructions" style="font-size:16px;color:#333;"></p>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   MATTYOU STUDIOS — CRAFT PORTAL — APPLICATIE LOGICA
+   ========================================================= */
+(function(){
+"use strict";
+
+/* ---------------------------------------------------------
+   0. HULPFUNCTIES
+--------------------------------------------------------- */
+function $(sel, ctx){ return (ctx||document).querySelector(sel); }
+function $all(sel, ctx){ return Array.from((ctx||document).querySelectorAll(sel)); }
+function el(tag, opts){
+  const e = document.createElement(tag);
+  if(opts) Object.entries(opts).forEach(([k,v])=>{
+    if(k === 'html') e.innerHTML = v;
+    else if(k === 'text') e.textContent = v;
+    else if(k === 'class') e.className = v;
+    else if(k.startsWith('on') && typeof v === 'function') e.addEventListener(k.slice(2), v);
+    else e.setAttribute(k, v);
+  });
+  return e;
+}
+function toast(message, type){
+  type = type || 'info';
+  const holder = $('#toast-holder');
+  const t = el('div', { class:'toast ' + type, text:message });
+  holder.appendChild(t);
+  setTimeout(()=>{
+    t.classList.add('fadeout');
+    setTimeout(()=> t.remove(), 320);
+  }, 3200);
+}
+/* eenvoudige (NIET veilige) obfuscatie enkel voor demo-doeleinden */
+function obfuscate(str){ try{ return btoa(unescape(encodeURIComponent(str))); }catch(e){ return str; } }
+
+
+/* ---------------------------------------------------------
+   1. DATA — GAMES / PROJECT-CATEGORIEEN / FILES
+--------------------------------------------------------- */
+const GAMES = [
+  { id:'snake',    title:'Neon Snake',      icon:'🐍', desc:'De klassieke slang-actie in een strak, modern jasje. Eet orbs op, groei en bots niet tegen jezelf.', tags:['Arcade','1 speler'] },
+  { id:'breakout',  title:'Glass Breaker',   icon:'🧱', desc:'Sloop rijen van glazen tegels met je bal en paddle. Verlies geen levens!', tags:['Arcade','Reflexen'] },
+  { id:'memory',    title:'Memory Match',    icon:'🧠', desc:'Draai kaarten om en vind alle paren met zo min mogelijk zetten.', tags:['Puzzel','Rustig'] },
+  { id:'reaction',  title:'Flash Tap',       icon:'⚡', desc:'Tegels lichten kort op — tik ze weg voor ze verdwijnen. 30 seconden, zoveel mogelijk punten.', tags:['Reflexen','30 sec'] }
+];
+
+const PROJECT_CATEGORIES = [
+  { id:'minecraft',     title:'Minecraft',       icon:'⛏️', desc:'Clients, launchers en de kernspel-bestanden zelf.' },
+  { id:'mods',          title:'Mods',            icon:'⚙️', desc:'Uitbreidingen die het spel nieuwe mechanics geven.' },
+  { id:'resourcepacks', title:'Resource Packs',  icon:'🎨', desc:'Nieuwe texturen, geluiden en sfeer voor je wereld.' },
+  { id:'datapacks',     title:'Datapacks',       icon:'📦', desc:'Aanpassingen aan spelregels en recepten, zonder mods.' }
+];
+
+const FILES = [
+  { id:'f1', cat:'minecraft', icon:'⛏️', name:'Minecraft Java Client 1.21', desc:'De officiële launcher-bundel voor de Java-editie.', size:'182 MB', version:'1.21.4' },
+  { id:'f2', cat:'minecraft', icon:'🌐', name:'Mattyou Server Pack', desc:'Kant-en-klare serverbestanden inclusief start-scripts.', size:'64 MB', version:'1.21.4' },
+  { id:'f3', cat:'minecraft', icon:'🗺️', name:'Skyland Wereldsjabloon', desc:'Voorgebouwde zwevende-eilanden wereld om mee te starten.', size:'41 MB', version:'1.20.1' },
+
+  { id:'f4', cat:'mods', icon:'⚡', name:'OptiSpeed', desc:'Grafische optimalisatie-mod voor vloeiendere framerates.', size:'6.2 MB', version:'Forge 47.x' },
+  { id:'f5', cat:'mods', icon:'🌾', name:'FarmPlus', desc:'Meer gewassen, automatische irrigatie en composters.', size:'3.8 MB', version:'Fabric 0.15' },
+  { id:'f6', cat:'mods', icon:'🐉', name:'DragonTamer', desc:'Voeg temembare drakenmobs toe met eigen AI en loot.', size:'11.4 MB', version:'Forge 47.x' },
+
+  { id:'f7', cat:'resourcepacks', icon:'🎨', name:'Pixel Faithful 32x', desc:'Verscherpte texturen die trouw blijven aan de originele stijl.', size:'28 MB', version:'1.21' },
+  { id:'f8', cat:'resourcepacks', icon:'🌙', name:'Nightshade Dark UI', desc:'Donker interface-pack voor lange avondsessies.', size:'9 MB', version:'1.20+' },
+  { id:'f9', cat:'resourcepacks', icon:'🔊', name:'Ambient Soundscape', desc:'Nieuwe omgevingsgeluiden per biome.', size:'54 MB', version:'1.19+' },
+
+  { id:'f10', cat:'datapacks', icon:'⚗️', name:'Ores+', desc:'Voegt extra ertsen en bijbehorende recepten toe.', size:'1.1 MB', version:'1.21' },
+  { id:'f11', cat:'datapacks', icon:'🍳', name:'Betere Recepten', desc:'Herbalanceert crafting-recepten voor survival.', size:'0.4 MB', version:'1.20+' },
+  { id:'f12', cat:'datapacks', icon:'🏆', name:'Uitdagingen Pack', desc:'Nieuwe progressie-advancements met beloningen.', size:'0.7 MB', version:'1.21' }
+];
+
+/* ---------------------------------------------------------
+   2. ACCOUNT-SYSTEEM (opslag in localStorage)
+--------------------------------------------------------- */
+const LS_USERS   = 'mattyou_users';
+const LS_SESSION = 'mattyou_session';
+
+function loadUsers(){
+  try{ return JSON.parse(localStorage.getItem(LS_USERS)) || {}; }
+  catch(e){ return {}; }
+}
+function saveUsers(users){
+  try{ localStorage.setItem(LS_USERS, JSON.stringify(users)); return true; }
+  catch(e){ toast('Kon niet opslaan in localStorage.', 'error'); return false; }
+}
+function getSession(){ return localStorage.getItem(LS_SESSION); }
+function setSession(username){
+  if(username) localStorage.setItem(LS_SESSION, username);
+  else localStorage.removeItem(LS_SESSION);
+}
+function currentUser(){
+  const name = getSession();
+  if(!name) return null;
+  const users = loadUsers();
+  return users[name] ? { username:name, ...users[name] } : null;
+}
+
+function registerUser(username, password, password2){
+  username = (username||'').trim();
+  if(username.length < 3) return { ok:false, msg:'Gebruikersnaam moet minstens 3 tekens zijn.' };
+  if(!/^[a-zA-Z0-9_]+$/.test(username)) return { ok:false, msg:'Alleen letters, cijfers en _ toegestaan.' };
+  if(password.length < 4) return { ok:false, msg:'Wachtwoord moet minstens 4 tekens zijn.' };
+  if(password !== password2) return { ok:false, msg:'Wachtwoorden komen niet overeen.' };
+  const users = loadUsers();
+  if(users[username]) return { ok:false, msg:'Deze gebruikersnaam bestaat al.' };
+  users[username] = { pass:obfuscate(password), favorites:[], createdAt:Date.now() };
+  saveUsers(users);
+  setSession(username);
+  return { ok:true };
+}
+function loginUser(username, password){
+  username = (username||'').trim();
+  const users = loadUsers();
+  const u = users[username];
+  if(!u || u.pass !== obfuscate(password)) return { ok:false, msg:'Onjuiste gebruikersnaam of wachtwoord.' };
+  setSession(username);
+  return { ok:true };
+}
+function logoutUser(){
+  setSession(null);
+  toast('Je bent uitgelogd.', 'info');
+  renderAccountBar();
+  renderHomeFavorites();
+  renderGames();
+}
+
+/* ---------------------------------------------------------
+   3. FAVORIETEN
+--------------------------------------------------------- */
+function isFavorite(gameId){
+  const u = currentUser();
+  return !!(u && u.favorites && u.favorites.includes(gameId));
+}
+function toggleFavorite(gameId){
+  const name = getSession();
+  if(!name){ openAuth('login'); toast('Log in om favorieten op te slaan.', 'info'); return; }
+  const users = loadUsers();
+  const u = users[name];
+  if(!u.favorites) u.favorites = [];
+  const idx = u.favorites.indexOf(gameId);
+  if(idx >= 0){ u.favorites.splice(idx,1); toast('Verwijderd uit favorieten.', 'info'); }
+  else { u.favorites.push(gameId); toast('Toegevoegd aan favorieten!', 'success'); }
+  saveUsers(users);
+  renderGames();
+  renderHomeFavorites();
+}
+
+/* ---------------------------------------------------------
+   4. ROUTER
+--------------------------------------------------------- */
+function switchPage(pageId, opts){
+  opts = opts || {};
+  $all('.page').forEach(p => p.classList.remove('active'));
+  const target = $('#page-' + pageId);
+  if(target) target.classList.add('active');
+  $all('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.nav === pageId));
+  window.scrollTo({ top:0, behavior: opts.scrollHash ? 'auto' : 'smooth' });
+  if(!opts.silent) location.hash = pageId;
+  if(opts.scrollHash){
+    setTimeout(()=>{
+      const anchor = document.getElementById('cat-' + opts.scrollHash);
+      if(anchor) anchor.scrollIntoView({ behavior:'smooth', block:'start' });
+    }, 60);
+  }
+}
+let triggerVehicleTransition = null; // wordt gezet door initGlassScene()
+const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function handleNavigate(targetPage){
+  const current = (location.hash || '#home').replace('#','');
+  if(targetPage === current){ switchPage(targetPage); return; }
+  if(prefersReducedMotion || typeof triggerVehicleTransition !== 'function'){
+    switchPage(targetPage);
+    return;
+  }
+  triggerVehicleTransition(()=> switchPage(targetPage));
+}
+$all('[data-nav]').forEach(node=>{
+  node.addEventListener('click', ()=> handleNavigate(node.dataset.nav));
+});
+
+/* ---------------------------------------------------------
+   5. RENDER: ACCOUNTBALK
+--------------------------------------------------------- */
+function renderAccountBar(){
+  const holder = $('#nav-account');
+  holder.innerHTML = '';
+  const u = currentUser();
+  if(u){
+    const pill = el('div', { class:'acc-pill' });
+    pill.innerHTML = '👤 ' + u.username;
+    const logoutBtn = el('button', { class:'mc-btn small red', text:'Uitloggen', onclick:logoutUser });
+    holder.appendChild(pill);
+    holder.appendChild(logoutBtn);
+  } else {
+    const loginBtn = el('button', { class:'mc-btn small', text:'Inloggen', onclick:()=>openAuth('login') });
+    const registerBtn = el('button', { class:'mc-btn small gold', text:'Account maken', onclick:()=>openAuth('register') });
+    holder.appendChild(loginBtn);
+    holder.appendChild(registerBtn);
+  }
+}
+
+/* ---------------------------------------------------------
+   6. RENDER: GAMES
+--------------------------------------------------------- */
+function renderGames(){
+  const grid = $('#games-grid');
+  grid.innerHTML = '';
+  GAMES.forEach(g=>{
+    const fav = isFavorite(g.id);
+    const card = el('div', { class:'card' });
+    card.innerHTML = `
+      <div class="top-row">
+        <div class="ic">${g.icon}</div>
+        <button class="fav-btn ${fav ? 'active':''}" data-fav="${g.id}" title="Favoriet">${fav ? '★' : '☆'}</button>
+      </div>
+      <h3>${g.title}</h3>
+      <p>${g.desc}</p>
+      <div class="meta">${g.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+      <div class="actions">
+        <button class="mc-btn small" data-play="${g.id}" style="flex:1;">▶ Speel</button>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+  $all('[data-fav]', grid).forEach(b => b.addEventListener('click', ()=> toggleFavorite(b.dataset.fav)));
+  $all('[data-play]', grid).forEach(b => b.addEventListener('click', ()=> startGame(b.dataset.play)));
+}
+
+/* ---------------------------------------------------------
+   7. RENDER: HOMEPAGE FAVORIETEN
+--------------------------------------------------------- */
+function renderHomeFavorites(){
+  const holder = $('#home-favorites');
+  const u = currentUser();
+  if(!u){
+    holder.innerHTML = '';
+    holder.appendChild(el('div', { class:'empty-state', html:'<b>NOG NIET INGELOGD</b>Log in of maak een account om games als favoriet te markeren.' }));
+    return;
+  }
+  const favGames = GAMES.filter(g => u.favorites && u.favorites.includes(g.id));
+  if(favGames.length === 0){
+    holder.innerHTML = '';
+    holder.appendChild(el('div', { class:'empty-state', html:'<b>NOG GEEN FAVORIETEN</b>Ga naar de Games-pagina en klik op ☆ bij een game.' }));
+    return;
+  }
+  holder.innerHTML = '<div class="grid"></div>';
+  const grid = $('.grid', holder);
+  favGames.forEach(g=>{
+    const card = el('div', { class:'card' });
+    card.innerHTML = `
+      <div class="top-row">
+        <div class="ic">${g.icon}</div>
+        <button class="fav-btn active" data-fav="${g.id}">★</button>
+      </div>
+      <h3>${g.title}</h3>
+      <p>${g.desc}</p>
+      <div class="actions">
+        <button class="mc-btn small" data-play="${g.id}" style="flex:1;">▶ Speel</button>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+  $all('[data-fav]', grid).forEach(b => b.addEventListener('click', ()=> toggleFavorite(b.dataset.fav)));
+  $all('[data-play]', grid).forEach(b => b.addEventListener('click', ()=> startGame(b.dataset.play)));
+}
+
+/* ---------------------------------------------------------
+   8. RENDER: PROJECTS
+--------------------------------------------------------- */
+function renderProjects(){
+  const grid = $('#projects-grid');
+  grid.innerHTML = '';
+  PROJECT_CATEGORIES.forEach(c=>{
+    const count = FILES.filter(f=>f.cat===c.id).length;
+    const card = el('div', { class:'card cat-card', 'data-cat':c.id });
+    card.innerHTML = `
+      <div class="ic">${c.icon}</div>
+      <h3>${c.title}</h3>
+      <p>${c.desc}</p>
+      <span class="tag">${count} bestand(en)</span>
+    `;
+    card.addEventListener('click', ()=> switchPage('files', { scrollHash:c.id }));
+    grid.appendChild(card);
+  });
+}
+
+/* ---------------------------------------------------------
+   9. RENDER: FILES
+--------------------------------------------------------- */
+function renderFiles(){
+  const holder = $('#files-list');
+  holder.innerHTML = '';
+  PROJECT_CATEGORIES.forEach(cat=>{
+    const section = el('div', { class:'file-category', id:'cat-' + cat.id });
+    section.appendChild(el('h2', { html:`${cat.icon} ${cat.title}` }));
+    const files = FILES.filter(f=>f.cat===cat.id);
+    files.forEach(f=>{
+      const row = el('div', { class:'file-row' });
+      row.innerHTML = `
+        <div class="ic">${f.icon}</div>
+        <div class="info">
+          <h4>${f.name}</h4>
+          <p>${f.desc}</p>
+        </div>
+        <div class="side">
+          <span class="tag">${f.version}</span>
+          <span class="tag">${f.size}</span>
+          <button class="mc-btn small stone" data-dl="${f.id}">⬇ Download</button>
+        </div>
+      `;
+      section.appendChild(row);
+    });
+    holder.appendChild(section);
+  });
+  $all('[data-dl]', holder).forEach(b=>{
+    b.addEventListener('click', ()=>{
+      const f = FILES.find(x=>x.id===b.dataset.dl);
+      toast('Demo-download gestart: ' + (f ? f.name : ''), 'success');
+    });
+  });
+}
+
+/* ---------------------------------------------------------
+   10. AUTH-MODAL LOGICA
+--------------------------------------------------------- */
+function openAuth(mode){
+  $('#auth-overlay').classList.add('open');
+  showAuthForm(mode || 'login');
+}
+function closeAuth(){
+  $('#auth-overlay').classList.remove('open');
+  $('#login-error').textContent = '';
+  $('#register-error').textContent = '';
+  $('#login-username').value = ''; $('#login-password').value = '';
+  $('#register-username').value = ''; $('#register-password').value = ''; $('#register-password2').value = '';
+}
+function showAuthForm(mode){
+  $('#login-form').style.display = mode === 'login' ? 'block' : 'none';
+  $('#register-form').style.display = mode === 'register' ? 'block' : 'none';
+}
+$('#auth-close').addEventListener('click', closeAuth);
+$('#auth-overlay').addEventListener('click', (e)=>{ if(e.target.id === 'auth-overlay') closeAuth(); });
+$('#show-register').addEventListener('click', ()=> showAuthForm('register'));
+$('#show-login').addEventListener('click', ()=> showAuthForm('login'));
+
+$('#login-submit').addEventListener('click', ()=>{
+  const res = loginUser($('#login-username').value, $('#login-password').value);
+  if(!res.ok){ $('#login-error').textContent = res.msg; return; }
+  closeAuth();
+  toast('Welkom terug, ' + getSession() + '!', 'success');
+  renderAccountBar(); renderHomeFavorites(); renderGames();
+});
+$('#register-submit').addEventListener('click', ()=>{
+  const res = registerUser($('#register-username').value, $('#register-password').value, $('#register-password2').value);
+  if(!res.ok){ $('#register-error').textContent = res.msg; return; }
+  closeAuth();
+  toast('Account aangemaakt! Welkom, ' + getSession() + '.', 'success');
+  renderAccountBar(); renderHomeFavorites(); renderGames();
+});
+/* enter-toetsen */
+['login-username','login-password'].forEach(id=>{
+  $('#'+id).addEventListener('keydown', e=>{ if(e.key==='Enter') $('#login-submit').click(); });
+});
+['register-username','register-password','register-password2'].forEach(id=>{
+  $('#'+id).addEventListener('keydown', e=>{ if(e.key==='Enter') $('#register-submit').click(); });
+});
+
+/* ---------------------------------------------------------
+   11. MINI-GAMES
+--------------------------------------------------------- */
+let activeGameCleanup = null; // functie om lopende game netjes te stoppen
+
+function startGame(gameId){
+  const game = GAMES.find(g=>g.id===gameId);
+  if(!game) return;
+  $('#game-title').textContent = game.icon + ' ' + game.title.toUpperCase();
+  $('#game-modal').classList.add('open');
+  $('#game-over').classList.remove('show');
+  $('#game-score').textContent = 'Score: 0';
+  $('#game-status').textContent = '';
+  const holder = $('#game-canvas-holder');
+  // canvas-holder legen maar overlay behouden
+  Array.from(holder.children).forEach(c=>{ if(c.id !== 'game-over') c.remove(); });
+
+  if(activeGameCleanup) { try{ activeGameCleanup(); }catch(e){} activeGameCleanup = null; }
+
+  if(gameId === 'snake') activeGameCleanup = initSnake(holder);
+  else if(gameId === 'breakout') activeGameCleanup = initBreakout(holder);
+  else if(gameId === 'memory') activeGameCleanup = initMemory(holder);
+  else if(gameId === 'reaction') activeGameCleanup = initReaction(holder);
+}
+function closeGame(){
+  $('#game-modal').classList.remove('open');
+  if(activeGameCleanup){ try{ activeGameCleanup(); }catch(e){} activeGameCleanup = null; }
+}
+$('#game-close').addEventListener('click', closeGame);
+$('#game-modal').addEventListener('click', (e)=>{ if(e.target.id === 'game-modal') closeGame(); });
+
+function showGameOver(score){
+  $('#final-score').textContent = 'Score: ' + score;
+  $('#game-over').classList.add('show');
+}
+
+/* ---- 11a. SNAKE CRAFT ---- */
+function initSnake(holder){
+  $('#game-instructions').textContent = 'Besturing: pijltjestoetsen. Eet appels 🍎, groei, en bots niet tegen jezelf of de rand.';
+  const size = 16, cols = 20, rows = 20;
+  const canvas = el('canvas', { width:cols*size, height:rows*size, style:'background:#2d5a1e;display:block;' });
+  holder.insertBefore(canvas, $('#game-over'));
+  const ctx = canvas.getContext('2d');
+
+  let snake, dir, nextDir, food, score, timer, running = true;
+  function reset(){
+    snake = [{x:10,y:10},{x:9,y:10},{x:8,y:10}];
+    dir = {x:1,y:0}; nextDir = {x:1,y:0};
+    score = 0; running = true;
+    placeFood();
+    $('#game-over').classList.remove('show');
+    $('#game-score').textContent = 'Score: 0';
+  }
+  function placeFood(){
+    let ok=false;
+    while(!ok){
+      food = { x: Math.floor(Math.random()*cols), y: Math.floor(Math.random()*rows) };
+      ok = !snake.some(s=> s.x===food.x && s.y===food.y);
+    }
+  }
+  function draw(){
+    ctx.fillStyle = '#3a6b26'; ctx.fillRect(0,0,canvas.width,canvas.height);
+    // checkerboard grasveld
+    ctx.fillStyle = '#427a2b';
+    for(let y=0;y<rows;y++) for(let x=0;x<cols;x++) if((x+y)%2===0) ctx.fillRect(x*size,y*size,size,size);
+    // eten
+    ctx.fillStyle = '#d64545';
+    ctx.fillRect(food.x*size+3, food.y*size+3, size-6, size-6);
+    // slang
+    snake.forEach((s,i)=>{
+      ctx.fillStyle = i===0 ? '#ffd93d' : '#5be36a';
+      ctx.fillRect(s.x*size+1, s.y*size+1, size-2, size-2);
+      ctx.strokeStyle = '#00000055'; ctx.strokeRect(s.x*size+1, s.y*size+1, size-2, size-2);
+    });
+  }
+  function step(){
+    if(!running) return;
+    dir = nextDir;
+    const head = { x: snake[0].x + dir.x, y: snake[0].y + dir.y };
+    if(head.x<0||head.y<0||head.x>=cols||head.y>=rows || snake.some(s=>s.x===head.x&&s.y===head.y)){
+      running = false; clearInterval(timer); showGameOver(score); return;
+    }
+    snake.unshift(head);
+    if(head.x===food.x && head.y===food.y){ score += 10; $('#game-score').textContent = 'Score: '+score; placeFood(); }
+    else snake.pop();
+    draw();
+  }
+  function keyHandler(e){
+    const map = { ArrowUp:{x:0,y:-1}, ArrowDown:{x:0,y:1}, ArrowLeft:{x:-1,y:0}, ArrowRight:{x:1,y:0} };
+    const d = map[e.key];
+    if(!d) return;
+    e.preventDefault();
+    if(d.x === -dir.x && d.y === -dir.y) return; // niet direct omkeren
+    nextDir = d;
+  }
+  document.addEventListener('keydown', keyHandler);
+  reset(); draw();
+  timer = setInterval(step, 130);
+  $('#game-restart').onclick = reset;
+  return function cleanup(){
+    clearInterval(timer);
+    document.removeEventListener('keydown', keyHandler);
+  };
+}
+
+/* ---- 11b. BLOCK BREAKER (breakout) ---- */
+function initBreakout(holder){
+  $('#game-instructions').textContent = 'Besturing: muis bewegen (of pijltjestoetsen links/rechts). Sloop alle blokken zonder de bal te missen.';
+  const W = 480, H = 380;
+  const canvas = el('canvas', { width:W, height:H, style:'background:#87ceeb;display:block;' });
+  holder.insertBefore(canvas, $('#game-over'));
+  const ctx = canvas.getContext('2d');
+
+  const paddle = { w:80, h:14, x:W/2-40, y:H-26, speed:7 };
+  let ball, bricks, score, lives, running, raf;
+  const rows = 5, cols = 8, bw = W/cols, bh = 22;
+  const rowColors = ['#5be3d3','#ffd93d','#8b8b8b','#7b4f2a','#5d9c3f'];
+
+  function reset(){
+    paddle.x = W/2 - paddle.w/2;
+    ball = { x:W/2, y:H-50, r:7, dx:3.4, dy:-3.4 };
+    bricks = [];
+    for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) bricks.push({ x:c*bw, y:r*bh+30, w:bw-4, h:bh-4, alive:true, color:rowColors[r] });
+    score = 0; lives = 3; running = true;
+    $('#game-over').classList.remove('show');
+    $('#game-score').textContent = 'Score: 0';
+    $('#game-status').textContent = '❤️ x3';
+  }
+  function draw(){
+    ctx.fillStyle = '#87ceeb'; ctx.fillRect(0,0,W,H);
+    bricks.forEach(b=>{ if(b.alive){ ctx.fillStyle=b.color; ctx.fillRect(b.x+2,b.y,b.w,b.h); ctx.strokeStyle='#0004'; ctx.strokeRect(b.x+2,b.y,b.w,b.h); } });
+    ctx.fillStyle = '#3a2a1a'; ctx.fillRect(paddle.x, paddle.y, paddle.w, paddle.h);
+    ctx.beginPath(); ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI*2); ctx.fillStyle='#fff'; ctx.fill();
+  }
+  function update(){
+    if(!running) return;
+    ball.x += ball.dx; ball.y += ball.dy;
+    if(ball.x < ball.r || ball.x > W-ball.r) ball.dx *= -1;
+    if(ball.y < ball.r) ball.dy *= -1;
+    if(ball.y > paddle.y - ball.r && ball.y < paddle.y + paddle.h && ball.x > paddle.x && ball.x < paddle.x+paddle.w){
+      ball.dy = -Math.abs(ball.dy);
+      const hitPos = (ball.x - (paddle.x+paddle.w/2)) / (paddle.w/2);
+      ball.dx = hitPos * 4.5;
+    }
+    bricks.forEach(b=>{
+      if(!b.alive) return;
+      if(ball.x > b.x+2 && ball.x < b.x+2+b.w && ball.y - ball.r < b.y+b.h && ball.y + ball.r > b.y){
+        b.alive = false; ball.dy *= -1; score += 10;
+        $('#game-score').textContent = 'Score: ' + score;
+      }
+    });
+    if(ball.y > H){
+      lives -= 1;
+      $('#game-status').textContent = '❤️ x' + lives;
+      if(lives <= 0){ running = false; showGameOver(score); return; }
+      ball.x = W/2; ball.y = H-50; ball.dx = 3.4; ball.dy = -3.4;
+    }
+    if(bricks.every(b=>!b.alive)){ running = false; $('#game-status').textContent = '🎉 Gewonnen!'; showGameOver(score); return; }
+    draw();
+    raf = requestAnimationFrame(update);
+  }
+  function onMouseMove(e){
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.clientX - rect.left) * (W / rect.width);
+    paddle.x = Math.max(0, Math.min(W - paddle.w, x - paddle.w/2));
+  }
+  function onKey(e){
+    if(e.key === 'ArrowLeft') paddle.x = Math.max(0, paddle.x - paddle.speed*3);
+    if(e.key === 'ArrowRight') paddle.x = Math.min(W-paddle.w, paddle.x + paddle.speed*3);
+  }
+  canvas.addEventListener('mousemove', onMouseMove);
+  document.addEventListener('keydown', onKey);
+  reset(); draw();
+  raf = requestAnimationFrame(update);
+  $('#game-restart').onclick = ()=>{ reset(); cancelAnimationFrame(raf); raf = requestAnimationFrame(update); };
+  return function cleanup(){
+    cancelAnimationFrame(raf);
+    canvas.removeEventListener('mousemove', onMouseMove);
+    document.removeEventListener('keydown', onKey);
+  };
+}
+
+/* ---- 11c. MEMORY BLOCKS ---- */
+function initMemory(holder){
+  $('#game-instructions').textContent = 'Klik twee kaarten om te kijken of ze overeenkomen. Vind alle paren met zo min mogelijk zetten.';
+  const icons = ['⛏️','🌳','💎','🧱','🔥','🪓','🐷','🧟'];
+  let deck = icons.concat(icons).sort(()=>Math.random()-0.5);
+  let flipped = [], matched = [], moves = 0, lock = false;
+
+  const wrap = el('div', { class:'memory-grid', style:'width:320px;' });
+  holder.insertBefore(wrap, $('#game-over'));
+  $('#game-instructions').dataset.moves = '0';
+
+  function render(){
+    wrap.innerHTML = '';
+    deck.forEach((icon, i)=>{
+      const isUp = flipped.includes(i) || matched.includes(i);
+      const card = el('div', { class:'mem-card' + (isUp?' flipped':'') + (matched.includes(i)?' matched':''), text: isUp ? icon : '❓' });
+      card.addEventListener('click', ()=> onCardClick(i));
+      wrap.appendChild(card);
+    });
+    $('#game-score').textContent = 'Zetten: ' + moves;
+  }
+  function onCardClick(i){
+    if(lock || flipped.includes(i) || matched.includes(i)) return;
+    flipped.push(i);
+    render();
+    if(flipped.length === 2){
+      moves++; lock = true;
+      const [a,b] = flipped;
+      if(deck[a] === deck[b]){
+        matched.push(a,b); flipped = []; lock = false; render();
+        if(matched.length === deck.length){ showGameOver(moves); $('#game-status').textContent = '🎉 Voltooid!'; }
+      } else {
+        setTimeout(()=>{ flipped = []; lock = false; render(); }, 700);
+      }
+      render();
+    }
+  }
+  function reset(){
+    deck = icons.concat(icons).sort(()=>Math.random()-0.5);
+    flipped = []; matched = []; moves = 0; lock = false;
+    $('#game-over').classList.remove('show');
+    render();
+  }
+  reset();
+  $('#game-restart').onclick = reset;
+  return function cleanup(){};
+}
+
+/* ---- 11d. CREEPER SMASH (reactie-spel) ---- */
+function initReaction(holder){
+  $('#game-instructions').textContent = 'Klik de creepers 🧟 weg voor ze weer verdwijnen. Je hebt 30 seconden.';
+  const cellsCount = 16;
+  const wrap = el('div', { class:'reaction-grid', style:'width:320px;' });
+  holder.insertBefore(wrap, $('#game-over'));
+  const cells = [];
+  for(let i=0;i<cellsCount;i++){
+    const c = el('div', { class:'reaction-cell' });
+    c.addEventListener('click', ()=> onCellClick(i));
+    wrap.appendChild(c); cells.push(c);
+  }
+  let score = 0, timeLeft = 30, activeIdx = -1, spawnTimer, countdownTimer, running = true;
+
+  function spawn(){
+    if(!running) return;
+    if(activeIdx >= 0) cells[activeIdx].classList.remove('active'), cells[activeIdx].textContent='';
+    activeIdx = Math.floor(Math.random()*cellsCount);
+    cells[activeIdx].classList.add('active');
+    cells[activeIdx].textContent = '🧟';
+    spawnTimer = setTimeout(()=>{
+      if(activeIdx>=0){ cells[activeIdx].classList.remove('active'); cells[activeIdx].textContent=''; }
+      spawn();
+    }, Math.max(420, 900 - score*10));
+  }
+  function onCellClick(i){
+    if(!running) return;
+    if(i === activeIdx){
+      score += 1; $('#game-score').textContent = 'Score: ' + score;
+      cells[i].classList.remove('active'); cells[i].textContent=''; activeIdx = -1;
+      clearTimeout(spawnTimer); spawn();
+    }
+  }
+  function tick(){
+    timeLeft -= 1;
+    $('#game-status').textContent = '⏱️ ' + timeLeft + 's';
+    if(timeLeft <= 0){
+      running = false;
+      clearTimeout(spawnTimer); clearInterval(countdownTimer);
+      if(activeIdx>=0) cells[activeIdx].classList.remove('active');
+      showGameOver(score);
+    }
+  }
+  function reset(){
+    clearTimeout(spawnTimer); clearInterval(countdownTimer);
+    score = 0; timeLeft = 30; activeIdx = -1; running = true;
+    cells.forEach(c=>{ c.classList.remove('active'); c.textContent=''; });
+    $('#game-score').textContent = 'Score: 0';
+    $('#game-status').textContent = '⏱️ 30s';
+    $('#game-over').classList.remove('show');
+    spawn();
+    countdownTimer = setInterval(tick, 1000);
+  }
+  reset();
+  $('#game-restart').onclick = reset;
+  return function cleanup(){ clearTimeout(spawnTimer); clearInterval(countdownTimer); running=false; };
+}
+
+/* ---------------------------------------------------------
+   12. 3D MINECRAFT-ACHTERGROND (Three.js)
+--------------------------------------------------------- */
+/* ---------------------------------------------------------
+   12. 3D LIQUID-GLASS ACHTERGROND (Three.js)
+   Zwevende, organisch vervormende glazen orbs met fresnel-gloed.
+--------------------------------------------------------- */
+/* ---------------------------------------------------------
+   12. 3D HERO-SCENE (Three.js)
+   Zwevende glazen orbs op de achtergrond + een glazen
+   "voertuig" dat bij navigatie wegscheurt en weer instroomt.
+--------------------------------------------------------- */
+function initGlassScene(){
+  const canvas = document.getElementById('bg-canvas');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setClearColor(0x000000, 0);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(50, window.innerWidth/window.innerHeight, 0.1, 100);
+  camera.position.set(0, 0, 13);
+
+  /* ---- gloed-textuur (radiaal verloop) voor sprites ---- */
+  function makeGlowTexture(){
+    const size = 128;
+    const c = document.createElement('canvas'); c.width = size; c.height = size;
+    const cx = c.getContext('2d');
+    const grad = cx.createRadialGradient(size/2,size/2,0, size/2,size/2,size/2);
+    grad.addColorStop(0, 'rgba(255,255,255,1)');
+    grad.addColorStop(0.35, 'rgba(255,255,255,0.55)');
+    grad.addColorStop(1, 'rgba(255,255,255,0)');
+    cx.fillStyle = grad; cx.fillRect(0,0,size,size);
+    return new THREE.CanvasTexture(c);
+  }
+  const glowTex = makeGlowTexture();
+
+  /* ---- fresnel "liquid glass" shader-materiaal ---- */
+  function makeGlassMaterial(colorA, colorB, opts){
+    opts = opts || {};
+    return new THREE.ShaderMaterial({
+      transparent:true,
+      depthWrite: !!opts.depthWrite,
+      side:THREE.DoubleSide,
+      uniforms:{
+        uColorA:{ value:new THREE.Color(colorA) },
+        uColorB:{ value:new THREE.Color(colorB) },
+        uTime:{ value:0 },
+        uWobble:{ value: opts.wobble === undefined ? 0.09 : opts.wobble },
+        uAlphaMul:{ value: opts.alphaMul === undefined ? 1 : opts.alphaMul }
+      },
+      vertexShader:`
+        varying vec3 vNormal;
+        varying vec3 vViewDir;
+        uniform float uTime;
+        uniform float uWobble;
+        void main(){
+          vec3 pos = position;
+          float wobble = sin(pos.x*2.2 + uTime*0.6) * cos(pos.y*2.0 + uTime*0.5) * sin(pos.z*2.4 + uTime*0.4);
+          pos += normal * wobble * uWobble;
+          vec4 worldPos = modelMatrix * vec4(pos, 1.0);
+          vNormal = normalize(mat3(modelMatrix) * normal);
+          vViewDir = normalize(cameraPosition - worldPos.xyz);
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+        }
+      `,
+      fragmentShader:`
+        varying vec3 vNormal;
+        varying vec3 vViewDir;
+        uniform vec3 uColorA;
+        uniform vec3 uColorB;
+        uniform float uAlphaMul;
+        void main(){
+          float fresnel = pow(1.0 - max(dot(normalize(vNormal), normalize(vViewDir)), 0.0), 2.4);
+          vec3 col = mix(uColorA, uColorB, fresnel);
+          float alpha = clamp((fresnel * 1.15 + 0.06) * uAlphaMul, 0.0, 0.85);
+          gl_FragColor = vec4(col, alpha);
+        }
+      `
+    });
+  }
+
+  /* =========================================================
+     A. AMBIENTE ZWEVENDE ORBS (achtergronddiepte)
+     ========================================================= */
+  const palette = [
+    ['#5b8def', '#9b7ef0'],
+    ['#9b7ef0', '#f472b6'],
+    ['#57e6c9', '#5b8def'],
+    ['#f472b6', '#f0c869']
+  ];
+  const orbGroup = new THREE.Group();
+  scene.add(orbGroup);
+  const orbs = [];
+  const ORB_COUNT = 5;
+  for(let i=0;i<ORB_COUNT;i++){
+    const radius = 0.9 + Math.random()*1.3;
+    const geo = new THREE.IcosahedronGeometry(radius, 4);
+    const [ca, cb] = palette[i % palette.length];
+    const mat = makeGlassMaterial(ca, cb);
+    const mesh = new THREE.Mesh(geo, mat);
+    const angle = (i / ORB_COUNT) * Math.PI * 2;
+    const dist = 4.4 + Math.random()*2.6;
+    mesh.position.set(Math.cos(angle)*dist, (Math.random()-0.5)*3.6 + 1.2, Math.sin(angle)*dist*0.5 - 4);
+    mesh.userData = { baseY: mesh.position.y, speed:0.4+Math.random()*0.5, phase:Math.random()*Math.PI*2, rotSpeed:(Math.random()-0.5)*0.15 };
+    orbGroup.add(mesh); orbs.push(mesh);
+  }
+
+  const starGeo = new THREE.BufferGeometry();
+  const starCount = 200;
+  const starPos = new Float32Array(starCount*3);
+  for(let i=0;i<starCount;i++){
+    starPos[i*3]   = (Math.random()-0.5)*44;
+    starPos[i*3+1] = (Math.random()-0.5)*26;
+    starPos[i*3+2] = (Math.random()-0.5)*20 - 8;
+  }
+  starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+  const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({ color:0xffffff, size:0.035, transparent:true, opacity:0.5 }));
+  scene.add(stars);
+
+  /* =========================================================
+     B. HET GLAZEN VOERTUIG — het signature-element
+     ========================================================= */
+  const REST_POS = new THREE.Vector3(2.6, -1.6, 2.2);
+  const REST_ROT_Y = -0.4;
+  const EXIT_DIR = new THREE.Vector3(1, 0.22, -0.55).normalize();
+
+  const vehicle = new THREE.Group();
+  vehicle.position.copy(REST_POS);
+  vehicle.rotation.y = REST_ROT_Y;
+  vehicle.scale.setScalar(1.05);
+  scene.add(vehicle);
+
+  // romp
+  const hullGeo = new THREE.SphereGeometry(1, 40, 28);
+  const hullMat = makeGlassMaterial('#57e6c9', '#9b7ef0', { wobble:0.035, alphaMul:1.1 });
+  const hull = new THREE.Mesh(hullGeo, hullMat);
+  hull.scale.set(2.3, 0.58, 0.68);
+  vehicle.add(hull);
+
+  // neus
+  const noseGeo = new THREE.ConeGeometry(0.5, 1.0, 24);
+  const nose = new THREE.Mesh(noseGeo, hullMat);
+  nose.rotation.z = -Math.PI/2;
+  nose.position.set(2.55, 0, 0);
+  nose.scale.set(1, 0.62, 0.72);
+  vehicle.add(nose);
+
+  // cockpit-koepel
+  const canopyGeo = new THREE.SphereGeometry(0.5, 24, 20);
+  const canopyMat = makeGlassMaterial('#ffffff', '#5b8def', { wobble:0.02, alphaMul:1.3 });
+  const canopy = new THREE.Mesh(canopyGeo, canopyMat);
+  canopy.position.set(0.55, 0.42, 0);
+  canopy.scale.set(1.15, 0.75, 0.7);
+  vehicle.add(canopy);
+
+  // vinnen
+  const finMat = makeGlassMaterial('#9b7ef0', '#f472b6', { wobble:0.02, alphaMul:1.2 });
+  [-1,1].forEach(side=>{
+    const fin = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.05, 0.75), finMat);
+    fin.position.set(-1.55, -0.05, side*0.5);
+    fin.rotation.z = 0.12;
+    fin.rotation.x = side * 0.35;
+    vehicle.add(fin);
+  });
+
+  // onderlichtstrip
+  const stripMat = new THREE.MeshBasicMaterial({ color:0x5be3d3, transparent:true, opacity:0.9, blending:THREE.AdditiveBlending });
+  const strip = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.035, 0.05), stripMat);
+  strip.position.set(0, -0.42, 0);
+  vehicle.add(strip);
+
+  // motorgloed (twee bolletjes + gloed-sprites)
+  const engineCoreMat = new THREE.MeshBasicMaterial({ color:0xbfe9ff, transparent:true, opacity:0.95 });
+  const engines = []; const engineGlows = [];
+  [-1,1].forEach(side=>{
+    const core = new THREE.Mesh(new THREE.SphereGeometry(0.16, 14, 14), engineCoreMat.clone());
+    core.position.set(-1.85, 0, side*0.42);
+    vehicle.add(core); engines.push(core);
+
+    const glowMat = new THREE.SpriteMaterial({ map:glowTex, color:0x7fd8ff, transparent:true, opacity:0.8, blending:THREE.AdditiveBlending, depthWrite:false });
+    const glow = new THREE.Sprite(glowMat);
+    glow.position.copy(core.position);
+    glow.scale.setScalar(0.9);
+    vehicle.add(glow); engineGlows.push(glow);
+  });
+
+  /* ---- vloeiende deeltjesstrepen achter het voertuig ---- */
+  const trailPool = [];
+  function spawnTrail(worldPos, dirAway, intensity){
+    const mat = new THREE.SpriteMaterial({
+      map:glowTex, color: Math.random()>0.5 ? 0x7fd8ff : 0xd9a8ff,
+      transparent:true, opacity:0.75*intensity, blending:THREE.AdditiveBlending, depthWrite:false
+    });
+    const sprite = new THREE.Sprite(mat);
+    sprite.position.copy(worldPos);
+    const s = (0.15 + Math.random()*0.25) * (0.6 + intensity);
+    sprite.scale.setScalar(s);
+    scene.add(sprite);
+    trailPool.push({
+      sprite,
+      vel: dirAway.clone().multiplyScalar(2.2 + Math.random()*2.2).add(new THREE.Vector3((Math.random()-0.5)*0.6,(Math.random()-0.5)*0.6,(Math.random()-0.5)*0.6)),
+      life:0, maxLife: 0.45 + Math.random()*0.25
+    });
+  }
+  function updateTrail(dt){
+    for(let i=trailPool.length-1;i>=0;i--){
+      const p = trailPool[i];
+      p.life += dt;
+      const k = p.life / p.maxLife;
+      if(k >= 1){ scene.remove(p.sprite); p.sprite.material.dispose(); trailPool.splice(i,1); continue; }
+      p.sprite.position.addScaledVector(p.vel, dt);
+      p.sprite.material.opacity = 0.75 * (1-k);
+      p.sprite.scale.setScalar(p.sprite.scale.x * (1 + dt*0.6));
+    }
+  }
+
+  /* =========================================================
+     C. TRANSITIE-STATEMACHINE (wegscheuren / instromen)
+     ========================================================= */
+  const vState = { mode:'idle', t:0, exitDuration:0.62, enterDuration:0.5, onMidpointFired:false, onMidpoint:null };
+
+  function startTransition(onMidpoint){
+    if(vState.mode !== 'idle') return false;
+    vState.mode = 'exit';
+    vState.t = 0;
+    vState.onMidpointFired = false;
+    vState.onMidpoint = onMidpoint;
+    return true;
+  }
+  triggerVehicleTransition = function(onMidpoint){
+    const started = startTransition(onMidpoint);
+    if(!started && typeof onMidpoint === 'function') onMidpoint(); // val terug: gewoon direct wisselen
+  };
+
+  function easeInQuad(x){ return x*x; }
+  function easeOutCubic(x){ return 1 - Math.pow(1-x, 3); }
+
+  function updateVehicleTransition(dt, elapsed){
+    if(vState.mode === 'exit'){
+      vState.t += dt;
+      const p = Math.min(vState.t / vState.exitDuration, 1);
+      const eased = easeInQuad(p);
+      vehicle.position.copy(REST_POS).addScaledVector(EXIT_DIR, eased * 16);
+      vehicle.position.y += Math.sin(p*Math.PI) * 0.4;
+      const scaleMul = 1.05 - eased*0.9;
+      vehicle.scale.setScalar(Math.max(scaleMul, 0.12));
+      vehicle.rotation.y = REST_ROT_Y - eased*0.25;
+      vehicle.rotation.z = eased * -0.12;
+      hullMat.uniforms.uAlphaMul.value = 1.1 * (1 - eased*0.7);
+      engines.forEach(e=> e.material.opacity = 0.95);
+      engineGlows.forEach(g=> g.scale.setScalar(0.9 + eased*1.6));
+
+      if(p > 0.08 && p < 0.97){
+        const worldPos = new THREE.Vector3();
+        engines[Math.random()>0.5?0:1].getWorldPosition(worldPos);
+        spawnTrail(worldPos, EXIT_DIR.clone().multiplyScalar(-1), 0.6 + eased*1.2);
+      }
+      if(p >= 0.82 && !vState.onMidpointFired){
+        vState.onMidpointFired = true;
+        if(typeof vState.onMidpoint === 'function') vState.onMidpoint();
+      }
+      if(p >= 1){
+        vehicle.position.copy(REST_POS).addScaledVector(EXIT_DIR, -14);
+        vehicle.scale.setScalar(0.12);
+        vState.mode = 'enter'; vState.t = 0;
+      }
+    } else if(vState.mode === 'enter'){
+      vState.t += dt;
+      const p = Math.min(vState.t / vState.enterDuration, 1);
+      const eased = easeOutCubic(p);
+      const startPos = REST_POS.clone().addScaledVector(EXIT_DIR, -14);
+      vehicle.position.lerpVectors(startPos, REST_POS, eased);
+      vehicle.position.y += Math.sin((1-p)*Math.PI) * 0.35;
+      vehicle.scale.setScalar(0.12 + eased*0.93);
+      vehicle.rotation.y = REST_ROT_Y - (1-eased)*0.25;
+      vehicle.rotation.z = (1-eased) * -0.12;
+      hullMat.uniforms.uAlphaMul.value = 1.1 * Math.min(eased*1.4, 1);
+      engineGlows.forEach(g=> g.scale.setScalar(0.9 + (1-eased)*1.2));
+
+      if(p < 0.9){
+        const worldPos = new THREE.Vector3();
+        engines[Math.random()>0.5?0:1].getWorldPosition(worldPos);
+        spawnTrail(worldPos, EXIT_DIR.clone().multiplyScalar(1), 0.5 + (1-eased)*0.8);
+      }
+      if(p >= 1){
+        vehicle.position.copy(REST_POS);
+        vehicle.scale.setScalar(1.05);
+        vState.mode = 'idle';
+      }
+    } else {
+      // idle: zachte zweefbeweging + motor-puls
+      vehicle.position.y = REST_POS.y + Math.sin(elapsed*0.9) * 0.16;
+      vehicle.rotation.y = REST_ROT_Y + Math.sin(elapsed*0.5) * 0.05;
+      vehicle.rotation.z = Math.sin(elapsed*0.7) * 0.02;
+      const pulse = 0.9 + Math.sin(elapsed*2.2)*0.15;
+      engineGlows.forEach(g=> g.scale.setScalar(pulse));
+      hullMat.uniforms.uAlphaMul.value = 1.1;
+    }
+  }
+
+  /* =========================================================
+     D. INTERACTIE: muis-parallax + klik-pulse op orbs
+     ========================================================= */
+  let targetX = 0, targetY = 0;
+  function onMouseMove(e){
+    const mx = (e.clientX / window.innerWidth) * 2 - 1;
+    const my = (e.clientY / window.innerHeight) * 2 - 1;
+    targetX = mx * 1.0;
+    targetY = -my * 0.5;
+  }
+  window.addEventListener('mousemove', onMouseMove);
+
+  const raycaster = new THREE.Raycaster();
+  const mouseVec = new THREE.Vector2();
+  const hintEl = document.getElementById('bg-hint');
+  let hintHidden = false;
+  function hideHint(){ if(!hintHidden){ hintEl.classList.add('hide'); hintHidden = true; } }
+
+  function onClick(e){
+    if(e.target.closest && e.target.closest('.overlay.open')) return;
+    if(e.target.closest && e.target.closest('[data-nav]')) return; // die triggeren al hun eigen transitie
+    mouseVec.x = (e.clientX / window.innerWidth) * 2 - 1;
+    mouseVec.y = -(e.clientY / window.innerHeight) * 2 + 1;
+    raycaster.setFromCamera(mouseVec, camera);
+    const hits = raycaster.intersectObjects(orbs);
+    if(hits.length > 0) hits[0].object.userData.pulseStart = performance.now();
+    hideHint();
+  }
+  window.addEventListener('click', onClick);
+
+  function onResize(){
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  }
+  window.addEventListener('resize', onResize);
+
+  /* =========================================================
+     E. RENDER-LOOP
+     ========================================================= */
+  const clock = new THREE.Clock();
+  function animate(){
+    requestAnimationFrame(animate);
+    const dt = Math.min(clock.getDelta(), 0.05);
+    const t = clock.elapsedTime;
+
+    orbs.forEach(orb=>{
+      const d = orb.userData;
+      orb.position.y = d.baseY + Math.sin(t*d.speed + d.phase) * 0.5;
+      orb.rotation.x += d.rotSpeed * 0.01;
+      orb.rotation.y += d.rotSpeed * 0.015;
+      orb.material.uniforms.uTime.value = t;
+      let scale = 1;
+      if(d.pulseStart){
+        const pdt = (performance.now() - d.pulseStart) / 1000;
+        if(pdt < 0.6) scale = 1 + Math.sin(pdt/0.6*Math.PI) * 0.18;
+        else d.pulseStart = null;
+      }
+      orb.scale.setScalar(scale);
+    });
+    orbGroup.rotation.y += (targetX*0.22 - orbGroup.rotation.y) * 0.02;
+    orbGroup.rotation.x += (targetY*0.12 - orbGroup.rotation.x) * 0.02;
+    stars.rotation.y += 0.0004;
+
+    hullMat.uniforms.uTime.value = t;
+    canopyMat.uniforms.uTime.value = t;
+    finMat.uniforms.uTime.value = t;
+    updateVehicleTransition(dt, t);
+    updateTrail(dt);
+
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  setTimeout(()=>{ if(!hintHidden) hintEl.classList.add('hide'); }, 9000);
+}
+
+/* ---------------------------------------------------------
+   13. INITIALISATIE
+--------------------------------------------------------- */
+function initRouting(){
+  const startPage = (location.hash || '#home').replace('#','');
+  const valid = ['home','games','projects','files'];
+  switchPage(valid.includes(startPage) ? startPage : 'home', { silent:true });
+  $all('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.nav === (valid.includes(startPage)?startPage:'home')));
+}
+
+function boot(){
+  renderAccountBar();
+  renderGames();
+  renderHomeFavorites();
+  renderProjects();
+  renderFiles();
+  initRouting();
+  try{ initGlassScene(); }
+  catch(e){ console.error('3D-wereld kon niet geladen worden:', e); }
+}
+
+document.addEventListener('DOMContentLoaded', boot);
+
+})();
+</script>
+</body>
+</html>
