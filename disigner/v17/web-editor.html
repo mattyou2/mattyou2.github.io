@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web3D Designer Workspace - Mattyou Studios™</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 overflow-hidden font-['Inter'] select-none">
+
+    <!-- Top Navigation Bar -->
+    <header class="h-16 border-b border-slate-800 bg-slate-900/80 backdrop-blur-md flex items-center justify-between px-6 z-30 relative shrink-0">
+        <div class="flex items-center gap-3">
+            <button onclick="goToMainMenu()" class="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-300 hover:text-white transition mr-2" title="Terug naar Hoofdmenu">
+                <i data-lucide="home" class="w-5 h-5"></i>
+            </button>
+            <div class="bg-cyan-600 p-2 rounded-lg text-white shadow-lg shadow-cyan-500/30">
+                <i data-lucide="layout" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <h1 class="text-lg font-bold tracking-tight bg-gradient-to-r from-cyan-400 to-indigo-400 bg-clip-text text-transparent">Web3D Designer</h1>
+                <p class="text-[10px] text-slate-400 uppercase tracking-widest font-semibold">Workspace v3.0 • Mattyou Studios™</p>
+            </div>
+        </div>
+
+        <!-- Project Info & Save -->
+        <div class="flex items-center gap-3">
+            <span class="text-xs text-slate-400">Website:</span>
+            <span id="current-project-display" class="text-sm font-bold text-cyan-400 bg-slate-950/60 px-3 py-1.5 rounded-lg border border-slate-800">Mijn Website</span>
+            <button onclick="saveProject()" class="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition">
+                <i data-lucide="save" class="w-4 h-4"></i> Opslaan
+            </button>
+            <button onclick="exportWebsite()" class="flex items-center gap-1.5 bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-1.5 rounded-lg text-xs font-bold transition shadow-lg shadow-cyan-500/20">
+                <i data-lucide="download" class="w-4 h-4"></i> Exporteer Website
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="flex h-[calc(100vh-4rem)] w-full overflow-hidden relative">
+        
+        <!-- Left Sidebar: Pages & Add Elements -->
+        <aside class="w-80 border-r border-slate-800 bg-slate-900/50 flex flex-col h-full z-10 overflow-y-auto">
+            <!-- Pages Manager -->
+            <div class="p-4 border-b border-slate-800 bg-slate-950/20">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                        <i data-lucide="files" class="w-4 h-4 text-cyan-400"></i> Pagina's
+                    </h2>
+                    <button onclick="createNewPagePrompt()" class="text-xs text-cyan-400 hover:text-cyan-300 font-medium">+ Pagina</button>
+                </div>
+                <div id="pages-list" class="space-y-1 max-h-36 overflow-y-auto pr-1">
+                    <!-- Dynamisch gevuld -->
+                </div>
+            </div>
+
+            <!-- Add Elements & Widgets -->
+            <div class="p-4 border-b border-slate-800">
+                <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <i data-lucide="plus-circle" class="w-4 h-4 text-cyan-400"></i> Voeg Element Toe
+                </h2>
+                
+                <!-- 2D Elements -->
+                <div class="mb-4">
+                    <span class="text-[10px] text-slate-500 uppercase font-bold tracking-wider block mb-2">Standaard 2D</span>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="addElement('text')" class="flex items-center gap-2 p-2 rounded bg-slate-800/50 hover:bg-slate-800 border border-slate-700/30 text-xs transition">
+                            <i data-lucide="type" class="w-4 h-4 text-slate-400"></i> Tekstvak
+                        </button>
+                        <button onclick="addElement('button')" class="flex items-center gap-2 p-2 rounded bg-slate-800/50 hover:bg-slate-800 border border-slate-700/30 text-xs transition">
+                            <i data-lucide="mouse-pointer-click" class="w-4 h-4 text-slate-400"></i> Knop
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 3D Widgets -->
+                <div>
+                    <span class="text-[10px] text-slate-500 uppercase font-bold tracking-wider block mb-2">Interactief 3D</span>
+                    <div class="space-y-2">
+                        <button onclick="addElement('3dtext')" class="w-full flex items-center gap-3 p-2 rounded bg-slate-800/30 hover:bg-slate-800 border border-slate-700/30 text-left text-xs transition group">
+                            <div class="p-1.5 rounded bg-indigo-500/10 text-indigo-400 group-hover:bg-indigo-500/20"><i data-lucide="box" class="w-4 h-4"></i></div>
+                            <div>
+                                <div class="font-medium">3D Roterende Titel</div>
+                                <div class="text-[9px] text-slate-500">Zwevende 3D tekst</div>
+                            </div>
+                        </button>
+                        <button onclick="addElement('3dcard')" class="w-full flex items-center gap-3 p-2 rounded bg-slate-800/30 hover:bg-slate-800 border border-slate-700/30 text-left text-xs transition group">
+                            <div class="p-1.5 rounded bg-cyan-500/10 text-cyan-400 group-hover:bg-cyan-500/20"><i data-lucide="credit-card" class="w-4 h-4"></i></div>
+                            <div>
+                                <div class="font-medium">3D Tilt Card (Parallax)</div>
+                                <div class="text-[9px] text-slate-500">Beweegt mee met de muis</div>
+                            </div>
+                        </button>
+                        <button onclick="addElement('3dmodel')" class="w-full flex items-center gap-3 p-2 rounded bg-slate-800/30 hover:bg-slate-800 border border-slate-700/30 text-left text-xs transition group">
+                            <div class="p-1.5 rounded bg-emerald-500/10 text-emerald-400 group-hover:bg-emerald-500/20"><i data-lucide="dog" class="w-4 h-4"></i></div>
+                            <div>
+                                <div class="font-medium">3D Model Viewer</div>
+                                <div class="text-[9px] text-slate-500">Plaats Koe, Huis of Boom</div>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Website Templates -->
+            <div class="p-4 flex-1">
+                <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <i data-lucide="sparkles" class="w-4 h-4 text-amber-400"></i> Website Templates
+                </h2>
+                <div class="space-y-2">
+                    <button onclick="loadTemplate('portfolio')" class="w-full flex items-center gap-3 p-2.5 rounded bg-slate-800/30 hover:bg-slate-800 border border-slate-700/30 text-left text-xs transition group">
+                        <div class="p-1.5 rounded bg-amber-500/10 text-amber-400 group-hover:bg-amber-500/20"><i data-lucide="user" class="w-4 h-4"></i></div>
+                        <div>
+                            <div class="font-medium">Mattyou Studios Portfolio</div>
+                            <div class="text-[9px] text-slate-500">Met 3D logo & pagina-knoppen</div>
+                        </div>
+                    </button>
+                    <button onclick="loadTemplate('shop')" class="w-full flex items-center gap-3 p-2.5 rounded bg-slate-800/30 hover:bg-slate-800 border border-slate-700/30 text-left text-xs transition group">
+                        <div class="p-1.5 rounded bg-blue-500/10 text-blue-400 group-hover:bg-blue-500/20"><i data-lucide="shopping-bag" class="w-4 h-4"></i></div>
+                        <div>
+                            <div class="font-medium">3D Tech Shop</div>
+                            <div class="text-[9px] text-slate-500">Met 3D tilt productkaarten</div>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Center Area: Website Canvas -->
+        <section class="flex-1 flex flex-col h-full bg-slate-950 p-8 items-center justify-center overflow-auto relative">
+            <!-- Canvas Container (Simuleert een desktop scherm) -->
+            <div id="website-canvas" class="w-[960px] h-[540px] rounded-xl border border-slate-800 overflow-hidden shadow-2xl relative">
+                <!-- Dynamische elementen worden hier gerenderd -->
+            </div>
+            <p class="text-[10px] text-slate-500 mt-4">Canvas Resolutie: 960x540 (16:9 Desktop Aspect Ratio)</p>
+        </section>
+
+        <!-- Right Sidebar: Properties & Settings -->
+        <aside class="w-80 border-l border-slate-800 bg-slate-900/50 flex flex-col h-full z-10 overflow-y-auto">
+            <!-- Global Website Settings -->
+            <div class="p-4 border-b border-slate-800 bg-slate-950/20">
+                <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <i data-lucide="settings" class="w-4 h-4 text-cyan-400"></i> Website Instellingen
+                </h2>
+                <div class="space-y-3 text-xs">
+                    <div class="flex items-center justify-between">
+                        <span class="text-slate-300">Achtergrond Kleur</span>
+                        <input type="color" id="web-bg-color" value="#0b0f19" oninput="updateGlobalSettings()" class="w-8 h-6 rounded cursor-pointer bg-transparent border-0">
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-slate-300">3D Deeltjes Achtergrond</span>
+                        <input type="checkbox" id="web-particles-bg" onchange="updateGlobalSettings()" class="accent-indigo-500">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Element Properties -->
+            <div class="p-4 flex-1">
+                <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                    <i data-lucide="sliders" class="w-4 h-4 text-cyan-400"></i> Element Eigenschappen
+                </h2>
+                
+                <div id="no-selection-msg" class="text-center py-8 text-slate-500 text-xs">
+                    <i data-lucide="info" class="w-8 h-8 mx-auto mb-2 opacity-50"></i>
+                    Klik op een element op het canvas om de eigenschappen te wijzigen.
+                </div>
+
+                <!-- Properties Form -->
+                <div id="properties-panel" class="hidden space-y-4 text-xs">
+                    <!-- Text Content -->
+                    <div>
+                        <label class="text-[10px] text-slate-400 uppercase tracking-wider block mb-1">Inhoud / Tekst</label>
+                        <input type="text" id="prop-text" oninput="updateSelectedElement()" class="w-full bg-slate-800 border border-slate-700 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-indigo-500">
+                    </div>
+
+                    <!-- Position & Size -->
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="text-[10px] text-slate-400 uppercase block mb-1">Positie X (px)</label>
+                            <input type="number" id="prop-pos-x" oninput="updateSelectedElement()" class="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-center">
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-slate-400 uppercase block mb-1">Positie Y (px)</label>
+                            <input type="number" id="prop-pos-y" oninput="updateSelectedElement()" class="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-center">
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-slate-400 uppercase block mb-1">Breedte (px)</label>
+                            <input type="number" id="prop-width" oninput="updateSelectedElement()" class="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-center">
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-slate-400 uppercase block mb-1">Hoogte (px)</label>
+                            <input type="number" id="prop-height" oninput="updateSelectedElement()" class="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-center">
+                        </div>
+                    </div>
+
+                    <!-- Styling -->
+                    <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800/60">
+                        <div>
+                            <label class="text-[10px] text-slate-400 uppercase block mb-1">Tekst Kleur</label>
+                            <input type="color" id="prop-color" oninput="updateSelectedElement()" class="w-full h-8 rounded cursor-pointer bg-transparent border-0">
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-slate-400 uppercase block mb-1">Lettergrootte (px)</label>
+                            <input type="number" id="prop-font-size" oninput="updateSelectedElement()" class="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-center">
+                        </div>
+                    </div>
+
+                    <!-- 3D Model Selector (Alleen zichtbaar voor 3D Model & 3D Card) -->
+                    <div id="prop-3d-model-container" class="hidden pt-2 border-t border-slate-800/60">
+                        <label class="text-[10px] text-slate-400 uppercase block mb-1">3D Model Type</label>
+                        <select id="prop-3d-model" onchange="updateSelectedElement()" class="w-full bg-slate-800 border border-slate-700 rounded px-3 py-1.5 focus:outline-none focus:border-indigo-500">
+                            <option value="cube">Kubus</option>
+                            <option value="sphere">Bol</option>
+                            <option value="cylinder">Cilinder</option>
+                            <option value="cow">Voxel Koe</option>
+                            <option value="house">Modern Huis</option>
+                            <option value="tree">Natuur Boom</option>
+                        </select>
+                    </div>
+
+                    <!-- Action / Interactivity -->
+                    <div class="pt-2 border-t border-slate-800/60">
+                        <label class="text-[10px] text-slate-400 uppercase block mb-1">Interactie (Bij Klik)</label>
+                        <select id="prop-action-type" onchange="toggleActionFields()" class="w-full bg-slate-800 border border-slate-700 rounded px-3 py-1.5 focus:outline-none focus:border-indigo-500">
+                            <option value="none">Geen actie</option>
+                            <option value="page">Ga naar Pagina</option>
+                            <option value="link">Open Externe Link</option>
+                        </select>
+                    </div>
+
+                    <div id="action-page-container" class="hidden">
+                        <label class="text-[10px] text-slate-400 uppercase block mb-1">Doel Pagina</label>
+                        <select id="prop-action-page" onchange="updateSelectedElement()" class="w-full bg-slate-800 border border-slate-700 rounded px-3 py-1.5 focus:outline-none focus:border-indigo-500">
+                            <!-- Dynamisch gevuld met pagina's -->
+                        </select>
+                    </div>
+
+                    <div id="action-link-container" class="hidden">
+                        <label class="text-[10px] text-slate-400 uppercase block mb-1">Doel URL</label>
+                        <input type="url" id="prop-action-link" oninput="updateSelectedElement()" class="w-full bg-slate-800 border border-slate-700 rounded px-3 py-1.5 focus:outline-none focus:border-indigo-500" placeholder="https://example.com">
+                    </div>
+
+                    <!-- Delete Element -->
+                    <div class="pt-4 border-t border-slate-800/60">
+                        <button onclick="deleteSelectedElement()" class="w-full py-2 bg-red-950/40 hover:bg-red-900/40 text-red-400 border border-red-900/30 rounded-lg font-semibold flex items-center justify-center gap-1.5 transition">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i> Verwijder Element
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </main>
+
+    <script src="web-app.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>
