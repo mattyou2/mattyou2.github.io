@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mattyou Studios™ - Designer Suite</title>
+    <!-- Tailwind CSS voor een ultra-modern design -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons voor prachtige iconen -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-slate-950 text-slate-100 overflow-hidden font-['Inter'] select-none flex items-center justify-center min-h-screen">
+
+    <!-- Start / Hoofdmenu Container -->
+    <div class="w-full max-w-4xl h-[550px] bg-slate-900/80 border border-slate-800 rounded-2xl shadow-2xl flex overflow-hidden backdrop-blur-md">
+        <!-- Start Menu Sidebar -->
+        <aside class="w-64 border-r border-slate-800 bg-slate-950/50 p-6 flex flex-col justify-between">
+            <div class="space-y-6">
+                <div class="flex items-center gap-3">
+                    <div class="bg-indigo-600 p-2 rounded-lg text-white shadow-lg shadow-indigo-500/30">
+                        <i data-lucide="box" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-md font-bold tracking-tight bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">Mattyou Studios™</h2>
+                        <p class="text-[9px] text-slate-500 uppercase tracking-widest font-semibold">Designer Suite v2.5</p>
+                    </div>
+                </div>
+
+                <!-- Navigation Tabs -->
+                <nav class="space-y-1.5">
+                    <button onclick="switchStartTab('home')" id="tab-btn-home" class="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition bg-indigo-600/10 text-indigo-400 border border-indigo-500/20">
+                        <i data-lucide="home" class="w-4 h-4"></i> Home
+                    </button>
+                    <button onclick="switchStartTab('projects')" id="tab-btn-projects" class="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/50 transition">
+                        <i data-lucide="folder-open" class="w-4 h-4"></i> Mijn Projecten
+                    </button>
+                </nav>
+            </div>
+
+            <div class="text-[10px] text-slate-500 border-t border-slate-800/60 pt-4">
+                &copy; 2024 Mattyou Studios™.<br>Alle rechten voorbehouden.
+            </div>
+        </aside>
+
+        <!-- Start Menu Content Area -->
+        <main class="flex-1 p-8 flex flex-col justify-between overflow-y-auto">
+            <!-- HOME TAB -->
+            <div id="start-tab-home" class="space-y-6">
+                <div>
+                    <h2 class="text-2xl font-bold text-white tracking-tight">Welkom bij Designer Pro</h2>
+                    <p class="text-sm text-slate-400 mt-1">Kies een geavanceerde ontwerpomgeving om direct aan de slag te gaan.</p>
+                </div>
+
+                <div class="grid grid-cols-1 gap-4">
+                    <!-- Mode 1 (Nu Bovenaan: 2D/3D Website Designer & Animator) -->
+                    <button onclick="launchDesigner('2d-3d')" class="flex items-start gap-4 p-5 rounded-xl bg-slate-800/30 hover:bg-slate-800/60 border border-slate-800 hover:border-cyan-500/50 text-left transition group">
+                        <div class="p-3 rounded-lg bg-cyan-600/10 text-cyan-400 group-hover:bg-cyan-600 group-hover:text-white transition shrink-0">
+                            <i data-lucide="layout-template" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-white text-md group-hover:text-cyan-400 transition">2D/3D Website Designer & Animator</h3>
+                            <p class="text-xs text-slate-400 mt-1">Ontwerp moderne websites met een perfecte mix van 2D overlays, interactieve knoppen, zwevende 3D elementen en vloeiende animaties.</p>
+                        </div>
+                    </button>
+
+                    <!-- Mode 2 (Nu Onderaan: 3D Animational World & Website Designer) -->
+                    <button onclick="launchDesigner('3d-world')" class="flex items-start gap-4 p-5 rounded-xl bg-slate-800/30 hover:bg-slate-800/60 border border-slate-800 hover:border-indigo-500/50 text-left transition group">
+                        <div class="p-3 rounded-lg bg-indigo-600/10 text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white transition shrink-0">
+                            <i data-lucide="globe" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-white text-md group-hover:text-indigo-400 transition">3D Animational World & Website Designer</h3>
+                            <p class="text-xs text-slate-400 mt-1">Bouw complete interactieve 3D werelden met vloeiende animaties, camera-paden, en geavanceerde keyframe-tijdlijnen.</p>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- PROJECTS TAB -->
+            <div id="start-tab-projects" class="space-y-4 hidden flex-1 flex flex-col">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-white tracking-tight">Jouw Projecten</h2>
+                        <p class="text-sm text-slate-400 mt-1">Beheer en open je eerder opgeslagen ontwerpen.</p>
+                    </div>
+                    <button onclick="createNewProjectFromMenu()" class="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition">
+                        <i data-lucide="plus" class="w-4 h-4"></i> Nieuw Project
+                    </button>
+                </div>
+
+                <!-- Projecten Lijst -->
+                <div id="menu-projects-list" class="flex-1 overflow-y-auto space-y-2 pr-2 max-h-[300px]">
+                    <!-- Dynamisch gevuld -->
+                </div>
+            </div>
+
+            <!-- Footer status -->
+            <div class="flex items-center justify-between text-xs text-slate-500 border-t border-slate-800/60 pt-4 mt-4">
+                <span>Status: <strong class="text-emerald-400">Online & Standby</strong></span>
+                <span>Engine v2.5</span>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // --- START MENU LOGIC ---
+        function switchStartTab(tab) {
+            document.getElementById('tab-btn-home').className = "w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition text-slate-400 hover:text-white hover:bg-slate-800/50";
+            document.getElementById('tab-btn-projects').className = "w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition text-slate-400 hover:text-white hover:bg-slate-800/50";
+            
+            document.getElementById('start-tab-home').classList.add('hidden');
+            document.getElementById('start-tab-projects').classList.add('hidden');
+
+            if (tab === 'home') {
+                document.getElementById('tab-btn-home').className = "w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition bg-indigo-600/10 text-indigo-400 border border-indigo-500/20";
+                document.getElementById('start-tab-home').classList.remove('hidden');
+            } else {
+                document.getElementById('tab-btn-projects').className = "w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition bg-indigo-600/10 text-indigo-400 border border-indigo-500/20";
+                document.getElementById('start-tab-projects').classList.remove('hidden');
+                renderStartMenuProjects();
+            }
+        }
+
+        function launchDesigner(mode, projectName = "Mijn Eerste Project") {
+            window.location.href = `3d-editor.html?mode=${mode}&project=${encodeURIComponent(projectName)}`;
+        }
+
+        function createNewProjectFromMenu() {
+            const name = prompt("Voer een naam in voor het nieuwe project:");
+            if (name) {
+                // Maak een leeg project aan in LocalStorage
+                const emptyProject = {
+                    skyColor: '#0f172a',
+                    groundColor: '#22c55e',
+                    showGrid: true,
+                    exportGrid: false,
+                    lockCamera: false,
+                    menus: [{ id: 'welkom_menu', title: 'Welkom bij Designer', content: 'Dit is een premium 3D website ontworpen met Designer Pro!' }],
+                    screenButtons: [{ id: 'btn_demo', label: 'Over Ons', actionType: 'open_menu', target: 'welkom_menu', left: 45, top: 85 }],
+                    objects: []
+                };
+                localStorage.setItem(`project_${name}`, JSON.stringify(emptyProject));
+                launchDesigner('2d-3d', name);
+            }
+        }
+
+        function renderStartMenuProjects() {
+            const list = document.getElementById('menu-projects-list');
+            list.innerHTML = '';
+
+            let keys = Object.keys(localStorage).filter(k => k.startsWith('project_'));
+            if (keys.length === 0) {
+                list.innerHTML = `<div class="text-center py-8 text-slate-500 text-xs">Geen opgeslagen projecten gevonden.</div>`;
+                return;
+            }
+
+            keys.forEach(key => {
+                const name = key.replace('project_', '');
+                const div = document.createElement('div');
+                div.className = "flex items-center justify-between p-4 bg-slate-800/30 border border-slate-800 rounded-xl hover:border-slate-700 transition";
+                div.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="p-2 rounded-lg bg-indigo-500/10 text-indigo-400">
+                            <i data-lucide="folder" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-sm text-white">${name}</h4>
+                            <p class="text-[10px] text-slate-500">Lokaal Opgeslagen</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="launchDesigner('2d-3d', '${name}')" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-medium transition">Openen</button>
+                        <button onclick="deleteProjectFromMenu('${name}')" class="p-2 bg-red-950/40 hover:bg-red-900/40 text-red-400 rounded-lg transition"><i data-lucide="trash" class="w-4 h-4"></i></button>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+            lucide.createIcons();
+        }
+
+        function deleteProjectFromMenu(name) {
+            if (confirm(`Weet je zeker dat je project "${name}" wilt verwijderen?`)) {
+                localStorage.removeItem(`project_${name}`);
+                renderStartMenuProjects();
+            }
+        }
+
+        // Init icons
+        lucide.createIcons();
+    </script>
+
+    <!-- Toegevoegd voor verzoek: ja maar als je em nu exporteerd (als html bestand) dan zijn alle objecten en alles er helemaal niet -->
+    <div class="p-4 bg-zinc-800 text-white rounded">Dynamische Content voor: ja maar als je em nu exporteerd (als html bestand) dan zijn alle objecten en alles er helemaal niet</div>
+</body>
+</html>
