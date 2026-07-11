@@ -364,7 +364,7 @@ function serializeObject(obj) {
         color: (obj.mesh.material && obj.mesh.material.color) ? "#" + obj.mesh.material.color.getHexString() : "#6366f1",
         opacity: (obj.mesh.material && typeof obj.mesh.material.opacity === 'number') ? obj.mesh.material.opacity : 1,
         clickAction: obj.clickAction,
-        keyframes: obj.keyframes,
+        keyframes: obj.keyframes || {},
         isGroup: obj.isGroup || false,
         textVal: obj.textVal || ""
     };
@@ -751,7 +751,7 @@ function spawnModel(modelName) {
             mesh: mesh,
             type: data.type,
             clickAction: data.clickAction,
-            keyframes: JSON.parse(JSON.stringify(data.keyframes)),
+            keyframes: JSON.parse(JSON.stringify(data.keyframes || {})),
             parentId: newParentId,
             isGroup: data.isGroup,
             textVal: data.textVal
@@ -793,6 +793,7 @@ function saveKeyframeData(objData, frame) {
 
     const quaternion = objData.mesh.quaternion.clone();
 
+    if (!objData.keyframes) objData.keyframes = {};
     objData.keyframes[frame] = {
         pos: { x: objData.mesh.position.x, y: objData.mesh.position.y, z: objData.mesh.position.z },
         rot: { x: quaternion.x, y: quaternion.y, z: quaternion.z, w: quaternion.w },
@@ -803,7 +804,7 @@ function saveKeyframeData(objData, frame) {
 }
 
 function applyKeyframeState(objData, frame) {
-    const keys = Object.keys(objData.keyframes).map(Number).sort((a, b) => a - b);
+    const keys = Object.keys(objData.keyframes || {}).map(Number).sort((a, b) => a - b);
     
     if (keys.length <= 1) {
         if (keys.length === 1 && isPlaying && keys[0] === frame) {
@@ -861,6 +862,7 @@ function applyKeyframeState(objData, frame) {
 }
 
 function setMeshState(mesh, state) {
+    if (!state) return;
     mesh.position.set(state.pos.x, state.pos.y, state.pos.z);
     mesh.quaternion.set(state.rot.x, state.rot.y, state.rot.z, state.rot.w);
     mesh.scale.set(state.scale.x, state.scale.y, state.scale.z);
@@ -1476,7 +1478,7 @@ function updateKeyframeTrackUI() {
     if (selectedObjects.length === 0) return;
     const primary = selectedObjects[selectedObjects.length - 1];
 
-    Object.keys(primary.keyframes).forEach(frame => {
+    Object.keys(primary.keyframes || {}).forEach(frame => {
         const dot = document.createElement('div');
         dot.className = `keyframe-dot ${parseInt(frame) === currentFrame ? 'active' : ''}`;
         dot.style.left = `${frame}%`;
@@ -1784,7 +1786,9 @@ function initWorkspace() {
             const exportData = objects.map(serializeObject);
 
             // --- DE ULTIEME WATERDICHTE EXPORT MET PLACEHOLDERS EN SPLIT/JOIN ---
-            // Dit voorkomt dat reguliere expressies of dollartekens ($) de JSON breken!
+            // We escapen ook alle '<' tekens om te voorkomen dat </script> tags de HTML breken!
+            const safeAnimationData = JSON.stringify(exportData).replace(/</g, '\\u003c');
+
             const rawTemplate = `<!DOCTYPE html>
 <html lang="nl">
 <head>
@@ -1941,44 +1945,60 @@ function initWorkspace() {
             return new THREE.CanvasTexture(canvas);
         }
 
+        // STAP 1: Registreer alle objecten eerst in de map
         animationData.forEach(data => {
             let mesh;
-            const geomType = data.geomType || data.type; // Fallback indien geomType ontbreekt
+            const geomType = data.geomType || data.type;
 
             if (data.isGroup || geomType === 'group') {
                 mesh = new THREE.Group();
             } else if (geomType === '3dtext') {
-                const texture = create3DTextTexture(data.textVal, data.color);
+                const texture = create3DTextTexture(data.textVal || "", data.color || "#6366f1");
                 mesh = new THREE.Mesh(new THREE.PlaneGeometry(4, 1), new THREE.MeshBasicMaterial({ map: texture, transparent: true, side: THREE.DoubleSide }));
             } else {
                 let geom;
                 if (geomType === 'cube' || geomType === 'box') geom = new THREE.BoxGeometry(1.5, 1.5, 1.5);
                 else if (geomType === 'sphere') geom = new THREE.SphereGeometry(1, 32, 32);
                 else if (geomType === 'cylinder') geom = new THREE.CylinderGeometry(0.8, 0.8, 2, 32);
-                else geom = new THREE.BoxGeometry(1, 1, 1); // Fallback voor koe/huis onderdelen!
+                else geom = new THREE.BoxGeometry(1, 1, 1);
                 
-                const mat = new THREE.MeshStandardMaterial({ color: data.color || "#6366f1", roughness: 0.4, transparent: Number(data.opacity) < 1, opacity: typeof data.opacity === 'number' ? data.opacity : 1 });
+                const mat = new THREE.MeshStandardMaterial({ 
+                    color: data.color || "#6366f1", 
+                    roughness: 0.4, 
+                    transparent: (typeof data.opacity === 'number' ? data.opacity : 1) < 1, 
+                    opacity: typeof data.opacity === 'number' ? data.opacity : 1 
+                });
                 mesh = new THREE.Mesh(geom, mat);
             }
 
-            mesh.position.set(data.pos.x, data.pos.y, data.pos.z);
-            mesh.quaternion.set(data.rot.x, data.rot.y, data.rot.z, data.rot.w);
-            mesh.scale.set(data.scale.x, data.scale.y, data.scale.z);
+            const pos = data.pos || { x: 0, y: 0, z: 0 };
+            const rot = data.rot || { x: 0, y: 0, z: 0, w: 1 };
+            const scale = data.scale || { x: 1, y: 1, z: 1 };
 
-            // Sla ID op voor Raycasting
+            mesh.position.set(pos.x, pos.y, pos.z);
+            mesh.quaternion.set(rot.x, rot.y, rot.z, rot.w);
+            mesh.scale.set(scale.x, scale.y, scale.z);
+
             mesh.userData = { id: data.id };
             mesh.traverse(child => {
                 child.userData = { id: data.id };
             });
 
             objectsMap[data.id] = mesh;
-            loadedObjects.push({ id: data.id, parentId: data.parentId, mesh: mesh, keyframes: data.keyframes, clickAction: data.clickAction });
+            loadedObjects.push({ 
+                id: data.id, 
+                parentId: data.parentId, 
+                mesh: mesh, 
+                keyframes: data.keyframes || {}, 
+                clickAction: data.clickAction || 'none' 
+            });
         });
 
+        // STAP 2: Bouw de hiërarchie op een veilige manier op (voorkomt Koe/Huis/Boom crashes!)
         loadedObjects.forEach(obj => {
             if (obj.parentId && objectsMap[obj.parentId]) {
                 objectsMap[obj.parentId].add(obj.mesh);
-            } else {
+            } else if (!obj.parentId) {
                 scene.add(obj.mesh);
             }
         });
@@ -2027,14 +2047,18 @@ function initWorkspace() {
         let currentFrame = 0;
 
         function applyKeyframeState(obj, frame) {
-            const keys = Object.keys(obj.keyframes).map(Number).sort((a, b) => a - b);
+            const keys = Object.keys(obj.keyframes || {}).map(Number).sort((a, b) => a - b);
             if (keys.length === 0) return;
 
             if (obj.keyframes[frame]) {
                 const state = obj.keyframes[frame];
-                obj.mesh.position.set(state.pos.x, state.pos.y, state.pos.z);
-                obj.mesh.quaternion.set(state.rot.x, state.rot.y, state.rot.z, state.rot.w);
-                obj.mesh.scale.set(state.scale.x, state.scale.y, state.scale.z);
+                const pos = state.pos || { x: 0, y: 0, z: 0 };
+                const rot = state.rot || { x: 0, y: 0, z: 0, w: 1 };
+                const scale = state.scale || { x: 1, y: 1, z: 1 };
+
+                obj.mesh.position.set(pos.x, pos.y, pos.z);
+                obj.mesh.quaternion.set(rot.x, rot.y, rot.z, rot.w);
+                obj.mesh.scale.set(scale.x, scale.y, scale.z);
                 return;
             }
 
@@ -2049,31 +2073,44 @@ function initWorkspace() {
                 const start = obj.keyframes[prevFrame];
                 const end = obj.keyframes[nextFrame];
 
+                const sPos = start.pos || { x: 0, y: 0, z: 0 };
+                const ePos = end.pos || { x: 0, y: 0, z: 0 };
+                const sRot = start.rot || { x: 0, y: 0, z: 0, w: 1 };
+                const eRot = end.rot || { x: 0, y: 0, z: 0, w: 1 };
+                const sScale = start.scale || { x: 1, y: 1, z: 1 };
+                const eScale = end.scale || { x: 1, y: 1, z: 1 };
+
                 obj.mesh.position.set(
-                    THREE.MathUtils.lerp(start.pos.x, end.pos.x, t),
-                    THREE.MathUtils.lerp(start.pos.y, end.pos.y, t),
-                    THREE.MathUtils.lerp(start.pos.z, end.pos.z, t)
+                    THREE.MathUtils.lerp(sPos.x, ePos.x, t),
+                    THREE.MathUtils.lerp(sPos.y, ePos.y, t),
+                    THREE.MathUtils.lerp(sPos.z, ePos.z, t)
                 );
                 
-                const qStart = new THREE.Quaternion(start.rot.x, start.rot.y, start.rot.z, start.rot.w);
-                const qEnd = new THREE.Quaternion(end.rot.x, end.rot.y, end.rot.z, end.rot.w);
+                const qStart = new THREE.Quaternion(sRot.x, sRot.y, sRot.z, sRot.w);
+                const qEnd = new THREE.Quaternion(eRot.x, eRot.y, eRot.z, eRot.w);
                 obj.mesh.quaternion.copy(qStart).slerp(qEnd, t);
 
                 obj.mesh.scale.set(
-                    THREE.MathUtils.lerp(start.scale.x, end.scale.x, t),
-                    THREE.MathUtils.lerp(start.scale.y, end.scale.y, t),
-                    THREE.MathUtils.lerp(start.scale.z, end.scale.z, t)
+                    THREE.MathUtils.lerp(sScale.x, eScale.x, t),
+                    THREE.MathUtils.lerp(sScale.y, eScale.y, t),
+                    THREE.MathUtils.lerp(sScale.z, eScale.z, t)
                 );
             } else if (prevFrame !== null) {
                 const state = obj.keyframes[prevFrame];
-                obj.mesh.position.set(state.pos.x, state.pos.y, state.pos.z);
-                obj.mesh.quaternion.set(state.rot.x, state.rot.y, state.rot.z, state.rot.w);
-                obj.mesh.scale.set(state.scale.x, state.scale.y, state.scale.z);
+                const pos = state.pos || { x: 0, y: 0, z: 0 };
+                const rot = state.rot || { x: 0, y: 0, z: 0, w: 1 };
+                const scale = state.scale || { x: 1, y: 1, z: 1 };
+                obj.mesh.position.set(pos.x, pos.y, pos.z);
+                obj.mesh.quaternion.set(rot.x, rot.y, rot.z, rot.w);
+                obj.mesh.scale.set(scale.x, scale.y, scale.z);
             } else if (nextFrame !== null) {
                 const state = obj.keyframes[nextFrame];
-                obj.mesh.position.set(state.pos.x, state.pos.y, state.pos.z);
-                obj.mesh.quaternion.set(state.rot.x, state.rot.y, state.rot.z, state.rot.w);
-                obj.mesh.scale.set(state.scale.x, state.scale.y, state.scale.z);
+                const pos = state.pos || { x: 0, y: 0, z: 0 };
+                const rot = state.rot || { x: 0, y: 0, z: 0, w: 1 };
+                const scale = state.scale || { x: 1, y: 1, z: 1 };
+                obj.mesh.position.set(pos.x, pos.y, pos.z);
+                obj.mesh.quaternion.set(rot.x, rot.y, rot.z, rot.w);
+                obj.mesh.scale.set(scale.x, scale.y, scale.z);
             }
         }
 
@@ -2138,7 +2175,7 @@ function initWorkspace() {
             // UI & Scènedata
             finalHTML = finalHTML.split('__SCREEN_BUTTONS_HTML__').join(screenButtonsHTML);
             finalHTML = finalHTML.split('__MENUS_HTML__').join(menusHTML);
-            finalHTML = finalHTML.split('__ANIMATION_DATA__').join(JSON.stringify(exportData));
+            finalHTML = finalHTML.split('__ANIMATION_DATA__').join(safeAnimationData);
 
             // Download triggeren
             const blob = new Blob([finalHTML], { type: 'text/html' });
