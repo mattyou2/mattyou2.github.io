@@ -1509,6 +1509,7 @@ function saveCurrentProject() {
     alert(`Project "${currentProjectName}" succesvol opgeslagen!`);
 }
 
+// Sla project op in LocalStorage
 function saveCurrentProjectSilently() {
     const projectData = {
         skyColor,
@@ -1526,6 +1527,7 @@ function saveCurrentProjectSilently() {
     loadProjectList();
 }
 
+// Laad project uit LocalStorage
 function loadProject(name) {
     const raw = localStorage.getItem(`project_${name}`);
     if (!raw) {
@@ -1781,8 +1783,8 @@ function initWorkspace() {
 
             const exportData = objects.map(serializeObject);
 
-            // --- DE ULTIEME WATERDICHTE EXPORT MET PLACEHOLDERS ---
-            // Dit voorkomt dat template literals in app.js breken door scènedata!
+            // --- DE ULTIEME WATERDICHTE EXPORT MET PLACEHOLDERS EN SPLIT/JOIN ---
+            // Dit voorkomt dat reguliere expressies of dollartekens ($) de JSON breken!
             const rawTemplate = `<!DOCTYPE html>
 <html lang="nl">
 <head>
@@ -1888,8 +1890,6 @@ function initWorkspace() {
         
         // Gebruik de exact opgeslagen camera positie!
         camera.position.set(__SAVED_CAMERA_POS_X__, __SAVED_CAMERA_POS_Y__, __SAVED_CAMERA_POS_Z__);
-        // Richt de camera ALTIJD direct op het middelpunt, ook als de besturing uit staat!
-        camera.lookAt(__SAVED_CAMERA_TARGET_X__, __SAVED_CAMERA_TARGET_Y__, __SAVED_CAMERA_TARGET_Z__);
 
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
@@ -1902,6 +1902,9 @@ function initWorkspace() {
             controls.enableDamping = true;
             // Gebruik het exact opgeslagen camera kijkpunt!
             controls.target.set(__SAVED_CAMERA_TARGET_X__, __SAVED_CAMERA_TARGET_Y__, __SAVED_CAMERA_TARGET_Z__);
+            controls.update();
+        } else {
+            camera.lookAt(__SAVED_CAMERA_TARGET_X__, __SAVED_CAMERA_TARGET_Y__, __SAVED_CAMERA_TARGET_Z__);
         }
 
         scene.add(new THREE.AmbientLight(0xffffff, 0.6));
@@ -1954,13 +1957,19 @@ function initWorkspace() {
                 else if (geomType === 'cylinder') geom = new THREE.CylinderGeometry(0.8, 0.8, 2, 32);
                 else geom = new THREE.BoxGeometry(1, 1, 1); // Fallback voor koe/huis onderdelen!
                 
-                const mat = new THREE.MeshStandardMaterial({ color: data.color, roughness: 0.4, transparent: data.opacity < 1, opacity: data.opacity });
+                const mat = new THREE.MeshStandardMaterial({ color: data.color || "#6366f1", roughness: 0.4, transparent: Number(data.opacity) < 1, opacity: typeof data.opacity === 'number' ? data.opacity : 1 });
                 mesh = new THREE.Mesh(geom, mat);
             }
 
             mesh.position.set(data.pos.x, data.pos.y, data.pos.z);
             mesh.quaternion.set(data.rot.x, data.rot.y, data.rot.z, data.rot.w);
             mesh.scale.set(data.scale.x, data.scale.y, data.scale.z);
+
+            // Sla ID op voor Raycasting
+            mesh.userData = { id: data.id };
+            mesh.traverse(child => {
+                child.userData = { id: data.id };
+            });
 
             objectsMap[data.id] = mesh;
             loadedObjects.push({ id: data.id, parentId: data.parentId, mesh: mesh, keyframes: data.keyframes, clickAction: data.clickAction });
@@ -1984,13 +1993,13 @@ function initWorkspace() {
 
             const intersects = raycaster.intersectObjects(loadedObjects.map(o => o.mesh), true);
             if (intersects.length > 0) {
-                let hitMesh = intersects[0].object;
-                while (hitMesh.parent && hitMesh.parent.type !== 'Scene') {
-                    hitMesh = hitMesh.parent;
-                }
-                const found = loadedObjects.find(o => o.mesh === hitMesh);
-                if (found && found.clickAction !== 'none') {
-                    openMenu(found.clickAction);
+                const hitMesh = intersects[0].object;
+                const clickedId = hitMesh.userData ? hitMesh.userData.id : null;
+                if (clickedId) {
+                    const found = loadedObjects.find(o => o.id === clickedId);
+                    if (found && found.clickAction && found.clickAction !== 'none') {
+                        openMenu(found.clickAction);
+                    }
                 }
             }
         });
@@ -2108,27 +2117,28 @@ function initWorkspace() {
             </div>
             `).join('');
 
-            // --- VERVANG DE PLACEHOLDERS VEILIG (GEEN TEMPLATE LITERAL CRASHES MEER!) ---
+            // --- DE ULTIEME WATERDICHTE VERVANGING MET SPLIT/JOIN ---
+            // Dit is 100% veilig en kan nooit crashen op dollartekens ($) in de JSON!
             let finalHTML = rawTemplate;
-            finalHTML = finalHTML.replace(/__SKY_COLOR__/g, skyColor);
-            finalHTML = finalHTML.replace(/__GROUND_COLOR__/g, groundColor);
-            finalHTML = finalHTML.replace(/__EXPORT_GRID__/g, exportGrid ? 'true' : 'false');
-            finalHTML = finalHTML.replace(/__LOCK_CAMERA__/g, lockCamera ? 'true' : 'false');
+            finalHTML = finalHTML.split('__SKY_COLOR__').join(skyColor);
+            finalHTML = finalHTML.split('__GROUND_COLOR__').join(groundColor);
+            finalHTML = finalHTML.split('__EXPORT_GRID__').join(exportGrid ? 'true' : 'false');
+            finalHTML = finalHTML.split('__LOCK_CAMERA__').join(lockCamera ? 'true' : 'false');
             
             // Camera Posities
-            finalHTML = finalHTML.replace(/__SAVED_CAMERA_POS_X__/g, typeof savedCameraPos.x === 'number' ? savedCameraPos.x : '8');
-            finalHTML = finalHTML.replace(/__SAVED_CAMERA_POS_Y__/g, typeof savedCameraPos.y === 'number' ? savedCameraPos.y : '8');
-            finalHTML = finalHTML.replace(/__SAVED_CAMERA_POS_Z__/g, typeof savedCameraPos.z === 'number' ? savedCameraPos.z : '12');
+            finalHTML = finalHTML.split('__SAVED_CAMERA_POS_X__').join(typeof savedCameraPos.x === 'number' ? savedCameraPos.x : '8');
+            finalHTML = finalHTML.split('__SAVED_CAMERA_POS_Y__').join(typeof savedCameraPos.y === 'number' ? savedCameraPos.y : '8');
+            finalHTML = finalHTML.split('__SAVED_CAMERA_POS_Z__').join(typeof savedCameraPos.z === 'number' ? savedCameraPos.z : '12');
             
             // Camera Target (Kijkpunt)
-            finalHTML = finalHTML.replace(/__SAVED_CAMERA_TARGET_X__/g, typeof savedCameraTarget.x === 'number' ? savedCameraTarget.x : '0');
-            finalHTML = finalHTML.replace(/__SAVED_CAMERA_TARGET_Y__/g, typeof savedCameraTarget.y === 'number' ? savedCameraTarget.y : '0');
-            finalHTML = finalHTML.replace(/__SAVED_CAMERA_TARGET_Z__/g, typeof savedCameraTarget.z === 'number' ? savedCameraTarget.z : '0');
+            finalHTML = finalHTML.split('__SAVED_CAMERA_TARGET_X__').join(typeof savedCameraTarget.x === 'number' ? savedCameraTarget.x : '0');
+            finalHTML = finalHTML.split('__SAVED_CAMERA_TARGET_Y__').join(typeof savedCameraTarget.y === 'number' ? savedCameraTarget.y : '0');
+            finalHTML = finalHTML.split('__SAVED_CAMERA_TARGET_Z__').join(typeof savedCameraTarget.z === 'number' ? savedCameraTarget.z : '0');
 
             // UI & Scènedata
-            finalHTML = finalHTML.replace(/__SCREEN_BUTTONS_HTML__/g, screenButtonsHTML);
-            finalHTML = finalHTML.replace(/__MENUS_HTML__/g, menusHTML);
-            finalHTML = finalHTML.replace(/__ANIMATION_DATA__/g, JSON.stringify(exportData));
+            finalHTML = finalHTML.split('__SCREEN_BUTTONS_HTML__').join(screenButtonsHTML);
+            finalHTML = finalHTML.split('__MENUS_HTML__').join(menusHTML);
+            finalHTML = finalHTML.split('__ANIMATION_DATA__').join(JSON.stringify(exportData));
 
             // Download triggeren
             const blob = new Blob([finalHTML], { type: 'text/html' });
