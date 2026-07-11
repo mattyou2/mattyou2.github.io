@@ -1780,36 +1780,17 @@ function initWorkspace() {
             }
 
             const exportData = objects.map(serializeObject);
-            
-            // ESCAPE DE JSON EN HTML DATA WATERDICHT!
-            const safeExportData = JSON.stringify(exportData)
-                .replace(/\\/g, '\\\\')
-                .replace(/`/g, '\\`')
-                .replace(/\${/g, '\\${');
 
-            const screenButtonsHTML = screenButtons.map(b => `
-                <button class="screen-btn" style="left: ${b.left}%; top: ${b.top}%;" onclick="handleScreenBtnClick('${b.actionType}', '${b.target}')">${b.label}</button>
-            `).join('').replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\${/g, '\\${');
-
-            const menusHTML = menus.map(m => `
-            <div id="overlay-${m.id}" class="overlay-menu">
-                <div class="menu-box">
-                    <button class="close-btn" onclick="closeMenu('${m.id}')">&times;</button>
-                    <h2>${m.title}</h2>
-                    <div>${m.content}</div>
-                </div>
-            </div>
-            `).join('').replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\${/g, '\\${');
-
-            const htmlContent = `
-<!DOCTYPE html>
+            // --- DE ULTIEME WATERDICHTE EXPORT MET PLACEHOLDERS ---
+            // Dit voorkomt dat template literals in app.js breken door scènedata!
+            const rawTemplate = `<!DOCTYPE html>
 <html lang="nl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Designer Pro - Mattyou Studios™</title>
     <style>
-        body { margin: 0; overflow: hidden; font-family: 'Inter', sans-serif; background: radial-gradient(circle at center, ${skyColor || '#0f172a'} 0%, #020617 100%); }
+        body { margin: 0; overflow: hidden; font-family: 'Inter', sans-serif; background: radial-gradient(circle at center, __SKY_COLOR__ 0%, #020617 100%); }
         #canvas-container { width: 100vw; height: 100vh; }
         #branding { position: absolute; top: 20px; left: 20px; color: white; pointer-events: none; z-index: 10; }
         #branding h1 { margin:0; font-size: 24px; font-weight: 700; letter-spacing: -0.05em; }
@@ -1895,20 +1876,20 @@ function initWorkspace() {
     <div id="canvas-container"></div>
 
     <div id="screen-buttons">
-        ${screenButtonsHTML}
+        __SCREEN_BUTTONS_HTML__
     </div>
 
     <!-- Dynamisch gegenereerde 2D Overlays -->
-    ${menusHTML}
+    __MENUS_HTML__
 
     <script>
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
         
         // Gebruik de exact opgeslagen camera positie!
-        camera.position.set(${savedCameraPos.x || 8}, ${savedCameraPos.y || 8}, ${savedCameraPos.z || 12});
-        // CRUCIALE FIX: Richt de camera ALTIJD direct op het middelpunt, ook als de besturing uit staat!
-        camera.lookAt(${savedCameraTarget.x || 0}, ${savedCameraTarget.y || 0}, ${savedCameraTarget.z || 0});
+        camera.position.set(__SAVED_CAMERA_POS_X__, __SAVED_CAMERA_POS_Y__, __SAVED_CAMERA_POS_Z__);
+        // Richt de camera ALTIJD direct op het middelpunt, ook als de besturing uit staat!
+        camera.lookAt(__SAVED_CAMERA_TARGET_X__, __SAVED_CAMERA_TARGET_Y__, __SAVED_CAMERA_TARGET_Z__);
 
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
@@ -1916,11 +1897,11 @@ function initWorkspace() {
         document.getElementById('canvas-container').appendChild(renderer.domElement);
 
         let controls;
-        if (!${!!lockCamera}) {
+        if (!__LOCK_CAMERA__) {
             controls = new THREE.OrbitControls(camera, renderer.domElement);
             controls.enableDamping = true;
             // Gebruik het exact opgeslagen camera kijkpunt!
-            controls.target.set(${savedCameraTarget.x || 0}, ${savedCameraTarget.y || 0}, ${savedCameraTarget.z || 0});
+            controls.target.set(__SAVED_CAMERA_TARGET_X__, __SAVED_CAMERA_TARGET_Y__, __SAVED_CAMERA_TARGET_Z__);
         }
 
         scene.add(new THREE.AmbientLight(0xffffff, 0.6));
@@ -1928,17 +1909,17 @@ function initWorkspace() {
         dirLight.position.set(10, 20, 15);
         scene.add(dirLight);
 
-        if (${!!exportGrid}) {
+        if (__EXPORT_GRID__) {
             scene.add(new THREE.GridHelper(20, 20, 0x6366f1, 0x334155));
         }
 
         const groundGeo = new THREE.PlaneGeometry(40, 40);
-        const groundMat = new THREE.MeshStandardMaterial({ color: '${groundColor || "#22c55e"}', roughness: 0.8 });
+        const groundMat = new THREE.MeshStandardMaterial({ color: '__GROUND_COLOR__', roughness: 0.8 });
         const groundMesh = new THREE.Mesh(groundGeo, groundMat);
         groundMesh.rotation.x = -Math.PI / 2;
         scene.add(groundMesh);
 
-        const animationData = ${safeExportData};
+        const animationData = __ANIMATION_DATA__;
         const loadedObjects = [];
         const objectsMap = {};
 
@@ -2110,10 +2091,47 @@ function initWorkspace() {
         });
     </script>
 </body>
-</html>
-            `;
+</html>`;
 
-            const blob = new Blob([htmlContent], { type: 'text/html' });
+            // Genereer de HTML voor knoppen en menu's
+            const screenButtonsHTML = screenButtons.map(b => `
+                <button class="screen-btn" style="left: ${b.left}%; top: ${b.top}%;" onclick="handleScreenBtnClick('${b.actionType}', '${b.target}')">${b.label}</button>
+            `).join('');
+
+            const menusHTML = menus.map(m => `
+            <div id="overlay-${m.id}" class="overlay-menu">
+                <div class="menu-box">
+                    <button class="close-btn" onclick="closeMenu('${m.id}')">&times;</button>
+                    <h2>${m.title}</h2>
+                    <div>${m.content}</div>
+                </div>
+            </div>
+            `).join('');
+
+            // --- VERVANG DE PLACEHOLDERS VEILIG (GEEN TEMPLATE LITERAL CRASHES MEER!) ---
+            let finalHTML = rawTemplate;
+            finalHTML = finalHTML.replace(/__SKY_COLOR__/g, skyColor);
+            finalHTML = finalHTML.replace(/__GROUND_COLOR__/g, groundColor);
+            finalHTML = finalHTML.replace(/__EXPORT_GRID__/g, exportGrid ? 'true' : 'false');
+            finalHTML = finalHTML.replace(/__LOCK_CAMERA__/g, lockCamera ? 'true' : 'false');
+            
+            // Camera Posities
+            finalHTML = finalHTML.replace(/__SAVED_CAMERA_POS_X__/g, typeof savedCameraPos.x === 'number' ? savedCameraPos.x : '8');
+            finalHTML = finalHTML.replace(/__SAVED_CAMERA_POS_Y__/g, typeof savedCameraPos.y === 'number' ? savedCameraPos.y : '8');
+            finalHTML = finalHTML.replace(/__SAVED_CAMERA_POS_Z__/g, typeof savedCameraPos.z === 'number' ? savedCameraPos.z : '12');
+            
+            // Camera Target (Kijkpunt)
+            finalHTML = finalHTML.replace(/__SAVED_CAMERA_TARGET_X__/g, typeof savedCameraTarget.x === 'number' ? savedCameraTarget.x : '0');
+            finalHTML = finalHTML.replace(/__SAVED_CAMERA_TARGET_Y__/g, typeof savedCameraTarget.y === 'number' ? savedCameraTarget.y : '0');
+            finalHTML = finalHTML.replace(/__SAVED_CAMERA_TARGET_Z__/g, typeof savedCameraTarget.z === 'number' ? savedCameraTarget.z : '0');
+
+            // UI & Scènedata
+            finalHTML = finalHTML.replace(/__SCREEN_BUTTONS_HTML__/g, screenButtonsHTML);
+            finalHTML = finalHTML.replace(/__MENUS_HTML__/g, menusHTML);
+            finalHTML = finalHTML.replace(/__ANIMATION_DATA__/g, JSON.stringify(exportData));
+
+            // Download triggeren
+            const blob = new Blob([finalHTML], { type: 'text/html' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
