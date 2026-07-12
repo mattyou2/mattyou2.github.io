@@ -354,14 +354,21 @@ main{ flex:1; padding:40px 24px 80px; max-width:1180px; margin:0 auto; width:100
   display:none; align-items:center; justify-content:center; padding:20px;
 }
 .overlay.open{ display:flex; }
-.modal{ max-width:440px; width:100%; position:relative; animation:modalIn .3s cubic-bezier(.2,.8,.2,1); }
+.modal{
+  max-width:440px; width:100%; position:relative; animation:modalIn .3s cubic-bezier(.2,.8,.2,1);
+  max-height:85vh; display:flex; flex-direction:column;
+}
 .modal.wide{ max-width:640px; }
+.modal h2{ flex-shrink:0; }
+.modal-scroll{ overflow-y:auto; overflow-x:hidden; padding-right:6px; margin-right:-6px; flex:1; min-height:0; }
+.modal-scroll::-webkit-scrollbar{ width:8px; }
+.modal-scroll::-webkit-scrollbar-thumb{ background:rgba(255,255,255,0.16); border-radius:8px; }
 @keyframes modalIn{ from{ opacity:0; transform:scale(.94) translateY(10px);} to{ opacity:1; transform:scale(1) translateY(0);} }
 .modal-close{
   position:absolute; top:-16px; right:-16px; width:36px; height:36px; border-radius:50%;
   background:var(--glass-bg-strong); backdrop-filter:blur(14px); border:1px solid var(--glass-border-strong); color:#fff;
   font-family:var(--font-body); font-size:15px; cursor:pointer;
-  display:flex; align-items:center; justify-content:center; transition:.2s;
+  display:flex; align-items:center; justify-content:center; transition:.2s; flex-shrink:0;
 }
 .modal-close:hover{ background:var(--danger); border-color:var(--danger); }
 .modal h2{ font-size:20px; margin:0 0 20px; color:#fff; text-align:center; font-weight:700; }
@@ -537,7 +544,7 @@ footer b{ color:var(--text); font-family:var(--font-display); font-size:14px; di
   <div class="modal wide mc-panel">
     <button class="modal-close" id="settings-close">X</button>
     <h2>⚙️ Instellingen</h2>
-    <div id="settings-overlay-content"></div>
+    <div id="settings-overlay-content" class="modal-scroll"></div>
   </div>
 </div>
 
@@ -546,7 +553,7 @@ footer b{ color:var(--text); font-family:var(--font-display); font-size:14px; di
   <div class="modal mc-panel">
     <button class="modal-close" id="auth-close">X</button>
 
-    <div id="login-form">
+    <div id="login-form" class="modal-scroll">
       <h2>🔑 INLOGGEN</h2>
       <div class="field">
         <label>Gebruikersnaam</label>
@@ -561,7 +568,7 @@ footer b{ color:var(--text); font-family:var(--font-display); font-size:14px; di
       <div class="switch-line">Nog geen account? <a id="show-register">Registreer hier</a></div>
     </div>
 
-    <div id="register-form" style="display:none;">
+    <div id="register-form" class="modal-scroll" style="display:none;">
       <h2>📝 ACCOUNT MAKEN</h2>
       <div class="field">
         <label>Gebruikersnaam</label>
@@ -587,18 +594,20 @@ footer b{ color:var(--text); font-family:var(--font-display); font-size:14px; di
   <div class="modal wide mc-panel">
     <button class="modal-close" id="game-close">X</button>
     <h2 id="game-title">GAME</h2>
-    <div class="game-hud">
-      <span id="game-score">Score: 0</span>
-      <span id="game-status"></span>
-    </div>
-    <div id="game-canvas-holder">
-      <div class="game-over-msg" id="game-over">
-        <div>GAME OVER</div>
-        <div class="score-big" id="final-score">Score: 0</div>
-        <button class="mc-btn gold" id="game-restart">🔄 Opnieuw</button>
+    <div class="modal-scroll">
+      <div class="game-hud">
+        <span id="game-score">Score: 0</span>
+        <span id="game-status"></span>
       </div>
+      <div id="game-canvas-holder">
+        <div class="game-over-msg" id="game-over">
+          <div>GAME OVER</div>
+          <div class="score-big" id="final-score">Score: 0</div>
+          <button class="mc-btn gold" id="game-restart">🔄 Opnieuw</button>
+        </div>
+      </div>
+      <p id="game-instructions" style="font-size:16px;color:#333;"></p>
     </div>
-    <p id="game-instructions" style="font-size:16px;color:#333;"></p>
   </div>
 </div>
 
@@ -763,8 +772,8 @@ const ACCENT_OPTIONS = [
 ];
 function loadPrefs(){
   try{
-    return Object.assign({ cursor:'default', accent:'default', vehicleAnim:true, showBg:true }, JSON.parse(localStorage.getItem(LS_PREFS)) || {});
-  }catch(e){ return { cursor:'default', accent:'default', vehicleAnim:true, showBg:true }; }
+    return Object.assign({ cursor:'default', accent:'default', vehicleAnim:true, showBg:true, showObjects:true }, JSON.parse(localStorage.getItem(LS_PREFS)) || {});
+  }catch(e){ return { cursor:'default', accent:'default', vehicleAnim:true, showBg:true, showObjects:true }; }
 }
 function savePrefs(prefs){
   try{ localStorage.setItem(LS_PREFS, JSON.stringify(prefs)); }
@@ -788,12 +797,30 @@ function selectAccent(accentId){
   renderSettingsOverlay();
 }
 function toggleVehicleAnim(on){
+  const prefs = loadPrefs();
+  if(on && (!prefs.showBg || !prefs.showObjects)){
+    toast('Zet eerst de 3D-achtergrond en objecten aan.', 'info');
+    renderSettingsOverlay();
+    return;
+  }
   updatePref('vehicleAnim', on);
 }
 function toggleShowBg(on){
-  updatePref('showBg', on);
+  let prefs = updatePref('showBg', on);
   const canvas = document.getElementById('bg-canvas');
   if(canvas) canvas.style.display = on ? 'block' : 'none';
+  if(!on && prefs.vehicleAnim){
+    prefs = updatePref('vehicleAnim', false); // zonder achtergrond kan er ook niet weggereden worden
+  }
+  renderSettingsOverlay();
+}
+function toggleShowObjects(on){
+  let prefs = updatePref('showObjects', on);
+  if(typeof setSceneObjectsVisible === 'function') setSceneObjectsVisible(on);
+  if(!on && prefs.vehicleAnim){
+    prefs = updatePref('vehicleAnim', false); // zonder voertuig-object ook geen wegrij-animatie
+  }
+  renderSettingsOverlay();
 }
 function applyAccentTheme(){
   const prefs = loadPrefs();
@@ -846,13 +873,14 @@ function switchPage(pageId, opts){
   }
 }
 let triggerVehicleTransition = null; // wordt gezet door initGlassScene()
+let setSceneObjectsVisible = null; // wordt gezet door initGlassScene()
 const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 function handleNavigate(targetPage){
   const current = (location.hash || '#home').replace('#','');
   if(targetPage === current){ switchPage(targetPage); return; }
   const prefs = loadPrefs();
-  if(prefersReducedMotion || !prefs.vehicleAnim || typeof triggerVehicleTransition !== 'function'){
+  if(prefersReducedMotion || !prefs.vehicleAnim || !prefs.showBg || !prefs.showObjects || typeof triggerVehicleTransition !== 'function'){
     switchPage(targetPage);
     return;
   }
@@ -1012,14 +1040,29 @@ function renderFiles(){
 }
 
 /* ---------------------------------------------------------
+   9a. OVERLAY SCROLL-LOCK (achtergrond niet laten meescrollen)
+--------------------------------------------------------- */
+let openOverlayCount = 0;
+function lockBodyScroll(){
+  openOverlayCount++;
+  document.body.style.overflow = 'hidden';
+}
+function unlockBodyScroll(){
+  openOverlayCount = Math.max(0, openOverlayCount - 1);
+  if(openOverlayCount === 0) document.body.style.overflow = '';
+}
+
+/* ---------------------------------------------------------
    9b. RENDER: INSTELLINGEN-OVERLAY
 --------------------------------------------------------- */
 function openSettings(){
   $('#settings-overlay').classList.add('open');
+  lockBodyScroll();
   renderSettingsOverlay();
 }
 function closeSettings(){
   $('#settings-overlay').classList.remove('open');
+  unlockBodyScroll();
 }
 
 function renderSettingsOverlay(){
@@ -1093,21 +1136,35 @@ function renderSettingsOverlay(){
   /* --- animatie / prestatie-opties --- */
   const perfBlock = el('div', { class:'settings-block' });
   perfBlock.innerHTML = `<h3>✨ Animaties</h3><p class="hint">Pas aan hoeveel beweging je op het scherm ziet.</p>`;
-  const toggleRow1 = el('div', { class:'toggle-row' });
-  toggleRow1.innerHTML = `
-    <span>Wegrij-animatie bij navigeren</span>
-    <label class="switch"><input type="checkbox" id="toggle-vehicle" ${prefs.vehicleAnim ? 'checked' : ''}><span class="slider"></span></label>
-  `;
-  const toggleRow2 = el('div', { class:'toggle-row' });
-  toggleRow2.innerHTML = `
+
+  const rowBg = el('div', { class:'toggle-row' });
+  rowBg.innerHTML = `
     <span>3D-achtergrond tonen</span>
     <label class="switch"><input type="checkbox" id="toggle-bg" ${prefs.showBg ? 'checked' : ''}><span class="slider"></span></label>
   `;
-  perfBlock.appendChild(toggleRow1);
-  perfBlock.appendChild(toggleRow2);
+
+  const objectsDisabled = !prefs.showBg;
+  const rowObjects = el('div', { class:'toggle-row' });
+  rowObjects.innerHTML = `
+    <span>3D-objecten tonen (bollen &amp; voertuig)${objectsDisabled ? ' <span style="color:var(--text-faint);font-size:12px;">(vereist achtergrond)</span>' : ''}</span>
+    <label class="switch"><input type="checkbox" id="toggle-objects" ${prefs.showObjects ? 'checked' : ''} ${objectsDisabled ? 'disabled' : ''}><span class="slider"></span></label>
+  `;
+
+  const vehicleDisabled = !prefs.showBg || !prefs.showObjects;
+  const rowVehicle = el('div', { class:'toggle-row' });
+  rowVehicle.innerHTML = `
+    <span>Wegrij-animatie bij navigeren${vehicleDisabled ? ' <span style="color:var(--text-faint);font-size:12px;">(vereist achtergrond + objecten)</span>' : ''}</span>
+    <label class="switch"><input type="checkbox" id="toggle-vehicle" ${prefs.vehicleAnim ? 'checked' : ''} ${vehicleDisabled ? 'disabled' : ''}><span class="slider"></span></label>
+  `;
+
+  perfBlock.appendChild(rowBg);
+  perfBlock.appendChild(rowObjects);
+  perfBlock.appendChild(rowVehicle);
   holder.appendChild(perfBlock);
-  $('#toggle-vehicle', perfBlock).addEventListener('change', (e)=> toggleVehicleAnim(e.target.checked));
   $('#toggle-bg', perfBlock).addEventListener('change', (e)=> toggleShowBg(e.target.checked));
+  $('#toggle-objects', perfBlock).addEventListener('change', (e)=> toggleShowObjects(e.target.checked));
+  $('#toggle-vehicle', perfBlock).addEventListener('change', (e)=> toggleVehicleAnim(e.target.checked));
+
 
   /* --- gevarenzone --- */
   const dangerBlock = el('div', { class:'settings-block' });
@@ -1182,10 +1239,12 @@ document.addEventListener('mousemove', onCursorMove);
 --------------------------------------------------------- */
 function openAuth(mode){
   $('#auth-overlay').classList.add('open');
+  lockBodyScroll();
   showAuthForm(mode || 'login');
 }
 function closeAuth(){
   $('#auth-overlay').classList.remove('open');
+  unlockBodyScroll();
   $('#login-error').textContent = '';
   $('#register-error').textContent = '';
   $('#login-username').value = ''; $('#login-password').value = '';
@@ -1232,6 +1291,7 @@ function startGame(gameId){
   if(!game) return;
   $('#game-title').textContent = game.icon + ' ' + game.title.toUpperCase();
   $('#game-modal').classList.add('open');
+  lockBodyScroll();
   $('#game-over').classList.remove('show');
   $('#game-score').textContent = 'Score: 0';
   $('#game-status').textContent = '';
@@ -1248,6 +1308,7 @@ function startGame(gameId){
 }
 function closeGame(){
   $('#game-modal').classList.remove('open');
+  unlockBodyScroll();
   if(activeGameCleanup){ try{ activeGameCleanup(); }catch(e){} activeGameCleanup = null; }
 }
 $('#game-close').addEventListener('click', closeGame);
@@ -1744,6 +1805,10 @@ function initGlassScene(){
     const started = startTransition(onMidpoint);
     if(!started && typeof onMidpoint === 'function') onMidpoint(); // val terug: gewoon direct wisselen
   };
+  setSceneObjectsVisible = function(visible){
+    orbGroup.visible = visible;
+    vehicle.visible = visible;
+  };
 
   function easeInQuad(x){ return x*x; }
   function easeOutCubic(x){ return 1 - Math.pow(1-x, 3); }
@@ -1909,7 +1974,10 @@ function boot(){
   const prefs = loadPrefs();
   if(!prefs.showBg){ const c = document.getElementById('bg-canvas'); if(c) c.style.display = 'none'; }
   initRouting();
-  try{ initGlassScene(); }
+  try{
+    initGlassScene();
+    if(!prefs.showObjects && typeof setSceneObjectsVisible === 'function') setSceneObjectsVisible(false);
+  }
   catch(e){ console.error('3D-wereld kon niet geladen worden:', e); }
 }
 
