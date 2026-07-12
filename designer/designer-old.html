@@ -1,0 +1,1633 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Designer — Mattyou Studios</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0c11;
+  --bg2:#0f1218;
+  --panel: rgba(255,255,255,0.045);
+  --panel-solid:#12151c;
+  --border: rgba(255,255,255,0.09);
+  --text:#e8eaf1;
+  --muted:#8b93a7;
+  --muted2:#5b6377;
+  --accent1:#8b5cf6;
+  --accent2:#22d3ee;
+  --grad: linear-gradient(135deg, var(--accent1), var(--accent2));
+  --danger:#f0556c;
+  --ok:#3ddc97;
+  --radius:12px;
+  --font-display:'Space Grotesk', sans-serif;
+  --font-body:'Inter', sans-serif;
+  --font-mono:'JetBrains Mono', monospace;
+}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--font-body);
+  overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:var(--accent1); color:#fff;}
+::-webkit-scrollbar{width:10px; height:10px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.12); border-radius:8px;}
+::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,0.2);}
+
+.app{ height:100vh; display:flex; flex-direction:column; background:
+  radial-gradient(1200px 600px at 15% -10%, rgba(139,92,246,0.16), transparent 60%),
+  radial-gradient(1000px 500px at 110% 10%, rgba(34,211,238,0.10), transparent 55%),
+  var(--bg);
+}
+
+/* ---------- TOPBAR ---------- */
+.topbar{
+  height:56px; flex:0 0 56px;
+  display:flex; align-items:center; gap:14px;
+  padding:0 16px;
+  background:rgba(15,18,24,0.75);
+  backdrop-filter:blur(18px);
+  border-bottom:1px solid var(--border);
+  z-index:50;
+}
+.logo{ display:flex; align-items:center; gap:10px; margin-right:6px; }
+.logo-mark{
+  width:30px; height:30px; border-radius:9px;
+  background:var(--grad);
+  display:flex; align-items:center; justify-content:center;
+  font-family:var(--font-display); font-weight:700; color:#0a0c11; font-size:15px;
+  box-shadow:0 4px 16px rgba(139,92,246,0.4);
+}
+.logo-text{ display:flex; flex-direction:column; line-height:1.1; }
+.logo-text b{ font-family:var(--font-display); font-size:15px; font-weight:600; letter-spacing:0.2px;}
+.logo-text span{ font-size:9.5px; color:var(--muted2); letter-spacing:0.3px; }
+.topbar-sep{ width:1px; align-self:stretch; margin:10px 4px; background:var(--border); }
+
+.pagetabs{ display:flex; align-items:center; gap:6px; flex:1; overflow-x:auto; padding:0 4px;}
+.pagetab{
+  display:flex; align-items:center; gap:6px;
+  padding:6px 10px; border-radius:8px; font-size:12.5px; white-space:nowrap;
+  color:var(--muted); cursor:pointer; border:1px solid transparent;
+}
+.pagetab.active{ background:var(--panel); border-color:var(--border); color:var(--text); }
+.pagetab:hover{ color:var(--text); }
+.pagetab .x{ opacity:0.5; padding:0 2px;}
+.pagetab .x:hover{ opacity:1; color:var(--danger);}
+.addpage{ width:26px; height:26px; border-radius:7px; border:1px dashed var(--border); color:var(--muted); display:flex;align-items:center;justify-content:center; cursor:pointer; flex:0 0 auto;}
+.addpage:hover{ color:var(--text); border-color:var(--accent2); }
+
+.topbar-actions{ display:flex; align-items:center; gap:8px; }
+
+.btn{
+  appearance:none; border:1px solid var(--border); background:var(--panel);
+  color:var(--text); font-family:var(--font-body); font-size:12.5px; font-weight:500;
+  padding:8px 13px; border-radius:9px; cursor:pointer; display:flex; align-items:center; gap:6px;
+  transition:transform .12s ease, border-color .12s ease, background .12s ease;
+}
+.btn:hover{ border-color:rgba(255,255,255,0.22); background:rgba(255,255,255,0.08); }
+.btn:active{ transform:scale(0.96); }
+.btn.primary{ background:var(--grad); border:none; color:#0a0c11; font-weight:600; }
+.btn.primary:hover{ filter:brightness(1.08); }
+.btn.ghost{ background:transparent; }
+.btn.icon{ padding:8px; width:34px; height:34px; justify-content:center; }
+.btn.small{ padding:5px 9px; font-size:11.5px; }
+.btn.danger{ color:var(--danger); border-color:rgba(240,85,108,0.35); }
+.btn.danger:hover{ background:rgba(240,85,108,0.12); }
+
+/* ---------- LAYOUT ---------- */
+.main{ flex:1; display:flex; min-height:0; }
+
+.rail{
+  flex:0 0 252px; display:flex; flex-direction:column;
+  background:rgba(15,18,24,0.55); backdrop-filter:blur(16px);
+  border-right:1px solid var(--border);
+}
+.rail.right{ border-right:none; border-left:1px solid var(--border); flex:0 0 300px;}
+.rail-tabs{ display:flex; border-bottom:1px solid var(--border); padding:8px 8px 0; gap:4px;}
+.rail-tab{ flex:1; text-align:center; padding:9px 4px; font-size:11.5px; color:var(--muted); cursor:pointer; border-radius:8px 8px 0 0; font-weight:500;}
+.rail-tab.active{ color:var(--text); background:var(--panel); }
+.rail-body{ flex:1; overflow-y:auto; padding:14px; }
+.rail-section-title{ font-size:10.5px; text-transform:uppercase; letter-spacing:0.8px; color:var(--muted2); margin:14px 0 8px; font-weight:600;}
+.rail-section-title:first-child{ margin-top:0;}
+
+.obj-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.obj-item{
+  background:var(--panel); border:1px solid var(--border); border-radius:10px;
+  padding:12px 8px; display:flex; flex-direction:column; align-items:center; gap:6px;
+  cursor:grab; font-size:10.5px; color:var(--muted); text-align:center; user-select:none;
+  transition:border-color .12s, color .12s, transform .12s;
+}
+.obj-item:hover{ border-color:var(--accent2); color:var(--text); transform:translateY(-1px);}
+.obj-item:active{ cursor:grabbing; }
+.obj-item .ic{ font-size:19px; }
+
+.bg-item{
+  border:1px solid var(--border); border-radius:10px; padding:10px; cursor:pointer; margin-bottom:10px;
+  display:flex; align-items:center; gap:10px; background:var(--panel);
+}
+.bg-item:hover{ border-color:var(--accent2); }
+.bg-item.active{ border-color:var(--accent1); box-shadow:0 0 0 1px var(--accent1); }
+.bg-swatch{ width:38px; height:32px; border-radius:7px; flex:0 0 auto; border:1px solid rgba(255,255,255,0.15); }
+.bg-item .lbl{ font-size:12px; font-weight:500; }
+.bg-item .sub{ font-size:10px; color:var(--muted2); }
+
+.tpl-card{
+  border:1px solid var(--border); border-radius:12px; overflow:hidden; margin-bottom:12px; cursor:pointer; background:var(--panel);
+}
+.tpl-card:hover{ border-color:var(--accent2); }
+.tpl-thumb{ height:80px; display:flex; align-items:center; justify-content:center; font-size:26px;}
+.tpl-info{ padding:9px 11px; border-top:1px solid var(--border);}
+.tpl-info b{ font-size:12.5px; }
+.tpl-info p{ margin:3px 0 0; font-size:10.5px; color:var(--muted2); }
+
+/* ---------- CANVAS ---------- */
+.canvas-wrap{
+  flex:1; overflow:auto; display:flex; align-items:flex-start; justify-content:center;
+  padding:36px; position:relative;
+}
+.canvas-shell{ box-shadow:0 30px 80px rgba(0,0,0,0.55); border-radius:14px; overflow:visible; position:relative;}
+.canvas{
+  width:1200px; height:800px; position:relative; overflow:hidden; border-radius:14px;
+  background:#101319; border:1px solid var(--border);
+}
+.canvas.mode-preview .el{ cursor:default !important; }
+.canvas-label{ position:absolute; top:-26px; left:0; font-size:11px; color:var(--muted2); display:flex; gap:10px; align-items:center;}
+.canvas-badge{ background:var(--panel); border:1px solid var(--border); padding:3px 9px; border-radius:20px; font-size:10.5px;}
+
+.el{
+  position:absolute; cursor:move; outline:none;
+}
+.el.selected{ box-shadow:0 0 0 2px var(--accent2); }
+.el:hover:not(.selected){ box-shadow:0 0 0 1px rgba(34,211,238,0.5); }
+.el[data-el-type="text"], .el[data-el-type="heading"], .el[data-el-type="button"]{ display:flex; align-items:center; }
+.el .resize-handle{
+  position:absolute; right:-6px; bottom:-6px; width:13px; height:13px; border-radius:4px;
+  background:var(--accent2); border:2px solid #0a0c11; cursor:nwse-resize; display:none;
+}
+.el.selected .resize-handle{ display:block; }
+.el-label{
+  position:absolute; top:-20px; left:0; font-size:9.5px; background:var(--accent1); color:#fff;
+  padding:1px 6px; border-radius:5px; white-space:nowrap; display:none; font-family:var(--font-mono);
+}
+.el.selected .el-label{ display:block; }
+
+.liquid-glass{
+  background:rgba(255,255,255,0.08) !important;
+  backdrop-filter:blur(18px) saturate(160%);
+  -webkit-backdrop-filter:blur(18px) saturate(160%);
+  border:1px solid rgba(255,255,255,0.25) !important;
+  box-shadow:0 8px 32px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.25);
+}
+
+.bg3d{ position:absolute; inset:0; overflow:hidden; z-index:0; perspective:900px;}
+.bg3d .cube{
+  position:absolute; width:70px; height:70px; transform-style:preserve-3d;
+  animation:spin3d 14s linear infinite; opacity:0.35;
+}
+.bg3d .cube div{ position:absolute; width:70px; height:70px; border:1px solid rgba(139,92,246,0.6); background:rgba(139,92,246,0.06);}
+.bg3d .cube .f1{ transform:translateZ(35px);} .bg3d .cube .f2{ transform:rotateY(90deg) translateZ(35px);}
+.bg3d .cube .f3{ transform:rotateY(180deg) translateZ(35px);} .bg3d .cube .f4{ transform:rotateY(-90deg) translateZ(35px);}
+.bg3d .cube .f5{ transform:rotateX(90deg) translateZ(35px);} .bg3d .cube .f6{ transform:rotateX(-90deg) translateZ(35px);}
+@keyframes spin3d{ from{transform:rotateX(0) rotateY(0);} to{transform:rotateX(360deg) rotateY(360deg);} }
+
+.bg-glasswave{ position:absolute; inset:0; overflow:hidden; z-index:0;}
+.bg-glasswave .blob{ position:absolute; border-radius:50%; filter:blur(50px); opacity:0.55; animation:floatBlob 10s ease-in-out infinite;}
+@keyframes floatBlob{ 0%,100%{ transform:translate(0,0) scale(1);} 50%{ transform:translate(30px,-25px) scale(1.12);} }
+
+.bg-animated-grad{ background-size:220% 220% !important; animation:gradShift 9s ease infinite;}
+@keyframes gradShift{ 0%{background-position:0% 50%;} 50%{background-position:100% 50%;} 100%{background-position:0% 50%;} }
+
+/* ---------- PROPERTIES PANEL ---------- */
+.prop-group{ margin-bottom:16px; }
+.prop-label{ font-size:11px; color:var(--muted); margin-bottom:6px; display:block; font-weight:500;}
+.prop-row{ display:flex; gap:8px; margin-bottom:8px; }
+.prop-row > *{ flex:1; }
+input[type=text], input[type=number], input[type=url], select, textarea{
+  width:100%; background:#0d1016; border:1px solid var(--border); color:var(--text);
+  padding:7px 9px; border-radius:8px; font-size:12px; font-family:var(--font-body); outline:none;
+}
+input[type=text]:focus, input[type=number]:focus, select:focus, textarea:focus, input[type=url]:focus{ border-color:var(--accent2); }
+textarea{ resize:vertical; min-height:56px; font-family:var(--font-mono); }
+input[type=color]{ width:36px; height:32px; padding:2px; border-radius:8px; border:1px solid var(--border); background:#0d1016; cursor:pointer;}
+input[type=range]{ width:100%; accent-color:var(--accent2); }
+.color-row{ display:flex; align-items:center; gap:8px; }
+.color-row input[type=text]{ flex:1; }
+.mini-label{ font-size:10px; color:var(--muted2); margin-bottom:4px; display:block;}
+.checkline{ display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer; margin-bottom:4px;}
+.checkline input{ accent-color:var(--accent1); width:15px; height:15px;}
+.empty-state{ text-align:center; color:var(--muted2); padding:40px 12px; font-size:12.5px; line-height:1.6;}
+.empty-state .ic{ font-size:30px; display:block; margin-bottom:10px; }
+.layerbtns{ display:flex; gap:6px; margin-top:4px;}
+.layerbtns .btn{ flex:1; }
+
+/* action block */
+.action-block{ border:1px solid var(--border); border-radius:10px; padding:10px; background:rgba(255,255,255,0.02); margin-bottom:8px;}
+.action-block-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;}
+.action-block-head b{ font-size:11.5px;}
+
+/* ---------- MODALS ---------- */
+.overlay{
+  position:fixed; inset:0; background:rgba(5,6,9,0.7); backdrop-filter:blur(6px);
+  display:none; align-items:center; justify-content:center; z-index:200;
+}
+.overlay.show{ display:flex; }
+.modal{
+  background:var(--panel-solid); border:1px solid var(--border); border-radius:16px;
+  width:560px; max-width:92vw; max-height:86vh; overflow:hidden; display:flex; flex-direction:column;
+  box-shadow:0 40px 100px rgba(0,0,0,0.6);
+}
+.modal.wide{ width:920px; }
+.modal-head{ display:flex; justify-content:space-between; align-items:center; padding:16px 20px; border-bottom:1px solid var(--border);}
+.modal-head h3{ margin:0; font-family:var(--font-display); font-size:16px; font-weight:600;}
+.modal-body{ padding:20px; overflow-y:auto; }
+.modal-foot{ padding:14px 20px; border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:8px;}
+.close-x{ cursor:pointer; color:var(--muted); font-size:18px; padding:4px 8px; border-radius:6px;}
+.close-x:hover{ color:var(--text); background:var(--panel);}
+
+.field{ margin-bottom:14px; }
+.field label{ font-size:11.5px; color:var(--muted); margin-bottom:5px; display:block; font-weight:500;}
+
+.code-tabs{ display:flex; gap:4px; padding:0 20px; border-bottom:1px solid var(--border); background:rgba(255,255,255,0.02);}
+.code-tab{ padding:10px 14px; font-size:12px; color:var(--muted); cursor:pointer; border-bottom:2px solid transparent;}
+.code-tab.active{ color:var(--text); border-color:var(--accent2);}
+.code-area{ width:100%; height:400px; background:#0a0c10; color:#c9d1d9; border:none; padding:16px; font-family:var(--font-mono); font-size:12px; line-height:1.55; resize:none; outline:none;}
+
+.toast-wrap{ position:fixed; bottom:20px; right:20px; z-index:400; display:flex; flex-direction:column; gap:8px;}
+.toast{ background:var(--panel-solid); border:1px solid var(--border); padding:11px 16px; border-radius:10px; font-size:12.5px; box-shadow:0 10px 30px rgba(0,0,0,0.4); display:flex; align-items:center; gap:8px; animation:toastIn .25s ease;}
+.toast.ok{ border-color:rgba(61,220,151,0.4); }
+.toast.err{ border-color:rgba(240,85,108,0.4); }
+@keyframes toastIn{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:none;} }
+
+.acc-tabs{ display:flex; gap:4px; margin-bottom:16px; background:rgba(255,255,255,0.03); padding:4px; border-radius:10px;}
+.acc-tab{ flex:1; text-align:center; padding:8px; font-size:12px; border-radius:7px; cursor:pointer; color:var(--muted);}
+.acc-tab.active{ background:var(--grad); color:#0a0c11; font-weight:600;}
+
+/* runtime animation keyframes */
+@keyframes fadeIn{ from{opacity:0;} to{opacity:1;} }
+@keyframes fadeOut{ from{opacity:1;} to{opacity:0;} }
+@keyframes slideInLeft{ from{opacity:0; transform:translateX(-40px);} to{opacity:1; transform:translateX(0);} }
+@keyframes slideInRight{ from{opacity:0; transform:translateX(40px);} to{opacity:1; transform:translateX(0);} }
+@keyframes slideInUp{ from{opacity:0; transform:translateY(40px);} to{opacity:1; transform:translateY(0);} }
+@keyframes slideInDown{ from{opacity:0; transform:translateY(-40px);} to{opacity:1; transform:translateY(0);} }
+@keyframes zoomIn{ from{opacity:0; transform:scale(0.7);} to{opacity:1; transform:scale(1);} }
+@keyframes bounceIn{ 0%{transform:scale(0.5); opacity:0;} 60%{transform:scale(1.08); opacity:1;} 100%{transform:scale(1);} }
+@keyframes pulse{ 0%,100%{transform:scale(1);} 50%{transform:scale(1.06);} }
+@keyframes rotateIn{ from{opacity:0; transform:rotate(-15deg) scale(0.9);} to{opacity:1; transform:rotate(0) scale(1);} }
+@keyframes shake{ 0%,100%{transform:translateX(0);} 20%{transform:translateX(-8px);} 40%{transform:translateX(8px);} 60%{transform:translateX(-5px);} 80%{transform:translateX(5px);} }
+@keyframes flipIn{ from{opacity:0; transform:rotateY(90deg);} to{opacity:1; transform:rotateY(0);} }
+
+@media (max-width: 980px){
+  .rail{ display:none; }
+}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<div class="toast-wrap" id="toastWrap"></div>
+<script>
+/* =========================================================================
+   DESIGNER — made by Mattyou Studios (tm)
+   Volledig client-side website-bouwer: drag & drop, acties, animaties,
+   liquid glass, templates, accounts, code editor, export.
+   ========================================================================= */
+
+/* ---------------- helpers ---------------- */
+const $  = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+const uid = (p='id') => p + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+function on(el, ev, fn, opts){ el.addEventListener(ev, fn, opts); }
+function toast(msg, type='ok', icon){
+  const wrap = $('#toastWrap');
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.innerHTML = `<span>${icon || (type==='ok'?'✅':type==='err'?'⚠️':'ℹ️')}</span><span>${msg}</span>`;
+  wrap.appendChild(t);
+  setTimeout(()=>{ t.style.opacity='0'; t.style.transition='opacity .3s'; setTimeout(()=>t.remove(),300); }, 2600);
+}
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function clamp(n,min,max){ return Math.max(min, Math.min(max, n)); }
+
+/* ---------------- storage keys ---------------- */
+const LS_ACCOUNTS = 'mattyou_designer_accounts';
+const LS_CURRENT_USER = 'mattyou_designer_current_user';
+const LS_SETTINGS = 'mattyou_designer_settings';
+const LS_PROJECTS_PREFIX = 'mattyou_designer_projectlist_';
+const LS_PROJECT_PREFIX = 'mattyou_designer_project_';
+
+function loadJSON(key, fallback){ try{ const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }catch(e){ return fallback; } }
+function saveJSON(key, val){ try{ localStorage.setItem(key, JSON.stringify(val)); return true; }catch(e){ toast('Opslaan mislukt (opslagruimte vol?)', 'err'); return false; } }
+function simpleHash(str){ let h=0; for(let i=0;i<str.length;i++){ h=(h<<5)-h+str.charCodeAt(i); h|=0; } return 'h'+h; }
+
+/* ---------------- constants: object library ---------------- */
+const OBJECT_DEFS = [
+  {type:'heading', ic:'𝐇', label:'Titel', w:400, h:60},
+  {type:'text', ic:'¶', label:'Tekst', w:320, h:40},
+  {type:'button', ic:'▭', label:'Knop', w:160, h:44},
+  {type:'image', ic:'🖼️', label:'Afbeelding', w:280, h:180},
+  {type:'container', ic:'▢', label:'Vak / Box', w:320, h:200},
+  {type:'input', ic:'⌤', label:'Invoerveld', w:240, h:42},
+  {type:'divider', ic:'―', label:'Scheidingslijn', w:400, h:2},
+  {type:'icon', ic:'★', label:'Icoon', w:60, h:60},
+  {type:'glass', ic:'◈', label:'Glass Panel', w:320, h:200},
+  {type:'video', ic:'▶', label:'Video (embed)', w:400, h:225},
+  {type:'shape', ic:'●', label:'Vorm (cirkel)', w:100, h:100},
+  {type:'badge', ic:'⬤', label:'Badge/Label', w:110, h:30},
+];
+
+const BACKGROUND_PRESETS = [
+  {id:'solid-dark', label:'Effen donker', sub:'Simpel & strak', type:'solid', value:'#0e1016', swatch:'#0e1016'},
+  {id:'solid-light', label:'Effen licht', sub:'Clean wit', type:'solid', value:'#f5f6fa', swatch:'#f5f6fa'},
+  {id:'grad-violet', label:'Violet → Cyaan', sub:'Verloop', type:'gradient', value:'linear-gradient(135deg,#8b5cf6,#22d3ee)', swatch:'linear-gradient(135deg,#8b5cf6,#22d3ee)'},
+  {id:'grad-sunset', label:'Sunset', sub:'Verloop', type:'gradient', value:'linear-gradient(135deg,#ff6a88,#ff9a44)', swatch:'linear-gradient(135deg,#ff6a88,#ff9a44)'},
+  {id:'grad-ocean', label:'Oceaan', sub:'Verloop', type:'gradient', value:'linear-gradient(135deg,#0f2027,#2c5364)', swatch:'linear-gradient(135deg,#0f2027,#2c5364)'},
+  {id:'grad-anim', label:'Bewegend verloop', sub:'Geanimeerd', type:'animgrad', value:'linear-gradient(120deg,#8b5cf6,#22d3ee,#3ddc97,#8b5cf6)', swatch:'linear-gradient(135deg,#8b5cf6,#22d3ee)'},
+  {id:'bg-3d', label:'3D kubussen', sub:'Zwevende 3D vormen', type:'3d', value:'', swatch:'linear-gradient(135deg,#1a1c26,#0e1016)'},
+  {id:'bg-glass', label:'Liquid glass waves', sub:'Vloeiende glow-blobs', type:'glasswave', value:'', swatch:'linear-gradient(135deg,#2a1e4d,#0e1016)'},
+];
+
+const ANIMATIONS = [
+  {id:'fadeIn', label:'Fade in'}, {id:'fadeOut', label:'Fade out'},
+  {id:'slideInLeft', label:'Slide vanaf links'}, {id:'slideInRight', label:'Slide vanaf rechts'},
+  {id:'slideInUp', label:'Slide vanaf onder'}, {id:'slideInDown', label:'Slide vanaf boven'},
+  {id:'zoomIn', label:'Zoom in'}, {id:'bounceIn', label:'Bounce'},
+  {id:'pulse', label:'Pulse (herhalend)'}, {id:'rotateIn', label:'Roteer in'},
+  {id:'shake', label:'Schud'}, {id:'flipIn', label:'Flip in'}
+];
+
+const ACTION_TYPES = [
+  {id:'none', label:'Geen actie'},
+  {id:'goToPage', label:'Ga naar pagina'},
+  {id:'openLink', label:'Open link (URL)'},
+  {id:'show', label:'Toon element'},
+  {id:'hide', label:'Verberg element'},
+  {id:'toggle', label:'Wissel zichtbaarheid'},
+  {id:'animate', label:'Speel animatie af'},
+  {id:'alert', label:'Toon melding'},
+];
+
+/* ---------------- default element factory ---------------- */
+function newElement(type, x=80, y=80){
+  const def = OBJECT_DEFS.find(o=>o.type===type) || OBJECT_DEFS[0];
+  const base = {
+    id: uid('el'), type, x, y, w:def.w, h:def.h, z: 1,
+    content: defaultContent(type),
+    href:'', src:'',
+    style:{
+      bg: type==='glass' ? 'rgba(255,255,255,0.08)' : (type==='button' ? '#8b5cf6' : (type==='container'? 'rgba(255,255,255,0.04)':'transparent')),
+      color: type==='button' ? '#0a0c11' : '#e8eaf1',
+      fontSize: type==='heading'?32:14,
+      fontWeight: type==='heading'?700:(type==='button'?600:400),
+      radius: type==='button'?10:(type==='container'||type==='glass'?14:(type==='shape'?999:6)),
+      opacity: 1,
+      shadow:false,
+      glass: type==='glass',
+      align:'left',
+      border: (type==='container') ? '1px solid rgba(255,255,255,0.12)' : 'none',
+    },
+    onLoadAnim:{enabled:false, type:'fadeIn', duration:600, delay:0},
+    action:{enabled:false, type:'none', target:'', animType:'pulse', url:'', message:''}
+  };
+  return base;
+}
+function defaultContent(type){
+  switch(type){
+    case 'heading': return 'Een pakkende titel';
+    case 'text': return 'Klik hier om je tekst te bewerken. Dubbelklik om te typen.';
+    case 'button': return 'Klik hier';
+    case 'input': return 'Typ hier iets...';
+    case 'badge': return 'Nieuw';
+    case 'icon': return '★';
+    case 'shape': return '';
+    default: return '';
+  }
+}
+
+/* ---------------- templates ---------------- */
+function templateElements(kind){
+  if(kind==='landing'){
+    return [
+      Object.assign(newElement('heading',120,90),{w:700,h:80,content:'Bouw iets moois vandaag', style:Object.assign(newElement('heading').style,{fontSize:44,color:'#ffffff'})}),
+      Object.assign(newElement('text',120,180),{w:600,h:60,content:'Ontwerp, koppel acties en publiceer je eigen site — zonder één regel code te hoeven schrijven.', style:Object.assign(newElement('text').style,{fontSize:16,color:'#c7cbe0'})}),
+      Object.assign(newElement('button',120,260),{w:180,h:48,content:'Aan de slag'}),
+      Object.assign(newElement('glass',760,80),{w:340,h:300,content:''}),
+      Object.assign(newElement('badge',120,250-60),{w:120,h:28,content:'✨ Gratis te gebruiken'}),
+    ];
+  }
+  if(kind==='portfolio'){
+    return [
+      Object.assign(newElement('heading',100,70),{w:500,h:60,content:'Mattyou — Creatief werk'}),
+      Object.assign(newElement('text',100,140),{w:500,h:40,content:'Een selectie van projecten die ik met plezier heb gemaakt.'}),
+      Object.assign(newElement('container',100,210),{w:300,h:200,content:''}),
+      Object.assign(newElement('container',420,210),{w:300,h:200,content:''}),
+      Object.assign(newElement('container',740,210),{w:300,h:200,content:''}),
+      Object.assign(newElement('button',100,440),{w:160,h:44,content:'Neem contact op'}),
+    ];
+  }
+  if(kind==='login'){
+    return [
+      Object.assign(newElement('glass',420,180),{w:360,h:380,content:''}),
+      Object.assign(newElement('heading',460,220),{w:280,h:44,content:'Welkom terug', style:Object.assign(newElement('heading').style,{fontSize:26})}),
+      Object.assign(newElement('text',460,270),{w:280,h:24,content:'Log in om verder te gaan'}),
+      Object.assign(newElement('input',460,310),{w:280,h:42,content:'E-mailadres'}),
+      Object.assign(newElement('input',460,362),{w:280,h:42,content:'Wachtwoord'}),
+      Object.assign(newElement('button',460,420),{w:280,h:46,content:'Inloggen'}),
+    ];
+  }
+  return [];
+}
+const TEMPLATES = [
+  {id:'blank', label:'Leeg canvas', desc:'Begin helemaal vanaf niks', ic:'⬜', bg:{type:'solid',value:'#101319'}},
+  {id:'landing', label:'Landingspagina', desc:'Hero, tekst, knop & glass panel', ic:'🚀', bg:{type:'gradient',value:'linear-gradient(135deg,#1b1030,#0e1016)'}},
+  {id:'portfolio', label:'Portfolio', desc:'Titel + projectenrooster', ic:'🖼️', bg:{type:'solid',value:'#101319'}},
+  {id:'login', label:'Login scherm', desc:'Glass login-kaart', ic:'🔐', bg:{type:'glasswave',value:''}},
+];
+
+/* ---------------- app state ---------------- */
+let state = {
+  user: loadJSON(LS_CURRENT_USER, null),
+  settings: loadJSON(LS_SETTINGS, {storageMode:'local', dbUrl:''}),
+  project: null,
+  selectedId: null,
+  mode: 'edit',
+  railTab: 'objects',
+  propTab: 'style',
+  dragNewType: null,
+  interaction: null, // {kind:'move'|'resize', elId, startX, startY, ...}
+};
+
+function currentNamespace(){ return state.user ? state.user.username : 'guest'; }
+function projectListKey(){ return LS_PROJECTS_PREFIX + currentNamespace(); }
+function getProjectList(){ return loadJSON(projectListKey(), []); }
+function saveProjectList(list){ saveJSON(projectListKey(), list); }
+
+function buildShell(){
+  const app = $('#app');
+  app.innerHTML = `
+    <div class="topbar">
+      <div class="logo">
+        <div class="logo-mark">D</div>
+        <div class="logo-text"><b>Designer</b><span>made by Mattyou Studios (tm)</span></div>
+      </div>
+      <div class="topbar-sep"></div>
+      <button class="btn small" id="btnProjects">📁 Projecten</button>
+      <button class="btn small" id="btnTemplates">🧩 Templates</button>
+      <div class="pagetabs" id="pageTabs"></div>
+      <div class="topbar-actions">
+        <button class="btn small" id="btnModeToggle">👁️ Voorbeeld</button>
+        <button class="btn small" id="btnCode">{ } Code</button>
+        <button class="btn small" id="btnSettings">⚙️ Instellingen</button>
+        <button class="btn small primary" id="btnSave">💾 Opslaan</button>
+        <button class="btn small primary" id="btnExport">⬇️ Exporteren</button>
+        <div class="topbar-sep"></div>
+        <button class="btn small" id="btnAccount">👤 Account</button>
+      </div>
+    </div>
+    <div class="main">
+      <div class="rail" id="railLeft">
+        <div class="rail-tabs">
+          <div class="rail-tab" data-tab="objects">Objecten</div>
+          <div class="rail-tab" data-tab="backgrounds">Achtergrond</div>
+          <div class="rail-tab" data-tab="layers">Lagen</div>
+        </div>
+        <div class="rail-body" id="railLeftBody"></div>
+      </div>
+      <div class="canvas-wrap" id="canvasWrap">
+        <div class="canvas-shell">
+          <div class="canvas-label">
+            <span class="canvas-badge" id="canvasModeBadge">✏️ Bewerkmodus</span>
+            <span class="canvas-badge">1200 × 800</span>
+          </div>
+          <div class="canvas" id="canvas"></div>
+        </div>
+      </div>
+      <div class="rail right" id="railRight">
+        <div class="rail-tabs">
+          <div class="rail-tab" data-tab="style">Stijl</div>
+          <div class="rail-tab" data-tab="animate">Animatie</div>
+          <div class="rail-tab" data-tab="action">Actie</div>
+        </div>
+        <div class="rail-body" id="railRightBody"></div>
+      </div>
+    </div>
+
+    <!-- Templates modal -->
+    <div class="overlay" id="modalTemplates">
+      <div class="modal wide">
+        <div class="modal-head"><h3>🧩 Kies een template</h3><span class="close-x" data-close>✕</span></div>
+        <div class="modal-body">
+          <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:14px;" id="tplGrid"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Code editor modal -->
+    <div class="overlay" id="modalCode">
+      <div class="modal wide">
+        <div class="modal-head"><h3>{ } Code-editor</h3><span class="close-x" data-close>✕</span></div>
+        <div class="code-tabs">
+          <div class="code-tab active" data-code-tab="html">HTML</div>
+          <div class="code-tab" data-code-tab="css">CSS</div>
+          <div class="code-tab" data-code-tab="js">JS (runtime)</div>
+        </div>
+        <textarea class="code-area" id="codeArea" spellcheck="false"></textarea>
+        <div class="modal-foot">
+          <span style="flex:1; font-size:11px; color:var(--muted2); align-self:center;">Pas de HTML aan en klik op 'Toepassen' om je canvas bij te werken.</span>
+          <button class="btn small" id="btnCodeCopy">📋 Kopiëren</button>
+          <button class="btn small primary" id="btnCodeApply">✅ Toepassen</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Account modal -->
+    <div class="overlay" id="modalAccount">
+      <div class="modal">
+        <div class="modal-head"><h3 id="accModalTitle">👤 Account</h3><span class="close-x" data-close>✕</span></div>
+        <div class="modal-body" id="accModalBody"></div>
+      </div>
+    </div>
+
+    <!-- Settings modal -->
+    <div class="overlay" id="modalSettings">
+      <div class="modal">
+        <div class="modal-head"><h3>⚙️ Instellingen — opslag</h3><span class="close-x" data-close>✕</span></div>
+        <div class="modal-body" id="settingsBody"></div>
+      </div>
+    </div>
+
+    <!-- Projects modal -->
+    <div class="overlay" id="modalProjects">
+      <div class="modal">
+        <div class="modal-head"><h3>📁 Mijn projecten</h3><span class="close-x" data-close>✕</span></div>
+        <div class="modal-body" id="projectsBody"></div>
+        <div class="modal-foot"><button class="btn small primary" id="btnNewProjectFromList">➕ Nieuw project</button></div>
+      </div>
+    </div>
+
+    <!-- New project modal -->
+    <div class="overlay" id="modalNewProject">
+      <div class="modal">
+        <div class="modal-head"><h3>➕ Nieuw project</h3><span class="close-x" data-close>✕</span></div>
+        <div class="modal-body">
+          <div class="field"><label>Projectnaam</label><input type="text" id="newProjName" value="Mijn nieuwe site"></div>
+          <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:10px;" id="newProjTplGrid"></div>
+        </div>
+      </div>
+    </div>
+  `;
+  bindShellEvents();
+}
+
+function bindShellEvents(){
+  $('#btnModeToggle').onclick = toggleMode;
+  $('#btnCode').onclick = openCodeModal;
+  $('#btnSettings').onclick = openSettingsModal;
+  $('#btnSave').onclick = () => saveProject(true);
+  $('#btnExport').onclick = exportHTML;
+  $('#btnAccount').onclick = openAccountModal;
+  $('#btnTemplates').onclick = openTemplatesModal;
+  $('#btnProjects').onclick = openProjectsModal;
+
+  $$('.rail-tab', $('#railLeft')).forEach(tab=>{
+    tab.onclick = () => { state.railTab = tab.dataset.tab; renderLeftRail(); };
+  });
+  $$('.rail-tab', $('#railRight')).forEach(tab=>{
+    tab.onclick = () => { state.propTab = tab.dataset.tab; renderRightRail(); };
+  });
+
+  $$('.overlay').forEach(ov=>{
+    ov.addEventListener('click', e=>{ if(e.target===ov) closeModal(ov.id); });
+    $$('[data-close]', ov).forEach(x=> x.onclick = ()=> closeModal(ov.id));
+  });
+
+  $$('.code-tab').forEach(t=>{
+    t.onclick = ()=>{ $$('.code-tab').forEach(x=>x.classList.remove('active')); t.classList.add('active'); loadCodeTab(t.dataset.codeTab); };
+  });
+  $('#btnCodeApply').onclick = applyCodeChanges;
+  $('#btnCodeCopy').onclick = ()=>{ navigator.clipboard.writeText($('#codeArea').value).then(()=>toast('Code gekopieerd')); };
+  $('#btnNewProjectFromList').onclick = ()=>{ closeModal('modalProjects'); openNewProjectModal(); };
+
+  // canvas background drop target for new objects
+  const canvas = $('#canvas');
+  on(canvas, 'dragover', e=> e.preventDefault());
+  on(canvas, 'drop', e=>{
+    e.preventDefault();
+    if(!state.dragNewType) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = clamp(e.clientX - rect.left - 20, 0, 1150);
+    const y = clamp(e.clientY - rect.top - 20, 0, 750);
+    addElement(state.dragNewType, x, y);
+    state.dragNewType = null;
+  });
+  on(canvas, 'mousedown', e=>{
+    if(e.target === canvas){ selectElement(null); }
+  });
+
+  document.addEventListener('keydown', e=>{
+    const tag = (document.activeElement && document.activeElement.tagName) || '';
+    if(tag==='INPUT' || tag==='TEXTAREA' || document.activeElement.isContentEditable) return;
+    if((e.key==='Delete' || e.key==='Backspace') && state.selectedId && state.mode==='edit'){
+      e.preventDefault(); deleteSelected();
+    }
+    if(e.key==='Escape'){ selectElement(null); }
+  });
+}
+
+function openModal(id){ $('#'+id).classList.add('show'); }
+function closeModal(id){ $('#'+id).classList.remove('show'); }
+
+/* =========================================================================
+   PROJECT MANAGEMENT
+   ========================================================================= */
+function createProject(name, tplId){
+  const bg = (TEMPLATES.find(t=>t.id===tplId) || TEMPLATES[0]).bg;
+  const proj = {
+    id: uid('proj'),
+    name: name || 'Naamloos project',
+    createdAt: Date.now(), updatedAt: Date.now(),
+    activePageId: 'page_1',
+    pages: [{
+      id:'page_1', name:'Home',
+      background: Object.assign({}, bg),
+      elements: templateElements(tplId)
+    }]
+  };
+  return proj;
+}
+
+function saveProject(showToast){
+  if(!state.project) return;
+  state.project.updatedAt = Date.now();
+  saveJSON(LS_PROJECT_PREFIX + state.project.id, state.project);
+  let list = getProjectList();
+  const idx = list.findIndex(p=>p.id===state.project.id);
+  const summary = {id:state.project.id, name:state.project.name, updatedAt: state.project.updatedAt};
+  if(idx>=0) list[idx] = summary; else list.push(summary);
+  saveProjectList(list);
+
+  if(state.settings.storageMode === 'database' && state.settings.dbUrl){
+    fetch(state.settings.dbUrl, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({action:'save', project: state.project})
+    }).then(()=> showToast && toast('Opgeslagen naar database én lokaal')).catch(()=> showToast && toast('Database niet bereikbaar — lokaal opgeslagen', 'err'));
+  } else if(showToast){
+    toast('Project opgeslagen in local storage');
+  }
+}
+
+function loadProject(id){
+  const proj = loadJSON(LS_PROJECT_PREFIX + id, null);
+  if(!proj){ toast('Project niet gevonden', 'err'); return; }
+  state.project = proj;
+  if(!state.project.activePageId) state.project.activePageId = state.project.pages[0].id;
+  state.selectedId = null;
+  renderAll();
+  toast('Project geladen: ' + proj.name);
+}
+
+function deleteProject(id){
+  localStorage.removeItem(LS_PROJECT_PREFIX + id);
+  saveProjectList(getProjectList().filter(p=>p.id!==id));
+  if(state.project && state.project.id===id){ initFreshProject(); }
+  renderProjectsList();
+  toast('Project verwijderd');
+}
+
+function initFreshProject(){
+  const list = getProjectList();
+  if(list.length){
+    loadProject(list[list.length-1].id);
+  } else {
+    state.project = createProject('Mijn eerste project', 'landing');
+    saveProject(false);
+    renderAll();
+  }
+}
+
+/* =========================================================================
+   PAGES
+   ========================================================================= */
+function activePage(){
+  if(!state.project) return null;
+  return state.project.pages.find(p=>p.id===state.project.activePageId) || state.project.pages[0];
+}
+function addPage(){
+  const p = {id: uid('page'), name:'Pagina ' + (state.project.pages.length+1), background:{type:'solid', value:'#101319'}, elements:[]};
+  state.project.pages.push(p);
+  state.project.activePageId = p.id;
+  state.selectedId = null;
+  renderAll();
+}
+function removePage(pageId){
+  if(state.project.pages.length<=1){ toast('Je hebt minimaal 1 pagina nodig', 'err'); return; }
+  state.project.pages = state.project.pages.filter(p=>p.id!==pageId);
+  if(state.project.activePageId===pageId) state.project.activePageId = state.project.pages[0].id;
+  state.selectedId = null;
+  renderAll();
+}
+function renderPageTabs(){
+  const wrap = $('#pageTabs');
+  if(!state.project){ wrap.innerHTML=''; return; }
+  wrap.innerHTML = state.project.pages.map(p => `
+    <div class="pagetab ${p.id===state.project.activePageId?'active':''}" data-page="${p.id}">
+      📄 ${esc(p.name)} ${state.project.pages.length>1?`<span class="x" data-del-page="${p.id}">✕</span>`:''}
+    </div>`).join('') + `<div class="addpage" id="addPageBtn">+</div>`;
+  $$('.pagetab', wrap).forEach(t=>{
+    t.onclick = (e)=>{ if(e.target.dataset.delPage) return; state.project.activePageId = t.dataset.page; state.selectedId=null; renderAll(); };
+  });
+  $$('[data-del-page]', wrap).forEach(x=> x.onclick = (e)=>{ e.stopPropagation(); removePage(x.dataset.delPage); });
+  $('#addPageBtn').onclick = addPage;
+}
+/* =========================================================================
+   LEFT RAIL — objects / backgrounds / layers
+   ========================================================================= */
+function renderLeftRail(){
+  $$('.rail-tab', $('#railLeft')).forEach(t=> t.classList.toggle('active', t.dataset.tab===state.railTab));
+  const body = $('#railLeftBody');
+  if(state.railTab==='objects'){
+    body.innerHTML = `
+      <div class="rail-section-title">Basis elementen</div>
+      <div class="obj-grid">${OBJECT_DEFS.map(o=>`
+        <div class="obj-item" draggable="true" data-type="${o.type}">
+          <span class="ic">${o.ic}</span><span>${o.label}</span>
+        </div>`).join('')}</div>
+      <div class="rail-section-title">Tip</div>
+      <p style="font-size:11.5px; color:var(--muted2); line-height:1.6;">Sleep een element naar het canvas. Dubbelklik op tekst om te typen. Klik-en-sleep de rechter-onderhoek om te verkleinen/vergroten.</p>
+    `;
+    $$('.obj-item', body).forEach(item=>{
+      item.addEventListener('dragstart', e=>{ state.dragNewType = item.dataset.type; });
+      item.addEventListener('click', ()=>{ addElement(item.dataset.type, 100+Math.random()*300, 100+Math.random()*200); });
+    });
+  } else if(state.railTab==='backgrounds'){
+    const pg = activePage();
+    body.innerHTML = `<div class="rail-section-title">Achtergrond van deze pagina</div>` +
+      BACKGROUND_PRESETS.map(b=>`
+        <div class="bg-item ${pg && pg.background.type===b.type && pg.background.value===b.value ? 'active':''}" data-bg="${b.id}">
+          <div class="bg-swatch" style="background:${b.swatch}"></div>
+          <div><div class="lbl">${b.label}</div><div class="sub">${b.sub}</div></div>
+        </div>`).join('') +
+      `<div class="rail-section-title">Eigen kleur</div>
+       <div class="color-row"><input type="color" id="customBgColor" value="#101319"><input type="text" id="customBgHex" value="#101319"></div>
+       <button class="btn small" style="margin-top:8px; width:100%;" id="applyCustomBg">Toepassen als achtergrond</button>`;
+    $$('.bg-item', body).forEach(el=>{
+      el.onclick = ()=>{
+        const preset = BACKGROUND_PRESETS.find(b=>b.id===el.dataset.bg);
+        activePage().background = {type:preset.type, value:preset.value};
+        renderAll();
+      };
+    });
+    const colorInput = $('#customBgColor'), hexInput = $('#customBgHex');
+    colorInput.oninput = ()=> hexInput.value = colorInput.value;
+    $('#applyCustomBg').onclick = ()=>{ activePage().background = {type:'solid', value: hexInput.value}; renderAll(); };
+  } else if(state.railTab==='layers'){
+    const pg = activePage();
+    const els = pg ? [...pg.elements].sort((a,b)=>b.z-a.z) : [];
+    body.innerHTML = `<div class="rail-section-title">Lagen op deze pagina (${els.length})</div>` +
+      (els.length ? els.map(el=>`
+        <div class="bg-item ${el.id===state.selectedId?'active':''}" data-layer="${el.id}" style="cursor:pointer;">
+          <div class="bg-swatch" style="background:${objIcon(el.type)}; display:flex; align-items:center; justify-content:center; font-size:15px;">${OBJECT_DEFS.find(o=>o.type===el.type)?.ic||'▢'}</div>
+          <div style="flex:1; overflow:hidden;"><div class="lbl">${OBJECT_DEFS.find(o=>o.type===el.type)?.label||el.type}</div><div class="sub" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:150px;">${esc(el.content||'')}</div></div>
+        </div>`).join('') : `<p style="font-size:11.5px; color:var(--muted2);">Nog geen elementen op deze pagina.</p>`);
+    $$('[data-layer]', body).forEach(x=> x.onclick = ()=> selectElement(x.dataset.layer));
+  }
+}
+function objIcon(){ return 'transparent'; }
+
+/* =========================================================================
+   CANVAS RENDERING
+   ========================================================================= */
+function renderCanvas(){
+  const canvas = $('#canvas');
+  canvas.classList.toggle('mode-preview', state.mode==='preview');
+  const pg = activePage();
+  canvas.innerHTML = '';
+  if(!pg){ return; }
+
+  // background
+  const bg = pg.background || {type:'solid', value:'#101319'};
+  canvas.style.background = '';
+  canvas.classList.remove('bg-animated-grad');
+  if(bg.type==='solid'){ canvas.style.background = bg.value; }
+  else if(bg.type==='gradient'){ canvas.style.background = bg.value; }
+  else if(bg.type==='animgrad'){ canvas.style.background = bg.value; canvas.classList.add('bg-animated-grad'); }
+  else if(bg.type==='3d'){ canvas.style.background = '#0e1016'; }
+  else if(bg.type==='glasswave'){ canvas.style.background = 'linear-gradient(135deg,#241a3d,#0e1016)'; }
+
+  if(bg.type==='3d'){
+    const wrap = document.createElement('div'); wrap.className='bg3d';
+    for(let i=0;i<7;i++){
+      const cube = document.createElement('div'); cube.className='cube';
+      cube.style.left = (Math.random()*1100)+'px';
+      cube.style.top = (Math.random()*700)+'px';
+      cube.style.animationDuration = (10+Math.random()*10)+'s';
+      cube.innerHTML = `<div class="f1"></div><div class="f2"></div><div class="f3"></div><div class="f4"></div><div class="f5"></div><div class="f6"></div>`;
+      wrap.appendChild(cube);
+    }
+    canvas.appendChild(wrap);
+  }
+  if(bg.type==='glasswave'){
+    const wrap = document.createElement('div'); wrap.className='bg-glasswave';
+    const colors = ['#8b5cf6','#22d3ee','#3ddc97'];
+    for(let i=0;i<4;i++){
+      const b = document.createElement('div'); b.className='blob';
+      const size = 180+Math.random()*180;
+      b.style.width=size+'px'; b.style.height=size+'px';
+      b.style.left=(Math.random()*1000)+'px'; b.style.top=(Math.random()*600)+'px';
+      b.style.background = colors[i%colors.length];
+      b.style.animationDelay = (Math.random()*4)+'s';
+      wrap.appendChild(b);
+    }
+    canvas.appendChild(wrap);
+  }
+
+  pg.elements.slice().sort((a,b)=>a.z-b.z).forEach(el=> canvas.appendChild(buildElementNode(el)));
+}
+
+function buildElementNode(el){
+  const node = document.createElement('div');
+  node.className = 'el';
+  node.dataset.elType = el.type;
+  node.dataset.id = el.id;
+  node.style.left = el.x+'px'; node.style.top = el.y+'px';
+  node.style.width = el.w+'px'; node.style.height = el.h+'px';
+  node.style.zIndex = el.z;
+  applyElementStyle(node, el);
+
+  let inner = '';
+  switch(el.type){
+    case 'heading': inner = `<div class="el-content" style="width:100%; outline:none;">${esc(el.content)}</div>`; break;
+    case 'text': inner = `<div class="el-content" style="width:100%; outline:none;">${esc(el.content)}</div>`; break;
+    case 'button': inner = `<div class="el-content" style="width:100%; text-align:center; outline:none;">${esc(el.content)}</div>`; break;
+    case 'badge': inner = `<div class="el-content" style="width:100%; text-align:center; outline:none;">${esc(el.content)}</div>`; break;
+    case 'input': inner = `<input type="text" placeholder="${esc(el.content)}" style="width:100%; height:100%; background:transparent; border:none; color:inherit; font-size:inherit; padding:0 12px;" ${state.mode==='edit'?'disabled':''}>`; break;
+    case 'image': inner = el.src ? `<img src="${esc(el.src)}" style="width:100%; height:100%; object-fit:cover; border-radius:inherit; pointer-events:none;">` : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted2);font-size:12px; flex-direction:column; gap:6px;"><span style="font-size:22px;">🖼️</span>Geen afbeelding — stel URL in bij Stijl</div>`;
+      break;
+    case 'video': inner = el.src ? `<iframe src="${esc(el.src)}" style="width:100%; height:100%; border:none; border-radius:inherit; pointer-events:none;" allowfullscreen></iframe>` : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted2);font-size:12px;">▶ Video — stel embed-URL in bij Stijl</div>`;
+      break;
+    case 'icon': inner = `<div class="el-content" style="width:100%; text-align:center; font-size:${Math.max(20,el.h*0.5)}px; line-height:${el.h}px; outline:none;">${esc(el.content)}</div>`; break;
+    case 'divider': inner = ''; break;
+    case 'shape': inner = ''; break;
+    case 'container': case 'glass': inner = state.mode==='edit' ? `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted2);font-size:11px;">${el.type==='glass'?'◈ Glass panel':'Container'}</div>` : ''; break;
+    default: inner = esc(el.content);
+  }
+  node.innerHTML = inner + `<span class="el-label">${OBJECT_DEFS.find(o=>o.type===el.type)?.label||el.type}</span><div class="resize-handle"></div>`;
+
+  if(el.id===state.selectedId) node.classList.add('selected');
+
+  if(state.mode==='edit'){
+    attachEditInteractions(node, el);
+  } else {
+    attachPreviewInteractions(node, el);
+  }
+  return node;
+}
+
+function applyElementStyle(node, el){
+  const s = el.style;
+  node.style.color = s.color;
+  node.style.fontSize = s.fontSize+'px';
+  node.style.fontWeight = s.fontWeight;
+  node.style.borderRadius = s.radius+'px';
+  node.style.opacity = s.opacity;
+  node.style.textAlign = s.align;
+  node.style.justifyContent = s.align==='center'?'center':(s.align==='right'?'flex-end':'flex-start');
+  node.style.border = s.border || 'none';
+  node.style.boxShadow = s.shadow ? '0 12px 30px rgba(0,0,0,0.35)' : '';
+  node.style.padding = ['button','container','glass','badge'].includes(el.type) ? '0 16px' : (el.type==='text'||el.type==='heading' ? '0' : '0');
+  node.style.overflow = 'hidden';
+  node.style.background = s.bg;
+  if(el.type==='divider'){ node.style.background = s.bg==='transparent' ? 'rgba(255,255,255,0.2)' : s.bg; }
+  node.classList.toggle('liquid-glass', !!s.glass);
+  if(el.onLoadAnim && el.onLoadAnim.enabled && state.mode==='preview'){
+    node.style.animation = `${el.onLoadAnim.type} ${el.onLoadAnim.duration}ms ease ${el.onLoadAnim.delay}ms both`;
+  } else {
+    node.style.animation = '';
+  }
+}
+/* =========================================================================
+   ELEMENT INTERACTIONS (edit mode: select / drag / resize / inline edit)
+   ========================================================================= */
+function attachEditInteractions(node, el){
+  node.addEventListener('mousedown', e=>{
+    if(e.target.classList.contains('resize-handle')) return;
+    if(e.target.isContentEditable) return;
+    e.stopPropagation();
+    selectElement(el.id);
+    const canvasRect = $('#canvas').getBoundingClientRect();
+    state.interaction = {
+      kind:'move', id: el.id,
+      offX: e.clientX - canvasRect.left - el.x,
+      offY: e.clientY - canvasRect.top - el.y
+    };
+  });
+  const handle = $('.resize-handle', node);
+  handle.addEventListener('mousedown', e=>{
+    e.stopPropagation(); e.preventDefault();
+    selectElement(el.id);
+    state.interaction = { kind:'resize', id: el.id, startX:e.clientX, startY:e.clientY, startW:el.w, startH:el.h };
+  });
+  const contentEl = $('.el-content', node);
+  if(contentEl){
+    node.addEventListener('dblclick', e=>{
+      e.stopPropagation();
+      contentEl.contentEditable = true;
+      contentEl.focus();
+      document.execCommand('selectAll', false, null);
+    });
+    contentEl.addEventListener('blur', ()=>{
+      contentEl.contentEditable = false;
+      el.content = contentEl.innerText;
+      renderRightRail();
+      saveDebounced();
+    });
+    contentEl.addEventListener('keydown', e=>{ if(e.key==='Enter' && el.type!=='text'){ e.preventDefault(); contentEl.blur(); } if(e.key==='Escape'){ contentEl.blur(); } });
+  }
+}
+
+on(document, 'mousemove', e=>{
+  const it = state.interaction;
+  if(!it) return;
+  const pg = activePage(); if(!pg) return;
+  const el = pg.elements.find(x=>x.id===it.id); if(!el) return;
+  const canvasRect = $('#canvas').getBoundingClientRect();
+  if(it.kind==='move'){
+    el.x = clamp(e.clientX - canvasRect.left - it.offX, -50, 1200 - 20);
+    el.y = clamp(e.clientY - canvasRect.top - it.offY, -20, 800 - 10);
+    const node = $(`.el[data-id="${el.id}"]`);
+    if(node){ node.style.left = el.x+'px'; node.style.top = el.y+'px'; }
+  } else if(it.kind==='resize'){
+    el.w = clamp(it.startW + (e.clientX - it.startX), 24, 1180);
+    el.h = clamp(it.startH + (e.clientY - it.startY), 16, 780);
+    const node = $(`.el[data-id="${el.id}"]`);
+    if(node){ node.style.width = el.w+'px'; node.style.height = el.h+'px'; }
+  }
+});
+on(document, 'mouseup', ()=>{
+  if(state.interaction){
+    state.interaction = null;
+    renderRightRail();
+    saveDebounced();
+  }
+});
+
+function attachPreviewInteractions(node, el){
+  if(!(el.action && el.action.enabled && el.action.type!=='none')) return;
+  node.style.cursor = 'pointer';
+  node.addEventListener('click', e=>{
+    e.stopPropagation();
+    runAction(el);
+  });
+}
+
+function runAction(el){
+  const a = el.action;
+  switch(a.type){
+    case 'goToPage':
+      if(a.target){ state.project.activePageId = a.target; renderAll(); }
+      break;
+    case 'openLink':
+      if(a.url) window.open(a.url, '_blank');
+      break;
+    case 'show': case 'hide': case 'toggle': {
+      const targetNode = $(`.el[data-id="${a.target}"]`);
+      if(targetNode){
+        if(a.type==='show') targetNode.style.display='';
+        if(a.type==='hide') targetNode.style.display='none';
+        if(a.type==='toggle') targetNode.style.display = (targetNode.style.display==='none') ? '' : 'none';
+      }
+      break;
+    }
+    case 'animate': {
+      const targetNode = a.target ? $(`.el[data-id="${a.target}"]`) : $(`.el[data-id="${el.id}"]`);
+      if(targetNode){
+        targetNode.style.animation = 'none';
+        void targetNode.offsetWidth;
+        targetNode.style.animation = `${a.animType} 650ms ease`;
+      }
+      break;
+    }
+    case 'alert':
+      toast(a.message || 'Actie uitgevoerd', 'info', '🔔');
+      break;
+  }
+}
+
+/* =========================================================================
+   ELEMENT CRUD
+   ========================================================================= */
+function addElement(type, x, y){
+  if(!state.project) return;
+  const pg = activePage();
+  const maxZ = pg.elements.reduce((m,e)=>Math.max(m,e.z),0);
+  const el = newElement(type, Math.round(x), Math.round(y));
+  el.z = maxZ+1;
+  pg.elements.push(el);
+  state.selectedId = el.id;
+  renderAll();
+  saveDebounced();
+}
+function deleteSelected(){
+  if(!state.selectedId) return;
+  const pg = activePage();
+  pg.elements = pg.elements.filter(e=>e.id!==state.selectedId);
+  state.selectedId = null;
+  renderAll();
+  saveDebounced();
+}
+function selectElement(id){
+  state.selectedId = id;
+  $$('.el').forEach(n=> n.classList.toggle('selected', n.dataset.id===id));
+  renderRightRail();
+  if(state.railTab==='layers') renderLeftRail();
+}
+function getSelectedEl(){
+  const pg = activePage(); if(!pg) return null;
+  return pg.elements.find(e=>e.id===state.selectedId) || null;
+}
+
+let saveTimer = null;
+function saveDebounced(){
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(()=> saveProject(false), 700);
+}
+
+function toggleMode(){
+  state.mode = state.mode==='edit' ? 'preview' : 'edit';
+  $('#btnModeToggle').innerHTML = state.mode==='edit' ? '👁️ Voorbeeld' : '✏️ Bewerken';
+  $('#canvasModeBadge').innerHTML = state.mode==='edit' ? '✏️ Bewerkmodus' : '👁️ Voorbeeldmodus (acties actief)';
+  if(state.mode==='preview') state.selectedId = null;
+  renderAll();
+}
+/* =========================================================================
+   RIGHT RAIL — properties: style / animate / action
+   ========================================================================= */
+function renderRightRail(){
+  $$('.rail-tab', $('#railRight')).forEach(t=> t.classList.toggle('active', t.dataset.tab===state.propTab));
+  const body = $('#railRightBody');
+  const el = getSelectedEl();
+  if(!el){
+    body.innerHTML = `<div class="empty-state"><span class="ic">🖱️</span>Selecteer een element op het canvas<br>om de eigenschappen te bewerken.</div>`;
+    return;
+  }
+  if(state.propTab==='style') renderStyleTab(body, el);
+  else if(state.propTab==='animate') renderAnimateTab(body, el);
+  else if(state.propTab==='action') renderActionTab(body, el);
+}
+
+function refreshEl(){
+  renderCanvas();
+  saveDebounced();
+}
+
+function renderStyleTab(body, el){
+  const isText = ['heading','text','button','badge','icon'].includes(el.type);
+  const label = OBJECT_DEFS.find(o=>o.type===el.type)?.label || el.type;
+  body.innerHTML = `
+    <div class="rail-section-title">${label} — inhoud</div>
+    ${(el.type!=='divider'&&el.type!=='shape'&&el.type!=='container'&&el.type!=='glass'&&el.type!=='image'&&el.type!=='video') ? `
+    <div class="prop-group"><textarea id="p_content">${esc(el.content)}</textarea></div>` : ''}
+    ${el.type==='image' ? `<div class="prop-group"><label class="mini-label">Afbeelding URL</label><input type="text" id="p_src" value="${esc(el.src)}" placeholder="https://..."></div>` : ''}
+    ${el.type==='video' ? `<div class="prop-group"><label class="mini-label">Embed URL (bv. YouTube embed)</label><input type="text" id="p_src" value="${esc(el.src)}" placeholder="https://www.youtube.com/embed/..."></div>` : ''}
+
+    <div class="rail-section-title">Positie & grootte</div>
+    <div class="prop-row">
+      <div><label class="mini-label">X</label><input type="number" id="p_x" value="${el.x}"></div>
+      <div><label class="mini-label">Y</label><input type="number" id="p_y" value="${el.y}"></div>
+    </div>
+    <div class="prop-row">
+      <div><label class="mini-label">Breedte</label><input type="number" id="p_w" value="${el.w}"></div>
+      <div><label class="mini-label">Hoogte</label><input type="number" id="p_h" value="${el.h}"></div>
+    </div>
+    <div class="layerbtns">
+      <button class="btn small" id="p_front">⬆ Naar voren</button>
+      <button class="btn small" id="p_back">⬇ Naar achteren</button>
+    </div>
+
+    <div class="rail-section-title">Kleur & vorm</div>
+    <div class="prop-row">
+      <div><label class="mini-label">Achtergrondkleur</label><div class="color-row"><input type="color" id="p_bgc" value="${toHexColor(el.style.bg)}"><input type="text" id="p_bg" value="${el.style.bg}"></div></div>
+    </div>
+    ${isText ? `<div class="prop-row"><div><label class="mini-label">Tekstkleur</label><div class="color-row"><input type="color" id="p_colorc" value="${toHexColor(el.style.color)}"><input type="text" id="p_color" value="${el.style.color}"></div></div></div>
+    <div class="prop-row">
+      <div><label class="mini-label">Lettergrootte</label><input type="number" id="p_fs" value="${el.style.fontSize}"></div>
+      <div><label class="mini-label">Uitlijning</label>
+        <select id="p_align"><option value="left" ${el.style.align==='left'?'selected':''}>Links</option><option value="center" ${el.style.align==='center'?'selected':''}>Midden</option><option value="right" ${el.style.align==='right'?'selected':''}>Rechts</option></select>
+      </div>
+    </div>` : ''}
+    <div class="prop-row">
+      <div><label class="mini-label">Ronde hoeken (px)</label><input type="number" id="p_radius" value="${el.style.radius}"></div>
+      <div><label class="mini-label">Doorzichtigheid</label><input type="range" min="0" max="1" step="0.05" id="p_opacity" value="${el.style.opacity}"></div>
+    </div>
+    <label class="checkline"><input type="checkbox" id="p_shadow" ${el.style.shadow?'checked':''}> Slagschaduw</label>
+    <label class="checkline"><input type="checkbox" id="p_glass" ${el.style.glass?'checked':''}> ◈ Liquid glass effect</label>
+
+    <div class="rail-section-title"></div>
+    <button class="btn small danger" style="width:100%;" id="p_delete">🗑️ Verwijder element</button>
+  `;
+  bindNum('p_x', v=>{ el.x=v; }); bindNum('p_y', v=>{ el.y=v; });
+  bindNum('p_w', v=>{ el.w=Math.max(10,v); }); bindNum('p_h', v=>{ el.h=Math.max(10,v); });
+  const contentArea = $('#p_content');
+  if(contentArea) contentArea.oninput = ()=>{ el.content = contentArea.value; refreshEl(); };
+  const srcInput = $('#p_src');
+  if(srcInput) srcInput.oninput = ()=>{ el.src = srcInput.value; refreshEl(); };
+
+  $('#p_front').onclick = ()=>{ const pg=activePage(); const maxZ=Math.max(...pg.elements.map(e=>e.z)); el.z=maxZ+1; refreshEl(); };
+  $('#p_back').onclick = ()=>{ const pg=activePage(); const minZ=Math.min(...pg.elements.map(e=>e.z)); el.z=minZ-1; refreshEl(); };
+
+  linkColor('p_bgc','p_bg', v=>{ el.style.bg=v; refreshEl(); });
+  if(isText){
+    linkColor('p_colorc','p_color', v=>{ el.style.color=v; refreshEl(); });
+    bindNum('p_fs', v=>{ el.style.fontSize=v; refreshEl(); });
+    $('#p_align').onchange = e=>{ el.style.align=e.target.value; refreshEl(); };
+  }
+  bindNum('p_radius', v=>{ el.style.radius=v; refreshEl(); });
+  $('#p_opacity').oninput = e=>{ el.style.opacity=parseFloat(e.target.value); refreshEl(); };
+  $('#p_shadow').onchange = e=>{ el.style.shadow=e.target.checked; refreshEl(); };
+  $('#p_glass').onchange = e=>{ el.style.glass=e.target.checked; refreshEl(); };
+  $('#p_delete').onclick = deleteSelected;
+
+  function bindNum(id, fn){ const i=$('#'+id); i.oninput=()=>{ fn(parseFloat(i.value)||0); refreshEl(); }; }
+}
+
+function toHexColor(v){
+  if(!v || v==='transparent') return '#000000';
+  if(v.startsWith('#')) return v.length===7?v:'#000000';
+  return '#8b5cf6';
+}
+function linkColor(colorId, textId, fn){
+  const c = $('#'+colorId), t = $('#'+textId);
+  c.oninput = ()=>{ t.value = c.value; fn(c.value); };
+  t.oninput = ()=>{ fn(t.value); };
+}
+
+function renderAnimateTab(body, el){
+  const a = el.onLoadAnim;
+  body.innerHTML = `
+    <div class="rail-section-title">Animatie bij laden van pagina</div>
+    <label class="checkline"><input type="checkbox" id="a_enabled" ${a.enabled?'checked':''}> Speel animatie af zodra pagina laadt</label>
+    <div class="prop-group" style="margin-top:10px;">
+      <label class="mini-label">Type animatie</label>
+      <select id="a_type">${ANIMATIONS.map(x=>`<option value="${x.id}" ${a.type===x.id?'selected':''}>${x.label}</option>`).join('')}</select>
+    </div>
+    <div class="prop-row">
+      <div><label class="mini-label">Duur (ms)</label><input type="number" id="a_dur" value="${a.duration}"></div>
+      <div><label class="mini-label">Vertraging (ms)</label><input type="number" id="a_delay" value="${a.delay}"></div>
+    </div>
+    <button class="btn small" style="width:100%; margin-top:8px;" id="a_preview">▶ Bekijk animatie</button>
+    <div class="rail-section-title">Weten hoe dit werkt?</div>
+    <p style="font-size:11.5px; color:var(--muted2); line-height:1.6;">Deze animatie speelt automatisch af zodra iemand de pagina bezoekt (in Voorbeeldmodus of de geëxporteerde site). Wil je een animatie afspelen ná een klik op een knop? Ga naar het tabblad <b>Actie</b> en kies "Speel animatie af".</p>
+  `;
+  $('#a_enabled').onchange = e=>{ a.enabled=e.target.checked; saveDebounced(); };
+  $('#a_type').onchange = e=>{ a.type=e.target.value; saveDebounced(); };
+  $('#a_dur').oninput = e=>{ a.duration=parseInt(e.target.value)||600; saveDebounced(); };
+  $('#a_delay').oninput = e=>{ a.delay=parseInt(e.target.value)||0; saveDebounced(); };
+  $('#a_preview').onclick = ()=>{
+    const node = $(`.el[data-id="${el.id}"]`);
+    if(node){ node.style.animation='none'; void node.offsetWidth; node.style.animation = `${a.type} ${a.duration}ms ease ${a.delay}ms both`; }
+  };
+}
+
+function renderActionTab(body, el){
+  const a = el.action;
+  const pg = activePage();
+  const others = pg.elements.filter(e=>e.id!==el.id);
+  body.innerHTML = `
+    <div class="rail-section-title">Wat gebeurt er bij een klik?</div>
+    <label class="checkline"><input type="checkbox" id="ac_enabled" ${a.enabled?'checked':''}> Actie inschakelen op klik</label>
+    <div class="action-block" style="margin-top:10px;">
+      <div class="prop-group">
+        <label class="mini-label">Actietype</label>
+        <select id="ac_type">${ACTION_TYPES.map(x=>`<option value="${x.id}" ${a.type===x.id?'selected':''}>${x.label}</option>`).join('')}</select>
+      </div>
+      <div id="ac_extra"></div>
+    </div>
+    <p style="font-size:11px; color:var(--muted2); line-height:1.6;">Test de koppeling via de knop <b>👁️ Voorbeeld</b> bovenaan — in bewerkmodus selecteer je elementen, in voorbeeldmodus werken de acties echt.</p>
+  `;
+  $('#ac_enabled').onchange = e=>{ a.enabled=e.target.checked; saveDebounced(); };
+  $('#ac_type').onchange = e=>{ a.type=e.target.value; renderActionExtra(); saveDebounced(); };
+  renderActionExtra();
+
+  function renderActionExtra(){
+    const extra = $('#ac_extra');
+    if(a.type==='goToPage'){
+      extra.innerHTML = `<label class="mini-label">Doelpagina</label><select id="ac_target">${state.project.pages.map(p=>`<option value="${p.id}" ${a.target===p.id?'selected':''}>${esc(p.name)}</option>`).join('')}</select>`;
+      $('#ac_target').onchange = e=>{ a.target=e.target.value; saveDebounced(); };
+    } else if(a.type==='openLink'){
+      extra.innerHTML = `<label class="mini-label">URL</label><input type="text" id="ac_url" value="${esc(a.url)}" placeholder="https://...">`;
+      $('#ac_url').oninput = e=>{ a.url=e.target.value; saveDebounced(); };
+    } else if(['show','hide','toggle'].includes(a.type)){
+      extra.innerHTML = `<label class="mini-label">Doelelement</label><select id="ac_target"><option value="">— kies element —</option>${others.map(o=>`<option value="${o.id}" ${a.target===o.id?'selected':''}>${OBJECT_DEFS.find(x=>x.type===o.type)?.label} — ${esc((o.content||'').slice(0,18))}</option>`).join('')}</select>`;
+      $('#ac_target').onchange = e=>{ a.target=e.target.value; saveDebounced(); };
+    } else if(a.type==='animate'){
+      extra.innerHTML = `
+        <label class="mini-label">Doelelement (leeg = zichzelf)</label>
+        <select id="ac_target"><option value="">— dit element zelf —</option>${others.map(o=>`<option value="${o.id}" ${a.target===o.id?'selected':''}>${OBJECT_DEFS.find(x=>x.type===o.type)?.label} — ${esc((o.content||'').slice(0,18))}</option>`).join('')}</select>
+        <label class="mini-label" style="margin-top:8px;">Welke animatie</label>
+        <select id="ac_anim">${ANIMATIONS.map(x=>`<option value="${x.id}" ${a.animType===x.id?'selected':''}>${x.label}</option>`).join('')}</select>`;
+      $('#ac_target').onchange = e=>{ a.target=e.target.value; saveDebounced(); };
+      $('#ac_anim').onchange = e=>{ a.animType=e.target.value; saveDebounced(); };
+    } else if(a.type==='alert'){
+      extra.innerHTML = `<label class="mini-label">Bericht</label><input type="text" id="ac_msg" value="${esc(a.message)}" placeholder="Bijv. Verzonden!">`;
+      $('#ac_msg').oninput = e=>{ a.message=e.target.value; saveDebounced(); };
+    } else {
+      extra.innerHTML = '';
+    }
+  }
+}
+/* =========================================================================
+   CODE GENERATION (used by both code-editor and export)
+   ========================================================================= */
+function bgCss(bg){
+  if(!bg) return 'background:#101319;';
+  if(bg.type==='solid') return `background:${bg.value};`;
+  if(bg.type==='gradient') return `background:${bg.value};`;
+  if(bg.type==='animgrad') return `background:${bg.value}; background-size:220% 220%; animation:gradShift 9s ease infinite;`;
+  if(bg.type==='3d') return `background:#0e1016;`;
+  if(bg.type==='glasswave') return `background:linear-gradient(135deg,#241a3d,#0e1016);`;
+  return 'background:#101319;';
+}
+function elementInnerHTML(el){
+  switch(el.type){
+    case 'heading': case 'text': case 'button': case 'badge': return esc(el.content);
+    case 'icon': return `<span style="font-size:${Math.max(20,el.h*0.5)}px;">${esc(el.content)}</span>`;
+    case 'input': return `<input type="text" placeholder="${esc(el.content)}" style="width:100%;height:100%;background:transparent;border:none;color:inherit;font-size:inherit;padding:0 12px;outline:none;">`;
+    case 'image': return el.src ? `<img src="${esc(el.src)}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">` : '';
+    case 'video': return el.src ? `<iframe src="${esc(el.src)}" style="width:100%;height:100%;border:none;border-radius:inherit;" allowfullscreen></iframe>` : '';
+    default: return '';
+  }
+}
+function elementStyleString(el){
+  const s = el.style;
+  let bg = s.bg;
+  let extra = '';
+  if(s.glass){
+    bg = 'rgba(255,255,255,0.08)';
+    extra += `backdrop-filter:blur(18px) saturate(160%); -webkit-backdrop-filter:blur(18px) saturate(160%); border:1px solid rgba(255,255,255,0.25); box-shadow:0 8px 32px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.25);`;
+  }
+  const justify = s.align==='center'?'center':(s.align==='right'?'flex-end':'flex-start');
+  const isFlexType = ['heading','text','button','badge','icon'].includes(el.type);
+  return `position:absolute; left:${el.x}px; top:${el.y}px; width:${el.w}px; height:${el.h}px; z-index:${el.z};`+
+    `background:${bg}; color:${s.color}; font-size:${s.fontSize}px; font-weight:${s.fontWeight}; border-radius:${s.radius}px; opacity:${s.opacity}; `+
+    `${!s.glass ? 'border:'+(s.border||'none')+';' : extra} ${s.shadow?'box-shadow:0 12px 30px rgba(0,0,0,0.35);':''} overflow:hidden; box-sizing:border-box; `+
+    `${isFlexType ? `display:flex; align-items:center; justify-content:${justify}; text-align:${s.align}; padding:0 16px;` : ''}`+
+    `${el.type==='divider' ? `background:${s.bg==='transparent'?'rgba(255,255,255,0.2)':s.bg};` : ''}`+
+    `${(el.action&&el.action.enabled&&el.action.type!=='none') ? 'cursor:pointer;' : ''}`+
+    `${(el.onLoadAnim&&el.onLoadAnim.enabled) ? `animation:${el.onLoadAnim.type} ${el.onLoadAnim.duration}ms ease ${el.onLoadAnim.delay}ms both;` : ''}`;
+}
+function generatePageHTML(page, isExport){
+  let bgLayers = '';
+  if(page.background && page.background.type==='3d'){
+    let cubes='';
+    for(let i=0;i<7;i++){
+      cubes += `<div class="cube" style="left:${Math.round(Math.random()*1100)}px; top:${Math.round(Math.random()*700)}px; animation-duration:${(10+Math.random()*10).toFixed(1)}s;"><div class="f1"></div><div class="f2"></div><div class="f3"></div><div class="f4"></div><div class="f5"></div><div class="f6"></div></div>`;
+    }
+    bgLayers = `<div class="bg3d">${cubes}</div>`;
+  }
+  if(page.background && page.background.type==='glasswave'){
+    const colors=['#8b5cf6','#22d3ee','#3ddc97']; let blobs='';
+    for(let i=0;i<4;i++){
+      const size = 180+Math.round(Math.random()*180);
+      blobs += `<div class="blob" style="width:${size}px;height:${size}px;left:${Math.round(Math.random()*1000)}px;top:${Math.round(Math.random()*600)}px;background:${colors[i%3]};animation-delay:${(Math.random()*4).toFixed(1)}s;"></div>`;
+    }
+    bgLayers = `<div class="bg-glasswave">${blobs}</div>`;
+  }
+  const els = page.elements.slice().sort((a,b)=>a.z-b.z).map(el=>{
+    const tag = el.type==='input' ? 'div' : 'div';
+    const dataAttrs = `data-id="${el.id}" data-el-type="${el.type}"`;
+    const actionAttrs = (el.action && el.action.enabled && el.action.type!=='none') ? `data-action="${el.action.type}" data-target="${esc(el.action.target||'')}" data-anim="${el.action.animType||''}" data-url="${esc(el.action.url||'')}" data-msg="${esc(el.action.message||'')}"` : '';
+    return `<${tag} ${dataAttrs} ${actionAttrs} style="${elementStyleString(el)}">${elementInnerHTML(el)}</${tag}>`;
+  }).join('\n    ');
+  return `<div class="dp-page" data-page-id="${page.id}" style="position:relative; width:1200px; height:800px; overflow:hidden; ${bgCss(page.background)}">
+    ${bgLayers}
+    ${els}
+  </div>`;
+}
+
+function generateFullHTML(){
+  const proj = state.project;
+  const pagesHtml = proj.pages.map((p,i)=> `<div class="dp-pagewrap" data-wrap-for="${p.id}" style="display:${p.id===proj.activePageId?'block':'none'};">${generatePageHTML(p)}</div>`).join('\n');
+  return `<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${esc(proj.name)}</title>
+<style>
+  body{ margin:0; background:#0a0c11; display:flex; justify-content:center; padding:24px; font-family:'Inter',sans-serif; }
+  .dp-page{ box-shadow:0 30px 80px rgba(0,0,0,0.5); border-radius:14px; }
+  .bg3d{ position:absolute; inset:0; overflow:hidden; z-index:0; perspective:900px;}
+  .bg3d .cube{ position:absolute; width:70px; height:70px; transform-style:preserve-3d; animation-name:spin3d; animation-timing-function:linear; animation-iteration-count:infinite; opacity:0.35;}
+  .bg3d .cube div{ position:absolute; width:70px; height:70px; border:1px solid rgba(139,92,246,0.6); background:rgba(139,92,246,0.06);}
+  .bg3d .cube .f1{ transform:translateZ(35px);} .bg3d .cube .f2{ transform:rotateY(90deg) translateZ(35px);}
+  .bg3d .cube .f3{ transform:rotateY(180deg) translateZ(35px);} .bg3d .cube .f4{ transform:rotateY(-90deg) translateZ(35px);}
+  .bg3d .cube .f5{ transform:rotateX(90deg) translateZ(35px);} .bg3d .cube .f6{ transform:rotateX(-90deg) translateZ(35px);}
+  @keyframes spin3d{ from{transform:rotateX(0) rotateY(0);} to{transform:rotateX(360deg) rotateY(360deg);} }
+  .bg-glasswave{ position:absolute; inset:0; overflow:hidden; z-index:0;}
+  .bg-glasswave .blob{ position:absolute; border-radius:50%; filter:blur(50px); opacity:0.55; animation:floatBlob 10s ease-in-out infinite;}
+  @keyframes floatBlob{ 0%,100%{ transform:translate(0,0) scale(1);} 50%{ transform:translate(30px,-25px) scale(1.12);} }
+  @keyframes gradShift{ 0%{background-position:0% 50%;} 50%{background-position:100% 50%;} 100%{background-position:0% 50%;} }
+  @keyframes fadeIn{ from{opacity:0;} to{opacity:1;} } @keyframes fadeOut{ from{opacity:1;} to{opacity:0;} }
+  @keyframes slideInLeft{ from{opacity:0; transform:translateX(-40px);} to{opacity:1; transform:translateX(0);} }
+  @keyframes slideInRight{ from{opacity:0; transform:translateX(40px);} to{opacity:1; transform:translateX(0);} }
+  @keyframes slideInUp{ from{opacity:0; transform:translateY(40px);} to{opacity:1; transform:translateY(0);} }
+  @keyframes slideInDown{ from{opacity:0; transform:translateY(-40px);} to{opacity:1; transform:translateY(0);} }
+  @keyframes zoomIn{ from{opacity:0; transform:scale(0.7);} to{opacity:1; transform:scale(1);} }
+  @keyframes bounceIn{ 0%{transform:scale(0.5); opacity:0;} 60%{transform:scale(1.08); opacity:1;} 100%{transform:scale(1);} }
+  @keyframes pulse{ 0%,100%{transform:scale(1);} 50%{transform:scale(1.06);} }
+  @keyframes rotateIn{ from{opacity:0; transform:rotate(-15deg) scale(0.9);} to{opacity:1; transform:rotate(0) scale(1);} }
+  @keyframes shake{ 0%,100%{transform:translateX(0);} 20%{transform:translateX(-8px);} 40%{transform:translateX(8px);} 60%{transform:translateX(-5px);} 80%{transform:translateX(5px);} }
+  @keyframes flipIn{ from{opacity:0; transform:rotateY(90deg);} to{opacity:1; transform:rotateY(0);} }
+  footer.dp-credit{ position:fixed; bottom:8px; right:12px; font-size:11px; color:#5b6377; font-family:'Inter',sans-serif;}
+  footer.dp-credit a{ color:#8b93a7; text-decoration:none; }
+</style>
+</head>
+<body>
+${pagesHtml}
+<footer class="dp-credit">Made with Designer — Mattyou Studios (tm)</footer>
+(function(){
+  function showPage(id){
+    document.querySelectorAll('.dp-pagewrap').forEach(w=>{ w.style.display = (w.dataset.wrapFor===id) ? 'block' : 'none'; });
+  }
+  document.querySelectorAll('[data-action]').forEach(function(node){
+    node.addEventListener('click', function(e){
+      e.stopPropagation();
+      var type = node.dataset.action, target = node.dataset.target;
+      if(type==='goToPage'){ showPage(target); }
+      else if(type==='openLink'){ if(node.dataset.url) window.open(node.dataset.url, '_blank'); }
+      else if(type==='show' || type==='hide' || type==='toggle'){
+        var t = document.querySelector('[data-id="'+target+'"]');
+        if(t){
+          if(type==='show') t.style.display='';
+          else if(type==='hide') t.style.display='none';
+          else t.style.display = (t.style.display==='none') ? '' : 'none';
+        }
+      } else if(type==='animate'){
+        var t = target ? document.querySelector('[data-id="'+target+'"]') : node;
+        if(t){ t.style.animation='none'; void t.offsetWidth; t.style.animation = (node.dataset.anim||'pulse')+' 650ms ease'; }
+      } else if(type==='alert'){
+        alert(node.dataset.msg || 'Actie uitgevoerd');
+      }
+    });
+  });
+})();
+<\/script>
+</body>
+</html>`;
+}
+
+function openCodeModal(){
+  if(!state.project){ toast('Geen project geladen', 'err'); return; }
+  openModal('modalCode');
+  $$('.code-tab').forEach(x=>x.classList.remove('active'));
+  $('.code-tab[data-code-tab="html"]').classList.add('active');
+  loadCodeTab('html');
+}
+function loadCodeTab(tab){
+  const area = $('#codeArea');
+  if(tab==='html'){ area.value = generatePageHTML(activePage()); area.dataset.tab='html'; area.readOnly=false; }
+  else if(tab==='css'){ area.value = '/* De volledige stijl wordt inline per element gegenereerd.\n   Pas kleuren/afmetingen aan via het Stijl-paneel rechts,\n   of bewerk het HTML-tabblad en klik Toepassen. */'; area.dataset.tab='css'; area.readOnly=true; }
+  else if(tab==='js'){ area.value = '/* Dit stukje JS wordt automatisch mee-geëxporteerd\n   en regelt kliks, animaties en paginanavigatie. */\n\n' + generateFullHTML().split('<script>')[1].split('<\\/script>')[0]; area.dataset.tab='js'; area.readOnly=true; }
+}
+function applyCodeChanges(){
+  const area = $('#codeArea');
+  if(area.dataset.tab!=='html'){ toast('Alleen het HTML-tabblad kan worden toegepast', 'err'); return; }
+  try{
+    const doc = new DOMParser().parseFromString(`<div>${area.value}</div>`, 'text/html');
+    const pageDiv = doc.body.firstChild.firstChild;
+    if(!pageDiv){ throw new Error('leeg'); }
+    const newEls = [];
+    pageDiv.querySelectorAll('[data-id]').forEach(node=>{
+      const pg = activePage();
+      const existing = pg.elements.find(e=>e.id===node.dataset.id);
+      if(!existing) return;
+      const st = node.getAttribute('style') || '';
+      const get = (prop)=>{ const m = st.match(new RegExp(prop+':\\s*([^;]+);?')); return m ? m[1].trim() : null; };
+      const px = v => v ? parseFloat(v) : null;
+      if(get('left')!=null) existing.x = px(get('left'));
+      if(get('top')!=null) existing.y = px(get('top'));
+      if(get('width')!=null) existing.w = px(get('width'));
+      if(get('height')!=null) existing.h = px(get('height'));
+      if(get('z-index')!=null) existing.z = px(get('z-index'));
+      if(get('opacity')!=null) existing.style.opacity = parseFloat(get('opacity'));
+      if(get('border-radius')!=null) existing.style.radius = px(get('border-radius'));
+      if(get('font-size')!=null) existing.style.fontSize = px(get('font-size'));
+      if(get('color')!=null) existing.style.color = get('color');
+      if(get('background')!=null) existing.style.bg = get('background').split(' ')[0];
+      if(['heading','text','button','badge','icon'].includes(existing.type)) existing.content = node.textContent;
+      newEls.push(existing);
+    });
+    if(newEls.length){ activePage().elements = newEls; }
+    renderAll();
+    saveDebounced();
+    toast('Code toegepast op canvas');
+    closeModal('modalCode');
+  }catch(err){
+    toast('Kon code niet verwerken — controleer of data-id attributen intact zijn', 'err');
+  }
+}
+
+function exportHTML(){
+  if(!state.project){ toast('Geen project geladen', 'err'); return; }
+  const html = generateFullHTML();
+  const blob = new Blob([html], {type:'text/html'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = (state.project.name || 'website').replace(/[^a-z0-9\-_]+/gi,'_') + '.html';
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+  toast('Website geëxporteerd als HTML-bestand');
+}
+
+/* =========================================================================
+   TEMPLATES MODAL
+   ========================================================================= */
+function openTemplatesModal(){
+  const grid = $('#tplGrid');
+  grid.innerHTML = TEMPLATES.map(t=>`
+    <div class="tpl-card" data-tpl="${t.id}">
+      <div class="tpl-thumb" style="background:${t.bg.type==='solid'?t.bg.value:(t.bg.value||'#1a1c26')};">${t.ic}</div>
+      <div class="tpl-info"><b>${t.label}</b><p>${t.desc}</p></div>
+    </div>`).join('');
+  $$('.tpl-card', grid).forEach(c=>{
+    c.onclick = ()=>{
+      if(!state.project){ toast('Geen project actief', 'err'); return; }
+      const pg = activePage();
+      const t = TEMPLATES.find(x=>x.id===c.dataset.tpl);
+      if(pg.elements.length && !confirm('Dit vervangt de inhoud van de huidige pagina door de template. Doorgaan?')) return;
+      pg.background = Object.assign({}, t.bg);
+      pg.elements = templateElements(t.id);
+      state.selectedId = null;
+      renderAll(); saveDebounced();
+      closeModal('modalTemplates');
+      toast('Template toegepast: ' + t.label);
+    };
+  });
+  openModal('modalTemplates');
+}
+
+function openNewProjectModal(){
+  const grid = $('#newProjTplGrid');
+  grid.innerHTML = TEMPLATES.map(t=>`
+    <div class="tpl-card" data-tpl="${t.id}">
+      <div class="tpl-thumb" style="background:${t.bg.type==='solid'?t.bg.value:(t.bg.value||'#1a1c26')};">${t.ic}</div>
+      <div class="tpl-info"><b>${t.label}</b><p>${t.desc}</p></div>
+    </div>`).join('');
+  $$('.tpl-card', grid).forEach(c=>{
+    c.onclick = ()=>{
+      const name = $('#newProjName').value.trim() || 'Naamloos project';
+      state.project = createProject(name, c.dataset.tpl);
+      state.selectedId = null;
+      saveProject(false);
+      renderAll();
+      closeModal('modalNewProject');
+      toast('Nieuw project aangemaakt');
+    };
+  });
+  openModal('modalNewProject');
+}
+
+/* =========================================================================
+   PROJECTS MODAL
+   ========================================================================= */
+function renderProjectsList(){
+  const list = getProjectList().slice().sort((a,b)=>b.updatedAt-a.updatedAt);
+  const body = $('#projectsBody');
+  if(!list.length){
+    body.innerHTML = `<div class="empty-state"><span class="ic">📁</span>Nog geen opgeslagen projecten${state.user?'':' als gast'}.</div>`;
+    return;
+  }
+  body.innerHTML = list.map(p=>`
+    <div class="bg-item" style="cursor:pointer;">
+      <div class="bg-swatch" style="background:var(--grad); display:flex; align-items:center; justify-content:center;">📄</div>
+      <div style="flex:1;" data-open="${p.id}"><div class="lbl">${esc(p.name)}</div><div class="sub">Bijgewerkt: ${new Date(p.updatedAt).toLocaleString('nl-NL')}</div></div>
+      <button class="btn small danger" data-del="${p.id}">🗑️</button>
+    </div>`).join('');
+  $$('[data-open]', body).forEach(x=> x.onclick = ()=>{ loadProject(x.dataset.open); closeModal('modalProjects'); });
+  $$('[data-del]', body).forEach(x=> x.onclick = (e)=>{ e.stopPropagation(); if(confirm('Project definitief verwijderen?')) deleteProject(x.dataset.del); });
+}
+function openProjectsModal(){ renderProjectsList(); openModal('modalProjects'); }
+
+/* =========================================================================
+   ACCOUNT MODAL (lokaal account-systeem via localStorage)
+   ========================================================================= */
+function openAccountModal(){
+  openModal('modalAccount');
+  renderAccountModal();
+}
+function renderAccountModal(){
+  const body = $('#accModalBody');
+  $('#accModalTitle').innerHTML = state.user ? '👤 Mijn account' : '👤 Account';
+  if(state.user){
+    body.innerHTML = `
+      <p style="font-size:13px; color:var(--muted); margin-top:0;">Ingelogd als <b style="color:var(--text);">${esc(state.user.username)}</b></p>
+      <p style="font-size:11.5px; color:var(--muted2); line-height:1.6;">Je projecten worden apart van gast-projecten bewaard in de opslag van deze browser.</p>
+      <button class="btn small" style="width:100%; margin-top:10px;" id="accLogout">🚪 Uitloggen</button>
+    `;
+    $('#accLogout').onclick = ()=>{
+      state.user = null;
+      localStorage.removeItem(LS_CURRENT_USER);
+      closeModal('modalAccount');
+      initFreshProject();
+      toast('Uitgelogd — verdergegaan als gast');
+    };
+    return;
+  }
+  body.innerHTML = `
+    <div class="acc-tabs">
+      <div class="acc-tab active" data-acctab="login">Inloggen</div>
+      <div class="acc-tab" data-acctab="register">Account maken</div>
+    </div>
+    <div id="accFormArea"></div>
+    <p style="font-size:10.5px; color:var(--muted2); margin-top:14px; line-height:1.5;">Accounts worden lokaal in deze browser bewaard (niet naar een server verstuurd), puur om jouw projecten te scheiden van andere gebruikers van dit toestel.</p>
+  `;
+  $$('.acc-tab', body).forEach(t=>{
+    t.onclick = ()=>{ $$('.acc-tab', body).forEach(x=>x.classList.remove('active')); t.classList.add('active'); renderAccForm(t.dataset.acctab); };
+  });
+  renderAccForm('login');
+
+  function renderAccForm(kind){
+    const area = $('#accFormArea');
+    area.innerHTML = `
+      <div class="field"><label>Gebruikersnaam</label><input type="text" id="accUser" placeholder="bv. mattyou"></div>
+      <div class="field"><label>Wachtwoord</label><input type="text" id="accPass" placeholder="••••••••"></div>
+      <button class="btn small primary" style="width:100%;" id="accSubmit">${kind==='login'?'Inloggen':'Account aanmaken'}</button>
+    `;
+    $('#accSubmit').onclick = ()=>{
+      const u = $('#accUser').value.trim();
+      const p = $('#accPass').value;
+      if(!u || !p){ toast('Vul gebruikersnaam en wachtwoord in', 'err'); return; }
+      const accounts = loadJSON(LS_ACCOUNTS, {});
+      if(kind==='register'){
+        if(accounts[u]){ toast('Deze gebruikersnaam bestaat al', 'err'); return; }
+        accounts[u] = {passHash: simpleHash(p), createdAt: Date.now()};
+        saveJSON(LS_ACCOUNTS, accounts);
+        toast('Account aangemaakt — je bent nu ingelogd');
+      } else {
+        if(!accounts[u] || accounts[u].passHash !== simpleHash(p)){ toast('Onjuiste gebruikersnaam of wachtwoord', 'err'); return; }
+        toast('Ingelogd als ' + u);
+      }
+      state.user = {username: u};
+      saveJSON(LS_CURRENT_USER, state.user);
+      closeModal('modalAccount');
+      initFreshProject();
+    };
+  }
+}
+
+/* =========================================================================
+   SETTINGS MODAL (opslag: local storage vs database)
+   ========================================================================= */
+function openSettingsModal(){
+  const body = $('#settingsBody');
+  body.innerHTML = `
+    <div class="field">
+      <label>Waar wil je projecten opslaan?</label>
+      <select id="setMode">
+        <option value="local" ${state.settings.storageMode==='local'?'selected':''}>Alleen local storage (in deze browser)</option>
+        <option value="database" ${state.settings.storageMode==='database'?'selected':''}>Local storage + eigen database-eindpunt</option>
+      </select>
+    </div>
+    <div class="field" id="dbUrlField" style="${state.settings.storageMode==='database'?'':'display:none;'}">
+      <label>Database API-URL (jouw eigen backend)</label>
+      <input type="text" id="setDbUrl" value="${esc(state.settings.dbUrl)}" placeholder="https://jouw-backend.nl/api/projects">
+      <p style="font-size:10.5px; color:var(--muted2); margin-top:6px; line-height:1.6;">Designer draait volledig in de browser en kan zelf geen database hosten. Geef hier de URL van jouw eigen server op — bij opslaan sturen we een POST met het project als JSON. Zonder eigen server valt alles automatisch terug op local storage, zodat je nooit iets kwijtraakt.</p>
+    </div>
+    <button class="btn small primary" style="width:100%;" id="setSave">Opslaan</button>
+  `;
+  $('#setMode').onchange = e=>{ $('#dbUrlField').style.display = e.target.value==='database' ? '' : 'none'; };
+  $('#setSave').onclick = ()=>{
+    state.settings.storageMode = $('#setMode').value;
+    state.settings.dbUrl = $('#setDbUrl') ? $('#setDbUrl').value.trim() : '';
+    saveJSON(LS_SETTINGS, state.settings);
+    toast('Instellingen opgeslagen');
+    closeModal('modalSettings');
+  };
+  openModal('modalSettings');
+}
+
+/* =========================================================================
+   MASTER RENDER + INIT
+   ========================================================================= */
+function renderAll(){
+  renderPageTabs();
+  renderCanvas();
+  renderLeftRail();
+  renderRightRail();
+}
+
+function init(){
+  buildShell();
+  initFreshProject();
+}
+init();
+</script>
+</body>
+</html>
