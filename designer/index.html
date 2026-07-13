@@ -6,6 +6,7 @@
 <title>Designer — Mattyou Studios</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
 :root{
   --bg:#0a0c11;
@@ -203,6 +204,53 @@ body{
 @keyframes floatBlob{ 0%,100%{ transform:translate(0,0) scale(1);} 50%{ transform:translate(30px,-25px) scale(1.12);} }
 
 .bg-animated-grad{ background-size:220% 220% !important; animation:gradShift 9s ease infinite;}
+
+.bg-starfield{ position:absolute; inset:0; overflow:hidden; z-index:0;}
+.bg-starfield .star{ position:absolute; border-radius:50%; background:#fff; box-shadow:0 0 4px rgba(255,255,255,0.8); animation:twinkle 3.5s ease-in-out infinite;}
+.bg-starfield .star-glow{ position:absolute; border-radius:50%; background:radial-gradient(circle, rgba(139,92,246,0.35), transparent 70%); filter:blur(6px);}
+@keyframes twinkle{ 0%,100%{opacity:0.25;} 50%{opacity:1;} }
+
+/* ---------- snap guides ---------- */
+.snap-guide{ position:absolute; background:var(--accent2); z-index:9999; pointer-events:none; box-shadow:0 0 6px rgba(34,211,238,0.8);}
+.snap-guide.v{ width:1px; top:0; bottom:0; }
+.snap-guide.h{ height:1px; left:0; right:0; }
+
+/* ---------- align toggle switch (top of right rail) ---------- */
+.snap-toggle-row{ display:flex; align-items:center; justify-content:space-between; padding:10px 14px; border-bottom:1px solid var(--border); background:rgba(255,255,255,0.02);}
+.switch{ position:relative; width:36px; height:20px; flex:0 0 auto;}
+.switch input{ opacity:0; width:0; height:0; }
+.switch .slider{ position:absolute; inset:0; background:rgba(255,255,255,0.15); border-radius:20px; cursor:pointer; transition:.15s;}
+.switch .slider:before{ content:''; position:absolute; width:14px; height:14px; left:3px; top:3px; background:#fff; border-radius:50%; transition:.15s;}
+.switch input:checked + .slider{ background:var(--grad); }
+.switch input:checked + .slider:before{ transform:translateX(16px); }
+
+/* ---------- context menu ---------- */
+.ctx-menu{ position:fixed; z-index:500; background:var(--panel-solid); border:1px solid var(--border); border-radius:10px; padding:6px; min-width:190px; box-shadow:0 20px 50px rgba(0,0,0,0.5); display:none;}
+.ctx-menu.show{ display:block; }
+.ctx-item{ padding:8px 10px; font-size:12.5px; border-radius:7px; cursor:pointer; display:flex; align-items:center; gap:8px; color:var(--text);}
+.ctx-item:hover{ background:var(--panel); }
+.ctx-item.disabled{ opacity:0.35; pointer-events:none; }
+.ctx-sep{ height:1px; background:var(--border); margin:5px 2px; }
+.ctx-key{ margin-left:auto; font-size:10px; color:var(--muted2); font-family:var(--font-mono);}
+
+/* ---------- align buttons ---------- */
+.align-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
+.align-grid .btn{ padding:8px 4px; justify-content:center; font-size:13px; }
+
+/* ---------- timeline bar ---------- */
+.timeline-bar{ flex:0 0 190px; border-top:1px solid var(--border); background:rgba(12,14,20,0.9); backdrop-filter:blur(16px); display:none; flex-direction:column; }
+.timeline-bar.show{ display:flex; }
+.timeline-head{ display:flex; align-items:center; gap:10px; padding:9px 16px; border-bottom:1px solid var(--border); }
+.timeline-head b{ font-size:12px; }
+.timeline-time{ font-family:var(--font-mono); font-size:11.5px; color:var(--muted); background:rgba(255,255,255,0.05); padding:3px 8px; border-radius:6px;}
+.timeline-track-wrap{ flex:1; position:relative; padding:16px; overflow-x:auto; }
+.timeline-ruler{ position:relative; height:44px; background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:8px; cursor:pointer; min-width:600px;}
+.timeline-tick{ position:absolute; top:0; bottom:0; width:1px; background:rgba(255,255,255,0.08); }
+.timeline-tick span{ position:absolute; top:2px; left:4px; font-size:9px; color:var(--muted2); font-family:var(--font-mono);}
+.timeline-kf{ position:absolute; top:50%; width:13px; height:13px; background:var(--accent1); border:2px solid #0a0c11; transform:translate(-50%,-50%) rotate(45deg); cursor:pointer; z-index:5;}
+.timeline-kf:hover, .timeline-kf.active{ background:var(--accent2); }
+.timeline-playhead{ position:absolute; top:-6px; bottom:-6px; width:2px; background:#fff; z-index:6; pointer-events:none; box-shadow:0 0 6px #fff;}
+.timeline-playhead:before{ content:''; position:absolute; top:-5px; left:-5px; width:12px; height:12px; background:#fff; border-radius:3px 3px 3px 0; transform:rotate(45deg); }
 @keyframes gradShift{ 0%{background-position:0% 50%;} 50%{background-position:100% 50%;} 100%{background-position:0% 50%;} }
 
 /* ---------- PROPERTIES PANEL ---------- */
@@ -288,6 +336,7 @@ input[type=range]{ width:100%; accent-color:var(--accent2); }
   .rail{ display:none; }
 }
 </style>
+<style id="dynamicKfStyle"></style>
 </head>
 <body>
 <div class="app" id="app"></div>
@@ -340,6 +389,7 @@ const OBJECT_DEFS = [
   {type:'video', ic:'▶', label:'Video (embed)', w:400, h:225},
   {type:'shape', ic:'●', label:'Vorm (cirkel)', w:100, h:100},
   {type:'badge', ic:'⬤', label:'Badge/Label', w:110, h:30},
+  {type:'overlay', ic:'⧉', label:'Overlay / Pop-up', w:1200, h:800},
 ];
 
 const BACKGROUND_PRESETS = [
@@ -348,9 +398,15 @@ const BACKGROUND_PRESETS = [
   {id:'grad-violet', label:'Violet → Cyaan', sub:'Verloop', type:'gradient', value:'linear-gradient(135deg,#8b5cf6,#22d3ee)', swatch:'linear-gradient(135deg,#8b5cf6,#22d3ee)'},
   {id:'grad-sunset', label:'Sunset', sub:'Verloop', type:'gradient', value:'linear-gradient(135deg,#ff6a88,#ff9a44)', swatch:'linear-gradient(135deg,#ff6a88,#ff9a44)'},
   {id:'grad-ocean', label:'Oceaan', sub:'Verloop', type:'gradient', value:'linear-gradient(135deg,#0f2027,#2c5364)', swatch:'linear-gradient(135deg,#0f2027,#2c5364)'},
+  {id:'grad-forest', label:'Forest', sub:'Verloop', type:'gradient', value:'linear-gradient(135deg,#134e5e,#71b280)', swatch:'linear-gradient(135deg,#134e5e,#71b280)'},
+  {id:'grad-candy', label:'Candy', sub:'Verloop', type:'gradient', value:'linear-gradient(135deg,#ee9ca7,#ffdde1)', swatch:'linear-gradient(135deg,#ee9ca7,#ffdde1)'},
   {id:'grad-anim', label:'Bewegend verloop', sub:'Geanimeerd', type:'animgrad', value:'linear-gradient(120deg,#8b5cf6,#22d3ee,#3ddc97,#8b5cf6)', swatch:'linear-gradient(135deg,#8b5cf6,#22d3ee)'},
   {id:'bg-3d', label:'3D kubussen', sub:'Zwevende 3D vormen', type:'3d', value:'', swatch:'linear-gradient(135deg,#1a1c26,#0e1016)'},
   {id:'bg-glass', label:'Liquid glass waves', sub:'Vloeiende glow-blobs', type:'glasswave', value:'', swatch:'linear-gradient(135deg,#2a1e4d,#0e1016)'},
+  {id:'bg-stars', label:'Sterrenhemel', sub:'Donker met witte stipjes', type:'starfield', value:'', swatch:'radial-gradient(circle at 30% 30%, #1c2030, #06070a)'},
+  {id:'bg-dots', label:'Stippenraster', sub:'Subtiel grid van stipjes', type:'dotgrid', value:'#12141c', swatch:'#12141c'},
+  {id:'bg-aurora', label:'Aurora glow', sub:'Zachte gloeiende nevel', type:'aurora', value:'', swatch:'linear-gradient(135deg,#0b1020,#1a1035)'},
+  {id:'bg-noise', label:'Donker + korrel', sub:'Filmische textuur', type:'noise', value:'#0b0c11', swatch:'#0b0c11'},
 ];
 
 const ANIMATIONS = [
@@ -380,20 +436,25 @@ function newElement(type, x=80, y=80){
     id: uid('el'), type, x, y, w:def.w, h:def.h, z: 1,
     content: defaultContent(type),
     href:'', src:'',
+    lockAspect:false,
+    startHidden: type==='overlay',
     style:{
-      bg: type==='glass' ? 'rgba(255,255,255,0.08)' : (type==='button' ? '#8b5cf6' : (type==='container'? 'rgba(255,255,255,0.04)':'transparent')),
+      bg: type==='glass' ? 'rgba(255,255,255,0.08)' : (type==='button' ? '#8b5cf6' : (type==='container'? 'rgba(255,255,255,0.04)': (type==='overlay' ? 'rgba(6,7,10,0.72)' : 'transparent'))),
       color: type==='button' ? '#0a0c11' : '#e8eaf1',
       fontSize: type==='heading'?32:14,
       fontWeight: type==='heading'?700:(type==='button'?600:400),
       radius: type==='button'?10:(type==='container'||type==='glass'?14:(type==='shape'?999:6)),
       opacity: 1,
+      scale: 1,
+      rotate: 0,
       shadow:false,
       glass: type==='glass',
       align:'left',
       border: (type==='container') ? '1px solid rgba(255,255,255,0.12)' : 'none',
     },
     onLoadAnim:{enabled:false, type:'fadeIn', duration:600, delay:0},
-    action:{enabled:false, type:'none', target:'', animType:'pulse', url:'', message:''}
+    action:{enabled:false, type:'none', target:'', animType:'pulse', url:'', message:''},
+    timeline:{enabled:false, duration:3000, keyframes:[]}
   };
   return base;
 }
@@ -406,6 +467,7 @@ function defaultContent(type){
     case 'badge': return 'Nieuw';
     case 'icon': return '★';
     case 'shape': return '';
+    case 'overlay': return '';
     default: return '';
   }
 }
@@ -461,6 +523,12 @@ let state = {
   propTab: 'style',
   dragNewType: null,
   interaction: null, // {kind:'move'|'resize', elId, startX, startY, ...}
+  snapEnabled: true,
+  clipboard: null,
+  timelineElId: null,
+  timelineTime: 0,
+  timelinePlaying: false,
+  timelineSelectedKf: null,
 };
 
 function currentNamespace(){ return state.user ? state.user.username : 'guest'; }
@@ -479,6 +547,8 @@ function buildShell(){
       <div class="topbar-sep"></div>
       <button class="btn small" id="btnProjects">📁 Projecten</button>
       <button class="btn small" id="btnTemplates">🧩 Templates</button>
+      <button class="btn icon" id="btnUndo" title="Ongedaan maken (Ctrl+Z)">↩️</button>
+      <button class="btn icon" id="btnRedo" title="Opnieuw (Ctrl+Y)">↪️</button>
       <div class="pagetabs" id="pageTabs"></div>
       <div class="topbar-actions">
         <button class="btn small" id="btnModeToggle">👁️ Voorbeeld</button>
@@ -509,6 +579,10 @@ function buildShell(){
         </div>
       </div>
       <div class="rail right" id="railRight">
+        <div class="snap-toggle-row">
+          <span style="font-size:11.5px; color:var(--text); font-weight:500;">🧲 Uitlijnhulp (snap)</span>
+          <label class="switch"><input type="checkbox" id="snapToggle" checked><span class="slider"></span></label>
+        </div>
         <div class="rail-tabs">
           <div class="rail-tab" data-tab="style">Stijl</div>
           <div class="rail-tab" data-tab="animate">Animatie</div>
@@ -517,6 +591,10 @@ function buildShell(){
         <div class="rail-body" id="railRightBody"></div>
       </div>
     </div>
+    <div class="timeline-bar" id="timelineBar"></div>
+
+    <!-- context menu -->
+    <div class="ctx-menu" id="ctxMenu"></div>
 
     <!-- Templates modal -->
     <div class="overlay" id="modalTemplates">
@@ -581,16 +659,44 @@ function buildShell(){
         </div>
       </div>
     </div>
+
+    <!-- Export choice modal -->
+    <div class="overlay" id="modalExport">
+      <div class="modal">
+        <div class="modal-head"><h3>⬇️ Website exporteren</h3><span class="close-x" data-close>✕</span></div>
+        <div class="modal-body">
+          <div class="tpl-card" id="expOneFile">
+            <div class="tpl-thumb" style="background:linear-gradient(135deg,#1b1030,#0e1016);">📄</div>
+            <div class="tpl-info"><b>Eén HTML-bestand</b><p>Alle pagina's samen in één bestand — simpelst om te openen of te hosten.</p></div>
+          </div>
+          <div class="tpl-card" id="expZip">
+            <div class="tpl-thumb" style="background:linear-gradient(135deg,#0f2027,#2c5364);">🗂️</div>
+            <div class="tpl-info"><b>ZIP met losse bestanden</b><p>Elke pagina als los .html-bestand, plus gedeelde style.css en script.js.</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
   `;
   bindShellEvents();
 }
 
 function bindShellEvents(){
+  $('#snapToggle').onchange = e=>{ state.snapEnabled = e.target.checked; toast(state.snapEnabled ? 'Uitlijnhulp aan' : 'Uitlijnhulp uit', 'info', '🧲'); };
+  $('#btnUndo').onclick = undo;
+  $('#btnRedo').onclick = redo;
+  $('#expOneFile').onclick = ()=>{ closeModal('modalExport'); exportSingleHTML(); };
+  $('#expZip').onclick = ()=>{ closeModal('modalExport'); exportZip(); };
+  on(document, 'click', e=>{ if(!e.target.closest('.ctx-menu')) closeContextMenu(); });
+  on(document, 'contextmenu', e=>{
+    if(state.mode!=='edit') return;
+    const canvas = $('#canvas');
+    if(e.target===canvas){ e.preventDefault(); openCanvasContextMenu(e.clientX, e.clientY); }
+  });
   $('#btnModeToggle').onclick = toggleMode;
   $('#btnCode').onclick = openCodeModal;
   $('#btnSettings').onclick = openSettingsModal;
   $('#btnSave').onclick = () => saveProject(true);
-  $('#btnExport').onclick = exportHTML;
+  $('#btnExport').onclick = ()=>{ if(!state.project){ toast('Geen project geladen', 'err'); return; } openModal('modalExport'); };
   $('#btnAccount').onclick = openAccountModal;
   $('#btnTemplates').onclick = openTemplatesModal;
   $('#btnProjects').onclick = openProjectsModal;
@@ -632,11 +738,22 @@ function bindShellEvents(){
 
   document.addEventListener('keydown', e=>{
     const tag = (document.activeElement && document.activeElement.tagName) || '';
-    if(tag==='INPUT' || tag==='TEXTAREA' || document.activeElement.isContentEditable) return;
+    const typing = tag==='INPUT' || tag==='TEXTAREA' || document.activeElement.isContentEditable;
+    const ctrl = e.ctrlKey || e.metaKey;
+    if(ctrl && !typing){
+      const k = e.key.toLowerCase();
+      if(k==='z' && !e.shiftKey){ e.preventDefault(); undo(); return; }
+      if((k==='z' && e.shiftKey) || k==='y'){ e.preventDefault(); redo(); return; }
+      if(k==='c' && state.selectedId){ e.preventDefault(); copyElement(state.selectedId); return; }
+      if(k==='x' && state.selectedId){ e.preventDefault(); cutElement(state.selectedId); return; }
+      if(k==='v' && state.clipboard){ e.preventDefault(); pasteClipboard(); return; }
+      if(k==='d' && state.selectedId){ e.preventDefault(); const pg=activePage(); const el=pg.elements.find(x=>x.id===state.selectedId); if(el) duplicateElement(el); return; }
+    }
+    if(typing) return;
     if((e.key==='Delete' || e.key==='Backspace') && state.selectedId && state.mode==='edit'){
       e.preventDefault(); deleteSelected();
     }
-    if(e.key==='Escape'){ selectElement(null); }
+    if(e.key==='Escape'){ selectElement(null); closeContextMenu(); }
   });
 }
 
@@ -803,6 +920,41 @@ function objIcon(){ return 'transparent'; }
 /* =========================================================================
    CANVAS RENDERING
    ========================================================================= */
+function ensureBgDeco(bg){
+  if(!bg) return bg;
+  if(bg.type==='3d' && !bg.cubes){
+    bg.cubes = Array.from({length:7}, ()=>({x:Math.round(Math.random()*1100), y:Math.round(Math.random()*700), dur:(10+Math.random()*10).toFixed(1)}));
+  }
+  if(bg.type==='glasswave' && !bg.blobs){
+    const colors=['#8b5cf6','#22d3ee','#3ddc97'];
+    bg.blobs = Array.from({length:4}, (_,i)=>({size:Math.round(180+Math.random()*180), x:Math.round(Math.random()*1000), y:Math.round(Math.random()*600), color:colors[i%3], delay:(Math.random()*4).toFixed(1)}));
+  }
+  if(bg.type==='starfield' && !bg.stars){
+    bg.stars = Array.from({length:110}, ()=>({x:Math.round(Math.random()*1200), y:Math.round(Math.random()*800), r:+(Math.random()*1.6+0.6).toFixed(1), o:+(Math.random()*0.6+0.35).toFixed(2)}));
+    bg.glows = Array.from({length:6}, ()=>({x:Math.round(Math.random()*1200), y:Math.round(Math.random()*800), size:Math.round(50+Math.random()*90)}));
+  }
+  if(bg.type==='aurora' && !bg.blobs){
+    const colors=['#8b5cf6','#22d3ee','#3ddc97','#5b6cf6'];
+    bg.blobs = Array.from({length:3}, (_,i)=>({size:Math.round(320+Math.random()*220), x:Math.round(Math.random()*900), y:Math.round(Math.random()*450), color:colors[i%colors.length], delay:(Math.random()*4).toFixed(1)}));
+  }
+  return bg;
+}
+function starfieldHTML(bg){
+  const stars = (bg.stars||[]).map(s=>`<div class="star" style="left:${s.x}px; top:${s.y}px; width:${s.r*2}px; height:${s.r*2}px; opacity:${s.o};"></div>`).join('');
+  const glows = (bg.glows||[]).map(g=>`<div class="star-glow" style="left:${g.x}px; top:${g.y}px; width:${g.size}px; height:${g.size}px;"></div>`).join('');
+  return `<div class="bg-starfield">${glows}${stars}</div>`;
+}
+function auroraHTML(bg){
+  const blobs = (bg.blobs||[]).map(b=>`<div class="blob" style="width:${b.size}px;height:${b.size}px;left:${b.x}px;top:${b.y}px;background:${b.color};animation-delay:${b.delay}s;"></div>`).join('');
+  return `<div class="bg-glasswave bg-aurora-wrap">${blobs}</div>`;
+}
+function cubesHTML(bg){
+  return `<div class="bg3d">${(bg.cubes||[]).map(c=>`<div class="cube" style="left:${c.x}px; top:${c.y}px; animation-duration:${c.dur}s;"><div class="f1"></div><div class="f2"></div><div class="f3"></div><div class="f4"></div><div class="f5"></div><div class="f6"></div></div>`).join('')}</div>`;
+}
+function glasswaveHTML(bg){
+  return `<div class="bg-glasswave">${(bg.blobs||[]).map(b=>`<div class="blob" style="width:${b.size}px;height:${b.size}px;left:${b.x}px;top:${b.y}px;background:${b.color};animation-delay:${b.delay}s;"></div>`).join('')}</div>`;
+}
+
 function renderCanvas(){
   const canvas = $('#canvas');
   canvas.classList.toggle('mode-preview', state.mode==='preview');
@@ -811,44 +963,29 @@ function renderCanvas(){
   if(!pg){ return; }
 
   // background
-  const bg = pg.background || {type:'solid', value:'#101319'};
+  const bg = ensureBgDeco(pg.background || {type:'solid', value:'#101319'});
   canvas.style.background = '';
+  canvas.style.backgroundImage = '';
   canvas.classList.remove('bg-animated-grad');
   if(bg.type==='solid'){ canvas.style.background = bg.value; }
   else if(bg.type==='gradient'){ canvas.style.background = bg.value; }
   else if(bg.type==='animgrad'){ canvas.style.background = bg.value; canvas.classList.add('bg-animated-grad'); }
   else if(bg.type==='3d'){ canvas.style.background = '#0e1016'; }
   else if(bg.type==='glasswave'){ canvas.style.background = 'linear-gradient(135deg,#241a3d,#0e1016)'; }
+  else if(bg.type==='starfield'){ canvas.style.background = 'radial-gradient(circle at 30% 20%, #171b2b, #06070a 70%)'; }
+  else if(bg.type==='aurora'){ canvas.style.background = 'linear-gradient(135deg,#0b1020,#170e2e)'; }
+  else if(bg.type==='dotgrid'){ canvas.style.background = bg.value; canvas.style.backgroundImage = 'radial-gradient(rgba(255,255,255,0.14) 1.4px, transparent 1.4px)'; canvas.style.backgroundSize = '22px 22px'; }
+  else if(bg.type==='noise'){ canvas.style.background = bg.value; canvas.style.backgroundImage = `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/></svg>")`; }
 
-  if(bg.type==='3d'){
-    const wrap = document.createElement('div'); wrap.className='bg3d';
-    for(let i=0;i<7;i++){
-      const cube = document.createElement('div'); cube.className='cube';
-      cube.style.left = (Math.random()*1100)+'px';
-      cube.style.top = (Math.random()*700)+'px';
-      cube.style.animationDuration = (10+Math.random()*10)+'s';
-      cube.innerHTML = `<div class="f1"></div><div class="f2"></div><div class="f3"></div><div class="f4"></div><div class="f5"></div><div class="f6"></div>`;
-      wrap.appendChild(cube);
-    }
-    canvas.appendChild(wrap);
-  }
-  if(bg.type==='glasswave'){
-    const wrap = document.createElement('div'); wrap.className='bg-glasswave';
-    const colors = ['#8b5cf6','#22d3ee','#3ddc97'];
-    for(let i=0;i<4;i++){
-      const b = document.createElement('div'); b.className='blob';
-      const size = 180+Math.random()*180;
-      b.style.width=size+'px'; b.style.height=size+'px';
-      b.style.left=(Math.random()*1000)+'px'; b.style.top=(Math.random()*600)+'px';
-      b.style.background = colors[i%colors.length];
-      b.style.animationDelay = (Math.random()*4)+'s';
-      wrap.appendChild(b);
-    }
-    canvas.appendChild(wrap);
-  }
+  if(bg.type==='3d') canvas.insertAdjacentHTML('beforeend', cubesHTML(bg));
+  if(bg.type==='glasswave') canvas.insertAdjacentHTML('beforeend', glasswaveHTML(bg));
+  if(bg.type==='starfield') canvas.insertAdjacentHTML('beforeend', starfieldHTML(bg));
+  if(bg.type==='aurora') canvas.insertAdjacentHTML('beforeend', auroraHTML(bg));
 
   pg.elements.slice().sort((a,b)=>a.z-b.z).forEach(el=> canvas.appendChild(buildElementNode(el)));
+  renderSnapGuideLayer();
 }
+
 
 function buildElementNode(el){
   const node = document.createElement('div');
@@ -874,12 +1011,17 @@ function buildElementNode(el){
     case 'icon': inner = `<div class="el-content" style="width:100%; text-align:center; font-size:${Math.max(20,el.h*0.5)}px; line-height:${el.h}px; outline:none;">${esc(el.content)}</div>`; break;
     case 'divider': inner = ''; break;
     case 'shape': inner = ''; break;
+    case 'overlay': inner = state.mode==='edit' ? `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.5);font-size:12px; border:2px dashed rgba(255,255,255,0.25); box-sizing:border-box;">⧉ Overlay / pop-up — plaats hier je elementen overheen</div>` : ''; break;
     case 'container': case 'glass': inner = state.mode==='edit' ? `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted2);font-size:11px;">${el.type==='glass'?'◈ Glass panel':'Container'}</div>` : ''; break;
     default: inner = esc(el.content);
   }
-  node.innerHTML = inner + `<span class="el-label">${OBJECT_DEFS.find(o=>o.type===el.type)?.label||el.type}</span><div class="resize-handle"></div>`;
+  node.innerHTML = inner + `<span class="el-label">${OBJECT_DEFS.find(o=>o.type===el.type)?.label||el.type}${el.startHidden?' · verborgen bij laden':''}</span><div class="resize-handle"></div>`;
 
   if(el.id===state.selectedId) node.classList.add('selected');
+  if(el.startHidden){
+    if(state.mode==='preview'){ node.style.display = 'none'; }
+    else { node.style.outline = '1px dashed rgba(255,255,255,0.3)'; node.style.opacity = (parseFloat(node.style.opacity||1) * 0.55); }
+  }
 
   if(state.mode==='edit'){
     attachEditInteractions(node, el);
@@ -901,12 +1043,19 @@ function applyElementStyle(node, el){
   node.style.border = s.border || 'none';
   node.style.boxShadow = s.shadow ? '0 12px 30px rgba(0,0,0,0.35)' : '';
   node.style.padding = ['button','container','glass','badge'].includes(el.type) ? '0 16px' : (el.type==='text'||el.type==='heading' ? '0' : '0');
-  node.style.overflow = 'hidden';
+  node.style.overflow = el.type==='overlay' ? 'visible' : 'hidden';
   node.style.background = s.bg;
+  node.style.transform = `scale(${s.scale||1}) rotate(${s.rotate||0}deg)`;
+  node.style.transformOrigin = 'center center';
   if(el.type==='divider'){ node.style.background = s.bg==='transparent' ? 'rgba(255,255,255,0.2)' : s.bg; }
   node.classList.toggle('liquid-glass', !!s.glass);
+  const useCustomKf = el.timeline && el.timeline.enabled && el.timeline.keyframes.length>=2;
   if(el.onLoadAnim && el.onLoadAnim.enabled && state.mode==='preview'){
-    node.style.animation = `${el.onLoadAnim.type} ${el.onLoadAnim.duration}ms ease ${el.onLoadAnim.delay}ms both`;
+    if(useCustomKf){
+      node.style.animation = `kf_${el.id} ${el.timeline.duration}ms linear ${el.onLoadAnim.delay}ms both`;
+    } else {
+      node.style.animation = `${el.onLoadAnim.type} ${el.onLoadAnim.duration}ms ease ${el.onLoadAnim.delay}ms both`;
+    }
   } else {
     node.style.animation = '';
   }
@@ -916,6 +1065,7 @@ function applyElementStyle(node, el){
    ========================================================================= */
 function attachEditInteractions(node, el){
   node.addEventListener('mousedown', e=>{
+    if(e.button!==0) return;
     if(e.target.classList.contains('resize-handle')) return;
     if(e.target.isContentEditable) return;
     e.stopPropagation();
@@ -927,11 +1077,16 @@ function attachEditInteractions(node, el){
       offY: e.clientY - canvasRect.top - el.y
     };
   });
+  node.addEventListener('contextmenu', e=>{
+    e.preventDefault(); e.stopPropagation();
+    selectElement(el.id);
+    openContextMenu(e.clientX, e.clientY, el.id);
+  });
   const handle = $('.resize-handle', node);
   handle.addEventListener('mousedown', e=>{
     e.stopPropagation(); e.preventDefault();
     selectElement(el.id);
-    state.interaction = { kind:'resize', id: el.id, startX:e.clientX, startY:e.clientY, startW:el.w, startH:el.h };
+    state.interaction = { kind:'resize', id: el.id, startX:e.clientX, startY:e.clientY, startW:el.w, startH:el.h, ratio: el.w/Math.max(1,el.h) };
   });
   const contentEl = $('.el-content', node);
   if(contentEl){
@@ -946,9 +1101,29 @@ function attachEditInteractions(node, el){
       el.content = contentEl.innerText;
       renderRightRail();
       saveDebounced();
+      historyDebounced();
     });
     contentEl.addEventListener('keydown', e=>{ if(e.key==='Enter' && el.type!=='text'){ e.preventDefault(); contentEl.blur(); } if(e.key==='Escape'){ contentEl.blur(); } });
   }
+}
+
+function snapAxis(pos, size, refLines, threshold){
+  const points = [pos, pos+size/2, pos+size];
+  for(const ref of refLines){
+    for(let i=0;i<points.length;i++){
+      if(Math.abs(points[i]-ref) < threshold){
+        return { newPos: ref - (i===0?0:(i===1?size/2:size)), guide: ref };
+      }
+    }
+  }
+  return { newPos: pos, guide: null };
+}
+let activeGuides = {v:null, h:null};
+function renderSnapGuideLayer(){
+  $$('.snap-guide').forEach(g=>g.remove());
+  const canvas = $('#canvas'); if(!canvas) return;
+  if(activeGuides.v!=null){ const g=document.createElement('div'); g.className='snap-guide v'; g.style.left=activeGuides.v+'px'; canvas.appendChild(g); }
+  if(activeGuides.h!=null){ const g=document.createElement('div'); g.className='snap-guide h'; g.style.top=activeGuides.h+'px'; canvas.appendChild(g); }
 }
 
 on(document, 'mousemove', e=>{
@@ -958,13 +1133,28 @@ on(document, 'mousemove', e=>{
   const el = pg.elements.find(x=>x.id===it.id); if(!el) return;
   const canvasRect = $('#canvas').getBoundingClientRect();
   if(it.kind==='move'){
-    el.x = clamp(e.clientX - canvasRect.left - it.offX, -50, 1200 - 20);
-    el.y = clamp(e.clientY - canvasRect.top - it.offY, -20, 800 - 10);
+    let nx = clamp(e.clientX - canvasRect.left - it.offX, -50, 1200 - 20);
+    let ny = clamp(e.clientY - canvasRect.top - it.offY, -20, 800 - 10);
+    activeGuides = {v:null, h:null};
+    if(state.snapEnabled){
+      const refX = [0,600,1200], refY = [0,400,800];
+      pg.elements.forEach(o=>{ if(o.id===el.id) return; refX.push(o.x, o.x+o.w/2, o.x+o.w); refY.push(o.y, o.y+o.h/2, o.y+o.h); });
+      const rx = snapAxis(nx, el.w, refX, 6); const ry = snapAxis(ny, el.h, refY, 6);
+      nx = rx.newPos; ny = ry.newPos; activeGuides = {v:rx.guide, h:ry.guide};
+    }
+    el.x = nx; el.y = ny;
     const node = $(`.el[data-id="${el.id}"]`);
     if(node){ node.style.left = el.x+'px'; node.style.top = el.y+'px'; }
+    renderSnapGuideLayer();
   } else if(it.kind==='resize'){
-    el.w = clamp(it.startW + (e.clientX - it.startX), 24, 1180);
-    el.h = clamp(it.startH + (e.clientY - it.startY), 16, 780);
+    const dx = e.clientX - it.startX, dy = e.clientY - it.startY;
+    if(el.lockAspect){
+      el.w = clamp(it.startW + dx, 24, 1180);
+      el.h = clamp(Math.round(el.w / it.ratio), 16, 780);
+    } else {
+      el.w = clamp(it.startW + dx, 24, 1180);
+      el.h = clamp(it.startH + dy, 16, 780);
+    }
     const node = $(`.el[data-id="${el.id}"]`);
     if(node){ node.style.width = el.w+'px'; node.style.height = el.h+'px'; }
   }
@@ -972,8 +1162,11 @@ on(document, 'mousemove', e=>{
 on(document, 'mouseup', ()=>{
   if(state.interaction){
     state.interaction = null;
+    activeGuides = {v:null, h:null};
+    renderSnapGuideLayer();
     renderRightRail();
     saveDebounced();
+    historyDebounced();
   }
 });
 
@@ -1020,7 +1213,7 @@ function runAction(el){
 }
 
 /* =========================================================================
-   ELEMENT CRUD
+   ELEMENT CRUD (+ clipboard, duplicate)
    ========================================================================= */
 function addElement(type, x, y){
   if(!state.project) return;
@@ -1032,6 +1225,7 @@ function addElement(type, x, y){
   state.selectedId = el.id;
   renderAll();
   saveDebounced();
+  pushHistory();
 }
 function deleteSelected(){
   if(!state.selectedId) return;
@@ -1040,6 +1234,64 @@ function deleteSelected(){
   state.selectedId = null;
   renderAll();
   saveDebounced();
+  pushHistory();
+}
+function deleteElementById(id){
+  const pg = activePage();
+  pg.elements = pg.elements.filter(e=>e.id!==id);
+  if(state.selectedId===id) state.selectedId = null;
+  renderAll();
+  saveDebounced();
+  pushHistory();
+}
+function duplicateElement(el){
+  const pg = activePage();
+  const clone = JSON.parse(JSON.stringify(el));
+  clone.id = uid('el');
+  clone.x = clamp(el.x+24, 0, 1180);
+  clone.y = clamp(el.y+24, 0, 780);
+  const maxZ = pg.elements.reduce((m,e)=>Math.max(m,e.z),0);
+  clone.z = maxZ+1;
+  pg.elements.push(clone);
+  state.selectedId = clone.id;
+  renderAll();
+  saveDebounced();
+  pushHistory();
+  toast('Element gedupliceerd');
+}
+function copyElement(id){
+  const pg = activePage();
+  const el = pg.elements.find(e=>e.id===id);
+  if(!el) return;
+  state.clipboard = JSON.parse(JSON.stringify(el));
+  toast('Gekopieerd — plak met Ctrl+V');
+}
+function cutElement(id){
+  copyElement(id);
+  deleteElementById(id);
+  toast('Geknipt');
+}
+function pasteClipboard(atX, atY){
+  if(!state.clipboard || !state.project) return;
+  const pg = activePage();
+  const clone = JSON.parse(JSON.stringify(state.clipboard));
+  clone.id = uid('el');
+  if(atX!=null){
+    const canvasRect = $('#canvas').getBoundingClientRect();
+    clone.x = clamp(Math.round(atX - canvasRect.left - clone.w/2), 0, 1180);
+    clone.y = clamp(Math.round(atY - canvasRect.top - clone.h/2), 0, 780);
+  } else {
+    clone.x = clamp(clone.x+24, 0, 1180);
+    clone.y = clamp(clone.y+24, 0, 780);
+  }
+  const maxZ = pg.elements.reduce((m,e)=>Math.max(m,e.z),0);
+  clone.z = maxZ+1;
+  pg.elements.push(clone);
+  state.selectedId = clone.id;
+  renderAll();
+  saveDebounced();
+  pushHistory();
+  toast('Geplakt');
 }
 function selectElement(id){
   state.selectedId = id;
@@ -1065,6 +1317,91 @@ function toggleMode(){
   if(state.mode==='preview') state.selectedId = null;
   renderAll();
 }
+
+/* =========================================================================
+   UNDO / REDO HISTORY
+   ========================================================================= */
+let history = { stack: [], index: -1, max: 60 };
+let historyTimer = null;
+function pushHistory(){
+  if(!state.project) return;
+  const snap = JSON.stringify(state.project);
+  if(history.stack[history.index] === snap) return;
+  history.stack = history.stack.slice(0, history.index+1);
+  history.stack.push(snap);
+  if(history.stack.length>history.max) history.stack.shift();
+  history.index = history.stack.length-1;
+}
+function historyDebounced(){
+  clearTimeout(historyTimer);
+  historyTimer = setTimeout(pushHistory, 500);
+}
+function undo(){
+  if(history.index<=0){ toast('Niets meer om ongedaan te maken', 'info'); return; }
+  clearTimeout(historyTimer);
+  if(history.index===history.stack.length-1) pushHistory();
+  history.index--;
+  state.project = JSON.parse(history.stack[history.index]);
+  if(!state.project.pages.find(p=>p.id===state.project.activePageId)) state.project.activePageId = state.project.pages[0].id;
+  state.selectedId = null;
+  renderAll();
+  saveDebounced();
+  toast('Ongedaan gemaakt', 'info', '↩️');
+}
+function redo(){
+  if(history.index>=history.stack.length-1){ toast('Niets om opnieuw te doen', 'info'); return; }
+  history.index++;
+  state.project = JSON.parse(history.stack[history.index]);
+  state.selectedId = null;
+  renderAll();
+  saveDebounced();
+  toast('Opnieuw gedaan', 'info', '↪️');
+}
+
+/* =========================================================================
+   RIGHT-CLICK CONTEXT MENU
+   ========================================================================= */
+function openContextMenu(x, y, elId){
+  const menu = $('#ctxMenu');
+  const hasClip = !!state.clipboard;
+  menu.innerHTML = `
+    <div class="ctx-item" data-act="copy">📋 Kopiëren<span class="ctx-key">Ctrl+C</span></div>
+    <div class="ctx-item" data-act="cut">✂️ Knippen<span class="ctx-key">Ctrl+X</span></div>
+    <div class="ctx-item ${hasClip?'':'disabled'}" data-act="paste">📥 Plakken<span class="ctx-key">Ctrl+V</span></div>
+    <div class="ctx-item" data-act="duplicate">⧉ Dupliceren<span class="ctx-key">Ctrl+D</span></div>
+    <div class="ctx-sep"></div>
+    <div class="ctx-item" data-act="front">⬆ Naar voren</div>
+    <div class="ctx-item" data-act="back">⬇ Naar achteren</div>
+    <div class="ctx-sep"></div>
+    <div class="ctx-item" data-act="delete">🗑️ Verwijderen<span class="ctx-key">Del</span></div>
+  `;
+  menu.style.left = x+'px'; menu.style.top = y+'px';
+  menu.classList.add('show');
+  menu.dataset.forEl = elId || '';
+  $$('.ctx-item', menu).forEach(item=>{
+    item.onclick = ()=>{
+      const id = menu.dataset.forEl;
+      const act = item.dataset.act;
+      if(act==='copy') copyElement(id);
+      else if(act==='cut') cutElement(id);
+      else if(act==='paste') pasteClipboard(x, y);
+      else if(act==='duplicate'){ const pg=activePage(); const el=pg.elements.find(e=>e.id===id); if(el) duplicateElement(el); }
+      else if(act==='front'){ const pg=activePage(); const el=pg.elements.find(e=>e.id===id); if(el){ const maxZ=Math.max(...pg.elements.map(e=>e.z)); el.z=maxZ+1; refreshEl(); historyDebounced(); } }
+      else if(act==='back'){ const pg=activePage(); const el=pg.elements.find(e=>e.id===id); if(el){ const minZ=Math.min(...pg.elements.map(e=>e.z)); el.z=minZ-1; refreshEl(); historyDebounced(); } }
+      else if(act==='delete') deleteElementById(id);
+      closeContextMenu();
+    };
+  });
+}
+function openCanvasContextMenu(x,y){
+  const menu = $('#ctxMenu');
+  const hasClip = !!state.clipboard;
+  menu.innerHTML = `<div class="ctx-item ${hasClip?'':'disabled'}" data-act="paste">📥 Plakken hier<span class="ctx-key">Ctrl+V</span></div>`;
+  menu.style.left = x+'px'; menu.style.top = y+'px';
+  menu.classList.add('show');
+  $$('.ctx-item', menu).forEach(item=>{ item.onclick = ()=>{ pasteClipboard(x,y); closeContextMenu(); }; });
+}
+function closeContextMenu(){ $('#ctxMenu').classList.remove('show'); }
 /* =========================================================================
    RIGHT RAIL — properties: style / animate / action
    ========================================================================= */
@@ -1091,7 +1428,7 @@ function renderStyleTab(body, el){
   const label = OBJECT_DEFS.find(o=>o.type===el.type)?.label || el.type;
   body.innerHTML = `
     <div class="rail-section-title">${label} — inhoud</div>
-    ${(el.type!=='divider'&&el.type!=='shape'&&el.type!=='container'&&el.type!=='glass'&&el.type!=='image'&&el.type!=='video') ? `
+    ${(el.type!=='divider'&&el.type!=='shape'&&el.type!=='container'&&el.type!=='glass'&&el.type!=='overlay'&&el.type!=='image'&&el.type!=='video') ? `
     <div class="prop-group"><textarea id="p_content">${esc(el.content)}</textarea></div>` : ''}
     ${el.type==='image' ? `<div class="prop-group"><label class="mini-label">Afbeelding URL</label><input type="text" id="p_src" value="${esc(el.src)}" placeholder="https://..."></div>` : ''}
     ${el.type==='video' ? `<div class="prop-group"><label class="mini-label">Embed URL (bv. YouTube embed)</label><input type="text" id="p_src" value="${esc(el.src)}" placeholder="https://www.youtube.com/embed/..."></div>` : ''}
@@ -1105,9 +1442,27 @@ function renderStyleTab(body, el){
       <div><label class="mini-label">Breedte</label><input type="number" id="p_w" value="${el.w}"></div>
       <div><label class="mini-label">Hoogte</label><input type="number" id="p_h" value="${el.h}"></div>
     </div>
+    <label class="checkline"><input type="checkbox" id="p_lock" ${el.lockAspect?'checked':''}> 🔒 Verhouding vergrendelen bij resizen</label>
+
+    <div class="rail-section-title">Uitlijnen op canvas</div>
+    <div class="align-grid">
+      <button class="btn small" data-align="left" title="Links uitlijnen">⇤</button>
+      <button class="btn small" data-align="centerH" title="Horizontaal centreren">↔</button>
+      <button class="btn small" data-align="right" title="Rechts uitlijnen">⇥</button>
+      <button class="btn small" data-align="top" title="Boven uitlijnen">⤒</button>
+      <button class="btn small" data-align="centerV" title="Verticaal centreren">↕</button>
+      <button class="btn small" data-align="bottom" title="Onder uitlijnen">⤓</button>
+    </div>
+
     <div class="layerbtns">
       <button class="btn small" id="p_front">⬆ Naar voren</button>
       <button class="btn small" id="p_back">⬇ Naar achteren</button>
+    </div>
+
+    <div class="rail-section-title">Schaal & rotatie</div>
+    <div class="prop-row">
+      <div><label class="mini-label">Schaal (%)</label><input type="number" id="p_scale" value="${Math.round((el.style.scale||1)*100)}"></div>
+      <div><label class="mini-label">Rotatie (°)</label><input type="number" id="p_rotate" value="${el.style.rotate||0}"></div>
     </div>
 
     <div class="rail-section-title">Kleur & vorm</div>
@@ -1118,7 +1473,7 @@ function renderStyleTab(body, el){
     <div class="prop-row">
       <div><label class="mini-label">Lettergrootte</label><input type="number" id="p_fs" value="${el.style.fontSize}"></div>
       <div><label class="mini-label">Uitlijning</label>
-        <select id="p_align"><option value="left" ${el.style.align==='left'?'selected':''}>Links</option><option value="center" ${el.style.align==='center'?'selected':''}>Midden</option><option value="right" ${el.style.align==='right'?'selected':''}>Rechts</option></select>
+        <select id="p_align_txt"><option value="left" ${el.style.align==='left'?'selected':''}>Links</option><option value="center" ${el.style.align==='center'?'selected':''}>Midden</option><option value="right" ${el.style.align==='right'?'selected':''}>Rechts</option></select>
       </div>
     </div>` : ''}
     <div class="prop-row">
@@ -1127,33 +1482,61 @@ function renderStyleTab(body, el){
     </div>
     <label class="checkline"><input type="checkbox" id="p_shadow" ${el.style.shadow?'checked':''}> Slagschaduw</label>
     <label class="checkline"><input type="checkbox" id="p_glass" ${el.style.glass?'checked':''}> ◈ Liquid glass effect</label>
+    <label class="checkline"><input type="checkbox" id="p_hidden" ${el.startHidden?'checked':''}> 🙈 Verberg bij laden (overlay/pop-up)</label>
 
     <div class="rail-section-title"></div>
-    <button class="btn small danger" style="width:100%;" id="p_delete">🗑️ Verwijder element</button>
+    <div class="layerbtns">
+      <button class="btn small" id="p_duplicate">⧉ Dupliceren</button>
+      <button class="btn small danger" id="p_delete">🗑️ Verwijderen</button>
+    </div>
   `;
   bindNum('p_x', v=>{ el.x=v; }); bindNum('p_y', v=>{ el.y=v; });
   bindNum('p_w', v=>{ el.w=Math.max(10,v); }); bindNum('p_h', v=>{ el.h=Math.max(10,v); });
+  $('#p_lock').onchange = e=>{ el.lockAspect = e.target.checked; historyDebounced(); };
   const contentArea = $('#p_content');
   if(contentArea) contentArea.oninput = ()=>{ el.content = contentArea.value; refreshEl(); };
   const srcInput = $('#p_src');
   if(srcInput) srcInput.oninput = ()=>{ el.src = srcInput.value; refreshEl(); };
 
-  $('#p_front').onclick = ()=>{ const pg=activePage(); const maxZ=Math.max(...pg.elements.map(e=>e.z)); el.z=maxZ+1; refreshEl(); };
-  $('#p_back').onclick = ()=>{ const pg=activePage(); const minZ=Math.min(...pg.elements.map(e=>e.z)); el.z=minZ-1; refreshEl(); };
+  $$('[data-align]', body).forEach(btn=>{
+    btn.onclick = ()=>{ alignElementToCanvas(el, btn.dataset.align); };
+  });
+
+  $('#p_front').onclick = ()=>{ const pg=activePage(); const maxZ=Math.max(...pg.elements.map(e=>e.z)); el.z=maxZ+1; refreshEl(); historyDebounced(); };
+  $('#p_back').onclick = ()=>{ const pg=activePage(); const minZ=Math.min(...pg.elements.map(e=>e.z)); el.z=minZ-1; refreshEl(); historyDebounced(); };
+  $('#p_duplicate').onclick = ()=> duplicateElement(el);
+  $('#p_delete').onclick = deleteSelected;
+
+  bindNum('p_scale', v=>{ el.style.scale = clamp(v,5,400)/100; });
+  bindNum('p_rotate', v=>{ el.style.rotate = v; });
 
   linkColor('p_bgc','p_bg', v=>{ el.style.bg=v; refreshEl(); });
   if(isText){
     linkColor('p_colorc','p_color', v=>{ el.style.color=v; refreshEl(); });
     bindNum('p_fs', v=>{ el.style.fontSize=v; refreshEl(); });
-    $('#p_align').onchange = e=>{ el.style.align=e.target.value; refreshEl(); };
+    $('#p_align_txt').onchange = e=>{ el.style.align=e.target.value; refreshEl(); historyDebounced(); };
   }
   bindNum('p_radius', v=>{ el.style.radius=v; refreshEl(); });
   $('#p_opacity').oninput = e=>{ el.style.opacity=parseFloat(e.target.value); refreshEl(); };
-  $('#p_shadow').onchange = e=>{ el.style.shadow=e.target.checked; refreshEl(); };
-  $('#p_glass').onchange = e=>{ el.style.glass=e.target.checked; refreshEl(); };
-  $('#p_delete').onclick = deleteSelected;
+  $('#p_shadow').onchange = e=>{ el.style.shadow=e.target.checked; refreshEl(); historyDebounced(); };
+  $('#p_glass').onchange = e=>{ el.style.glass=e.target.checked; refreshEl(); historyDebounced(); };
+  $('#p_hidden').onchange = e=>{ el.startHidden=e.target.checked; refreshEl(); historyDebounced(); };
 
   function bindNum(id, fn){ const i=$('#'+id); i.oninput=()=>{ fn(parseFloat(i.value)||0); refreshEl(); }; }
+}
+
+function alignElementToCanvas(el, type){
+  switch(type){
+    case 'left': el.x=0; break;
+    case 'centerH': el.x=Math.round((1200-el.w)/2); break;
+    case 'right': el.x=1200-el.w; break;
+    case 'top': el.y=0; break;
+    case 'centerV': el.y=Math.round((800-el.h)/2); break;
+    case 'bottom': el.y=800-el.h; break;
+  }
+  refreshEl();
+  renderRightRail();
+  historyDebounced();
 }
 
 function toHexColor(v){
@@ -1169,6 +1552,7 @@ function linkColor(colorId, textId, fn){
 
 function renderAnimateTab(body, el){
   const a = el.onLoadAnim;
+  const tl = el.timeline;
   body.innerHTML = `
     <div class="rail-section-title">Animatie bij laden van pagina</div>
     <label class="checkline"><input type="checkbox" id="a_enabled" ${a.enabled?'checked':''}> Speel animatie af zodra pagina laadt</label>
@@ -1181,17 +1565,169 @@ function renderAnimateTab(body, el){
       <div><label class="mini-label">Vertraging (ms)</label><input type="number" id="a_delay" value="${a.delay}"></div>
     </div>
     <button class="btn small" style="width:100%; margin-top:8px;" id="a_preview">▶ Bekijk animatie</button>
+
+    <div class="rail-section-title">🎞️ Geavanceerd: eigen keyframes</div>
+    <label class="checkline"><input type="checkbox" id="tl_enabled" ${tl.enabled?'checked':''}> Eigen keyframe-animatie gebruiken (overschrijft type hierboven)</label>
+    <p style="font-size:11px; color:var(--muted2); line-height:1.6; margin:6px 0 10px;">Bouw een eigen animatie op een tijdlijn: zet het element op verschillende momenten neer en Designer maakt er een vloeiende animatie van.</p>
+    <button class="btn small primary" style="width:100%;" id="tl_open">🎬 Open tijdlijn-editor</button>
+
     <div class="rail-section-title">Weten hoe dit werkt?</div>
     <p style="font-size:11.5px; color:var(--muted2); line-height:1.6;">Deze animatie speelt automatisch af zodra iemand de pagina bezoekt (in Voorbeeldmodus of de geëxporteerde site). Wil je een animatie afspelen ná een klik op een knop? Ga naar het tabblad <b>Actie</b> en kies "Speel animatie af".</p>
   `;
-  $('#a_enabled').onchange = e=>{ a.enabled=e.target.checked; saveDebounced(); };
-  $('#a_type').onchange = e=>{ a.type=e.target.value; saveDebounced(); };
+  $('#a_enabled').onchange = e=>{ a.enabled=e.target.checked; saveDebounced(); historyDebounced(); };
+  $('#a_type').onchange = e=>{ a.type=e.target.value; saveDebounced(); historyDebounced(); };
   $('#a_dur').oninput = e=>{ a.duration=parseInt(e.target.value)||600; saveDebounced(); };
   $('#a_delay').oninput = e=>{ a.delay=parseInt(e.target.value)||0; saveDebounced(); };
   $('#a_preview').onclick = ()=>{
     const node = $(`.el[data-id="${el.id}"]`);
     if(node){ node.style.animation='none'; void node.offsetWidth; node.style.animation = `${a.type} ${a.duration}ms ease ${a.delay}ms both`; }
   };
+  $('#tl_enabled').onchange = e=>{ tl.enabled=e.target.checked; refreshDynamicKeyframesCSS(); saveDebounced(); historyDebounced(); };
+  $('#tl_open').onclick = ()=> openTimelineEditor(el.id);
+}
+
+/* =========================================================================
+   KEYFRAME TIMELINE EDITOR
+   ========================================================================= */
+function openTimelineEditor(elId){
+  state.timelineElId = elId;
+  const pg = activePage();
+  const el = pg.elements.find(e=>e.id===elId);
+  if(el && el.timeline.keyframes.length===0){
+    el.timeline.keyframes.push(captureKeyframe(el, 0));
+  }
+  state.timelineTime = 0;
+  state.timelineSelectedKf = null;
+  renderTimelineBar();
+}
+function closeTimelineEditor(){
+  state.timelineElId = null;
+  state.timelinePlaying = false;
+  renderTimelineBar();
+  refreshEl();
+}
+function captureKeyframe(el, t){
+  return { id: uid('kf'), t, x: el.x, y: el.y, w: el.w, h: el.h, opacity: el.style.opacity, scale: el.style.scale||1, rotate: el.style.rotate||0 };
+}
+function timelineGetEl(){
+  if(!state.timelineElId || !state.project) return null;
+  const pg = activePage();
+  return pg.elements.find(e=>e.id===state.timelineElId) || null;
+}
+function interpolateAt(el, t){
+  const kfs = el.timeline.keyframes.slice().sort((a,b)=>a.t-b.t);
+  if(!kfs.length) return null;
+  if(t<=kfs[0].t) return kfs[0];
+  if(t>=kfs[kfs.length-1].t) return kfs[kfs.length-1];
+  let k0=kfs[0], k1=kfs[kfs.length-1];
+  for(let i=0;i<kfs.length-1;i++){ if(t>=kfs[i].t && t<=kfs[i+1].t){ k0=kfs[i]; k1=kfs[i+1]; break; } }
+  const span = Math.max(1, k1.t-k0.t);
+  const f = (t-k0.t)/span;
+  const lerp = (a,b)=> a + (b-a)*f;
+  return { x:lerp(k0.x,k1.x), y:lerp(k0.y,k1.y), w:lerp(k0.w,k1.w), h:lerp(k0.h,k1.h), opacity:lerp(k0.opacity,k1.opacity), scale:lerp(k0.scale,k1.scale), rotate:lerp(k0.rotate,k1.rotate) };
+}
+function previewTimelineAt(el, t){
+  const val = interpolateAt(el, t);
+  if(!val) return;
+  const node = $(`.el[data-id="${el.id}"]`);
+  if(!node) return;
+  node.style.left = val.x+'px'; node.style.top = val.y+'px';
+  node.style.width = val.w+'px'; node.style.height = val.h+'px';
+  node.style.opacity = val.opacity;
+  node.style.transform = `scale(${val.scale}) rotate(${val.rotate}deg)`;
+}
+function renderTimelineBar(){
+  const bar = $('#timelineBar');
+  if(!bar) return;
+  const el = timelineGetEl();
+  if(!el || !el.timeline.enabled){ bar.classList.remove('show'); bar.innerHTML=''; return; }
+  bar.classList.add('show');
+  const dur = el.timeline.duration;
+  const kfs = el.timeline.keyframes.slice().sort((a,b)=>a.t-b.t);
+  const rulerW = Math.max(600, Math.round(dur/4));
+  const ticks = [];
+  const tickStep = dur<=2000?250:(dur<=6000?500:1000);
+  for(let t=0;t<=dur;t+=tickStep){ ticks.push(t); }
+  bar.innerHTML = `
+    <div class="timeline-head">
+      <b>🎬 ${OBJECT_DEFS.find(o=>o.type===el.type)?.label||el.type} — keyframe-tijdlijn</b>
+      <button class="btn icon small" id="tl_play">${state.timelinePlaying?'⏸':'▶'}</button>
+      <span class="timeline-time" id="tl_timeLabel">${Math.round(state.timelineTime)} ms</span>
+      <div style="display:flex; align-items:center; gap:6px;"><label class="mini-label" style="margin:0;">Duur</label><input type="number" id="tl_dur" value="${dur}" style="width:80px;"> ms</div>
+      <button class="btn small" id="tl_addkf">＋ Keyframe hier</button>
+      <button class="btn small danger ${state.timelineSelectedKf?'':'disabled'}" id="tl_delkf">🗑️ Verwijder keyframe</button>
+      <div style="flex:1;"></div>
+      <button class="btn small" id="tl_close">✕ Sluiten</button>
+    </div>
+    <div class="timeline-track-wrap">
+      <div class="timeline-ruler" id="tl_ruler" style="width:${rulerW}px;">
+        ${ticks.map(t=>`<div class="timeline-tick" style="left:${(t/dur)*rulerW}px;"><span>${t}ms</span></div>`).join('')}
+        ${kfs.map(k=>`<div class="timeline-kf ${state.timelineSelectedKf===k.id?'active':''}" data-kf="${k.id}" style="left:${(k.t/dur)*rulerW}px;" title="${k.t}ms"></div>`).join('')}
+        <div class="timeline-playhead" id="tl_playhead" style="left:${(state.timelineTime/dur)*rulerW}px;"></div>
+      </div>
+    </div>
+  `;
+  const ruler = $('#tl_ruler');
+  ruler.addEventListener('click', e=>{
+    if(e.target.classList.contains('timeline-kf')) return;
+    const rect = ruler.getBoundingClientRect();
+    const t = clamp(Math.round(((e.clientX-rect.left)/rulerW)*dur), 0, dur);
+    state.timelineTime = t; state.timelineSelectedKf = null;
+    previewTimelineAt(el, t);
+    renderTimelineBar();
+  });
+  $$('.timeline-kf', ruler).forEach(dot=>{
+    dot.onclick = e=>{
+      e.stopPropagation();
+      const kf = el.timeline.keyframes.find(k=>k.id===dot.dataset.kf);
+      state.timelineTime = kf.t; state.timelineSelectedKf = kf.id;
+      previewTimelineAt(el, kf.t);
+      renderTimelineBar();
+    };
+  });
+  $('#tl_play').onclick = ()=> toggleTimelinePlay(el);
+  $('#tl_close').onclick = closeTimelineEditor;
+  $('#tl_dur').onchange = e=>{
+    el.timeline.duration = Math.max(200, parseInt(e.target.value)||3000);
+    refreshDynamicKeyframesCSS(); saveDebounced(); historyDebounced();
+    renderTimelineBar();
+  };
+  $('#tl_addkf').onclick = ()=>{
+    const existing = el.timeline.keyframes.find(k=>Math.abs(k.t-state.timelineTime)<Math.max(20, dur*0.01));
+    const kf = captureKeyframe(el, state.timelineTime);
+    if(existing){ Object.assign(existing, kf, {id:existing.id, t:existing.t}); }
+    else { el.timeline.keyframes.push(kf); }
+    refreshDynamicKeyframesCSS(); saveDebounced(); pushHistory();
+    renderTimelineBar();
+    toast('Keyframe toegevoegd');
+  };
+  $('#tl_delkf').onclick = ()=>{
+    if(!state.timelineSelectedKf) return;
+    if(el.timeline.keyframes.length<=1){ toast('Je hebt minimaal 1 keyframe nodig', 'err'); return; }
+    el.timeline.keyframes = el.timeline.keyframes.filter(k=>k.id!==state.timelineSelectedKf);
+    state.timelineSelectedKf = null;
+    refreshDynamicKeyframesCSS(); saveDebounced(); pushHistory();
+    renderTimelineBar();
+  };
+}
+function toggleTimelinePlay(el){
+  state.timelinePlaying = !state.timelinePlaying;
+  if(!state.timelinePlaying){ renderTimelineBar(); return; }
+  const dur = el.timeline.duration;
+  const startTime = performance.now() - state.timelineTime;
+  function tick(now){
+    if(!state.timelinePlaying) return;
+    let t = now - startTime;
+    if(t>=dur){ t = dur; state.timelinePlaying = false; }
+    state.timelineTime = t;
+    previewTimelineAt(el, t);
+    const ph = $('#tl_playhead'); const lbl = $('#tl_timeLabel'); const playBtn = $('#tl_play');
+    if(ph){ const ruler=$('#tl_ruler'); const rulerW = ruler ? ruler.getBoundingClientRect().width : 600; ph.style.left = (t/dur)*rulerW+'px'; }
+    if(lbl) lbl.textContent = Math.round(t)+' ms';
+    if(!state.timelinePlaying && playBtn) playBtn.textContent = '▶';
+    if(state.timelinePlaying) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
 }
 
 function renderActionTab(body, el){
@@ -1251,6 +1787,10 @@ function bgCss(bg){
   if(bg.type==='animgrad') return `background:${bg.value}; background-size:220% 220%; animation:gradShift 9s ease infinite;`;
   if(bg.type==='3d') return `background:#0e1016;`;
   if(bg.type==='glasswave') return `background:linear-gradient(135deg,#241a3d,#0e1016);`;
+  if(bg.type==='starfield') return `background:radial-gradient(circle at 30% 20%, #171b2b, #06070a 70%);`;
+  if(bg.type==='aurora') return `background:linear-gradient(135deg,#0b1020,#170e2e);`;
+  if(bg.type==='dotgrid') return `background:${bg.value}; background-image:radial-gradient(rgba(255,255,255,0.14) 1.4px, transparent 1.4px); background-size:22px 22px;`;
+  if(bg.type==='noise') return `background:${bg.value}; background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/></svg>");`;
   return 'background:#101319;';
 }
 function elementInnerHTML(el){
@@ -1273,36 +1813,54 @@ function elementStyleString(el){
   }
   const justify = s.align==='center'?'center':(s.align==='right'?'flex-end':'flex-start');
   const isFlexType = ['heading','text','button','badge','icon'].includes(el.type);
+  const useCustomKf = el.timeline && el.timeline.enabled && el.timeline.keyframes && el.timeline.keyframes.length>=2;
+  let animCss = '';
+  if(el.onLoadAnim && el.onLoadAnim.enabled){
+    animCss = useCustomKf
+      ? `animation:kf_${el.id} ${el.timeline.duration}ms linear ${el.onLoadAnim.delay}ms both;`
+      : `animation:${el.onLoadAnim.type} ${el.onLoadAnim.duration}ms ease ${el.onLoadAnim.delay}ms both;`;
+  }
   return `position:absolute; left:${el.x}px; top:${el.y}px; width:${el.w}px; height:${el.h}px; z-index:${el.z};`+
     `background:${bg}; color:${s.color}; font-size:${s.fontSize}px; font-weight:${s.fontWeight}; border-radius:${s.radius}px; opacity:${s.opacity}; `+
-    `${!s.glass ? 'border:'+(s.border||'none')+';' : extra} ${s.shadow?'box-shadow:0 12px 30px rgba(0,0,0,0.35);':''} overflow:hidden; box-sizing:border-box; `+
+    `transform:scale(${s.scale||1}) rotate(${s.rotate||0}deg); transform-origin:center center; `+
+    `${!s.glass ? 'border:'+(s.border||'none')+';' : extra} ${s.shadow?'box-shadow:0 12px 30px rgba(0,0,0,0.35);':''} overflow:${el.type==='overlay'?'visible':'hidden'}; box-sizing:border-box; `+
     `${isFlexType ? `display:flex; align-items:center; justify-content:${justify}; text-align:${s.align}; padding:0 16px;` : ''}`+
     `${el.type==='divider' ? `background:${s.bg==='transparent'?'rgba(255,255,255,0.2)':s.bg};` : ''}`+
     `${(el.action&&el.action.enabled&&el.action.type!=='none') ? 'cursor:pointer;' : ''}`+
-    `${(el.onLoadAnim&&el.onLoadAnim.enabled) ? `animation:${el.onLoadAnim.type} ${el.onLoadAnim.duration}ms ease ${el.onLoadAnim.delay}ms both;` : ''}`;
+    `${el.startHidden ? 'display:none;' : ''}`+
+    animCss;
 }
-function generatePageHTML(page, isExport){
-  let bgLayers = '';
-  if(page.background && page.background.type==='3d'){
-    let cubes='';
-    for(let i=0;i<7;i++){
-      cubes += `<div class="cube" style="left:${Math.round(Math.random()*1100)}px; top:${Math.round(Math.random()*700)}px; animation-duration:${(10+Math.random()*10).toFixed(1)}s;"><div class="f1"></div><div class="f2"></div><div class="f3"></div><div class="f4"></div><div class="f5"></div><div class="f6"></div></div>`;
+function elementActionAttrs(el, mode, fileMap, page){
+  if(!(el.action && el.action.enabled && el.action.type!=='none')) return '';
+  let animName = el.action.animType || 'pulse', animDur = 650, animTiming = 'ease';
+  if(el.action.type==='animate'){
+    const targetId = el.action.target || el.id;
+    const targetEl = page.elements.find(x=>x.id===targetId);
+    if(el.action.animType==='__custom__' && targetEl && targetEl.timeline && targetEl.timeline.enabled && targetEl.timeline.keyframes.length>=2){
+      animName = 'kf_'+targetId; animDur = targetEl.timeline.duration; animTiming = 'linear';
     }
-    bgLayers = `<div class="bg3d">${cubes}</div>`;
   }
-  if(page.background && page.background.type==='glasswave'){
-    const colors=['#8b5cf6','#22d3ee','#3ddc97']; let blobs='';
-    for(let i=0;i<4;i++){
-      const size = 180+Math.round(Math.random()*180);
-      blobs += `<div class="blob" style="width:${size}px;height:${size}px;left:${Math.round(Math.random()*1000)}px;top:${Math.round(Math.random()*600)}px;background:${colors[i%3]};animation-delay:${(Math.random()*4).toFixed(1)}s;"></div>`;
-    }
-    bgLayers = `<div class="bg-glasswave">${blobs}</div>`;
+  let targetFileAttr = '';
+  if(el.action.type==='goToPage' && mode==='zip' && fileMap){
+    targetFileAttr = `data-target-file="${esc(fileMap[el.action.target]||'')}"`;
   }
+  return `data-action="${el.action.type}" data-target="${esc(el.action.target||'')}" ${targetFileAttr} data-anim="${esc(animName)}" data-anim-dur="${animDur}" data-anim-timing="${animTiming}" data-url="${esc(el.action.url||'')}" data-msg="${esc(el.action.message||'')}"`;
+}
+function bgDecoHTML(bg){
+  if(bg.type==='3d') return cubesHTML(bg);
+  if(bg.type==='glasswave') return glasswaveHTML(bg);
+  if(bg.type==='starfield') return starfieldHTML(bg);
+  if(bg.type==='aurora') return auroraHTML(bg);
+  return '';
+}
+function generatePageHTML(page, mode, fileMap){
+  mode = mode || 'single';
+  ensureBgDeco(page.background);
+  const bgLayers = bgDecoHTML(page.background);
   const els = page.elements.slice().sort((a,b)=>a.z-b.z).map(el=>{
-    const tag = el.type==='input' ? 'div' : 'div';
     const dataAttrs = `data-id="${el.id}" data-el-type="${el.type}"`;
-    const actionAttrs = (el.action && el.action.enabled && el.action.type!=='none') ? `data-action="${el.action.type}" data-target="${esc(el.action.target||'')}" data-anim="${el.action.animType||''}" data-url="${esc(el.action.url||'')}" data-msg="${esc(el.action.message||'')}"` : '';
-    return `<${tag} ${dataAttrs} ${actionAttrs} style="${elementStyleString(el)}">${elementInnerHTML(el)}</${tag}>`;
+    const actionAttrs = elementActionAttrs(el, mode, fileMap, page);
+    return `<div ${dataAttrs} ${actionAttrs} style="${elementStyleString(el)}">${elementInnerHTML(el)}</div>`;
   }).join('\n    ');
   return `<div class="dp-page" data-page-id="${page.id}" style="position:relative; width:1200px; height:800px; overflow:hidden; ${bgCss(page.background)}">
     ${bgLayers}
@@ -1310,16 +1868,10 @@ function generatePageHTML(page, isExport){
   </div>`;
 }
 
-function generateFullHTML(){
-  const proj = state.project;
-  const pagesHtml = proj.pages.map((p,i)=> `<div class="dp-pagewrap" data-wrap-for="${p.id}" style="display:${p.id===proj.activePageId?'block':'none'};">${generatePageHTML(p)}</div>`).join('\n');
-  return `<!DOCTYPE html>
-<html lang="nl">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>${esc(proj.name)}</title>
-<style>
+function sharedStyleCSS(proj){
+  let kfCss = '';
+  proj.pages.forEach(pg=> pg.elements.forEach(el=>{ kfCss += buildKeyframeCSS(el); }));
+  return `
   body{ margin:0; background:#0a0c11; display:flex; justify-content:center; padding:24px; font-family:'Inter',sans-serif; }
   .dp-page{ box-shadow:0 30px 80px rgba(0,0,0,0.5); border-radius:14px; }
   .bg3d{ position:absolute; inset:0; overflow:hidden; z-index:0; perspective:900px;}
@@ -1333,6 +1885,10 @@ function generateFullHTML(){
   .bg-glasswave .blob{ position:absolute; border-radius:50%; filter:blur(50px); opacity:0.55; animation:floatBlob 10s ease-in-out infinite;}
   @keyframes floatBlob{ 0%,100%{ transform:translate(0,0) scale(1);} 50%{ transform:translate(30px,-25px) scale(1.12);} }
   @keyframes gradShift{ 0%{background-position:0% 50%;} 50%{background-position:100% 50%;} 100%{background-position:0% 50%;} }
+  .bg-starfield{ position:absolute; inset:0; overflow:hidden; z-index:0;}
+  .bg-starfield .star{ position:absolute; border-radius:50%; background:#fff; box-shadow:0 0 4px rgba(255,255,255,0.8); animation:twinkle 3.5s ease-in-out infinite;}
+  .bg-starfield .star-glow{ position:absolute; border-radius:50%; background:radial-gradient(circle, rgba(139,92,246,0.35), transparent 70%); filter:blur(6px);}
+  @keyframes twinkle{ 0%,100%{opacity:0.25;} 50%{opacity:1;} }
   @keyframes fadeIn{ from{opacity:0;} to{opacity:1;} } @keyframes fadeOut{ from{opacity:1;} to{opacity:0;} }
   @keyframes slideInLeft{ from{opacity:0; transform:translateX(-40px);} to{opacity:1; transform:translateX(0);} }
   @keyframes slideInRight{ from{opacity:0; transform:translateX(40px);} to{opacity:1; transform:translateX(0);} }
@@ -1346,20 +1902,22 @@ function generateFullHTML(){
   @keyframes flipIn{ from{opacity:0; transform:rotateY(90deg);} to{opacity:1; transform:rotateY(0);} }
   footer.dp-credit{ position:fixed; bottom:8px; right:12px; font-size:11px; color:#5b6377; font-family:'Inter',sans-serif;}
   footer.dp-credit a{ color:#8b93a7; text-decoration:none; }
-</style>
-</head>
-<body>
-${pagesHtml}
-<footer class="dp-credit">Made with Designer — Mattyou Studios (tm)</footer>
-(function(){
+  ${kfCss}`;
+}
+
+function runtimeJSBody(mode){
+  return `(function(){
   function showPage(id){
-    document.querySelectorAll('.dp-pagewrap').forEach(w=>{ w.style.display = (w.dataset.wrapFor===id) ? 'block' : 'none'; });
+    var els = document.querySelectorAll('.dp-pagewrap');
+    if(els.length){ els.forEach(function(w){ w.style.display = (w.dataset.wrapFor===id) ? 'block' : 'none'; }); }
   }
   document.querySelectorAll('[data-action]').forEach(function(node){
     node.addEventListener('click', function(e){
       e.stopPropagation();
       var type = node.dataset.action, target = node.dataset.target;
-      if(type==='goToPage'){ showPage(target); }
+      if(type==='goToPage'){
+        ${mode==='zip' ? `if(node.dataset.targetFile){ window.location.href = node.dataset.targetFile; }` : `showPage(target);`}
+      }
       else if(type==='openLink'){ if(node.dataset.url) window.open(node.dataset.url, '_blank'); }
       else if(type==='show' || type==='hide' || type==='toggle'){
         var t = document.querySelector('[data-id="'+target+'"]');
@@ -1370,14 +1928,75 @@ ${pagesHtml}
         }
       } else if(type==='animate'){
         var t = target ? document.querySelector('[data-id="'+target+'"]') : node;
-        if(t){ t.style.animation='none'; void t.offsetWidth; t.style.animation = (node.dataset.anim||'pulse')+' 650ms ease'; }
+        if(t){ t.style.animation='none'; void t.offsetWidth; t.style.animation = (node.dataset.anim||'pulse')+' '+(node.dataset.animDur||650)+'ms '+(node.dataset.animTiming||'ease'); }
       } else if(type==='alert'){
         alert(node.dataset.msg || 'Actie uitgevoerd');
       }
     });
   });
-})();
+})();`;
+}
+
+function generateFullHTML(){
+  const proj = state.project;
+  const pagesHtml = proj.pages.map((p)=> `<div class="dp-pagewrap" data-wrap-for="${p.id}" style="display:${p.id===proj.activePageId?'block':'none'};">${generatePageHTML(p,'single')}</div>`).join('\n');
+  return `<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${esc(proj.name)}</title>
+<style>${sharedStyleCSS(proj)}
+</style>
+</head>
+<body>
+${pagesHtml}
+<footer class="dp-credit">Made with Designer — Mattyou Studios (tm)</footer>
+<script>
+${runtimeJSBody('single')}
 <\/script>
+</body>
+</html>`;
+}
+
+function slugify(name){
+  return (name||'pagina').toString().toLowerCase()
+    .replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'') || 'pagina';
+}
+function buildFileMap(proj){
+  const map = {}; const used = {};
+  proj.pages.forEach((p,i)=>{
+    let base = i===0 ? 'index' : slugify(p.name);
+    let name = base, n=2;
+    while(used[name]){ name = base+'-'+n; n++; }
+    used[name] = true;
+    map[p.id] = name+'.html';
+  });
+  return map;
+}
+function generateStandalonePageHTML(page, proj, fileMap){
+  ensureBgDeco(page.background);
+  const bgLayers = bgDecoHTML(page.background);
+  const els = page.elements.slice().sort((a,b)=>a.z-b.z).map(el=>{
+    const dataAttrs = `data-id="${el.id}" data-el-type="${el.type}"`;
+    const actionAttrs = elementActionAttrs(el, 'zip', fileMap, page);
+    return `<div ${dataAttrs} ${actionAttrs} style="${elementStyleString(el)}">${elementInnerHTML(el)}</div>`;
+  }).join('\n  ');
+  return `<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${esc(proj.name)} — ${esc(page.name)}</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="dp-page" style="position:relative; width:1200px; height:800px; overflow:hidden; ${bgCss(page.background)}">
+  ${bgLayers}
+  ${els}
+</div>
+<footer class="dp-credit">Made with Designer — Mattyou Studios (tm)</footer>
+<script src="script.js"><\/script>
 </body>
 </html>`;
 }
@@ -1391,9 +2010,9 @@ function openCodeModal(){
 }
 function loadCodeTab(tab){
   const area = $('#codeArea');
-  if(tab==='html'){ area.value = generatePageHTML(activePage()); area.dataset.tab='html'; area.readOnly=false; }
-  else if(tab==='css'){ area.value = '/* De volledige stijl wordt inline per element gegenereerd.\n   Pas kleuren/afmetingen aan via het Stijl-paneel rechts,\n   of bewerk het HTML-tabblad en klik Toepassen. */'; area.dataset.tab='css'; area.readOnly=true; }
-  else if(tab==='js'){ area.value = '/* Dit stukje JS wordt automatisch mee-geëxporteerd\n   en regelt kliks, animaties en paginanavigatie. */\n\n' + generateFullHTML().split('<script>')[1].split('<\\/script>')[0]; area.dataset.tab='js'; area.readOnly=true; }
+  if(tab==='html'){ area.value = generatePageHTML(activePage(),'single'); area.dataset.tab='html'; area.readOnly=false; }
+  else if(tab==='css'){ area.value = sharedStyleCSS(state.project); area.dataset.tab='css'; area.readOnly=true; }
+  else if(tab==='js'){ area.value = '/* Dit stukje JS wordt automatisch mee-geëxporteerd\n   en regelt kliks, animaties en paginanavigatie. */\n\n' + runtimeJSBody('single'); area.dataset.tab='js'; area.readOnly=true; }
 }
 function applyCodeChanges(){
   const area = $('#codeArea');
@@ -1426,6 +2045,7 @@ function applyCodeChanges(){
     if(newEls.length){ activePage().elements = newEls; }
     renderAll();
     saveDebounced();
+    pushHistory();
     toast('Code toegepast op canvas');
     closeModal('modalCode');
   }catch(err){
@@ -1433,7 +2053,7 @@ function applyCodeChanges(){
   }
 }
 
-function exportHTML(){
+function exportSingleHTML(){
   if(!state.project){ toast('Geen project geladen', 'err'); return; }
   const html = generateFullHTML();
   const blob = new Blob([html], {type:'text/html'});
@@ -1444,6 +2064,28 @@ function exportHTML(){
   document.body.appendChild(a); a.click(); a.remove();
   URL.revokeObjectURL(url);
   toast('Website geëxporteerd als HTML-bestand');
+}
+
+function exportZip(){
+  if(!state.project){ toast('Geen project geladen', 'err'); return; }
+  if(typeof JSZip==='undefined'){ toast('ZIP-bibliotheek kon niet laden — controleer je internetverbinding', 'err'); return; }
+  const proj = state.project;
+  const fileMap = buildFileMap(proj);
+  const zip = new JSZip();
+  zip.file('style.css', `/* ${esc(proj.name)} — gedeelde stijl, gegenereerd door Designer (Mattyou Studios) */\n` + sharedStyleCSS(proj));
+  zip.file('script.js', `/* ${esc(proj.name)} — gedeelde runtime, gegenereerd door Designer (Mattyou Studios) */\n` + runtimeJSBody('zip'));
+  proj.pages.forEach(p=>{
+    zip.file(fileMap[p.id], generateStandalonePageHTML(p, proj, fileMap));
+  });
+  zip.generateAsync({type:'blob'}).then(blob=>{
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = (proj.name || 'website').replace(/[^a-z0-9\-_]+/gi,'_') + '.zip';
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+    toast('Website geëxporteerd als ZIP-bestand');
+  }).catch(()=> toast('Zippen mislukt — probeer het opnieuw', 'err'));
 }
 
 /* =========================================================================
@@ -1621,11 +2263,32 @@ function renderAll(){
   renderCanvas();
   renderLeftRail();
   renderRightRail();
+  refreshDynamicKeyframesCSS();
+  renderTimelineBar();
+}
+
+function buildKeyframeCSS(el){
+  if(!el.timeline || !el.timeline.enabled || !el.timeline.keyframes || el.timeline.keyframes.length<2) return '';
+  const kfs = el.timeline.keyframes.slice().sort((a,b)=>a.t-b.t);
+  const dur = Math.max(1, el.timeline.duration);
+  const stops = kfs.map(k=>{
+    const pct = clamp(Math.round((k.t/dur)*100),0,100);
+    return `${pct}%{ left:${k.x}px; top:${k.y}px; width:${k.w}px; height:${k.h}px; opacity:${k.opacity}; transform:scale(${k.scale}) rotate(${k.rotate}deg); }`;
+  }).join(' ');
+  return `@keyframes kf_${el.id}{ ${stops} }`;
+}
+function refreshDynamicKeyframesCSS(){
+  const styleTag = document.getElementById('dynamicKfStyle');
+  if(!styleTag || !state.project) return;
+  let css = '';
+  state.project.pages.forEach(pg=> pg.elements.forEach(el=>{ css += buildKeyframeCSS(el); }));
+  styleTag.textContent = css;
 }
 
 function init(){
   buildShell();
   initFreshProject();
+  pushHistory();
 }
 init();
 </script>
