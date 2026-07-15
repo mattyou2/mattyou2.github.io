@@ -253,7 +253,7 @@ function renderFooter(){
         </div>
       </div>
     </div>
-    <div class="foot-bottom">${APP_NAME} — zelfgemaakte tools voor Minecraft datapacks &amp; resourcepacks. Niet geaffilieerd met Mojang.</div>
+    <div class="foot-bottom">${APP_NAME} — (by Mattyou Studios™) Minecraft tools voor datapacks &amp; resourcepacks. Niet geaffilieerd met Mojang.</div>
   `;
   return foot;
 }
