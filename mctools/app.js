@@ -6,7 +6,7 @@
 const APP_NAME = 'Resource Pack Creator';
 
 /* =========================================================================
-   SUPABASE — accounts & cloud packs
+   SUPABASE(public keys) — accounts & cloud packs
    ========================================================================= */
 const SUPABASE_URL = 'https://gscqsdztghjvlrvfhdjv.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdzY3FzZHp0Z2hqdmxydmZoZGp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwMzE5NTksImV4cCI6MjA5NzYwNzk1OX0.qcltg43WR05AElvagteN6DicUuQc6rP3frX7Jv0AgBA';
