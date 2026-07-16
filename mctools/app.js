@@ -3,22 +3,76 @@
    Gebruikt door index.html (home) en datapack-maker.html (tool).
    ========================================================================= */
 
-const APP_NAME = 'McTools©';
+const APP_NAME = 'Resource Pack Creator';
 
 /* =========================================================================
-   SUPABASE(public keys) — accounts & cloud packs
+   CRASH SAFETY NET — nooit meer een stil wit scherm.
+   Als er ergens een fout optreedt (nu of in de toekomst), verschijnt er een
+   zichtbare rode foutbox met de exacte melding i.p.v. een leeg scherm.
+   ========================================================================= */
+function renderFatalError(err){
+  console.error(err);
+  const app=document.getElementById('app');
+  if(!app) return; // zelfs #app ontbreekt — dan kunnen we niks meer tonen
+  app.innerHTML = `
+    <div style="max-width:720px;margin:60px auto;padding:20px;background:#2a1414;border:2px solid #e05a5a;color:#f4d7d7;font-family:monospace;border-radius:4px;">
+      <h2 style="color:#ff8b8b;margin:0 0 10px;">⚠ Er ging iets mis</h2>
+      <p style="margin:0 0 10px;">De pagina kon niet volledig laden. Dit is de exacte foutmelding (kopieer 'm als je hulp vraagt):</p>
+      <pre style="white-space:pre-wrap;background:#1a0e0e;padding:10px;border-radius:3px;font-size:12px;">${(err && (err.stack||err.message)) || err}</pre>
+      <p style="margin:14px 0 0;font-size:12px;">Meest voorkomende oorzaken: de pagina is geopend als lokaal bestand (dubbelklik) i.p.v. via een server/URL,
+      een script kon niet laden (internetverbinding/adblocker), of een bestand ontbreekt/heet anders dan verwacht.</p>
+    </div>`;
+}
+window.addEventListener('error', (e)=>{ renderFatalError(e.error || e.message); });
+window.addEventListener('unhandledrejection', (e)=>{ renderFatalError(e.reason); });
+function safeRender(){
+  if(typeof render !== 'function') return; // pagina-script nog niet geladen
+  try{ render(); }catch(e){ renderFatalError(e); }
+}
+
+/* =========================================================================
+   SUPABASE — accounts & cloud packs
    ========================================================================= */
 const SUPABASE_URL = 'https://gscqsdztghjvlrvfhdjv.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdzY3FzZHp0Z2hqdmxydmZoZGp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwMzE5NTksImV4cCI6MjA5NzYwNzk1OX0.qcltg43WR05AElvagteN6DicUuQc6rP3frX7Jv0AgBA';
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-let currentUser = null;
-sb.auth.getSession().then(({data})=>{ currentUser = data.session ? data.session.user : null; render(); });
-sb.auth.onAuthStateChange((_event, session)=>{ currentUser = session ? session.user : null; render(); });
 
+let sb;
+let SUPABASE_UNAVAILABLE = false;
+try{
+  if(!window.supabase) throw new Error('De Supabase-library (supabase-js) is niet geladen. Check je internetverbinding, of dat het <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"> tagje vóór app.js in de HTML staat.');
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+}catch(e){
+  SUPABASE_UNAVAILABLE = true;
+  console.error('Supabase kon niet initialiseren, accounts/cloud-opslag staan uit:', e);
+  // Stub zodat de rest van de app (die overal sb.auth.* en sb.from(...) aanroept) niet crasht,
+  // ook al werkt inloggen/opslaan dan niet.
+  const rejected = ()=>Promise.resolve({data:null,error:new Error('Supabase niet beschikbaar')});
+  const chainStub = { select:()=>chainStub, eq:()=>chainStub, order:()=>chainStub, single:rejected,
+    upsert:rejected, update:rejected, delete:rejected, in:()=>chainStub, then:(res)=>res({data:[],error:new Error('Supabase niet beschikbaar')}) };
+  sb = { auth:{ getSession:async()=>({data:{session:null}}), onAuthStateChange:()=>({data:{subscription:{unsubscribe(){}}}}),
+    signOut:async()=>({error:null}), signInWithPassword:rejected, signUp:rejected }, from:()=>chainStub };
+}
+// De echte site (GitHub Pages) — nodig zodat e-mailverificatie/reset-links je hier terugbrengen i.p.v. naar een lokaal pad.
+const SITE_URL = 'https://mattyou2.github.io/mctools/index.html';
+
+let currentUser = null;
+let currentMcUsername = ''; // uit de mc_profiles-tabel (publiek zichtbare gebruikersnaam)
+sb.auth.getSession().then(({data})=>{ currentUser = data.session ? data.session.user : null; loadMcUsername().then(safeRender); }).catch(e=>renderFatalError(e));
+sb.auth.onAuthStateChange((_event, session)=>{ currentUser = session ? session.user : null; loadMcUsername().then(safeRender); });
+
+async function loadMcUsername(){
+  currentMcUsername='';
+  if(!currentUser) return;
+  try{
+    const {data,error}=await sb.from('mc_profiles').select('username').eq('id',currentUser.id).single();
+    if(!error && data) currentMcUsername=data.username;
+  }catch(e){ /* tabel bestaat misschien nog niet — val terug op user_metadata hieronder */ }
+}
 function currentUsername(){
   if(!currentUser) return '';
-  return (currentUser.user_metadata && currentUser.user_metadata.username) || currentUser.email || '';
+  return currentMcUsername || (currentUser.user_metadata && currentUser.user_metadata.username) || currentUser.email || '';
 }
+
 
 /* =========================================================================
    DATA
@@ -155,11 +209,25 @@ const state = {
   modal:null,
   authModal:null,     // {tab:'login'|'signup', error, loading}
   myPacksModal:null,  // {packs:[...], loading}
+  importModal:null,   // {loading,error,parsed:{items,textures},checkedItems:Set,checkedTextures:Set,tab}
   addingNew:false,
+  // Texture-bibliotheek — gedeeld tussen Datapack Maker en Texture Pack Maker via localStorage,
+  // want het zijn losse pagina's met elk hun eigen JS-state.
+  textureLibrary:[], // [{id,name,category,texturePath,dataUrl}]
 };
 let uidCounter=1;
 function uid(prefix){return prefix+'_'+(uidCounter++)+'_'+Math.random().toString(36).slice(2,7);}
 function slug(str){ return str.toLowerCase().trim().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'') || 'item'; }
+
+const TEXLIB_KEY='mc_texture_library_v1';
+function loadTextureLibrary(){
+  try{ const raw=localStorage.getItem(TEXLIB_KEY); state.textureLibrary = raw ? JSON.parse(raw) : []; }
+  catch(e){ state.textureLibrary=[]; }
+}
+function saveTextureLibrary(){
+  try{ localStorage.setItem(TEXLIB_KEY, JSON.stringify(state.textureLibrary)); }catch(e){ /* storage vol/geblokkeerd */ }
+}
+loadTextureLibrary();
 
 /* =========================================================================
    HEADER + FOOTER (gedeeld door beide pagina's)
@@ -177,13 +245,18 @@ function renderHeader(activeNav){
   const nav=document.createElement('nav');
   nav.className='main-nav';
   nav.innerHTML=`
-    <div class="nav-link">Browse</div>
-    <div class="nav-link">Community ⌄</div>
-    <div class="nav-link ${activeNav==='tools'?'active':''}">Tools ⌄</div>
+    <div class="nav-link" id="navBrowse">Browse</div>
+    <div class="nav-link" id="navCommunity">Community</div>
+    <div class="nav-link ${activeNav==='tools'?'active':''}" id="navTools">Tools ⌄</div>
     <div class="nav-link">Guide</div>
     <div class="nav-link gold">Premium</div>
   `;
   h.appendChild(nav);
+  setTimeout(()=>{
+    document.getElementById('navBrowse').onclick=()=>{ location.href='browse.html'; };
+    document.getElementById('navCommunity').onclick=()=>{ location.href='community.html'; };
+    document.getElementById('navTools').onclick=(e)=>{ e.stopPropagation(); toggleToolsMenu(); };
+  },0);
 
   const spacer=document.createElement('div');
   spacer.className='spacer';
@@ -229,6 +302,30 @@ function renderHeader(activeNav){
   return h;
 }
 
+function toggleToolsMenu(){
+  let menu=document.getElementById('toolsDropdown');
+  if(menu){ menu.remove(); return; }
+  const btn=document.getElementById('navTools');
+  menu=document.createElement('div');
+  menu.id='toolsDropdown';
+  menu.className='panel';
+  menu.style.cssText='position:absolute;z-index:60;padding:6px;min-width:200px;';
+  const rect=btn.getBoundingClientRect();
+  menu.style.top=(rect.bottom+6)+'px'; menu.style.left=rect.left+'px';
+  menu.innerHTML=`
+    <div class="nav-link" style="width:100%;" id="toolsToDatapack">📦 Datapack Maker</div>
+    <div class="nav-link" style="width:100%;" id="toolsToTexture">🎨 Texture Pack Maker</div>
+  `;
+  document.body.appendChild(menu);
+  menu.querySelector('#toolsToDatapack').onclick=()=>{ location.href='datapack-maker.html'; };
+  menu.querySelector('#toolsToTexture').onclick=()=>{ location.href='texture-pack-maker.html'; };
+  setTimeout(()=>{
+    document.addEventListener('click', function closeMenu(e){
+      if(!menu.contains(e.target)){ menu.remove(); document.removeEventListener('click',closeMenu); }
+    });
+  },0);
+}
+
 function renderFooter(){
   const foot=document.createElement('footer');
   foot.className='foot';
@@ -253,7 +350,7 @@ function renderFooter(){
         </div>
       </div>
     </div>
-    <div class="foot-bottom">${APP_NAME} — (by Mattyou Studios™) Minecraft tools voor datapacks &amp; resourcepacks. Niet geaffilieerd met Mojang.</div>
+    <div class="foot-bottom">${APP_NAME} — zelfgemaakte tools voor Minecraft datapacks &amp; resourcepacks. Niet geaffilieerd met Mojang.</div>
   `;
   return foot;
 }
@@ -303,7 +400,7 @@ function renderAuthModal(){
       state.authModal.loading=true; state.authModal.error=null; render();
       try{
         if(state.authModal.tab==='signup'){
-          const {error}=await sb.auth.signUp({email,password,options:{data:{username}}});
+          const {error}=await sb.auth.signUp({email,password,options:{data:{username}, emailRedirectTo: SITE_URL}});
           if(error) throw error;
           state.authModal.info='Account aangemaakt! Als e-mailbevestiging aanstaat, check je inbox — anders ben je al ingelogd als '+username+'.';
           state.authModal.loading=false; render();
@@ -332,7 +429,7 @@ function openMyPacksModal(){
 }
 async function loadMyPacks(){
   try{
-    const {data,error}=await sb.from('packs').select('id,name,updated_at').order('updated_at',{ascending:false});
+    const {data,error}=await sb.from('packs').select('id,name,updated_at,is_public').order('updated_at',{ascending:false});
     if(error) throw error;
     state.myPacksModal={packs:data,loading:false,error:null};
   }catch(err){
@@ -353,8 +450,9 @@ function renderMyPacksModal(){
   else if(!m.packs.length) body='<div class="empty-hint">Nog geen packs opgeslagen in de cloud.</div>';
   else body=m.packs.map(p=>`
     <div class="mypacks-row">
-      <div><b>${escapeHtml(p.name)}</b><div class="mp-meta">bijgewerkt: ${new Date(p.updated_at).toLocaleString('nl-NL')}</div></div>
+      <div><b>${escapeHtml(p.name)}</b><div class="mp-meta">bijgewerkt: ${new Date(p.updated_at).toLocaleString('nl-NL')} · ${p.is_public?'🌍 publiek':'🔒 privé'}</div></div>
       <div class="field-row" style="margin:0;">
+        <button class="btn small ${p.is_public?'ghost':'gold'}" data-pub="${p.id}" data-makepublic="${p.is_public?'0':'1'}">${p.is_public?'Privé maken':'Publiceren'}</button>
         <button class="btn small primary" data-load="${p.id}">Laden</button>
         <button class="btn small danger" data-del="${p.id}">✕</button>
       </div>
@@ -373,6 +471,7 @@ function renderMyPacksModal(){
     box.querySelector('#saveCurrentBtn').onclick=()=>saveCurrentPackToCloud();
     box.querySelectorAll('[data-load]').forEach(btn=>{ btn.onclick=()=>loadPackFromCloud(btn.dataset.load); });
     box.querySelectorAll('[data-del]').forEach(btn=>{ btn.onclick=()=>deletePackFromCloud(btn.dataset.del); });
+    box.querySelectorAll('[data-pub]').forEach(btn=>{ btn.onclick=()=>togglePublishPack(btn.dataset.pub, btn.dataset.makepublic==='1'); });
   },0);
   return overlay;
 }
@@ -460,12 +559,15 @@ async function buildResourcePack(ns,versionInfo){
   zip.file('pack.mcmeta', JSON.stringify(packMcmeta(state.packName+' resource pack ('+APP_NAME+')',versionInfo,'resource'),null,2));
 
   // Elk custom item krijgt zijn EIGEN model + eigen texture-laag — dit item "overlapt zichzelf":
-  // het is volledig self-contained en verwijst nooit naar een ander item se model.
+  // het is volledig self-contained en verwijst nooit naar een ander item's model.
+  // Het model zelf staat onder assets/minecraft/models/item/<naam>.json (net als vanilla items dat
+  // doen) — alleen de texture blijft in de eigen namespace, zodat er geen bestandsnaam-botsingen met
+  // vanilla textures kunnen ontstaan.
   for(const item of state.items){
     const modelId=slug(item.name);
     let texDataUrl=item.texture || await blankTransparentPngDataUrl();
     zip.file(`assets/${ns}/textures/item/${modelId}.png`, dataUrlToBlob(texDataUrl));
-    zip.file(`assets/${ns}/models/item/${modelId}.json`, JSON.stringify({parent:'item/generated',textures:{layer0:`${ns}:item/${modelId}`}},null,2));
+    zip.file(`assets/minecraft/models/item/${modelId}.json`, JSON.stringify({parent:'item/generated',textures:{layer0:`${ns}:item/${modelId}`}},null,2));
   }
 
   // Koppeling met het basisitem (bijv. diamond_sword): dit "overlapt" het basisitem — dat hoort zo,
@@ -484,7 +586,7 @@ async function buildResourcePack(ns,versionInfo){
           type:'minecraft:range_dispatch',
           property:'minecraft:custom_model_data',
           fallback:{ type:'minecraft:model', model:`minecraft:item/${base}` },
-          entries: sorted.map(l=>({ threshold:l.cmd, model:{ type:'minecraft:model', model:`${ns}:item/${slug(l.item.name)}` } }))
+          entries: sorted.map(l=>({ threshold:l.cmd, model:{ type:'minecraft:model', model:`minecraft:item/${slug(l.item.name)}` } }))
         }
       },null,2));
     } else {
@@ -493,7 +595,7 @@ async function buildResourcePack(ns,versionInfo){
       // eigen model van dat item.
       zip.file(`assets/minecraft/models/item/${base}.json`, JSON.stringify({
         parent:'item/generated', textures:{layer0:`item/${base}`},
-        overrides: sorted.map(l=>({predicate:{custom_model_data:l.cmd},model:`${ns}:item/${slug(l.item.name)}`}))
+        overrides: sorted.map(l=>({predicate:{custom_model_data:l.cmd},model:`minecraft:item/${slug(l.item.name)}`}))
       },null,2));
     }
   }
@@ -685,18 +787,18 @@ het item). "Raak"-abilities gebruiken het volledig vanilla-ondersteunde advancem
 "player_hurt_entity". "Terwijl vastgehouden"-abilities draaien via een tick-functie.
 
 ITEM-MODELLEN — HOE DIT ZIT
-Elk item dat je toevoegt krijgt zijn EIGEN model + eigen texture onder
-assets/${ns}/models/item/ en assets/${ns}/textures/item/ — dat model verwijst nooit
-naar een ander item, het "overlapt zichzelf" (self-contained).
+Elk item dat je toevoegt krijgt zijn EIGEN model onder assets/minecraft/models/item/
+(net als vanilla-items dat doen) met zijn eigen texture-laag onder
+assets/${ns}/textures/item/ — dat model verwijst nooit naar een ander item, het
+"overlapt zichzelf" (self-contained).
 ${versionInfo.newItemModelSystem
   ? `Voor 1.21.4+ wordt daarnaast per basisitem (bijv. diamond_sword) een
 item-definitie aangemaakt onder assets/minecraft/items/<basisitem>.json. Die verwijst
-op basis van custom_model_data door naar het juiste eigen model van jouw item — het
-vanilla model van het basisitem zelf (assets/minecraft/models/item/<basisitem>.json)
-wordt NIET aangepast en blijft gewoon de fallback-look.`
+op basis van custom_model_data door naar het model van jouw item — het vanilla model
+van het basisitem zelf (assets/minecraft/models/item/<basisitem>.json) wordt NIET
+aangepast en blijft gewoon de fallback-look.`
   : `Voor deze (oudere) versie wordt het vanilla model van het basisitem herschreven met
-een "overrides"-lijst die op custom_model_data naar het juiste eigen model van jouw
-item verwijst.`}
+een "overrides"-lijst die op custom_model_data naar het model van jouw item verwijst.`}
 
 VERSIE-OPMERKING
 Vanaf Minecraft 1.21.9 gebruikt Mojang "min_format"/"max_format" in plaats van een
@@ -706,4 +808,279 @@ de exacte syntax op de Minecraft Wiki (Pack format-pagina) voor jouw build.
 `);
 
   return zip;
+}
+
+/* =========================================================================
+   GENERIEK IMPORTEREN — upload een resourcepack- en/of datapack-.zip,
+   kies specifieke items en/of textures, voeg toe aan je datapack en/of
+   je texture pack (of allebei).
+   ========================================================================= */
+async function parseUploadedZip(file){
+  const zip=await JSZip.loadAsync(file);
+  const textures=[]; // {id, ns, relPath, fileName, category, dataUrl}
+  const modelFiles={}; // fullPath -> parsed json
+  const dispatchMap={}; // "ns:item/modelId" -> baseItemId (uit assets/minecraft/items/<base>.json)
+  const giveInfo={}; // modelId -> {name,color} best-effort uit give_*.mcfunction
+
+  const texEntries=[];
+  zip.forEach((path,entry)=>{
+    if(entry.dir) return;
+    const texMatch=path.match(/^assets\/([^\/]+)\/textures\/(.+)\.png$/i);
+    if(texMatch) texEntries.push({path,ns:texMatch[1],relPath:texMatch[2],entry});
+    const modelMatch=path.match(/^assets\/([^\/]+)\/models\/item\/([^\/]+)\.json$/i);
+    if(modelMatch) modelFiles[path]={ns:modelMatch[1],modelId:modelMatch[2],entry};
+    const itemDefMatch=path.match(/^assets\/minecraft\/items\/([^\/]+)\.json$/i);
+    if(itemDefMatch) modelFiles['ITEMDEF::'+path]={baseItem:itemDefMatch[1],entry,isItemDef:true};
+    const giveMatch=path.match(/^data\/[^\/]+\/function\/give_([^\/]+)\.mcfunction$/i);
+    if(giveMatch) modelFiles['GIVE::'+path]={modelId:giveMatch[1],entry,isGive:true};
+  });
+
+  // textures inlezen (als data-url)
+  for(const t of texEntries){
+    const dataUrl='data:image/png;base64,'+(await t.entry.async('base64'));
+    const parts=t.relPath.split('/');
+    const category=parts.length>1?parts[0]:'item';
+    textures.push({id:uid('tex'),ns:t.ns,relPath:t.relPath,fileName:parts[parts.length-1].replace(/\.png$/i,''),category,dataUrl,fullPath:t.path});
+  }
+  const texByFullPath={}; textures.forEach(t=>texByFullPath[t.fullPath]=t);
+  function findTextureByRef(ref, fallbackNs){
+    // ref kan zijn "ns:item/naam" of "item/naam" (dan geldt fallbackNs)
+    let ns=fallbackNs, rel=ref;
+    if(ref.includes(':')){ const p=ref.split(':'); ns=p[0]; rel=p[1]; }
+    const full=`assets/${ns}/textures/${rel}.png`;
+    return texByFullPath[full] || null;
+  }
+
+  // item-definities (nieuw systeem, 1.21.4+) uitlezen voor base-item koppeling
+  for(const key of Object.keys(modelFiles)){
+    const f=modelFiles[key];
+    if(!f.isItemDef) continue;
+    try{
+      const json=JSON.parse(await f.entry.async('string'));
+      const collect=(node)=>{
+        if(!node) return;
+        if(node.entries) node.entries.forEach(en=>collect(en.model));
+        if(node.cases) node.cases.forEach(c=>collect(c.model));
+        if(node.model && node.type==='minecraft:model') dispatchMap[node.model]=f.baseItem;
+        if(node.model && typeof node.model==='object') collect(node.model);
+      };
+      collect(json.model);
+    }catch(e){ /* geen geldige JSON, negeren */ }
+  }
+  // give_*.mcfunction best-effort uitlezen voor naam/kleur
+  for(const key of Object.keys(modelFiles)){
+    const f=modelFiles[key];
+    if(!f.isGive) continue;
+    try{
+      const txt=await f.entry.async('string');
+      const nameMatch=txt.match(/"text":"([^"]+)"/);
+      const colorMatch=txt.match(/"color":"([^"]+)"/);
+      giveInfo[f.modelId]={ name:nameMatch?nameMatch[1]:null, color:colorMatch?colorMatch[1]:null };
+    }catch(e){}
+  }
+
+  // items samenstellen uit model-bestanden
+  const items=[];
+  for(const key of Object.keys(modelFiles)){
+    const f=modelFiles[key];
+    if(f.isItemDef || f.isGive) continue;
+    try{
+      const json=JSON.parse(await f.entry.async('string'));
+      if(!json.textures || !json.textures.layer0) continue;
+      const tex=findTextureByRef(json.textures.layer0, f.ns);
+      const baseItem=dispatchMap[`${f.ns}:item/${f.modelId}`] || dispatchMap[`minecraft:item/${f.modelId}`] || 'paper';
+      const info=giveInfo[f.modelId]||{};
+      items.push({
+        id:uid('imp'), modelId:f.modelId, ns:f.ns, baseItem,
+        name: info.name || prettyName(f.modelId),
+        color: info.color || 'white',
+        dataUrl: tex ? tex.dataUrl : null,
+      });
+    }catch(e){ /* niet-standaard model json, overslaan */ }
+  }
+
+  return {items, textures};
+}
+
+function openImportModal(){
+  state.importModal={ tab:'items', loading:false, error:null, parsed:null, checkedItems:new Set(), checkedTextures:new Set() };
+  render();
+}
+function closeImportModal(){ state.importModal=null; render(); }
+
+function renderImportModal(){
+  const overlay=document.createElement('div');
+  overlay.className='modal-overlay';
+  overlay.onclick=(e)=>{ if(e.target===overlay) closeImportModal(); };
+  const box=document.createElement('div');
+  box.className='panel modal-box wide';
+  const m=state.importModal;
+
+  if(!m.parsed){
+    box.innerHTML=`
+      <h2>📥 Pack importeren</h2>
+      <p style="color:var(--text-dim);font-size:12.5px;line-height:1.6;">
+        Upload een resourcepack-.zip en/of datapack-.zip (mag ook een gecombineerde .zip zijn — alles
+        wat erin staat wordt gescand). Daarna kies je precies welke items en/of textures je wilt
+        overnemen.</p>
+      <label class="upload-label" for="importFileInput" style="display:block;margin-top:14px;">⬆ Kies .zip bestand</label>
+      <input type="file" id="importFileInput" accept=".zip" style="display:none;">
+      ${m.loading?'<div class="empty-hint">Bezig met inlezen…</div>':''}
+      ${m.error?`<div class="error-msg">${escapeHtml(m.error)}</div>`:''}
+      <div class="field-row" style="margin-top:18px;justify-content:flex-end;">
+        <button class="btn ghost" id="closeImportBtn">Sluiten</button>
+      </div>
+    `;
+    overlay.appendChild(box);
+    setTimeout(()=>{
+      box.querySelector('#closeImportBtn').onclick=closeImportModal;
+      box.querySelector('#importFileInput').addEventListener('change', async (e)=>{
+        const file=e.target.files[0]; if(!file) return;
+        m.loading=true; m.error=null; render();
+        try{
+          m.parsed=await parseUploadedZip(file);
+          m.parsed.items.forEach(it=>m.checkedItems.add(it.id));
+          m.parsed.textures.forEach(t=>m.checkedTextures.add(t.id));
+          m.loading=false; render();
+        }catch(err){ m.loading=false; m.error='Kon dit bestand niet lezen: '+err.message; render(); }
+      });
+    },0);
+    return overlay;
+  }
+
+  const itemsTab=m.tab==='items';
+  const itemsHtml = m.parsed.items.length ? m.parsed.items.map(it=>`
+    <label style="display:flex;align-items:center;gap:9px;padding:6px 4px;">
+      <input type="checkbox" class="imp-item-chk" value="${it.id}" ${m.checkedItems.has(it.id)?'checked':''}>
+      <div class="thumb">${it.dataUrl?`<img src="${it.dataUrl}">`:''}</div>
+      <div class="meta"><div class="nm">${escapeHtml(it.name)}</div><div class="sub">${prettyName(it.baseItem)}</div></div>
+    </label>`).join('') : '<div class="empty-hint">Geen items gevonden in dit bestand.</div>';
+  const texHtml = m.parsed.textures.length ? m.parsed.textures.map(t=>`
+    <label style="display:flex;align-items:center;gap:9px;padding:6px 4px;">
+      <input type="checkbox" class="imp-tex-chk" value="${t.id}" ${m.checkedTextures.has(t.id)?'checked':''}>
+      <div class="thumb"><img src="${t.dataUrl}"></div>
+      <div class="meta"><div class="nm">${escapeHtml(t.fileName)}</div><div class="sub">${escapeHtml(t.relPath)}</div></div>
+    </label>`).join('') : '<div class="empty-hint">Geen losse textures gevonden.</div>';
+
+  box.innerHTML=`
+    <h2>📥 Kies wat je wilt importeren</h2>
+    <div class="recipe-tabs">
+      <div class="recipe-tab ${itemsTab?'on':''}" id="tabItems">Items (${m.parsed.items.length})</div>
+      <div class="recipe-tab ${!itemsTab?'on':''}" id="tabTex">Textures (${m.parsed.textures.length})</div>
+    </div>
+    <div class="field-row" style="margin-bottom:6px;">
+      <button class="btn small ghost" id="selectAllBtn">Alles selecteren</button>
+      <button class="btn small ghost" id="selectNoneBtn">Niks selecteren</button>
+    </div>
+    <div class="checklist" style="max-height:340px;" id="importList">${itemsTab?itemsHtml:texHtml}</div>
+    <div class="field-row" style="margin-top:18px;justify-content:flex-end;">
+      <button class="btn ghost" id="closeImportBtn">Sluiten</button>
+      <button class="btn" id="addToTexBtn">+ Aan texture pack</button>
+      ${window.IS_DATAPACK_PAGE?`<button class="btn primary" id="addToBothBtn">+ Aan datapack</button>`:''}
+    </div>
+  `;
+  overlay.appendChild(box);
+  setTimeout(()=>{
+    box.querySelector('#closeImportBtn').onclick=closeImportModal;
+    box.querySelector('#tabItems').onclick=()=>{ m.tab='items'; render(); };
+    box.querySelector('#tabTex').onclick=()=>{ m.tab='textures'; render(); };
+    box.querySelector('#selectAllBtn').onclick=()=>{
+      if(itemsTab) m.parsed.items.forEach(it=>m.checkedItems.add(it.id));
+      else m.parsed.textures.forEach(t=>m.checkedTextures.add(t.id));
+      render();
+    };
+    box.querySelector('#selectNoneBtn').onclick=()=>{
+      if(itemsTab) m.checkedItems.clear(); else m.checkedTextures.clear();
+      render();
+    };
+    box.querySelectorAll('.imp-item-chk').forEach(chk=>{ chk.onchange=()=>{ chk.checked?m.checkedItems.add(chk.value):m.checkedItems.delete(chk.value); }; });
+    box.querySelectorAll('.imp-tex-chk').forEach(chk=>{ chk.onchange=()=>{ chk.checked?m.checkedTextures.add(chk.value):m.checkedTextures.delete(chk.value); }; });
+    box.querySelector('#addToTexBtn').onclick=()=>{ importSelectedIntoTextureLibrary(); };
+    const bothBtn=box.querySelector('#addToBothBtn');
+    if(bothBtn) bothBtn.onclick=()=>{ importSelectedIntoDatapack(); importSelectedIntoTextureLibrary(); };
+  },0);
+  return overlay;
+}
+
+/* Community-pack rechtstreeks importeren (geen zip nodig — items staan al gestructureerd klaar) */
+function openImportModalWithParsedItems(items){
+  state.importModal={ tab:'items', loading:false, error:null,
+    parsed:{ items: items.map(it=>({...it,id:uid('imp')})), textures:[] },
+    checkedItems:new Set(), checkedTextures:new Set() };
+  items.forEach(()=>{});
+  state.importModal.parsed.items.forEach(it=>state.importModal.checkedItems.add(it.id));
+  render();
+}
+
+/* Bij het laden van de Datapack Maker: kijk of er een 'pending import' klaarstaat
+   (bijv. vanaf de Community-pagina) en open die dan automatisch. */
+function checkPendingImport(){
+  try{
+    const raw=localStorage.getItem('mc_pending_import');
+    if(!raw) return;
+    localStorage.removeItem('mc_pending_import');
+    const items=JSON.parse(raw);
+    if(items && items.length) openImportModalWithParsedItems(items);
+  }catch(e){}
+}
+
+function importSelectedIntoDatapack(){
+  const m=state.importModal; if(!m || !m.parsed) return;
+  if(typeof state.items === 'undefined' || !Array.isArray(state.items)){ showToast('Ga naar Datapack Maker om items te importeren.'); return; }
+  let count=0;
+  m.parsed.items.filter(it=>m.checkedItems.has(it.id)).forEach(it=>{
+    state.items.push({
+      id:uid('item'), setId:null, setLabel:null, baseItem:it.baseItem, armorSlot:null,
+      name:it.name, color:it.color, bold:false, italic:false, underline:false,
+      texture:it.dataUrl, attributes:[], enchants:[], abilities:[],
+      recipe:newRecipe(), misc:newMisc(), durability:newDurability()
+    });
+    count++;
+  });
+  state.importModal=null;
+  showToast(count+' item(s) geïmporteerd in je datapack.');
+  render();
+}
+function importSelectedIntoTextureLibrary(){
+  const m=state.importModal; if(!m || !m.parsed) return;
+  let count=0;
+  m.parsed.textures.filter(t=>m.checkedTextures.has(t.id)).forEach(t=>{
+    state.textureLibrary.push({ id:uid('lib'), name:t.fileName, category:t.category, ns:t.ns, texturePath:t.relPath, dataUrl:t.dataUrl });
+    count++;
+  });
+  saveTextureLibrary();
+  if(!(m.checkedItems && m.checkedItems.size)) state.importModal=null;
+  showToast(count+' texture(s) toegevoegd aan je texture pack-bibliotheek.');
+  render();
+}
+
+/* =========================================================================
+   PUBLICEREN & COMMUNITY
+   ========================================================================= */
+async function togglePublishPack(id, makePublic){
+  try{
+    const {error}=await sb.from('packs').update({is_public:makePublic}).eq('id',id);
+    if(error) throw error;
+    showToast(makePublic ? 'Pack gepubliceerd — zichtbaar op de Community-pagina!' : 'Pack weer privé gemaakt.');
+    if(state.myPacksModal) loadMyPacks();
+  }catch(err){ showToast('Kon publicatiestatus niet wijzigen: '+err.message); }
+}
+
+async function fetchCommunityPacks(){
+  const {data,error}=await sb.from('packs').select('id,name,data,updated_at,user_id').eq('is_public',true).order('updated_at',{ascending:false});
+  if(error) throw error;
+  const userIds=[...new Set(data.map(p=>p.user_id))];
+  let usernames={};
+  if(userIds.length){
+    const {data:profiles}=await sb.from('mc_profiles').select('id,username').in('id',userIds);
+    (profiles||[]).forEach(p=>usernames[p.id]=p.username);
+  }
+  return data.map(p=>({ ...p, authorName: usernames[p.user_id] || 'onbekend' }));
+}
+
+async function downloadCommunityPack(pack){
+  const backup={packName:state.packName,packVersion:state.packVersion,items:state.items};
+  state.packName=pack.name; state.packVersion=(pack.data&&pack.data.packVersion)||'1.21.8'; state.items=(pack.data&&pack.data.items)||[];
+  await doExport();
+  state.packName=backup.packName; state.packVersion=backup.packVersion; state.items=backup.items;
 }
