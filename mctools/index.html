@@ -12,6 +12,7 @@
 
 <script src="app.js"></script>
 <script>
+window.IS_DATAPACK_PAGE=false;
 function render(){
   const app=document.getElementById('app');
   app.innerHTML='';
@@ -39,6 +40,8 @@ function renderHome(){
   const grid=wrap.querySelector('#toolGrid');
   const tools=[
     {icon:'📦',name:'Datapack Maker',desc:'Maak custom items, wapens, harnassen en item-sets met eigen textures, stats en abilities.',active:true,href:'datapack-maker.html'},
+    {icon:'🎨',name:'Texture Pack Maker',desc:'Reskin bestaande Minecraft-textures met de pixel-editor, of importeer een bestaande resourcepack.',active:true,href:'texture-pack-maker.html'},
+    {icon:'🌍',name:'Community',desc:'Blader door gepubliceerde packs van andere makers en download of importeer ze.',active:true,href:'community.html'},
     {icon:'🧑',name:'Skin Editor',desc:'Speler-skins tekenen en aanpassen.',active:false},
     {icon:'🗺️',name:'Structure Planner',desc:'Bouwwerken plannen en exporteren als .nbt structuur.',active:false},
     {icon:'🎵',name:'Resourcepack Sounds',desc:'Eigen geluiden toevoegen aan items en mobs.',active:false},
