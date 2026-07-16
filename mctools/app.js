@@ -3,7 +3,7 @@
    Gebruikt door index.html (home) en datapack-maker.html (tool).
    ========================================================================= */
 
-const APP_NAME = 'Resource Pack Creator';
+const APP_NAME = 'McTools©';
 
 /* =========================================================================
    CRASH SAFETY NET — nooit meer een stil wit scherm.
