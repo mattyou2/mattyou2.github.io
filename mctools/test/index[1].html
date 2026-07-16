@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resource Pack Creator</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+</head>
+<body>
+<div class="app" id="app"></div>
+
+<script src="app.js"></script>
+<script>
+window.IS_DATAPACK_PAGE=false;
+function render(){
+  const app=document.getElementById('app');
+  app.innerHTML='';
+  app.appendChild(renderHeader('home'));
+  const main=document.createElement('main');
+  main.appendChild(renderHome());
+  app.appendChild(main);
+  app.appendChild(renderFooter());
+
+  if(state.authModal) app.appendChild(renderAuthModal());
+  if(state.myPacksModal) app.appendChild(renderMyPacksModal());
+}
+
+function renderHome(){
+  const wrap=document.createElement('div');
+  wrap.innerHTML=`
+    <div class="hero">
+      <h1>Minecraft tools, rechtstreeks in je browser</h1>
+      <p>Bouw je eigen items, wapensets en harnassen — met eigen pixel-textures, attributen,
+      enchantments, crafting-recipes en abilities. Exporteer als werkende datapack + resourcepack .zip.
+      Niks te installeren.</p>
+    </div>
+    <div class="tool-grid" id="toolGrid"></div>
+  `;
+  const grid=wrap.querySelector('#toolGrid');
+  const tools=[
+    {icon:'📦',name:'Datapack Maker',desc:'Maak custom items, wapens, harnassen en item-sets met eigen textures, stats en abilities.',active:true,href:'datapack-maker.html'},
+    {icon:'🎨',name:'Texture Pack Maker',desc:'Reskin bestaande Minecraft-textures met de pixel-editor, of importeer een bestaande resourcepack.',active:true,href:'texture-pack-maker.html'},
+    {icon:'🌍',name:'Community',desc:'Blader door gepubliceerde packs van andere makers en download of importeer ze.',active:true,href:'community.html'},
+    {icon:'🧑',name:'Skin Editor',desc:'Speler-skins tekenen en aanpassen.',active:false},
+    {icon:'🗺️',name:'Structure Planner',desc:'Bouwwerken plannen en exporteren als .nbt structuur.',active:false},
+    {icon:'🎵',name:'Resourcepack Sounds',desc:'Eigen geluiden toevoegen aan items en mobs.',active:false},
+  ];
+  tools.forEach(t=>{
+    const c=document.createElement('div');
+    c.className='panel tool-card'+(t.active?'':' disabled');
+    c.innerHTML=`<div class="icon">${t.icon}</div><h3>${t.name}</h3><p>${t.desc}</p>${!t.active?'<div class="badge-soon">BINNENKORT</div>':''}`;
+    if(t.active){ c.onclick=()=>{ location.href=t.href; }; }
+    grid.appendChild(c);
+  });
+  return wrap;
+}
+
+render();
+</script>
+</body>
+</html>
