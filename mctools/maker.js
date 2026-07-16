@@ -3,6 +3,12 @@
    ========================================================================= */
 
 function render(){
+  // Scrollposities onthouden vóór we de DOM weggooien, anders spring je bij elke wijziging
+  // (bijv. een enchantment toevoegen) weer helemaal naar boven.
+  const prevWindowScroll = window.scrollY;
+  const prevEditorScroll = document.querySelector('.editor-scroll') ? document.querySelector('.editor-scroll').scrollTop : null;
+  const prevItemsScroll = document.querySelector('.items-panel') ? document.querySelector('.items-panel').scrollTop : null;
+
   const app=document.getElementById('app');
   app.innerHTML='';
   app.appendChild(renderHeader('tools'));
@@ -14,6 +20,13 @@ function render(){
   if(state.modal) app.appendChild(renderAddItemModal());
   if(state.authModal) app.appendChild(renderAuthModal());
   if(state.myPacksModal) app.appendChild(renderMyPacksModal());
+  if(state.importModal) app.appendChild(renderImportModal());
+
+  window.scrollTo(0, prevWindowScroll);
+  const newEditorScroll=document.querySelector('.editor-scroll');
+  if(newEditorScroll && prevEditorScroll!==null) newEditorScroll.scrollTop=prevEditorScroll;
+  const newItemsScroll=document.querySelector('.items-panel');
+  if(newItemsScroll && prevItemsScroll!==null) newItemsScroll.scrollTop=prevItemsScroll;
 }
 
 /* ---------------- toolbar + layout ---------------- */
@@ -47,6 +60,7 @@ function renderDatapackMaker(){
       </select>
     </div>
     <div class="spacer"></div>
+    <button class="btn" id="importBtn">📥 Importeren</button>
     <button class="btn gold" id="exportBtn">↓ Export pack</button>
   `;
   wrap.appendChild(toolbar);
@@ -78,6 +92,7 @@ function renderDatapackMaker(){
     });
     document.getElementById('packVersionSelect').addEventListener('change',e=>{state.packVersion=e.target.value; render();});
     document.getElementById('exportBtn').addEventListener('click',()=>doExport());
+    document.getElementById('importBtn').addEventListener('click',()=>openImportModal());
     document.getElementById('saveDraftBtn').addEventListener('click',()=>{
       if(currentUser) saveCurrentPackToCloud(); else { state.authModal={tab:'login',username:'',error:null,loading:false}; render(); }
     });
@@ -449,7 +464,11 @@ function renderTextureEditor(item){
     <input type="file" id="uploadImgInput" accept="image/*" style="display:none;">
     <button class="btn small ghost" id="clearCanvasBtn">Wis alles (transparant)</button>
     <div class="hint-box">Achtergrond = doorzichtig. 16×16 canvas, uitvergroot. Er zit geen vanilla
-    Minecraft-texture voorgeladen (auteursrecht) — teken zelf of upload een eigen afbeelding als basis.</div>
+    Minecraft-texture voorgeladen — Mojang's eigen textures mogen we hier niet zomaar hosten/aanbieden,
+    ook niet met een "niet-geaffilieerd"-tekstje (dat dekt alleen dat je geen officieel product
+    claimt, geen auteursrecht). Wil je vanaf een vanilla texture beginnen: gebruik <b>Importeren</b>
+    hierboven om je eigen (legaal aangeschafte) resourcepack of texture-map te uploaden, of teken/upload
+    gewoon je eigen afbeelding.</div>
   `;
   const canvasWrap=document.createElement('div');
   const canvas=document.createElement('canvas');
@@ -723,4 +742,5 @@ function createItemsFromModal(){
 }
 
 /* boot */
-render();
+window.IS_DATAPACK_PAGE=true;
+try{ render(); checkPendingImport(); }catch(e){ renderFatalError(e); }
