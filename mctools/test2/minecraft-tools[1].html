@@ -1,0 +1,1407 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blokwerk — Minecraft Tools</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+@font-face {
+  font-family: 'MCPixel';
+  src: local('Press Start 2p');
+}
+:root{
+  --stone-900:#161310;
+  --stone-800:#211d18;
+  --stone-700:#2c2620;
+  --stone-600:#3a332a;
+  --panel:#252019;
+  --slot:#8b8b8b;
+  --slot-light:#ffffff;
+  --slot-dark:#373737;
+  --slot-bg:#3d3d3d;
+  --gold:#ffb400;
+  --gold-dim:#a87400;
+  --enchant:#a24bd6;
+  --xp:#7de84a;
+  --redstone:#c73a3a;
+  --diamond:#5fd9d0;
+  --text:#e9e2d3;
+  --text-dim:#a89f8c;
+  --danger:#c73a3a;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;height:100%;}
+body{
+  background:
+    radial-gradient(circle at 20% 10%, #2a2419 0, transparent 40%),
+    repeating-linear-gradient(45deg, var(--stone-900) 0 2px, var(--stone-800) 2px 4px),
+    var(--stone-900);
+  color:var(--text);
+  font-family: 'Courier New', Consolas, monospace;
+  min-height:100vh;
+}
+::-webkit-scrollbar{width:10px;height:10px;}
+::-webkit-scrollbar-track{background:var(--stone-800);}
+::-webkit-scrollbar-thumb{background:var(--stone-600);border:2px solid var(--stone-800);}
+
+.pixel-font{
+  font-family: 'MCPixel','Courier New',monospace;
+  letter-spacing:1px;
+  text-shadow: 2px 2px 0 rgba(0,0,0,0.6);
+}
+
+/* ---------- Inventory-slot bevel look ---------- */
+.slot{
+  background:var(--slot-bg);
+  border-top:3px solid var(--slot-dark);
+  border-left:3px solid var(--slot-dark);
+  border-bottom:3px solid var(--slot-light);
+  border-right:3px solid var(--slot-light);
+  filter:brightness(0.55);
+}
+.panel{
+  background:var(--panel);
+  border-top:3px solid #4a4234;
+  border-left:3px solid #4a4234;
+  border-bottom:3px solid #0e0c09;
+  border-right:3px solid #0e0c09;
+  box-shadow: inset 0 0 0 2px #1a160f;
+}
+button.mc-btn{
+  font-family:inherit;
+  background:var(--slot);
+  color:#161310;
+  font-weight:bold;
+  padding:9px 16px;
+  border-top:3px solid #ffffff;
+  border-left:3px solid #ffffff;
+  border-bottom:3px solid #383838;
+  border-right:3px solid #383838;
+  cursor:pointer;
+  filter:brightness(0.62);
+  font-size:13px;
+  text-shadow:1px 1px 0 rgba(0,0,0,0.3);
+  transition:filter .08s;
+}
+button.mc-btn:hover{filter:brightness(0.78);}
+button.mc-btn:active{
+  border-top:3px solid #383838;border-left:3px solid #383838;
+  border-bottom:3px solid #ffffff;border-right:3px solid #ffffff;
+}
+button.mc-btn.primary{background:var(--xp);}
+button.mc-btn.gold{background:var(--gold);}
+button.mc-btn.danger{background:#e05a5a;}
+button.mc-btn:disabled{filter:brightness(0.3);cursor:not-allowed;}
+button.mc-btn.small{padding:5px 10px;font-size:11px;}
+
+input[type=text], input[type=number], select, textarea{
+  font-family:inherit;
+  background:#131110;
+  color:var(--text);
+  border-top:2px solid var(--slot-dark);
+  border-left:2px solid var(--slot-dark);
+  border-bottom:2px solid #55503f;
+  border-right:2px solid #55503f;
+  padding:7px 9px;
+  font-size:13px;
+}
+input[type=text]:focus, input[type=number]:focus, select:focus{outline:2px solid var(--gold);}
+label{font-size:11px;color:var(--text-dim);display:block;margin-bottom:4px;letter-spacing:.5px;}
+
+a{color:var(--diamond);}
+
+/* ---------- Layout ---------- */
+.app{min-height:100vh;display:flex;flex-direction:column;}
+header.topbar{
+  padding:14px 22px;
+  background:linear-gradient(180deg,#2c2620,#211d18);
+  border-bottom:4px solid #0e0c09;
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+}
+header.topbar .logo{
+  font-size:18px;color:var(--gold);cursor:pointer;
+}
+header.topbar .crumb{color:var(--text-dim);font-size:12px;}
+main{flex:1;padding:22px;max-width:1500px;margin:0 auto;width:100%;}
+
+/* ---------- Home ---------- */
+.hero{
+  text-align:center;padding:40px 10px 30px;
+}
+.hero h1{font-size:26px;color:var(--gold);margin:0 0 10px;}
+.hero p{color:var(--text-dim);max-width:560px;margin:0 auto;font-size:13px;line-height:1.7;}
+.tool-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));
+  gap:18px;margin-top:30px;
+}
+.tool-card{
+  padding:20px;cursor:pointer;position:relative;
+}
+.tool-card.disabled{cursor:not-allowed;opacity:.5;}
+.tool-card .icon{
+  width:48px;height:48px;display:flex;align-items:center;justify-content:center;
+  font-size:26px;margin-bottom:12px;background:var(--slot-bg);
+  border-top:3px solid var(--slot-light);border-left:3px solid var(--slot-light);
+  border-bottom:3px solid var(--slot-dark);border-right:3px solid var(--slot-dark);
+}
+.tool-card h3{margin:0 0 6px;font-size:14px;color:var(--text);}
+.tool-card p{margin:0;font-size:12px;color:var(--text-dim);line-height:1.5;}
+.badge-soon{
+  position:absolute;top:12px;right:12px;background:var(--redstone);color:#fff;
+  font-size:9px;padding:3px 6px;letter-spacing:.5px;
+}
+
+/* ---------- Datapack maker layout ---------- */
+.dm-grid{
+  display:grid;grid-template-columns:250px 1fr 320px;gap:16px;align-items:start;
+}
+@media (max-width:1100px){.dm-grid{grid-template-columns:1fr;}}
+
+.dm-toolbar{
+  display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;padding:14px;margin-bottom:16px;
+}
+.dm-toolbar .field{min-width:150px;}
+.dm-toolbar .spacer{flex:1;}
+
+.sidebar{padding:12px;max-height:78vh;overflow:auto;}
+.sidebar h4{margin:14px 0 6px;font-size:11px;color:var(--gold);text-transform:uppercase;letter-spacing:1px;}
+.sidebar h4:first-child{margin-top:0;}
+.base-item-row{
+  padding:6px 8px;font-size:12px;color:var(--text-dim);cursor:default;
+  border-radius:2px;
+}
+.base-item-row:hover{background:var(--stone-700);color:var(--text);}
+
+.items-panel{padding:14px;min-height:78vh;}
+.items-panel h3{margin:0 0 12px;font-size:14px;color:var(--gold);}
+.empty-hint{color:var(--text-dim);font-size:12px;padding:30px 10px;text-align:center;line-height:1.8;}
+.set-group{margin-bottom:16px;}
+.set-group .set-title{font-size:11px;color:var(--text-dim);margin-bottom:6px;letter-spacing:.5px;}
+.item-card{
+  display:flex;align-items:center;gap:10px;padding:8px 10px;margin-bottom:6px;cursor:pointer;
+  background:var(--stone-700);border-left:3px solid transparent;
+}
+.item-card:hover{border-left:3px solid var(--gold);background:var(--stone-600);}
+.item-card.selected{border-left:3px solid var(--xp);background:var(--stone-600);}
+.item-card .thumb{
+  width:34px;height:34px;background:var(--slot-bg) repeating-conic-gradient(#4a4a4a 0 25%,#3a3a3a 0 50%) 0 0/8px 8px;
+  border:2px solid #000;flex-shrink:0;image-rendering:pixelated;
+}
+.item-card .thumb img{width:100%;height:100%;image-rendering:pixelated;}
+.item-card .meta{flex:1;min-width:0;}
+.item-card .meta .nm{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.item-card .meta .sub{font-size:10px;color:var(--text-dim);}
+.item-card .del{color:var(--danger);cursor:pointer;font-size:14px;padding:2px 6px;}
+.item-card .del:hover{color:#ff8b8b;}
+
+.editor-panel{padding:14px;min-height:78vh;}
+.editor-panel .placeholder{color:var(--text-dim);font-size:12px;text-align:center;padding:60px 10px;}
+.tabs{display:flex;gap:4px;margin-bottom:14px;flex-wrap:wrap;}
+.tab-btn{
+  font-family:inherit;background:var(--stone-700);color:var(--text-dim);border:none;
+  padding:7px 10px;font-size:11px;cursor:pointer;letter-spacing:.5px;
+}
+.tab-btn.active{background:var(--stone-600);color:var(--gold);}
+.tab-content{display:none;}
+.tab-content.active{display:block;}
+.field-row{display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap;}
+.field{flex:1;min-width:110px;}
+
+.color-swatches{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px;}
+.swatch{
+  width:22px;height:22px;cursor:pointer;border:2px solid #000;
+}
+.swatch.active{outline:2px solid #fff;outline-offset:1px;}
+
+.name-preview{
+  padding:10px 12px;background:#000;margin-top:10px;font-size:15px;
+  border:2px solid #333;
+}
+
+.format-toggles{display:flex;gap:6px;margin-top:6px;}
+.toggle-chip{
+  font-size:11px;padding:5px 9px;background:var(--stone-700);cursor:pointer;color:var(--text-dim);
+}
+.toggle-chip.on{background:var(--gold);color:#161310;font-weight:bold;}
+
+.row-list{display:flex;flex-direction:column;gap:6px;margin-bottom:10px;}
+.row-item{
+  display:flex;gap:6px;align-items:center;background:var(--stone-700);padding:6px 8px;flex-wrap:wrap;
+}
+.row-item select, .row-item input{flex:1;min-width:90px;}
+.row-item .rm{color:var(--danger);cursor:pointer;padding:0 4px;font-size:14px;}
+
+.ability-card{
+  background:var(--stone-700);padding:10px;margin-bottom:8px;
+}
+.ability-card .ah{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.ability-card .ah b{color:var(--enchant);font-size:12px;}
+
+/* ---------- Pixel editor ---------- */
+.pixel-editor-wrap{display:flex;gap:18px;flex-wrap:wrap;}
+.pixel-toolcol{display:flex;flex-direction:column;gap:8px;width:150px;}
+.pixel-tool-btn{
+  font-family:inherit;background:var(--stone-700);color:var(--text);border:none;padding:8px;font-size:11px;
+  cursor:pointer;text-align:left;
+}
+.pixel-tool-btn.active{background:var(--gold);color:#161310;font-weight:bold;}
+#pixelCanvas{
+  image-rendering:pixelated;cursor:crosshair;
+  background-image: repeating-conic-gradient(#555 0 25%, #3a3a3a 0 50%);
+  background-size:16px 16px;
+  border:3px solid #000;
+}
+.color-picker-row{display:flex;align-items:center;gap:8px;margin-top:4px;}
+.current-color-box{width:26px;height:26px;border:2px solid #fff;}
+
+/* ---------- Modal ---------- */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.72);display:flex;align-items:center;justify-content:center;
+  z-index:100;padding:20px;
+}
+.modal-box{
+  width:100%;max-width:640px;max-height:88vh;overflow:auto;padding:20px;
+}
+.modal-box h2{margin:0 0 16px;font-size:16px;color:var(--gold);}
+.type-choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px;}
+.type-choice{
+  padding:14px;background:var(--stone-700);cursor:pointer;text-align:center;
+}
+.type-choice:hover{background:var(--stone-600);}
+.type-choice.selected{background:var(--stone-600);outline:2px solid var(--gold);}
+.type-choice .ti{font-size:22px;margin-bottom:6px;}
+.type-choice .tn{font-size:12px;}
+.slot-pick-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.checklist{max-height:220px;overflow:auto;background:var(--stone-800);padding:8px;}
+.checklist label{display:flex;align-items:center;gap:6px;color:var(--text);font-size:12px;padding:3px 0;}
+
+.toast{
+  position:fixed;bottom:20px;right:20px;padding:12px 18px;background:var(--xp);color:#0e2600;
+  font-size:13px;font-weight:bold;z-index:200;box-shadow:0 4px 12px rgba(0,0,0,.4);
+}
+footer.foot{text-align:center;padding:20px;color:var(--text-dim);font-size:11px;}
+.hint-box{background:var(--stone-800);padding:10px 12px;font-size:11px;color:var(--text-dim);line-height:1.7;margin-top:10px;}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+
+<script>
+/* =========================================================================
+   DATA
+   ========================================================================= */
+const MC_COLORS = [
+  {code:'black',hex:'#000000'},{code:'dark_blue',hex:'#0000AA'},{code:'dark_green',hex:'#00AA00'},
+  {code:'dark_aqua',hex:'#00AAAA'},{code:'dark_red',hex:'#AA0000'},{code:'dark_purple',hex:'#AA00AA'},
+  {code:'gold',hex:'#FFAA00'},{code:'gray',hex:'#AAAAAA'},{code:'dark_gray',hex:'#555555'},
+  {code:'blue',hex:'#5555FF'},{code:'green',hex:'#55FF55'},{code:'aqua',hex:'#55FFFF'},
+  {code:'red',hex:'#FF5555'},{code:'light_purple',hex:'#FF55FF'},{code:'yellow',hex:'#FFFF55'},
+  {code:'white',hex:'#FFFFFF'}
+];
+
+const VANILLA_ITEMS = {
+  'Zwaarden': ['wooden_sword','stone_sword','golden_sword','iron_sword','diamond_sword','netherite_sword'],
+  'Gereedschap': ['wooden_pickaxe','stone_pickaxe','iron_pickaxe','golden_pickaxe','diamond_pickaxe','netherite_pickaxe',
+    'wooden_axe','iron_axe','diamond_axe','wooden_shovel','iron_shovel','diamond_shovel','wooden_hoe','shears','fishing_rod','flint_and_steel'],
+  'Wapens op afstand': ['bow','crossbow','trident'],
+  'Helm': ['leather_helmet','chainmail_helmet','iron_helmet','golden_helmet','diamond_helmet','netherite_helmet','turtle_helmet'],
+  'Harnas': ['leather_chestplate','chainmail_chestplate','iron_chestplate','golden_chestplate','diamond_chestplate','netherite_chestplate'],
+  'Broek': ['leather_leggings','chainmail_leggings','iron_leggings','golden_leggings','diamond_leggings','netherite_leggings'],
+  'Laarzen': ['leather_boots','chainmail_boots','iron_boots','golden_boots','diamond_boots','netherite_boots'],
+  'Ertsen & blokken': ['coal_ore','iron_ore','gold_ore','diamond_ore','emerald_ore','lapis_ore','redstone_ore',
+    'iron_block','gold_block','diamond_block','emerald_block','netherite_block'],
+  'Ingots & gems': ['coal','raw_iron','iron_ingot','raw_gold','gold_ingot','diamond','emerald','lapis_lazuli','redstone',
+    'netherite_scrap','netherite_ingot'],
+  'Voedsel': ['apple','golden_apple','bread','cooked_beef','golden_carrot','cookie','melon_slice'],
+  'Overig': ['stick','blaze_rod','ender_pearl','ender_eye','totem_of_undying','shield','elytra','bucket','potion','nether_star']
+};
+const ALL_BASE_ITEMS = Object.values(VANILLA_ITEMS).flat();
+
+const ATTRIBUTES = [
+  {id:'generic.attack_damage',label:'Aanvalsschade'},
+  {id:'generic.attack_speed',label:'Aanvalssnelheid'},
+  {id:'generic.armor',label:'Bepantsering'},
+  {id:'generic.armor_toughness',label:'Bepantsering-taaiheid'},
+  {id:'generic.max_health',label:'Max. gezondheid'},
+  {id:'generic.movement_speed',label:'Bewegingssnelheid'},
+  {id:'generic.knockback_resistance',label:'Terugstootweerstand'},
+  {id:'generic.luck',label:'Geluk'},
+];
+const OPERATIONS = [
+  {id:'add_value',op:0,label:'Optellen (vast getal)'},
+  {id:'add_multiplied_base',op:1,label:'Vermenigvuldigen (basis)'},
+  {id:'add_multiplied_total',op:2,label:'Vermenigvuldigen (totaal)'},
+];
+const SLOTS = [
+  {id:'mainhand',label:'Hoofdhand'},{id:'offhand',label:'Andere hand'},{id:'head',label:'Hoofd'},
+  {id:'chest',label:'Lichaam'},{id:'legs',label:'Benen'},{id:'feet',label:'Voeten'},{id:'any',label:'Overal'}
+];
+const ENCHANTMENTS = [
+  ['sharpness',5],['smite',5],['bane_of_arthropods',5],['knockback',2],['fire_aspect',2],['looting',3],
+  ['sweeping_edge',3],['efficiency',5],['silk_touch',1],['unbreaking',3],['fortune',3],['power',5],['punch',2],
+  ['flame',1],['infinity',1],['protection',4],['fire_protection',4],['blast_protection',4],['projectile_protection',4],
+  ['thorns',3],['respiration',3],['aqua_affinity',1],['depth_strider',3],['frost_walker',2],['feather_falling',4],
+  ['mending',1],['curse_of_vanishing',1],['curse_of_binding',1],['loyalty',3],['impaling',5],['riptide',3],
+  ['channeling',1],['multishot',1],['quick_charge',3],['piercing',4],['luck_of_the_sea',3],['lure',3],
+  ['soul_speed',3],['swift_sneak',3]
+].map(e=>({id:e[0],max:e[1]}));
+
+const ABILITY_DEFS = {
+  grappling_hook:{label:'Grappling hook (rechtsklik)',trigger:'use',
+    params:[{k:'strength',label:'Trekkracht',type:'number',min:1,max:10,def:3}]},
+  fireball_shoot:{label:'Vuurbal schieten (rechtsklik)',trigger:'use',
+    params:[{k:'power',label:'Kracht',type:'number',min:1,max:5,def:2},{k:'damage',label:'Schade',type:'number',min:1,max:50,def:6}]},
+  speed_boost_use:{label:'Snelheidsboost (rechtsklik)',trigger:'use',
+    params:[{k:'duration',label:'Duur (sec)',type:'number',min:1,max:60,def:8},{k:'amplifier',label:'Niveau',type:'number',min:1,max:5,def:2}]},
+  melee_explosion:{label:'Explosie bij raak',trigger:'hit',
+    params:[{k:'radius',label:'Straal (blokken, kracht)',type:'number',min:1,max:10,def:2},{k:'damage',label:'Extra schade',type:'number',min:1,max:50,def:4}]},
+  lightning_on_hit:{label:'Bliksem bij raak',trigger:'hit',
+    params:[{k:'chance',label:'Kans (%)',type:'number',min:1,max:100,def:35}]},
+};
+
+const VERSIONS = [
+  {id:'1.21.4',data:57,resource:46,style:'component'},
+  {id:'1.21.1',data:48,resource:34,style:'component'},
+  {id:'1.21',data:48,resource:34,style:'component'},
+  {id:'1.20.6',data:41,resource:32,style:'component'},
+  {id:'1.20.4',data:26,resource:22,style:'nbt'},
+  {id:'1.20.2',data:18,resource:18,style:'nbt'},
+  {id:'1.20.1',data:15,resource:15,style:'nbt'},
+];
+
+const ARMOR_SLOTS = [
+  {slot:'helmet',label:'Helm',eq:'head'},{slot:'chestplate',label:'Harnas',eq:'chest'},
+  {slot:'leggings',label:'Broek',eq:'legs'},{slot:'boots',label:'Laarzen',eq:'feet'}
+];
+function guessArmorBase(material,slot){ return material+'_'+slot; }
+
+/* =========================================================================
+   STATE
+   ========================================================================= */
+const state = {
+  view:'home',
+  packName:'',
+  packVersion:'1.21.1',
+  items:[],           // {id, setId, setLabel, type, baseItem, name, color, bold,italic,underline, texture(dataURL), attributes:[], enchants:[], abilities:[]}
+  selectedItemId:null,
+  modal:null,          // {step, type, ...}
+  editorTab:'algemeen',
+};
+let uidCounter=1;
+function uid(prefix){return prefix+'_'+(uidCounter++)+'_'+Math.random().toString(36).slice(2,7);}
+
+function slug(str){
+  return str.toLowerCase().trim()
+    .replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'') || 'item';
+}
+
+/* =========================================================================
+   RENDER ROOT
+   ========================================================================= */
+function render(){
+  const app=document.getElementById('app');
+  app.innerHTML='';
+  app.appendChild(renderHeader());
+  const main=document.createElement('main');
+  if(state.view==='home') main.appendChild(renderHome());
+  else main.appendChild(renderDatapackMaker());
+  app.appendChild(main);
+  const foot=document.createElement('footer');
+  foot.className='foot';
+  foot.textContent='Blokwerk — zelfgemaakte tools voor Minecraft datapacks & resourcepacks. Niet geaffilieerd met Mojang.';
+  app.appendChild(foot);
+}
+
+function renderHeader(){
+  const h=document.createElement('header');
+  h.className='topbar';
+  const logo=document.createElement('div');
+  logo.className='logo pixel-font';
+  logo.textContent='⛏ BLOKWERK';
+  logo.onclick=()=>{state.view='home';render();};
+  h.appendChild(logo);
+  const crumb=document.createElement('div');
+  crumb.className='crumb';
+  crumb.textContent = state.view==='home' ? '' : '/ Datapack Maker';
+  h.appendChild(crumb);
+  return h;
+}
+
+/* =========================================================================
+   HOME
+   ========================================================================= */
+function renderHome(){
+  const wrap=document.createElement('div');
+  wrap.innerHTML=`
+    <div class="hero">
+      <h1 class="pixel-font">MINECRAFT TOOLS</h1>
+      <p>Bouw je eigen items, wapensets en harnassen — met eigen pixel-textures, attributen,
+      enchantments en abilities. Exporteer als werkende datapack + resourcepack .zip.</p>
+    </div>
+    <div class="tool-grid" id="toolGrid"></div>
+  `;
+  const grid=wrap.querySelector('#toolGrid');
+
+  const tools=[
+    {icon:'📦',name:'Datapack Maker',desc:'Maak custom items, wapens, harnassen en item-sets met eigen textures, stats en abilities.',active:true,go:'datapack'},
+    {icon:'🧑',name:'Skin Editor',desc:'Speler-skins tekenen en aanpassen.',active:false},
+    {icon:'🗺️',name:'Structure Planner',desc:'Bouwwerken plannen en exporteren als .nbt structuur.',active:false},
+    {icon:'🎵',name:'Resourcepack Sounds',desc:'Eigen geluiden toevoegen aan items en mobs.',active:false},
+  ];
+  tools.forEach(t=>{
+    const c=document.createElement('div');
+    c.className='panel tool-card'+(t.active?'':' disabled');
+    c.innerHTML=`
+      <div class="icon">${t.icon}</div>
+      <h3>${t.name}</h3>
+      <p>${t.desc}</p>
+      ${!t.active?'<div class="badge-soon">BINNENKORT</div>':''}
+    `;
+    if(t.active){ c.onclick=()=>{state.view=t.go;render();}; }
+    grid.appendChild(c);
+  });
+  return wrap;
+}
+
+/* =========================================================================
+   DATAPACK MAKER — main view
+   ========================================================================= */
+function renderDatapackMaker(){
+  const wrap=document.createElement('div');
+
+  // toolbar
+  const toolbar=document.createElement('div');
+  toolbar.className='panel dm-toolbar';
+  toolbar.innerHTML=`
+    <div class="field">
+      <label>PACK NAAM</label>
+      <input type="text" id="packNameInput" placeholder="bijv. GG Pack" value="${escapeHtml(state.packName)}">
+    </div>
+    <div class="field">
+      <label>MINECRAFT VERSIE</label>
+      <select id="packVersionSelect">
+        ${VERSIONS.map(v=>`<option value="${v.id}" ${v.id===state.packVersion?'selected':''}>${v.id}</option>`).join('')}
+      </select>
+    </div>
+    <div class="spacer"></div>
+    <button class="mc-btn primary" id="addItemBtn">+ ITEM TOEVOEGEN</button>
+    <button class="mc-btn gold" id="exportBtn">⬇ EXPORTEREN (.zip)</button>
+  `;
+  wrap.appendChild(toolbar);
+
+  const grid=document.createElement('div');
+  grid.className='dm-grid';
+
+  grid.appendChild(renderSidebar());
+  grid.appendChild(renderItemsPanel());
+  grid.appendChild(renderEditorPanel());
+
+  wrap.appendChild(grid);
+
+  setTimeout(()=>{
+    document.getElementById('packNameInput').addEventListener('input',e=>{state.packName=e.target.value;});
+    document.getElementById('packVersionSelect').addEventListener('change',e=>{state.packVersion=e.target.value;});
+    document.getElementById('addItemBtn').addEventListener('click',()=>openAddItemModal());
+    document.getElementById('exportBtn').addEventListener('click',()=>doExport());
+  },0);
+
+  if(state.modal) wrap.appendChild(renderModal());
+
+  return wrap;
+}
+
+function renderSidebar(){
+  const box=document.createElement('div');
+  box.className='panel sidebar';
+  let html='<h4>Vanilla basis-items</h4>';
+  for(const [group,items] of Object.entries(VANILLA_ITEMS)){
+    html+=`<h4>${group}</h4>`;
+    items.forEach(it=>{
+      html+=`<div class="base-item-row">${prettyName(it)}</div>`;
+    });
+  }
+  box.innerHTML=html;
+  return box;
+}
+
+function renderItemsPanel(){
+  const box=document.createElement('div');
+  box.className='panel items-panel';
+  let html='<h3>JOUW ITEMS</h3>';
+  if(state.items.length===0){
+    html+=`<div class="empty-hint">Nog geen items.<br>Klik op <b>+ Item toevoegen</b> om te beginnen.</div>`;
+  } else {
+    const sets={};
+    state.items.forEach(it=>{
+      const key=it.setId||it.id;
+      if(!sets[key]) sets[key]={label:it.setLabel||it.name,items:[]};
+      sets[key].items.push(it);
+    });
+    for(const g of Object.values(sets)){
+      html+=`<div class="set-group"><div class="set-title">${escapeHtml(g.label)}</div><div class="set-items"></div></div>`;
+    }
+  }
+  box.innerHTML=html;
+
+  if(state.items.length){
+    const groupsWrap=box.querySelectorAll('.set-items');
+    const sets={};
+    state.items.forEach(it=>{
+      const key=it.setId||it.id;
+      if(!sets[key]) sets[key]=[];
+      sets[key].push(it);
+    });
+    Array.from(sets.values? []:[]); // noop safeguard
+    let i=0;
+    for(const arr of Object.values(sets)){
+      const container=groupsWrap[i++];
+      arr.forEach(it=>{
+        const card=document.createElement('div');
+        card.className='item-card'+(state.selectedItemId===it.id?' selected':'');
+        card.innerHTML=`
+          <div class="thumb">${it.texture?`<img src="${it.texture}">`:''}</div>
+          <div class="meta">
+            <div class="nm" style="color:${mcColorHex(it.color)}">${escapeHtml(it.name)}</div>
+            <div class="sub">${prettyName(it.baseItem)} ${it.armorSlot?('· '+it.armorSlot):''}</div>
+          </div>
+          <div class="del" title="Verwijderen">✕</div>
+        `;
+        card.querySelector('.meta').onclick=()=>{state.selectedItemId=it.id; state.editorTab='algemeen'; render();};
+        card.querySelector('.thumb').onclick=()=>{state.selectedItemId=it.id; state.editorTab='algemeen'; render();};
+        card.querySelector('.del').onclick=(e)=>{
+          e.stopPropagation();
+          state.items=state.items.filter(x=>x.id!==it.id);
+          if(state.selectedItemId===it.id) state.selectedItemId=null;
+          render();
+        };
+        container.appendChild(card);
+      });
+    }
+  }
+  return box;
+}
+
+function renderEditorPanel(){
+  const box=document.createElement('div');
+  box.className='panel editor-panel';
+  const item=state.items.find(i=>i.id===state.selectedItemId);
+  if(!item){
+    box.innerHTML=`<div class="placeholder">Selecteer een item links om te bewerken,<br>of maak een nieuw item aan.</div>`;
+    return box;
+  }
+
+  const tabs=['algemeen','texture','attributes','enchants','abilities'];
+  const tabLabels={algemeen:'Algemeen',texture:'Texture',attributes:'Attributen',enchants:'Enchants',abilities:'Abilities'};
+
+  let html=`<div class="tabs">`;
+  tabs.forEach(t=>{
+    html+=`<button class="tab-btn ${state.editorTab===t?'active':''}" data-tab="${t}">${tabLabels[t]}</button>`;
+  });
+  html+=`</div><div id="tabHost"></div>`;
+  box.innerHTML=html;
+
+  box.querySelectorAll('.tab-btn').forEach(b=>{
+    b.onclick=()=>{state.editorTab=b.dataset.tab; render();};
+  });
+
+  const host=box.querySelector('#tabHost');
+  if(state.editorTab==='algemeen') host.appendChild(renderTabAlgemeen(item));
+  if(state.editorTab==='texture') host.appendChild(renderTabTexture(item));
+  if(state.editorTab==='attributes') host.appendChild(renderTabAttributes(item));
+  if(state.editorTab==='enchants') host.appendChild(renderTabEnchants(item));
+  if(state.editorTab==='abilities') host.appendChild(renderTabAbilities(item));
+
+  return box;
+}
+
+/* ---------------- Tab: Algemeen ---------------- */
+function renderTabAlgemeen(item){
+  const d=document.createElement('div');
+  d.innerHTML=`
+    <div class="field-row">
+      <div class="field">
+        <label>NAAM</label>
+        <input type="text" id="itNameInput" value="${escapeHtml(item.name)}">
+      </div>
+      <div class="field">
+        <label>BASIS ITEM</label>
+        <input type="text" value="${prettyName(item.baseItem)}" disabled>
+      </div>
+    </div>
+    <label>NAAMKLEUR</label>
+    <div class="color-swatches" id="colorSwatches">
+      ${MC_COLORS.map(c=>`<div class="swatch ${item.color===c.code?'active':''}" data-code="${c.code}" style="background:${c.hex}" title="${c.code}"></div>`).join('')}
+    </div>
+    <div class="format-toggles">
+      <div class="toggle-chip ${item.bold?'on':''}" data-f="bold"><b>B</b></div>
+      <div class="toggle-chip ${item.italic?'on':''}" data-f="italic"><i>I</i></div>
+      <div class="toggle-chip ${item.underline?'on':''}" data-f="underline"><u>U</u></div>
+    </div>
+    <div class="name-preview" id="namePreview"></div>
+  `;
+  function refreshPreview(){
+    const p=d.querySelector('#namePreview');
+    p.textContent=item.name;
+    p.style.color=mcColorHex(item.color);
+    p.style.fontWeight=item.bold?'bold':'normal';
+    p.style.fontStyle=item.italic?'italic':'normal';
+    p.style.textDecoration=item.underline?'underline':'none';
+  }
+  refreshPreview();
+  setTimeout(()=>{
+    d.querySelector('#itNameInput').addEventListener('input',e=>{
+      item.name=e.target.value;
+      if(item.setId) updateSetItemName(item);
+      refreshPreview();
+      syncSidebarLabel();
+    });
+    d.querySelectorAll('#colorSwatches .swatch').forEach(s=>{
+      s.onclick=()=>{item.color=s.dataset.code; render();};
+    });
+    d.querySelectorAll('.toggle-chip').forEach(chip=>{
+      chip.onclick=()=>{ item[chip.dataset.f]=!item[chip.dataset.f]; render(); };
+    });
+  },0);
+  return d;
+}
+function updateSetItemName(item){ /* placeholder for future cross-item sync */ }
+function syncSidebarLabel(){}
+
+/* ---------------- Tab: Texture (pixel editor) ---------------- */
+const PIXEL_SIZE=16;
+const PIXEL_SCALE=20;
+function renderTabTexture(item){
+  const d=document.createElement('div');
+  d.className='pixel-editor-wrap';
+
+  const toolcol=document.createElement('div');
+  toolcol.className='pixel-toolcol';
+  toolcol.innerHTML=`
+    <button class="pixel-tool-btn active" data-tool="pencil">✏️ Potlood</button>
+    <button class="pixel-tool-btn" data-tool="bucket">🪣 Emmer (fill)</button>
+    <button class="pixel-tool-btn" data-tool="eyedrop">💧 Kleurenkiezer</button>
+    <button class="pixel-tool-btn" data-tool="eraser">🧽 Gum</button>
+    <div class="color-picker-row">
+      <div class="current-color-box" id="curColorBox" style="background:#ff5555"></div>
+      <input type="color" id="colorPickerInput" value="#ff5555">
+    </div>
+    <button class="mc-btn small" id="clearCanvasBtn" style="margin-top:6px;">Wis alles (transparant)</button>
+    <div class="hint-box">Achtergrond = doorzichtig (checkerboard). Canvas is 16×16 pixels, uitvergroot.
+    Er zit geen vanilla Minecraft-texture voorgeladen (auteursrecht) — teken je eigen pixelart.</div>
+  `;
+
+  const canvasWrap=document.createElement('div');
+  const canvas=document.createElement('canvas');
+  canvas.id='pixelCanvas';
+  canvas.width=PIXEL_SIZE*PIXEL_SCALE;
+  canvas.height=PIXEL_SIZE*PIXEL_SCALE;
+  canvasWrap.appendChild(canvas);
+
+  d.appendChild(toolcol);
+  d.appendChild(canvasWrap);
+
+  setTimeout(()=>{
+    const ctx=canvas.getContext('2d');
+    ctx.imageSmoothingEnabled=false;
+    // grid buffer at native 16x16
+    let buf=document.createElement('canvas');
+    buf.width=PIXEL_SIZE; buf.height=PIXEL_SIZE;
+    let bctx=buf.getContext('2d');
+    if(item.texture){
+      const img=new Image();
+      img.onload=()=>{ bctx.clearRect(0,0,16,16); bctx.drawImage(img,0,0,16,16); redraw(); };
+      img.src=item.texture;
+    }
+    function redraw(){
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      ctx.drawImage(buf,0,0,PIXEL_SIZE,PIXEL_SIZE,0,0,canvas.width,canvas.height);
+      // grid lines
+      ctx.strokeStyle='rgba(0,0,0,0.15)';
+      for(let i=0;i<=PIXEL_SIZE;i++){
+        ctx.beginPath();ctx.moveTo(i*PIXEL_SCALE,0);ctx.lineTo(i*PIXEL_SCALE,canvas.height);ctx.stroke();
+        ctx.beginPath();ctx.moveTo(0,i*PIXEL_SCALE);ctx.lineTo(canvas.width,i*PIXEL_SCALE);ctx.stroke();
+      }
+    }
+    function saveToItem(){ item.texture=buf.toDataURL('image/png'); }
+    redraw();
+
+    let tool='pencil';
+    let color='#ff5555';
+    toolcol.querySelectorAll('.pixel-tool-btn').forEach(b=>{
+      b.onclick=()=>{
+        toolcol.querySelectorAll('.pixel-tool-btn').forEach(x=>x.classList.remove('active'));
+        b.classList.add('active'); tool=b.dataset.tool;
+      };
+    });
+    const colorInput=toolcol.querySelector('#colorPickerInput');
+    const colorBox=toolcol.querySelector('#curColorBox');
+    colorInput.addEventListener('input',e=>{ color=e.target.value; colorBox.style.background=color; });
+    toolcol.querySelector('#clearCanvasBtn').onclick=()=>{
+      bctx.clearRect(0,0,16,16); redraw(); saveToItem();
+      renderItemsPanelInPlace();
+    };
+
+    function px(e){
+      const rect=canvas.getBoundingClientRect();
+      const x=Math.floor((e.clientX-rect.left)/(rect.width/PIXEL_SIZE));
+      const y=Math.floor((e.clientY-rect.top)/(rect.height/PIXEL_SIZE));
+      return [Math.max(0,Math.min(15,x)),Math.max(0,Math.min(15,y))];
+    }
+    function floodFill(sx,sy,fillColor){
+      const data=bctx.getImageData(0,0,16,16);
+      const idx=(x,y)=>(y*16+x)*4;
+      const target=data.data.slice(idx(sx,sy),idx(sx,sy)+4);
+      const fc=hexToRgba(fillColor);
+      if(target[0]===fc[0]&&target[1]===fc[1]&&target[2]===fc[2]&&target[3]===fc[3]) return;
+      const stack=[[sx,sy]];
+      while(stack.length){
+        const [x,y]=stack.pop();
+        if(x<0||x>15||y<0||y>15) continue;
+        const i=idx(x,y);
+        if(data.data[i]!==target[0]||data.data[i+1]!==target[1]||data.data[i+2]!==target[2]||data.data[i+3]!==target[3]) continue;
+        data.data[i]=fc[0];data.data[i+1]=fc[1];data.data[i+2]=fc[2];data.data[i+3]=fc[3];
+        stack.push([x+1,y],[x-1,y],[x,y+1],[x,y-1]);
+      }
+      bctx.putImageData(data,0,0);
+    }
+    function hexToRgba(hex){
+      const v=parseInt(hex.slice(1),16);
+      return [(v>>16)&255,(v>>8)&255,v&255,255];
+    }
+    let painting=false;
+    function act(e){
+      const [x,y]=px(e);
+      if(tool==='pencil'){ bctx.clearRect(x,y,1,1); bctx.fillStyle=color; bctx.fillRect(x,y,1,1); }
+      else if(tool==='eraser'){ bctx.clearRect(x,y,1,1); }
+      else if(tool==='bucket'){ floodFill(x,y,color); }
+      else if(tool==='eyedrop'){
+        const d2=bctx.getImageData(x,y,1,1).data;
+        if(d2[3]>0){
+          const hex='#'+[d2[0],d2[1],d2[2]].map(n=>n.toString(16).padStart(2,'0')).join('');
+          color=hex; colorInput.value=hex; colorBox.style.background=hex;
+        }
+      }
+      redraw(); saveToItem();
+    }
+    canvas.addEventListener('mousedown',e=>{ painting=true; act(e); });
+    canvas.addEventListener('mousemove',e=>{ if(painting && (tool==='pencil'||tool==='eraser')) act(e); });
+    window.addEventListener('mouseup',()=>{
+      if(painting){ painting=false; renderItemsPanelInPlace(); }
+    });
+  },0);
+
+  return d;
+}
+function renderItemsPanelInPlace(){
+  // lightweight refresh of just the thumbnail list without losing canvas focus
+  const old=document.querySelector('.items-panel');
+  if(!old) return;
+  const fresh=renderItemsPanel();
+  old.replaceWith(fresh);
+}
+
+/* ---------------- Tab: Attributes ---------------- */
+function renderTabAttributes(item){
+  const d=document.createElement('div');
+  const listHtml=()=>item.attributes.map((a,i)=>`
+    <div class="row-item" data-i="${i}">
+      <select class="a-attr">${ATTRIBUTES.map(x=>`<option value="${x.id}" ${x.id===a.attribute?'selected':''}>${x.label}</option>`).join('')}</select>
+      <input type="number" class="a-amount" value="${a.amount}" step="0.1">
+      <select class="a-op">${OPERATIONS.map(x=>`<option value="${x.id}" ${x.id===a.operation?'selected':''}>${x.label}</option>`).join('')}</select>
+      <select class="a-slot">${SLOTS.map(x=>`<option value="${x.id}" ${x.id===a.slot?'selected':''}>${x.label}</option>`).join('')}</select>
+      <div class="rm">✕</div>
+    </div>`).join('');
+  d.innerHTML=`
+    <div class="row-list" id="attrList">${item.attributes.length?listHtml():'<div class="empty-hint" style="padding:14px;">Nog geen attributen toegevoegd.</div>'}</div>
+    <button class="mc-btn small primary" id="addAttrBtn">+ Attribuut toevoegen</button>
+  `;
+  setTimeout(()=>{
+    d.querySelector('#addAttrBtn').onclick=()=>{
+      item.attributes.push({attribute:ATTRIBUTES[0].id,amount:1,operation:'add_value',slot:'mainhand'});
+      render();
+    };
+    d.querySelectorAll('#attrList .row-item').forEach(row=>{
+      const i=+row.dataset.i;
+      row.querySelector('.a-attr').onchange=e=>{item.attributes[i].attribute=e.target.value;};
+      row.querySelector('.a-amount').onchange=e=>{item.attributes[i].amount=parseFloat(e.target.value)||0;};
+      row.querySelector('.a-op').onchange=e=>{item.attributes[i].operation=e.target.value;};
+      row.querySelector('.a-slot').onchange=e=>{item.attributes[i].slot=e.target.value;};
+      row.querySelector('.rm').onclick=()=>{item.attributes.splice(i,1); render();};
+    });
+  },0);
+  return d;
+}
+
+/* ---------------- Tab: Enchants ---------------- */
+function renderTabEnchants(item){
+  const d=document.createElement('div');
+  const listHtml=()=>item.enchants.map((en,i)=>{
+    const def=ENCHANTMENTS.find(x=>x.id===en.id)||ENCHANTMENTS[0];
+    return `<div class="row-item" data-i="${i}">
+      <select class="e-id">${ENCHANTMENTS.map(x=>`<option value="${x.id}" ${x.id===en.id?'selected':''}>${prettyName(x.id)}</option>`).join('')}</select>
+      <input type="number" class="e-lvl" min="1" max="${def.max}" value="${en.level}" style="max-width:70px;">
+      <div class="rm">✕</div>
+    </div>`;
+  }).join('');
+  d.innerHTML=`
+    <div class="row-list" id="enchList">${item.enchants.length?listHtml():'<div class="empty-hint" style="padding:14px;">Nog geen enchantments toegevoegd.</div>'}</div>
+    <button class="mc-btn small primary" id="addEnchBtn">+ Enchantment toevoegen</button>
+    <div class="hint-box">Levels mogen hoger dan de vanilla max — dat werkt in datapacks (custom enchant power).</div>
+  `;
+  setTimeout(()=>{
+    d.querySelector('#addEnchBtn').onclick=()=>{
+      item.enchants.push({id:ENCHANTMENTS[0].id,level:1});
+      render();
+    };
+    d.querySelectorAll('#enchList .row-item').forEach(row=>{
+      const i=+row.dataset.i;
+      row.querySelector('.e-id').onchange=e=>{item.enchants[i].id=e.target.value;};
+      row.querySelector('.e-lvl').onchange=e=>{item.enchants[i].level=parseInt(e.target.value)||1;};
+      row.querySelector('.rm').onclick=()=>{item.enchants.splice(i,1); render();};
+    });
+  },0);
+  return d;
+}
+
+/* ---------------- Tab: Abilities ---------------- */
+function renderTabAbilities(item){
+  const d=document.createElement('div');
+  const addedTypes=item.abilities.map(a=>a.type);
+  const options=Object.keys(ABILITY_DEFS).filter(k=>!addedTypes.includes(k));
+  let html=`<div class="row-list" id="abilList">`;
+  item.abilities.forEach((ab,i)=>{
+    const def=ABILITY_DEFS[ab.type];
+    html+=`<div class="ability-card" data-i="${i}">
+      <div class="ah"><b>${def.label}</b><span class="rm" data-rm="${i}">✕</span></div>
+      <div class="field-row">
+        ${def.params.map(p=>`
+          <div class="field">
+            <label>${p.label}</label>
+            <input type="number" class="ab-param" data-key="${p.k}" min="${p.min}" max="${p.max}" value="${ab.params[p.k]}">
+          </div>`).join('')}
+      </div>
+    </div>`;
+  });
+  html+=`</div>`;
+  if(options.length){
+    html+=`<div class="field-row"><select id="abilitySelect">${options.map(k=>`<option value="${k}">${ABILITY_DEFS[k].label}</option>`).join('')}</select>
+      <button class="mc-btn small primary" id="addAbilBtn">+ Toevoegen</button></div>`;
+  } else if(item.abilities.length===0){
+    html+=`<div class="empty-hint" style="padding:14px;">Nog geen abilities toegevoegd.</div>`;
+  }
+  html+=`<div class="hint-box">Abilities die bij <b>raak</b> triggeren (explosie, bliksem) gebruiken het advancement
+    <code>player_hurt_entity</code> — dit werkt volledig vanilla. Abilities bij <b>rechtsklik</b> (grappling hook, vuurbal,
+    snelheidsboost) gebruiken de "consumable"-truc en werken het best vanaf 1.20.5+.</div>`;
+  d.innerHTML=html;
+
+  setTimeout(()=>{
+    d.querySelectorAll('[data-rm]').forEach(x=>{
+      x.onclick=()=>{ item.abilities.splice(+x.dataset.rm,1); render(); };
+    });
+    d.querySelectorAll('.ability-card').forEach(card=>{
+      const i=+card.dataset.i;
+      card.querySelectorAll('.ab-param').forEach(inp=>{
+        inp.onchange=e=>{ item.abilities[i].params[e.target.dataset.key]=parseFloat(e.target.value)||0; };
+      });
+    });
+    const addBtn=d.querySelector('#addAbilBtn');
+    if(addBtn){
+      addBtn.onclick=()=>{
+        const type=d.querySelector('#abilitySelect').value;
+        const def=ABILITY_DEFS[type];
+        const params={};
+        def.params.forEach(p=>params[p.k]=p.def);
+        item.abilities.push({type,params});
+        render();
+      };
+    }
+  },0);
+  return d;
+}
+
+/* =========================================================================
+   ADD ITEM MODAL FLOW
+   ========================================================================= */
+function openAddItemModal(){
+  state.modal={step:1,type:null,name:'',color:'white',bold:false,italic:false,underline:false,
+    singleBase:ALL_BASE_ITEMS[0], weaponBase:VANILLA_ITEMS['Zwaarden'][0],
+    armorMaterial:'diamond', armorPicks:{helmet:'diamond_helmet',chestplate:'diamond_chestplate',leggings:'diamond_leggings',boots:'diamond_boots'},
+    setPicks:new Set([ALL_BASE_ITEMS[0]])
+  };
+  render();
+}
+function closeModal(){ state.modal=null; render(); }
+
+function renderModal(){
+  const overlay=document.createElement('div');
+  overlay.className='modal-overlay';
+  overlay.onclick=(e)=>{ if(e.target===overlay) closeModal(); };
+  const box=document.createElement('div');
+  box.className='panel modal-box';
+  overlay.appendChild(box);
+
+  const m=state.modal;
+  if(m.step===1) box.appendChild(modalStepType());
+  else if(m.step===2) box.appendChild(modalStepDetails());
+  return overlay;
+}
+
+function modalStepType(){
+  const d=document.createElement('div');
+  const m=state.modal;
+  d.innerHTML=`
+    <h2>WAT WIL JE MAKEN?</h2>
+    <div class="type-choice-grid">
+      <div class="type-choice ${m.type==='single'?'selected':''}" data-t="single"><div class="ti">🗡️</div><div class="tn">Los item</div></div>
+      <div class="type-choice ${m.type==='weapon'?'selected':''}" data-t="weapon"><div class="ti">⚔️</div><div class="tn">Wapen</div></div>
+      <div class="type-choice ${m.type==='armor_set'?'selected':''}" data-t="armor_set"><div class="ti">🛡️</div><div class="tn">Armor set</div></div>
+      <div class="type-choice ${m.type==='item_set'?'selected':''}" data-t="item_set"><div class="ti">💎</div><div class="tn">Item set (bijv. nieuw erts)</div></div>
+    </div>
+    <div class="field-row" style="margin-top:16px;justify-content:flex-end;">
+      <button class="mc-btn" id="cancelModalBtn">Annuleren</button>
+      <button class="mc-btn primary" id="nextModalBtn" ${m.type?'':'disabled'}>Volgende →</button>
+    </div>
+  `;
+  setTimeout(()=>{
+    d.querySelectorAll('.type-choice').forEach(c=>{
+      c.onclick=()=>{ state.modal.type=c.dataset.t; render(); };
+    });
+    d.querySelector('#cancelModalBtn').onclick=closeModal;
+    d.querySelector('#nextModalBtn').onclick=()=>{ if(state.modal.type){ state.modal.step=2; render(); } };
+  },0);
+  return d;
+}
+
+function modalStepDetails(){
+  const d=document.createElement('div');
+  const m=state.modal;
+  let inner='';
+
+  if(m.type==='single'){
+    inner=`
+      <label>BASIS ITEM</label>
+      <select id="baseSelect">${ALL_BASE_ITEMS.map(it=>`<option value="${it}" ${it===m.singleBase?'selected':''}>${prettyName(it)}</option>`).join('')}</select>
+      <label style="margin-top:12px;">NAAM</label>
+      <input type="text" id="nameInput" placeholder="bijv. GG Appel" value="${escapeHtml(m.name)}">
+    `;
+  } else if(m.type==='weapon'){
+    inner=`
+      <label>BASIS WAPEN</label>
+      <select id="baseSelect">${[...VANILLA_ITEMS['Zwaarden'],...VANILLA_ITEMS['Gereedschap'],...VANILLA_ITEMS['Wapens op afstand']].map(it=>`<option value="${it}" ${it===m.weaponBase?'selected':''}>${prettyName(it)}</option>`).join('')}</select>
+      <label style="margin-top:12px;">NAAM</label>
+      <input type="text" id="nameInput" placeholder="bijv. GG" value="${escapeHtml(m.name)}">
+      <div class="hint-box">Uiteindelijke naam wordt: <b id="finalNamePreview"></b></div>
+    `;
+  } else if(m.type==='armor_set'){
+    inner=`
+      <label>MATERIAAL-STIJL (voor alle 4 stukken)</label>
+      <select id="armorMaterialSelect">
+        ${['leather','chainmail','iron','golden','diamond','netherite'].map(mat=>`<option value="${mat}" ${mat===m.armorMaterial?'selected':''}>${prettyName(mat)}</option>`).join('')}
+      </select>
+      <label style="margin-top:12px;">NAAM VAN DE SET</label>
+      <input type="text" id="nameInput" placeholder="bijv. GG" value="${escapeHtml(m.name)}">
+      <div class="hint-box">Er worden 4 items gemaakt: <b id="finalNamePreview"></b> Helmet / Chestplate / Leggings / Boots</div>
+    `;
+  } else if(m.type==='item_set'){
+    inner=`
+      <label>KIES BASIS-ITEMS VOOR DE SET</label>
+      <div class="checklist" id="setChecklist">
+        ${ALL_BASE_ITEMS.map(it=>`<label><input type="checkbox" value="${it}" ${m.setPicks.has(it)?'checked':''}> ${prettyName(it)}</label>`).join('')}
+      </div>
+      <label style="margin-top:12px;">NAAM VAN DE SET</label>
+      <input type="text" id="nameInput" placeholder="bijv. Ruby" value="${escapeHtml(m.name)}">
+    `;
+  }
+
+  d.innerHTML=`
+    <h2>DETAILS</h2>
+    ${inner}
+    <label style="margin-top:14px;">NAAMKLEUR</label>
+    <div class="color-swatches" id="colorSwatches">
+      ${MC_COLORS.map(c=>`<div class="swatch ${m.color===c.code?'active':''}" data-code="${c.code}" style="background:${c.hex}" title="${c.code}"></div>`).join('')}
+    </div>
+    <div class="format-toggles">
+      <div class="toggle-chip ${m.bold?'on':''}" data-f="bold"><b>B</b></div>
+      <div class="toggle-chip ${m.italic?'on':''}" data-f="italic"><i>I</i></div>
+      <div class="toggle-chip ${m.underline?'on':''}" data-f="underline"><u>U</u></div>
+    </div>
+    <div class="name-preview" id="namePreview"></div>
+    <div class="field-row" style="margin-top:16px;justify-content:flex-end;">
+      <button class="mc-btn" id="backModalBtn">← Terug</button>
+      <button class="mc-btn primary" id="createModalBtn">Aanmaken</button>
+    </div>
+  `;
+
+  function suffixFor(type){
+    if(type==='weapon') return '';
+    if(type==='armor_set') return ' Armor';
+    if(type==='item_set') return '';
+    return '';
+  }
+  function refresh(){
+    const preview=d.querySelector('#namePreview');
+    const finalName = m.name ? (m.name + suffixFor(m.type)) : '(vul een naam in)';
+    preview.textContent=finalName;
+    preview.style.color=mcColorHex(m.color);
+    preview.style.fontWeight=m.bold?'bold':'normal';
+    preview.style.fontStyle=m.italic?'italic':'normal';
+    preview.style.textDecoration=m.underline?'underline':'none';
+    const fp=d.querySelector('#finalNamePreview');
+    if(fp) fp.textContent=finalName;
+  }
+  refresh();
+
+  setTimeout(()=>{
+    const nameInput=d.querySelector('#nameInput');
+    if(nameInput) nameInput.addEventListener('input',e=>{ m.name=e.target.value; refresh(); });
+    const baseSelect=d.querySelector('#baseSelect');
+    if(baseSelect) baseSelect.addEventListener('change',e=>{
+      if(m.type==='single') m.singleBase=e.target.value;
+      if(m.type==='weapon') m.weaponBase=e.target.value;
+    });
+    const armorMaterialSelect=d.querySelector('#armorMaterialSelect');
+    if(armorMaterialSelect) armorMaterialSelect.addEventListener('change',e=>{ m.armorMaterial=e.target.value; });
+    const setChecklist=d.querySelector('#setChecklist');
+    if(setChecklist) setChecklist.addEventListener('change',e=>{
+      if(e.target.checked) m.setPicks.add(e.target.value); else m.setPicks.delete(e.target.value);
+    });
+    d.querySelectorAll('#colorSwatches .swatch').forEach(s=>{
+      s.onclick=()=>{ m.color=s.dataset.code; d.querySelectorAll('#colorSwatches .swatch').forEach(x=>x.classList.remove('active')); s.classList.add('active'); refresh(); };
+    });
+    d.querySelectorAll('.toggle-chip').forEach(chip=>{
+      chip.onclick=()=>{ chip.classList.toggle('on'); m[chip.dataset.f]=chip.classList.contains('on'); refresh(); };
+    });
+    d.querySelector('#backModalBtn').onclick=()=>{ state.modal.step=1; render(); };
+    d.querySelector('#createModalBtn').onclick=()=>{ createItemsFromModal(); };
+  },0);
+
+  return d;
+}
+
+function createItemsFromModal(){
+  const m=state.modal;
+  if(!m.name || !m.name.trim()){ showToast('Geef eerst een naam op.'); return; }
+
+  function baseItemObj(baseItem,name,armorSlot){
+    return {
+      id:uid('item'), setId:null, setLabel:null, type:m.type, baseItem, armorSlot:armorSlot||null,
+      name, color:m.color, bold:m.bold, italic:m.italic, underline:m.underline,
+      texture:null, attributes:[], enchants:[], abilities:[]
+    };
+  }
+
+  if(m.type==='single'){
+    const it=baseItemObj(m.singleBase, m.name);
+    state.items.push(it);
+    state.selectedItemId=it.id;
+  } else if(m.type==='weapon'){
+    const it=baseItemObj(m.weaponBase, m.name);
+    state.items.push(it);
+    state.selectedItemId=it.id;
+  } else if(m.type==='armor_set'){
+    const setId=uid('set');
+    const setLabel=m.name+' Armor';
+    const pieceNames={helmet:'Helmet',chestplate:'Chestplate',leggings:'Leggings',boots:'Boots'};
+    let first=null;
+    ARMOR_SLOTS.forEach(as=>{
+      const base=guessArmorBase(m.armorMaterial, as.slot);
+      const it=baseItemObj(base, m.name+' '+pieceNames[as.slot], as.eq);
+      it.setId=setId; it.setLabel=setLabel;
+      it.attributes.push({attribute:'generic.armor',amount:2,operation:'add_value',slot:as.eq});
+      state.items.push(it);
+      if(!first) first=it;
+    });
+    state.selectedItemId=first.id;
+  } else if(m.type==='item_set'){
+    const setId=uid('set');
+    const setLabel=m.name;
+    const picks=Array.from(m.setPicks);
+    if(picks.length===0){ showToast('Kies minimaal 1 basis-item voor de set.'); return; }
+    let first=null;
+    picks.forEach(base=>{
+      const it=baseItemObj(base, m.name+' '+prettyName(base));
+      it.setId=setId; it.setLabel=setLabel;
+      state.items.push(it);
+      if(!first) first=it;
+    });
+    state.selectedItemId=first.id;
+  }
+
+  state.modal=null;
+  state.editorTab='algemeen';
+  render();
+  showToast('Item(s) aangemaakt! Bewerk texture, stats & abilities rechts.');
+}
+
+/* =========================================================================
+   HELPERS
+   ========================================================================= */
+function prettyName(id){
+  return id.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+}
+function mcColorHex(code){
+  const c=MC_COLORS.find(x=>x.code===code);
+  return c?c.hex:'#FFFFFF';
+}
+function escapeHtml(s){
+  return (s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function showToast(msg){
+  const t=document.createElement('div');
+  t.className='toast';
+  t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),3200);
+}
+
+/* =========================================================================
+   EXPORT — build datapack + resourcepack zips
+   ========================================================================= */
+async function doExport(){
+  if(!state.packName.trim()){ showToast('Geef je pack eerst een naam.'); return; }
+  if(state.items.length===0){ showToast('Voeg eerst minstens 1 item toe.'); return; }
+
+  const versionInfo=VERSIONS.find(v=>v.id===state.packVersion) || VERSIONS[0];
+  const ns=slug(state.packName);
+
+  try{
+    const rpZip=await buildResourcePack(ns,versionInfo);
+    const dpZip=await buildDataPack(ns,versionInfo);
+
+    const rpBlob=await rpZip.generateAsync({type:'blob'});
+    const dpBlob=await dpZip.generateAsync({type:'blob'});
+    downloadBlob(rpBlob, ns+'_resourcepack.zip');
+    downloadBlob(dpBlob, ns+'_datapack.zip');
+    showToast('Export klaar! Beide .zip bestanden zijn gedownload.');
+  }catch(err){
+    console.error(err);
+    showToast('Er ging iets mis bij het exporteren — zie console.');
+  }
+}
+
+function downloadBlob(blob,filename){
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),4000);
+}
+
+function dataUrlToBlob(dataUrl){
+  const arr=dataUrl.split(',');
+  const mime=arr[0].match(/:(.*?);/)[1];
+  const bstr=atob(arr[1]);
+  let n=bstr.length; const u8=new Uint8Array(n);
+  while(n--) u8[n]=bstr.charCodeAt(n);
+  return new Blob([u8],{type:mime});
+}
+
+async function blankTransparentPngDataUrl(){
+  const c=document.createElement('canvas'); c.width=16;c.height=16;
+  return c.toDataURL('image/png');
+}
+
+/* ---------- Resource pack ---------- */
+async function buildResourcePack(ns,versionInfo){
+  const zip=new JSZip();
+  zip.file('pack.mcmeta', JSON.stringify({
+    pack:{ pack_format: versionInfo.resource, description: state.packName+' resource pack (Blokwerk)' }
+  },null,2));
+
+  for(const item of state.items){
+    const modelId=slug(item.name);
+    let texDataUrl=item.texture || await blankTransparentPngDataUrl();
+    zip.file(`assets/${ns}/textures/item/${modelId}.png`, dataUrlToBlob(texDataUrl));
+    zip.file(`assets/${ns}/models/item/${modelId}.json`, JSON.stringify({
+      parent:'item/generated',
+      textures:{ layer0: `${ns}:item/${modelId}` }
+    },null,2));
+  }
+
+  // Legacy CustomModelData override models for the vanilla base items (broad compatibility)
+  const byBase={};
+  state.items.forEach((it,idx)=>{ (byBase[it.baseItem]=byBase[it.baseItem]||[]).push({item:it,cmd:1000+idx}); });
+  for(const [base,list] of Object.entries(byBase)){
+    zip.file(`assets/minecraft/models/item/${base}.json`, JSON.stringify({
+      parent:'item/generated',
+      textures:{ layer0:`item/${base}` },
+      overrides: list.map(l=>({ predicate:{ custom_model_data:l.cmd }, model:`${ns}:item/${slug(l.item.name)}` }))
+    },null,2));
+  }
+
+  return zip;
+}
+
+/* ---------- Data pack ---------- */
+function nameComponentJson(item){
+  return JSON.stringify({text:item.name,color:item.color,bold:!!item.bold,italic:!!item.italic,underline:!!item.underline});
+}
+function randUUID(){
+  return [rnd(),rnd(),rnd(),rnd()];
+  function rnd(){ return -2147483648 + Math.floor(Math.random()*4294967295); }
+}
+
+function buildGiveCommand(item,cmd,versionInfo){
+  const nameJson=nameComponentJson(item).replace(/"/g,'\\"');
+  if(versionInfo.style==='component'){
+    const parts=[`custom_name='${nameComponentJson(item)}'`,`custom_model_data=${cmd}`];
+    if(item.enchants.length){
+      const levels=item.enchants.map(e=>`"minecraft:${e.id}":${e.level}`).join(',');
+      parts.push(`enchantments={levels:{${levels}}}`);
+    }
+    if(item.attributes.length){
+      const mods=item.attributes.map((a,i)=>{
+        const opId=a.operation;
+        return `{type:"minecraft:${a.attribute}",id:"${slug(state.packName)}:mod_${i}",amount:${a.amount},operation:"${opId}",slot:"${a.slot}"}`;
+      }).join(',');
+      parts.push(`attribute_modifiers={modifiers:[${mods}],show_in_tooltip:true}`);
+    }
+    return `give @s minecraft:${item.baseItem}[${parts.join(',')}]`;
+  } else {
+    const nbtParts=[`display:{Name:'${nameComponentJson(item)}'}`,`CustomModelData:${cmd}`];
+    if(item.enchants.length){
+      const ench=item.enchants.map(e=>`{id:"minecraft:${e.id}",lvl:${e.level}}`).join(',');
+      nbtParts.push(`Enchantments:[${ench}]`);
+    }
+    if(item.attributes.length){
+      const opMap={add_value:0,add_multiplied_base:1,add_multiplied_total:2};
+      const attrNameMap={};
+      const mods=item.attributes.map((a,i)=>{
+        const u=randUUID();
+        return `{AttributeName:"${a.attribute}",Name:"mod_${i}",Amount:${a.amount},Operation:${opMap[a.operation]},Slot:"${a.slot}",UUID:[I;${u.join(',')}]}`;
+      }).join(',');
+      nbtParts.push(`AttributeModifiers:[${mods}]`);
+    }
+    return `give @s minecraft:${item.baseItem}{${nbtParts.join(',')}}`;
+  }
+}
+
+async function buildDataPack(ns,versionInfo){
+  const zip=new JSZip();
+  zip.file('pack.mcmeta', JSON.stringify({
+    pack:{ pack_format: versionInfo.data, description: state.packName+' datapack (Blokwerk)' }
+  },null,2));
+
+  const giveLines=[];
+  const loadLines=[`say ${state.packName} datapack geladen — gebruik /function ${ns}:give_<item> om items te krijgen.`];
+  const tickLines=[];
+
+  state.items.forEach((item,idx)=>{
+    const cmd=1000+idx;
+    const modelId=slug(item.name);
+    const giveCmd=buildGiveCommand(item,cmd,versionInfo);
+    zip.file(`data/${ns}/function/give_${modelId}.mcfunction`, `# Geeft "${item.name}" aan de speler die de functie aanroept\n${giveCmd}\n`);
+    giveLines.push(`/function ${ns}:give_${modelId}  -> ${item.name}`);
+
+    // Melee-triggered abilities via advancement (player_hurt_entity)
+    const hitAbilities=item.abilities.filter(a=>ABILITY_DEFS[a.type].trigger==='hit');
+    if(hitAbilities.length){
+      const advId=`hit_${modelId}`;
+      zip.file(`data/${ns}/advancement/${advId}.json`, JSON.stringify({
+        criteria:{
+          req:{
+            trigger:'minecraft:player_hurt_entity',
+            conditions: versionInfo.style==='component'
+              ? { player:[{condition:'minecraft:entity_properties',entity:'this',predicate:{equipment:{mainhand:{items:[item.baseItem],nbt:`{CustomModelData:${cmd}}`}}}}] }
+              : { player:[{condition:'minecraft:entity_properties',entity:'this',predicate:{equipment:{mainhand:{items:[item.baseItem],nbt:`{CustomModelData:${cmd}}`}}}}] }
+          }
+        },
+        rewards:{ function:`${ns}:ability/${advId}` }
+      },null,2));
+
+      let fnBody=`# Wordt uitgevoerd zodra iemand een entity raakt met "${item.name}"\n`;
+      hitAbilities.forEach(ab=>{
+        if(ab.type==='melee_explosion'){
+          fnBody+=`execute at @s run summon minecraft:tnt ~ ~1 ~ {Fuse:0}\n`;
+          fnBody+=`# radius/kracht: ${ab.params.radius}, extra schade: ${ab.params.damage} (pas evt. de TNT power aan via een custom explosion command in latere versies)\n`;
+        }
+        if(ab.type==='lightning_on_hit'){
+          fnBody+=`execute if predicate ${ns}:chance_${ab.params.chance} at @s run summon minecraft:lightning_bolt ~ ~ ~\n`;
+        }
+      });
+      fnBody+=`advancement revoke @s only ${ns}:${advId}\n`;
+      zip.file(`data/${ns}/function/ability/${advId}.mcfunction`, fnBody);
+
+      hitAbilities.filter(a=>a.type==='lightning_on_hit').forEach(ab=>{
+        zip.file(`data/${ns}/predicate/chance_${ab.params.chance}.json`, JSON.stringify({
+          condition:'minecraft:random_chance', chance: ab.params.chance/100
+        },null,2));
+      });
+    }
+
+    // Use-triggered abilities via consumable + using_item advancement
+    const useAbilities=item.abilities.filter(a=>ABILITY_DEFS[a.type].trigger==='use');
+    if(useAbilities.length){
+      const advId=`use_${modelId}`;
+      zip.file(`data/${ns}/advancement/${advId}.json`, JSON.stringify({
+        criteria:{
+          req:{
+            trigger:'minecraft:using_item',
+            conditions:{ item:{ items:[item.baseItem], nbt:`{CustomModelData:${cmd}}` } }
+          }
+        },
+        rewards:{ function:`${ns}:ability/${advId}` }
+      },null,2));
+
+      let fnBody=`# Wordt uitgevoerd bij rechtsklik (ingedrukt houden) met "${item.name}"\n`;
+      fnBody+=`# Let op: vereist dat het item een "consumable"/food component heeft (zie README) zodat rechtsklik detecteerbaar is.\n`;
+      useAbilities.forEach(ab=>{
+        if(ab.type==='grappling_hook'){
+          fnBody+=`execute at @s run summon minecraft:fishing_bobber ~ ~ ~\n`;
+          fnBody+=`# trekkracht: ${ab.params.strength} (koppel dit aan een scoreboard-vergelijking met de bobber-afstand voor een echte grappling-pull)\n`;
+        }
+        if(ab.type==='fireball_shoot'){
+          fnBody+=`execute at @s run summon minecraft:small_fireball ~ ~1.5 ~ {power:[0.0,0.0,${ab.params.power}],ExplosionPower:1}\n`;
+        }
+        if(ab.type==='speed_boost_use'){
+          fnBody+=`effect give @s minecraft:speed ${ab.params.duration} ${ab.params.amplifier-1} true\n`;
+        }
+      });
+      fnBody+=`advancement revoke @s only ${ns}:${advId}\n`;
+      zip.file(`data/${ns}/function/ability/${advId}.mcfunction`, fnBody);
+    }
+  });
+
+  zip.file(`data/${ns}/function/give_all.mcfunction`, giveLines.map(l=>'# '+l).join('\n')+'\n'+
+    state.items.map(it=>`function ${ns}:give_${slug(it.name)}`).join('\n')+'\n');
+
+  loadLines.push(...state.items.map(it=>`say - ${it.name}: /function ${ns}:give_${slug(it.name)}`));
+  zip.file(`data/${ns}/function/load.mcfunction`, loadLines.join('\n')+'\n');
+  zip.file(`data/minecraft/tags/function/load.json`, JSON.stringify({values:[`${ns}:load`]},null,2));
+
+  zip.file('README.txt',
+`Datapack: ${state.packName}
+Gemaakt met Blokwerk Datapack Maker
+Doelversie: ${state.packVersion}
+
+INSTALLATIE
+1. Zet deze map (of de losse .zip) in je wereld-map onder "datapacks/".
+2. Zet de resourcepack .zip in je "resourcepacks/" map en activeer hem in-game.
+3. Gebruik /reload of herstart de wereld.
+4. Typ /function ${ns}:give_all om al je items te ontvangen, of gebruik de losse
+   give_<item>.mcfunction per item (zie de lijst in load.mcfunction / hierboven).
+
+ABILITIES — BEPERKINGEN
+Vanilla datapacks kunnen geen rechtsklik direct detecteren. Deze export gebruikt
+een bekende workaround (advancement "using_item" + een consumable-component op
+het item). Voor 100% betrouwbare rechtsklik-abilities in een survival-wereld
+raden we aan dit te combineren met een lichte plugin/mod, maar de datapack-only
+aanpak hierboven werkt in de meeste gevallen.
+Bij "raak"-abilities (explosie/bliksem) wordt het advancement "player_hurt_entity"
+gebruikt — dit is een volledig vanilla-ondersteunde, betrouwbare methode.
+
+pack_format kan per kleine patch-versie afwijken; controleer bij twijfel de
+Minecraft Wiki voor jouw exacte versie.
+`);
+
+  return zip;
+}
+
+/* =========================================================================
+   BOOT
+   ========================================================================= */
+render();
+</script>
+</body>
+</html>
