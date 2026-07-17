@@ -246,7 +246,7 @@ function renderHeader(activeNav){
   nav.className='main-nav';
   nav.innerHTML=`
     <div class="nav-link" id="navBrowse">Browse</div>
-    <div class="nav-link" id="navCommunity">Community</div>
+    <div class="nav-link ${activeNav==='community'?'active':''}" id="navCommunity">Community ⌄</div>
     <div class="nav-link ${activeNav==='tools'?'active':''}" id="navTools">Tools ⌄</div>
     <div class="nav-link">Guide</div>
     <div class="nav-link gold">Premium</div>
@@ -254,7 +254,7 @@ function renderHeader(activeNav){
   h.appendChild(nav);
   setTimeout(()=>{
     document.getElementById('navBrowse').onclick=()=>{ location.href='browse.html'; };
-    document.getElementById('navCommunity').onclick=()=>{ location.href='community.html'; };
+    document.getElementById('navCommunity').onclick=(e)=>{ e.stopPropagation(); toggleCommunityMenu(); };
     document.getElementById('navTools').onclick=(e)=>{ e.stopPropagation(); toggleToolsMenu(); };
   },0);
 
@@ -302,6 +302,34 @@ function renderHeader(activeNav){
   return h;
 }
 
+function toggleCommunityMenu(){
+  let menu=document.getElementById('communityDropdown');
+  if(menu){ menu.remove(); return; }
+  const btn=document.getElementById('navCommunity');
+  menu=document.createElement('div');
+  menu.id='communityDropdown';
+  menu.className='panel';
+  menu.style.cssText='position:absolute;z-index:60;padding:6px;min-width:220px;';
+  const rect=btn.getBoundingClientRect();
+  menu.style.top=(rect.bottom+6)+'px'; menu.style.left=rect.left+'px';
+  menu.innerHTML=`
+    <div class="dropdown-item" id="commToPacks">
+      <span class="di-icon">📦</span><div><b>Packs</b><div class="di-sub">Browse &amp; remix gepubliceerde packs</div></div>
+    </div>
+    <div class="dropdown-item" id="commToTextures">
+      <span class="di-icon">🖼️</span><div><b>Textures</b><div class="di-sub">Losse textures om te mixen</div></div>
+    </div>
+  `;
+  document.body.appendChild(menu);
+  menu.querySelector('#commToPacks').onclick=()=>{ location.href='community.html?filter=packs'; };
+  menu.querySelector('#commToTextures').onclick=()=>{ location.href='community.html?filter=items'; };
+  setTimeout(()=>{
+    document.addEventListener('click', function closeMenu(e){
+      if(!menu.contains(e.target)){ menu.remove(); document.removeEventListener('click',closeMenu); }
+    });
+  },0);
+}
+
 function toggleToolsMenu(){
   let menu=document.getElementById('toolsDropdown');
   if(menu){ menu.remove(); return; }
@@ -313,8 +341,12 @@ function toggleToolsMenu(){
   const rect=btn.getBoundingClientRect();
   menu.style.top=(rect.bottom+6)+'px'; menu.style.left=rect.left+'px';
   menu.innerHTML=`
-    <div class="nav-link" style="width:100%;" id="toolsToDatapack">📦 Datapack Maker</div>
-    <div class="nav-link" style="width:100%;" id="toolsToTexture">🎨 Texture Pack Maker</div>
+    <div class="dropdown-item" id="toolsToDatapack">
+      <span class="di-icon">📦</span><div><b>Datapack Maker</b><div class="di-sub">Custom items, sets &amp; abilities</div></div>
+    </div>
+    <div class="dropdown-item" id="toolsToTexture">
+      <span class="di-icon">🎨</span><div><b>Texture Pack Maker</b><div class="di-sub">Reskin bestaande textures</div></div>
+    </div>
   `;
   document.body.appendChild(menu);
   menu.querySelector('#toolsToDatapack').onclick=()=>{ location.href='datapack-maker.html'; };
@@ -337,10 +369,10 @@ function renderFooter(){
       </div>
       <div class="foot-cols">
         <div class="foot-col"><h5>Create</h5>
-          <a href="#">Browse &amp; Edit</a><a href="#">Import</a><a href="#">Export</a><a href="#">Sounds</a>
+          <a href="browse.html">Browse &amp; Edit</a><a href="#">Import</a><a href="#">Export</a><a href="#">Sounds</a>
         </div>
         <div class="foot-col"><h5>Community</h5>
-          <a href="#">Packs</a><a href="#">Textures</a>
+          <a href="community.html?filter=packs">Packs</a><a href="community.html?filter=items">Textures</a>
         </div>
         <div class="foot-col"><h5>Tools</h5>
           <a href="datapack-maker.html">Datapack Maker</a><a href="#">Pixel Art Editor</a><a href="#">GIF Maker</a><a href="#">Menu Background</a>
@@ -547,6 +579,132 @@ function dataUrlToBlob(dataUrl){
   return new Blob([u8],{type:mime});
 }
 async function blankTransparentPngDataUrl(){ const c=document.createElement('canvas'); c.width=16;c.height=16; return c.toDataURL('image/png'); }
+
+/* =========================================================================
+   VANILLA TEXTURE CATALOG — namen/categorieën alleen, GEEN pixel-data.
+   We nemen bewust geen echte Minecraft-textures over (ook niet vanaf externe
+   sites die ze hosten) — dat blijft Mojang's auteursrechtelijk beschermde werk,
+   ongeacht de bron. Deze catalogus geeft alleen de juiste naam + categorie
+   (nodig voor het resourcepack-pad), zodat je zelf tekent of je eigen,
+   legaal verkregen bestanden importeert.
+   ========================================================================= */
+const TEXTURE_CATALOG = {
+  'Blocks': ['stone','cobblestone','dirt','grass_block','sand','gravel','oak_planks','spruce_planks','birch_planks',
+    'oak_log','oak_log_top','oak_leaves','glass','sandstone','bricks','bookshelf','tnt','obsidian','diamond_block',
+    'gold_block','iron_block','emerald_block','netherite_block','coal_ore','iron_ore','gold_ore','diamond_ore',
+    'emerald_ore','redstone_ore','lapis_ore','netherrack','soul_sand','glowstone','ice','snow','clay','crafting_table_top',
+    'furnace_front','furnace_side','furnace_top','chest_front','chest_side','chest_top','bedrock','end_stone',
+    'nether_bricks','magma','sea_lantern','prismarine','mycelium','podzol','farmland','water_still','lava_still'],
+  'Items': ['diamond_sword','iron_sword','stone_sword','golden_sword','wooden_sword','netherite_sword',
+    'diamond_pickaxe','iron_pickaxe','diamond_axe','diamond_shovel','diamond_hoe','bow','crossbow','trident',
+    'shield','fishing_rod','shears','flint_and_steel','stick','bucket','apple','golden_apple','bread','cooked_beef',
+    'diamond','emerald','gold_ingot','iron_ingot','netherite_ingot','coal','redstone','lapis_lazuli','ender_pearl',
+    'ender_eye','blaze_rod','totem_of_undying','potion','nether_star','elytra','book','map','compass','clock'],
+  'Armor & Equipment': ['diamond_helmet','diamond_chestplate','diamond_leggings','diamond_boots',
+    'iron_helmet','iron_chestplate','iron_leggings','iron_boots','netherite_helmet','netherite_chestplate',
+    'netherite_leggings','netherite_boots','leather_helmet','leather_chestplate','leather_leggings','leather_boots',
+    'golden_helmet','golden_chestplate','golden_leggings','golden_boots','turtle_helmet'],
+  'Misc': ['heart_full','heart_half','armor_full','armor_half','hunger_full','hunger_half','xp_bar','crosshair',
+    'widgets','icons','hotbar'],
+};
+const ALL_CATALOG_ENTRIES = Object.entries(TEXTURE_CATALOG).flatMap(([cat,names])=>
+  names.map(name=>({name, category: cat==='Blocks'?'block':(cat==='Armor & Equipment'?'item':(cat==='Misc'?'gui':'item')), group:cat})));
+
+/* Generieke pixel-editor voor een texture-library entry — werkt op elk object
+   met .dataUrl (wordt gebruikt door zowel de Texture Pack Maker als Browse). */
+function renderGenericTextureEditor(entry){
+  const d=document.createElement('div');
+  d.className='pixel-editor-wrap';
+  const toolcol=document.createElement('div');
+  toolcol.className='pixel-toolcol';
+  toolcol.innerHTML=`
+    <button class="pixel-tool-btn active" data-tool="pencil">✏️ Potlood</button>
+    <button class="pixel-tool-btn" data-tool="bucket">🪣 Emmer (fill)</button>
+    <button class="pixel-tool-btn" data-tool="eyedrop">💧 Kleurenkiezer</button>
+    <button class="pixel-tool-btn" data-tool="eraser">🧽 Gum</button>
+    <div class="color-picker-row">
+      <div class="current-color-box" id="curColorBox" style="background:#ff5555"></div>
+      <input type="color" id="colorPickerInput" value="#ff5555">
+    </div>
+    <input type="text" class="hex-input" id="hexInput" value="#ff5555" maxlength="7">
+    <label class="upload-label" for="uploadImgInput">⬆ Afbeelding uploaden</label>
+    <input type="file" id="uploadImgInput" accept="image/*" style="display:none;">
+    <button class="btn small ghost" id="clearCanvasBtn">Wis alles (transparant)</button>
+  `;
+  const canvasWrap=document.createElement('div');
+  const canvas=document.createElement('canvas');
+  canvas.id='pixelCanvas';
+  canvas.width=16*20; canvas.height=16*20;
+  canvasWrap.appendChild(canvas);
+  d.appendChild(toolcol); d.appendChild(canvasWrap);
+
+  setTimeout(()=>{
+    const ctx=canvas.getContext('2d'); ctx.imageSmoothingEnabled=false;
+    let buf=document.createElement('canvas'); buf.width=16; buf.height=16;
+    let bctx=buf.getContext('2d');
+    if(entry.dataUrl){ const img=new Image(); img.onload=()=>{ bctx.clearRect(0,0,16,16); bctx.drawImage(img,0,0,16,16); redraw(); }; img.src=entry.dataUrl; }
+    function redraw(){
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      ctx.drawImage(buf,0,0,16,16,0,0,canvas.width,canvas.height);
+      ctx.strokeStyle='rgba(0,0,0,0.15)';
+      for(let i=0;i<=16;i++){ ctx.beginPath();ctx.moveTo(i*20,0);ctx.lineTo(i*20,canvas.height);ctx.stroke();
+        ctx.beginPath();ctx.moveTo(0,i*20);ctx.lineTo(canvas.width,i*20);ctx.stroke(); }
+    }
+    function saveEntry(){ entry.dataUrl=buf.toDataURL('image/png'); saveTextureLibrary(); }
+    redraw();
+    let tool='pencil'; let color='#ff5555';
+    toolcol.querySelectorAll('.pixel-tool-btn').forEach(b=>{ b.onclick=()=>{ toolcol.querySelectorAll('.pixel-tool-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); tool=b.dataset.tool; }; });
+    const colorInput=toolcol.querySelector('#colorPickerInput'); const hexInput=toolcol.querySelector('#hexInput'); const colorBox=toolcol.querySelector('#curColorBox');
+    function setColor(hex){ if(!/^#[0-9a-fA-F]{6}$/.test(hex)) return; color=hex; colorInput.value=hex; hexInput.value=hex; colorBox.style.background=hex; }
+    colorInput.addEventListener('input',e=>setColor(e.target.value));
+    hexInput.addEventListener('change',e=>setColor(e.target.value.startsWith('#')?e.target.value:'#'+e.target.value));
+    toolcol.querySelector('#uploadImgInput').addEventListener('change',e=>{
+      const file=e.target.files[0]; if(!file) return;
+      const reader=new FileReader();
+      reader.onload=ev=>{ const img=new Image(); img.onload=()=>{ bctx.clearRect(0,0,16,16); bctx.drawImage(img,0,0,16,16); redraw(); saveEntry(); }; img.src=ev.target.result; };
+      reader.readAsDataURL(file);
+    });
+    toolcol.querySelector('#clearCanvasBtn').onclick=()=>{ bctx.clearRect(0,0,16,16); redraw(); saveEntry(); };
+    function px(e){ const rect=canvas.getBoundingClientRect(); const x=Math.floor((e.clientX-rect.left)/(rect.width/16)); const y=Math.floor((e.clientY-rect.top)/(rect.height/16)); return [Math.max(0,Math.min(15,x)),Math.max(0,Math.min(15,y))]; }
+    function hexToRgba(hex){ const v=parseInt(hex.slice(1),16); return [(v>>16)&255,(v>>8)&255,v&255,255]; }
+    function floodFill(sx,sy,fillColor){
+      const data=bctx.getImageData(0,0,16,16); const idx=(x,y)=>(y*16+x)*4;
+      const target=data.data.slice(idx(sx,sy),idx(sx,sy)+4); const fc=hexToRgba(fillColor);
+      if(target[0]===fc[0]&&target[1]===fc[1]&&target[2]===fc[2]&&target[3]===fc[3]) return;
+      const stack=[[sx,sy]];
+      while(stack.length){ const [x,y]=stack.pop(); if(x<0||x>15||y<0||y>15) continue; const i=idx(x,y);
+        if(data.data[i]!==target[0]||data.data[i+1]!==target[1]||data.data[i+2]!==target[2]||data.data[i+3]!==target[3]) continue;
+        data.data[i]=fc[0];data.data[i+1]=fc[1];data.data[i+2]=fc[2];data.data[i+3]=fc[3]; stack.push([x+1,y],[x-1,y],[x,y+1],[x,y-1]); }
+      bctx.putImageData(data,0,0);
+    }
+    let painting=false;
+    function act(e){
+      const [x,y]=px(e);
+      if(tool==='pencil'){ bctx.clearRect(x,y,1,1); bctx.fillStyle=color; bctx.fillRect(x,y,1,1); }
+      else if(tool==='eraser'){ bctx.clearRect(x,y,1,1); }
+      else if(tool==='bucket'){ floodFill(x,y,color); }
+      else if(tool==='eyedrop'){ const d2=bctx.getImageData(x,y,1,1).data; if(d2[3]>0){ setColor('#'+[d2[0],d2[1],d2[2]].map(n=>n.toString(16).padStart(2,'0')).join('')); } }
+      redraw(); saveEntry();
+    }
+    canvas.addEventListener('mousedown',e=>{ painting=true; act(e); });
+    canvas.addEventListener('mousemove',e=>{ if(painting && (tool==='pencil'||tool==='eraser')) act(e); });
+    window.addEventListener('mouseup',()=>{ painting=false; });
+  },0);
+  return d;
+}
+
+/* Zoek (of maak) de textureLibrary-entry die bij een catalogus-item hoort,
+   zodat tekeningen die je hier maakt ook in de Texture Pack Maker terugkomen. */
+function findOrCreateLibraryEntry(catalogEntry){
+  let entry=state.textureLibrary.find(t=>t.name===catalogEntry.name && t.category===catalogEntry.category && (t.ns||'minecraft')==='minecraft');
+  if(!entry){
+    entry={id:uid('lib'), name:catalogEntry.name, category:catalogEntry.category, ns:'minecraft',
+      texturePath:catalogEntry.category+'/'+catalogEntry.name, dataUrl:null};
+    state.textureLibrary.push(entry);
+    saveTextureLibrary();
+  }
+  return entry;
+}
 
 function packMcmeta(desc,versionInfo,which){
   const val = which==='data'? versionInfo.data : versionInfo.resource;
@@ -1076,6 +1234,18 @@ async function fetchCommunityPacks(){
     (profiles||[]).forEach(p=>usernames[p.id]=p.username);
   }
   return data.map(p=>({ ...p, authorName: usernames[p.user_id] || 'onbekend' }));
+}
+
+async function fetchCommunityPackById(id){
+  const {data,error}=await sb.from('packs').select('id,name,data,updated_at,user_id,is_public').eq('id',id).single();
+  if(error) throw error;
+  if(!data.is_public && (!currentUser || currentUser.id!==data.user_id)) throw new Error('Deze pack is niet openbaar.');
+  let authorName='onbekend';
+  try{
+    const {data:profile}=await sb.from('mc_profiles').select('username').eq('id',data.user_id).single();
+    if(profile) authorName=profile.username;
+  }catch(e){}
+  return { ...data, authorName };
 }
 
 async function downloadCommunityPack(pack){
