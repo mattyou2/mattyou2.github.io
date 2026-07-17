@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Browse — McTools©</title>
+<title>Browse — Resource Pack Creator</title>
 <link rel="stylesheet" href="style.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -14,7 +14,7 @@
 <script src="app.js"></script>
 <script>
 window.IS_DATAPACK_PAGE=false;
-let browseItems=null, browseLoading=true, browseError=null, browseSearch='';
+let browseCategory='All Textures', browseSearch='', browseEditingEntry=null;
 
 function render(){
   const app=document.getElementById('app');
@@ -28,78 +28,100 @@ function render(){
   if(state.myPacksModal) app.appendChild(renderMyPacksModal());
 }
 
+function catalogCounts(){
+  const counts={};
+  Object.keys(TEXTURE_CATALOG).forEach(cat=>{ counts[cat]=TEXTURE_CATALOG[cat].length; });
+  counts['All Textures']=ALL_CATALOG_ENTRIES.length;
+  return counts;
+}
+
 function renderBrowsePage(){
   const wrap=document.createElement('div');
   wrap.innerHTML=`
-    <div style="margin-bottom:20px;">
-      <h1 style="font-size:22px;margin:0 0 6px;">🔍 Browse</h1>
-      <p style="color:var(--text-dim);font-size:13px;max-width:700px;line-height:1.6;margin:0;">
-        Zoek door items die door de community zijn gedeeld (via gepubliceerde packs). Klik op een item
-        om 'm zo in je eigen datapack te zetten. <b>Let op:</b> vanilla Minecraft-textures staan hier
-        bewust nog niet in — die mogen we niet zomaar vanaf een externe bron aanbieden (auteursrecht van
-        Mojang). Zodra er een nette, legale manier is (bijv. je eigen game-bestanden lokaal uploaden) komt
-        dat er nog bij; voor nu doorzoek je wat spelers zelf gemaakt en gepubliceerd hebben.
-      </p>
-    </div>
-    <div class="field" style="max-width:380px;margin-bottom:18px;">
-      <input type="text" id="browseSearchInput" placeholder="Zoek op itemnaam, basis-item of maker…" value="${escapeHtml(browseSearch)}">
-    </div>
-    <div id="browseGrid"></div>
+    <h1 style="font-size:24px;margin:0 0 6px;">Browse Minecraft Textures — Blocks, Items, Armor &amp; meer</h1>
+    <p style="color:var(--text-dim);font-size:13px;max-width:820px;line-height:1.7;margin:0 0 20px;">
+      Dit is een naam-catalogus van vanilla Minecraft blocks/items — <b>geen</b> originele Mojang-pixelart.
+      We nemen bewust geen echte Minecraft-textures over, ook niet vanaf externe sites die ze hosten: dat blijft
+      auteursrechtelijk beschermd werk van Mojang, ongeacht de bron. Klik op een naam om 'm zelf te tekenen, of
+      upload je eigen (legaal verkregen) afbeelding als basis.
+    </p>
   `;
-  const grid=wrap.querySelector('#browseGrid');
-  grid.style.cssText='display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;';
+  const layout=document.createElement('div');
+  layout.className='browse-layout';
 
-  if(browseLoading){ grid.innerHTML='<div class="empty-hint">Laden…</div>'; }
-  else if(browseError){ grid.innerHTML=`<div class="error-msg">${escapeHtml(browseError)}</div>`; }
-  else {
-    const q=browseSearch.trim().toLowerCase();
-    const filtered=browseItems.filter(it=> !q ||
-      it.name.toLowerCase().includes(q) || it.baseItem.toLowerCase().includes(q) ||
-      it.authorName.toLowerCase().includes(q) || it.packName.toLowerCase().includes(q));
-    if(!filtered.length){ grid.innerHTML='<div class="empty-hint">Niks gevonden. Nog niemand heeft dit item gepubliceerd, of pas je zoekterm aan.</div>'; }
-    filtered.forEach(it=>{
-      const card=document.createElement('div');
-      card.className='item-card';
-      card.style.cursor='pointer';
-      card.innerHTML=`
-        <div class="thumb">${it.texture?`<img src="${it.texture}">`:''}</div>
-        <div class="meta">
-          <div class="nm" style="color:${mcColorHex(it.color)}">${escapeHtml(it.name)}</div>
-          <div class="sub">${prettyName(it.baseItem)} · ${escapeHtml(it.authorName)}</div>
-        </div>
+  const sidebar=document.createElement('div');
+  sidebar.className='panel cat-sidebar';
+  const counts=catalogCounts();
+  const cats=['All Textures',...Object.keys(TEXTURE_CATALOG)];
+  sidebar.innerHTML=`
+    <div style="padding:8px 10px;">
+      <input type="text" id="browseSearchInput" placeholder="Zoek textures…" value="${escapeHtml(browseSearch)}">
+    </div>
+    ${cats.map(c=>`<div class="cat-row ${browseCategory===c?'active':''}" data-cat="${escapeHtml(c)}"><span>${escapeHtml(c)}</span><span class="cnt">${counts[c]||0}</span></div>`).join('')}
+  `;
+  layout.appendChild(sidebar);
+
+  const right=document.createElement('div');
+  const q=browseSearch.trim().toLowerCase();
+  let entries = browseCategory==='All Textures' ? ALL_CATALOG_ENTRIES : ALL_CATALOG_ENTRIES.filter(e=>e.group===browseCategory);
+  if(q) entries = entries.filter(e=>e.name.toLowerCase().includes(q));
+
+  const gridWrap=document.createElement('div');
+  gridWrap.className='catalog-grid';
+  if(!entries.length){
+    gridWrap.innerHTML='<div class="empty-hint">Niks gevonden voor die zoekterm.</div>';
+  } else {
+    entries.forEach(ce=>{
+      const existing=state.textureLibrary.find(t=>t.name===ce.name && t.category===ce.category && (t.ns||'minecraft')==='minecraft');
+      const tile=document.createElement('div');
+      tile.className='catalog-tile'+(existing&&existing.dataUrl?' has-art':'');
+      tile.innerHTML=`
+        <div class="ct-thumb">${existing&&existing.dataUrl?`<img src="${existing.dataUrl}">`:`<span class="placeholder-icon">${ce.category==='block'?'🧱':(ce.category==='gui'?'🖤':'⛏️')}</span>`}</div>
+        <div class="ct-name">${prettyName(ce.name)}</div>
+        <div class="ct-cat">${ce.category}/${escapeHtml(ce.name)}.png</div>
       `;
-      card.onclick=()=>{
-        localStorage.setItem('mc_pending_import', JSON.stringify([{name:it.name,color:it.color,baseItem:it.baseItem,dataUrl:it.texture}]));
-        location.href='datapack-maker.html';
-      };
-      grid.appendChild(card);
+      tile.onclick=()=>{ browseEditingEntry=findOrCreateLibraryEntry(ce); render(); window.scrollTo(0,document.body.scrollHeight); };
+      gridWrap.appendChild(tile);
     });
   }
+  right.appendChild(gridWrap);
+
+  if(browseEditingEntry) right.appendChild(renderBrowseEditor());
+
+  layout.appendChild(right);
+  wrap.appendChild(layout);
 
   setTimeout(()=>{
     wrap.querySelector('#browseSearchInput').addEventListener('input',e=>{ browseSearch=e.target.value; render(); });
+    wrap.querySelectorAll('.cat-row').forEach(r=>{ r.onclick=()=>{ browseCategory=r.dataset.cat; render(); }; });
   },0);
   return wrap;
 }
 
-async function boot(){
-  render();
-  try{
-    const packs=await fetchCommunityPacks();
-    browseItems=[];
-    packs.forEach(p=>{
-      ((p.data&&p.data.items)||[]).forEach(it=>{
-        browseItems.push({ name:it.name, color:it.color, baseItem:it.baseItem, texture:it.texture, authorName:p.authorName, packName:p.name });
-      });
-    });
-    browseLoading=false;
-  }catch(err){
-    browseLoading=false;
-    browseError='Kon community-items niet laden. ('+err.message+')';
-  }
-  render();
+function renderBrowseEditor(){
+  const entry=browseEditingEntry;
+  const box=document.createElement('div');
+  box.className='panel';
+  box.style.cssText='padding:18px;margin-top:18px;';
+  box.innerHTML=`
+    <div class="field-row" style="margin-bottom:10px;">
+      <div><b style="font-size:15px;">${prettyName(entry.name)}</b>
+        <div style="color:var(--text-dim);font-size:11.5px;">assets/minecraft/textures/${entry.category}/${entry.name}.png</div>
+      </div>
+      <div class="spacer"></div>
+      <button class="btn ghost small" id="browseCloseEditorBtn">Sluiten</button>
+    </div>
+  `;
+  const host=document.createElement('div');
+  box.appendChild(host);
+  host.appendChild(renderGenericTextureEditor(entry));
+  setTimeout(()=>{
+    box.querySelector('#browseCloseEditorBtn').onclick=()=>{ browseEditingEntry=null; render(); };
+  },0);
+  return box;
 }
-boot();
+
+render();
 </script>
 </body>
 </html>
