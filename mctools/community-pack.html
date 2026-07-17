@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pack — Resource Pack Creator</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+</head>
+<body>
+<div class="app" id="app"></div>
+
+<script src="app.js"></script>
+<script>
+window.IS_DATAPACK_PAGE=false;
+const packId = new URLSearchParams(location.search).get('id');
+let pdPack=null, pdLoading=true, pdError=null;
+
+function render(){
+  const app=document.getElementById('app');
+  app.innerHTML='';
+  app.appendChild(renderHeader('community'));
+  const main=document.createElement('main');
+  main.appendChild(renderPackDetailPage());
+  app.appendChild(main);
+  app.appendChild(renderFooter());
+  if(state.authModal) app.appendChild(renderAuthModal());
+  if(state.myPacksModal) app.appendChild(renderMyPacksModal());
+}
+
+function renderPackDetailPage(){
+  const wrap=document.createElement('div');
+  if(!packId){ wrap.innerHTML='<div class="error-msg">Geen pack-id opgegeven.</div>'; return wrap; }
+  if(pdLoading){ wrap.innerHTML='<div class="empty-hint">Laden…</div>'; return wrap; }
+  if(pdError){ wrap.innerHTML=`<div class="error-msg">${escapeHtml(pdError)}</div><p><a href="community.html">← Terug naar Community</a></p>`; return wrap; }
+
+  const items=(pdPack.data&&pdPack.data.items)||[];
+  const head=document.createElement('div');
+  head.className='pack-detail-head';
+  head.innerHTML=`
+    <div>
+      <p style="margin:0 0 6px;"><a href="community.html" style="color:var(--text-dim);font-size:12px;">← Community</a></p>
+      <h1>${escapeHtml(pdPack.name)}</h1>
+      <div class="pd-meta">door <b>${escapeHtml(pdPack.authorName)}</b> · ${items.length} item${items.length===1?'':'s'} ·
+        bijgewerkt ${new Date(pdPack.updated_at).toLocaleDateString('nl-NL')} · versie ${escapeHtml((pdPack.data&&pdPack.data.packVersion)||'?')}</div>
+    </div>
+    <div class="field-row" style="margin:0;">
+      <button class="btn primary" id="pdImportBtn">Alles importeren</button>
+      <button class="btn ghost" id="pdDownloadBtn">Download .zip</button>
+    </div>
+  `;
+  wrap.appendChild(head);
+
+  const grid=document.createElement('div');
+  grid.style.cssText='display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;';
+  if(!items.length){
+    grid.innerHTML='<div class="empty-hint">Deze pack heeft nog geen items.</div>';
+  } else {
+    items.forEach(it=>{
+      const card=document.createElement('div');
+      card.className='item-card';
+      card.style.cursor='pointer';
+      card.innerHTML=`
+        <div class="thumb">${it.texture?`<img src="${it.texture}">`:''}</div>
+        <div class="meta">
+          <div class="nm" style="color:${mcColorHex(it.color)}">${escapeHtml(it.name)}</div>
+          <div class="sub">${prettyName(it.baseItem)}</div>
+        </div>
+      `;
+      card.onclick=()=>{
+        localStorage.setItem('mc_pending_import', JSON.stringify([{name:it.name,color:it.color,baseItem:it.baseItem,dataUrl:it.texture}]));
+        location.href='datapack-maker.html';
+      };
+      grid.appendChild(card);
+    });
+  }
+  wrap.appendChild(grid);
+
+  setTimeout(()=>{
+    wrap.querySelector('#pdImportBtn').onclick=()=>{
+      localStorage.setItem('mc_pending_import', JSON.stringify(items.map(it=>({name:it.name,color:it.color,baseItem:it.baseItem,dataUrl:it.texture}))));
+      location.href='datapack-maker.html';
+    };
+    wrap.querySelector('#pdDownloadBtn').onclick=()=>downloadCommunityPack(pdPack);
+  },0);
+
+  return wrap;
+}
+
+async function boot(){
+  render();
+  if(!packId){ pdLoading=false; render(); return; }
+  try{
+    pdPack=await fetchCommunityPackById(packId);
+    pdLoading=false;
+  }catch(err){
+    pdLoading=false;
+    pdError='Kon deze pack niet laden. ('+err.message+')';
+  }
+  render();
+}
+boot();
+</script>
+</body>
+</html>
