@@ -3,11 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<!-- Legt het basispad vast, zodat alle relatieve links (dashboard.html,
-     style.css, app.js, enz.) altijd naar /browser/... wijzen — ook als
-     iemand de URL zonder slash op het eind bezoekt. Verhuis je de site,
-     pas dan alleen deze ene regel aan. -->
-<base href="https://mattyou2.github.io/browser/">
 <title>Browseport — typ een domein, kom er direct</title>
 <meta name="description" content="Browseport is een decentraal domeinsysteem naast het gewone DNS. Registreer een custom domein, host er een site op, en navigeer ernaartoe door 'browseport [domein]' in je adresbalk te typen.">
 <meta name="theme-color" content="#101828">
@@ -26,10 +21,7 @@
       <svg class="mark" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="#101828"/><path d="M18 40 V24 a6 6 0 0 1 6 -6 h6" stroke="#00C48C" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M46 24 V40 a6 6 0 0 1 -6 6 h-6" stroke="#FF6B35" stroke-width="5" fill="none" stroke-linecap="round"/><circle cx="24" cy="18" r="4.5" fill="#00C48C"/><circle cx="40" cy="46" r="4.5" fill="#FF6B35"/></svg>
       browse<span class="port">port</span>
     </a>
-    <div class="nav-actions" id="topbar-actions">
-      <a class="btn btn-ghost" href="dashboard.html">Inloggen</a>
-      <a class="btn btn-primary" href="dashboard.html?tab=register">Domein registreren</a>
-    </div>
+    <div class="nav-actions" id="topbar-actions"></div>
   </div>
 </div>
 
@@ -41,27 +33,26 @@
     <p class="subhead">Browseport is een eigen, decentraal namensysteem naast het gewone DNS. Registreer een custom domein, host er een site op, en kom er — na installatie — met één zoekopdracht.</p>
 
     <div class="omnibox-stage">
-      <div class="omnibox">
+      <form class="omnibox" id="omnibox-form">
         <div class="browser-dots"><span></span><span></span><span></span></div>
-        <div class="field"><span id="omnibox-text"></span><span class="caret"></span></div>
-      </div>
-      <div class="omnibox-status" id="omnibox-status">&nbsp;</div>
+        <div class="omnibox-field-wrap">
+          <span class="ghost-type" id="ghost-type" aria-hidden="true"></span>
+          <input type="text" id="omnibox-input" class="omnibox-input mono" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Domeinnaam" placeholder="">
+        </div>
+        <button class="omnibox-go" type="submit" aria-label="Ga naar domein">→</button>
+      </form>
+      <div class="omnibox-status" id="omnibox-status">Dit is een echt zoekveld — typ gewoon je domein en druk op enter</div>
     </div>
 
     <div class="hero-actions">
       <button class="btn btn-accent" data-install-btn hidden>⤓ Installeer Browseport als app</button>
-      <a class="btn btn-ghost" href="#lookup">Zoek een domein op</a>
+      <a class="btn btn-ghost" href="#directory">Bekijk live domeinen</a>
     </div>
-  </section>
 
-  <section id="lookup">
-    <div class="lookup-card">
-      <label class="field-label" for="domain-input">Domein opzoeken</label>
-      <form class="lookup-row" id="lookup-form">
-        <input type="text" id="domain-input" class="mono" placeholder="mattyou.cool" autocomplete="off" autocapitalize="off" spellcheck="false" required>
-        <button class="btn btn-primary" type="submit">Ga naar site →</button>
-      </form>
-      <p class="lookup-hint">Sneller: installeer Browseport (knop hierboven) en typ voortaan <code>browseport&nbsp;mattyou.cool</code> direct in je browser-adresbalk.</p>
+    <div class="stats-bar" id="stats-bar">
+      <div class="stat"><span class="stat-n skeleton" id="stat-total">&nbsp;</span><span class="stat-l">domeinen geregistreerd</span></div>
+      <div class="stat"><span class="stat-n skeleton" id="stat-hosted">&nbsp;</span><span class="stat-l">zelf gehoste sites</span></div>
+      <div class="stat"><span class="stat-n">2</span><span class="stat-l">admins bewaken het systeem</span></div>
     </div>
   </section>
 
@@ -72,7 +63,7 @@
       <div class="hop">
         <div class="hop-index"><span class="n">01</span> · adresbalk</div>
         <h3>Jij typt het keyword</h3>
-        <p>Na installatie herkent je browser Browseport als zoekmachine. Typ <code class="mono">browseport</code>, spatie, en het domein — geen tabblad wisselen nodig.</p>
+        <p>Na installatie herkent je browser Browseport als zoekmachine. Typ <code class="mono">browseport</code>, spatie, en het domein — geen tabblad wisselen nodig. Of gebruik het zoekveld hierboven.</p>
       </div>
       <div class="hop">
         <div class="hop-index"><span class="n">02</span> · resolver</div>
@@ -84,6 +75,20 @@
         <h3>Doorverwijzing of gehoste site</h3>
         <p>Wijst het domein naar een externe URL? Dan stuurt Browseport je direct door. Host je er zelf bestanden op? Dan wordt de site ter plekke gerenderd.</p>
       </div>
+    </div>
+  </section>
+
+  <section id="directory">
+    <div style="display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+      <div>
+        <h2 class="section-title" style="margin-bottom:6px;">Live op Browseport</h2>
+        <p class="section-lede" style="margin-bottom:22px;">Een greep uit de recent geregistreerde domeinen — allemaal doorzoekbaar via het adresveld hierboven.</p>
+      </div>
+    </div>
+    <div class="directory-grid" id="directory-grid">
+      <div class="directory-card skeleton" style="height:96px;"></div>
+      <div class="directory-card skeleton" style="height:96px;"></div>
+      <div class="directory-card skeleton" style="height:96px;"></div>
     </div>
   </section>
 
@@ -99,12 +104,33 @@
       <div class="feature-card">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/><path d="M8 4v5"/></svg>
         <h3>Mini-hosting per domein</h3>
-        <p>Zet <code class="mono">index.html</code>, <code class="mono">style.css</code> en <code class="mono">script.js</code> in mappen neer en Browseport rendert je site rechtstreeks — geen losse hostingprovider nodig.</p>
+        <p>Nog geen site? Start met één klik vanuit een kant-en-klaar sjabloon, of zet zelf <code class="mono">index.html</code>, <code class="mono">style.css</code> en <code class="mono">script.js</code> neer.</p>
       </div>
       <div class="feature-card">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
         <h3>Installeerbaar &amp; snel</h3>
         <p>Als PWA werkt Browseport als standalone app én als adresbalk-zoekmachine — het dichtst bij "echt DNS" zonder een browserextensie te hoeven installeren.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="section-title">Veelgestelde vragen</h2>
+    <div class="hop-list">
+      <div class="hop">
+        <div class="hop-index">Q</div>
+        <h3>Kost een domein iets?</h3>
+        <p>Nee. Browseport-domeinen bestaan alleen binnen dit systeem — er is geen registrar, geen jaarlijkse rekening, geen wachttijd.</p>
+      </div>
+      <div class="hop">
+        <div class="hop-index">Q</div>
+        <h3>Wie beheert het systeem?</h3>
+        <p>Twee beheerders houden toezicht op alle domeinen en kunnen, indien nodig, ingrijpen bij misbruik. Zij zijn te herkennen aan het ADMIN-label.</p>
+      </div>
+      <div class="hop">
+        <div class="hop-index">Q</div>
+        <h3>Werkt dit ook zonder installatie?</h3>
+        <p>Ja — de website zelf werkt overal. Het adresbalk-zoeken (typ <code class="mono">browseport</code> + domein) werkt pas na één bezoek aan deze site over HTTPS.</p>
       </div>
     </div>
   </section>
@@ -119,62 +145,119 @@
 </footer>
 
 <script type="module">
-  import { renderTopbarAuth, wireInstallButtons, registerServiceWorker, normalizeDomain } from './app.js';
+  import {
+    renderTopbarAuth, wireInstallButtons, registerServiceWorker, normalizeDomain,
+    fetchPublicDomains, fetchDomainStats,
+  } from './app.js';
 
   renderTopbarAuth();
   wireInstallButtons();
   registerServiceWorker();
 
-  // ---- lookup form ----
-  document.getElementById('lookup-form').addEventListener('submit', (e) => {
-    e.preventDefault();
-    const val = normalizeDomain(document.getElementById('domain-input').value);
-    if (!val) return;
-    window.location.href = `go.html?domain=${encodeURIComponent(val)}`;
-  });
-
-  // ---- signature omnibox typing animation ----
-  const textEl = document.getElementById('omnibox-text');
-  const statusEl = document.getElementById('omnibox-status');
-  const script = 'browseport mattyou.cool';
-  const keywordLen = 'browseport'.length;
-
-  function renderTyped(n) {
-    const shown = script.slice(0, n);
-    if (n <= keywordLen) {
-      textEl.innerHTML = `<span class="keyword">${shown}</span>`;
-    } else {
-      textEl.innerHTML = `<span class="keyword">${script.slice(0, keywordLen)}</span>${shown.slice(keywordLen)}`;
-    }
+  function escapeHtml(str) {
+    const d = document.createElement('div');
+    d.textContent = str ?? '';
+    return d.innerHTML;
   }
 
-  async function playOmniboxLoop() {
-    while (true) {
-      statusEl.textContent = '';
-      for (let i = 0; i <= script.length; i++) {
-        renderTyped(i);
-        await sleep(55);
-      }
-      await sleep(400);
-      statusEl.innerHTML = '<span class="spinner" style="width:11px;height:11px;border-width:2px;"></span> resolving domain…';
-      await sleep(700);
-      statusEl.innerHTML = '<span class="arrow">→</span> opgelost naar mattyou.cool/index.html';
-      await sleep(1800);
-      for (let i = script.length; i >= 0; i--) {
-        renderTyped(i);
-        await sleep(18);
-      }
-      await sleep(500);
+  // ---- functional omnibox: real input + gray ghost-typing animation ----
+  const ghostEl = document.getElementById('ghost-type');
+  const inputEl = document.getElementById('omnibox-input');
+  const statusEl = document.getElementById('omnibox-status');
+  const formEl = document.getElementById('omnibox-form');
+  const script = 'browseport mattyou.cool';
+  const keywordLen = 'browseport'.length;
+  let ghostRunning = false;
+  let userEngaged = false;
+
+  function renderGhost(n) {
+    const shown = script.slice(0, n);
+    if (n <= keywordLen) {
+      ghostEl.innerHTML = `<span class="ghost-keyword">${shown}</span>`;
+    } else {
+      ghostEl.innerHTML = `<span class="ghost-keyword">${script.slice(0, keywordLen)}</span>${escapeHtml(shown.slice(keywordLen))}`;
     }
   }
   function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
 
-  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    playOmniboxLoop();
-  } else {
-    renderTyped(script.length);
-    statusEl.innerHTML = '<span class="arrow">→</span> opgelost naar mattyou.cool/index.html';
+  async function playGhostLoop() {
+    if (ghostRunning) return;
+    ghostRunning = true;
+    while (!userEngaged) {
+      for (let i = 0; i <= script.length && !userEngaged; i++) { renderGhost(i); await sleep(55); }
+      if (userEngaged) break;
+      await sleep(900);
+      for (let i = script.length; i >= 0 && !userEngaged; i--) { renderGhost(i); await sleep(18); }
+      await sleep(500);
+    }
+    ghostRunning = false;
   }
+
+  function stopGhostForGood() {
+    if (userEngaged) return;
+    userEngaged = true;
+    ghostEl.style.opacity = '0';
+    statusEl.textContent = '';
+  }
+
+  inputEl.addEventListener('focus', stopGhostForGood);
+  inputEl.addEventListener('input', () => {
+    if (inputEl.value) stopGhostForGood();
+  });
+  inputEl.addEventListener('blur', () => {
+    // Als het veld weer helemaal leeg is, mag de ghost-animatie terugkomen.
+    if (!inputEl.value) {
+      userEngaged = false;
+      ghostEl.style.opacity = '1';
+      statusEl.textContent = 'Dit is een echt zoekveld — typ gewoon je domein en druk op enter';
+      playGhostLoop();
+    }
+  });
+
+  formEl.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const val = normalizeDomain(inputEl.value) || 'mattyou.cool';
+    window.location.href = `go.html?domain=${encodeURIComponent(val)}`;
+  });
+
+  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    playGhostLoop();
+  } else {
+    renderGhost(script.length);
+    ghostEl.style.opacity = '0.6';
+  }
+
+  // ---- live stats ----
+  fetchDomainStats().then(({ total, hosted }) => {
+    document.getElementById('stat-total').textContent = total;
+    document.getElementById('stat-total').classList.remove('skeleton');
+    document.getElementById('stat-hosted').textContent = hosted;
+    document.getElementById('stat-hosted').classList.remove('skeleton');
+  }).catch(() => {
+    document.getElementById('stat-total').textContent = '—';
+    document.getElementById('stat-hosted').textContent = '—';
+  });
+
+  // ---- public directory ----
+  fetchPublicDomains(6).then(({ domains, error }) => {
+    const grid = document.getElementById('directory-grid');
+    if (error) { grid.innerHTML = `<div class="empty-state">Kon domeinen niet laden.</div>`; return; }
+    if (!domains.length) {
+      grid.innerHTML = `<div class="empty-state">Nog geen domeinen geregistreerd — wees de eerste via het dashboard.</div>`;
+      return;
+    }
+    grid.innerHTML = domains.map((d) => `
+      <a class="directory-card" href="go.html?domain=${encodeURIComponent(d.domain_name)}">
+        <div class="directory-card-top">
+          <span class="mono directory-name">${escapeHtml(d.domain_name)}</span>
+          ${d.is_hosted ? '<span class="pill pill-green">gehost</span>' : '<span class="pill pill-ink">doorverwijzing</span>'}
+        </div>
+        <p>${d.description ? escapeHtml(d.description) : 'Geen omschrijving opgegeven.'}</p>
+      </a>
+    `).join('');
+  }).catch(() => {
+    document.getElementById('directory-grid').innerHTML = `<div class="empty-state">Kon domeinen niet laden.</div>`;
+  });
 </script>
 
 </body>
