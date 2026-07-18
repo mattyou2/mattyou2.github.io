@@ -3,9 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<!-- Legt het basispad vast, zodat alle relatieve links altijd naar
-     /browser/... wijzen — ook zonder slash op het eind van de URL. -->
-<base href="https://mattyou2.github.io/browser/">
 <title>Dashboard — Browseport</title>
 <meta name="theme-color" content="#101828">
 <link rel="manifest" href="manifest.json">
@@ -60,6 +57,7 @@
           <input type="password" id="login-password" required autocomplete="current-password">
         </div>
         <button class="btn btn-primary" type="submit" style="width:100%;" id="login-submit">Inloggen</button>
+        <p class="lookup-hint" style="text-align:center;"><a href="#" id="forgot-password-link">Wachtwoord vergeten?</a></p>
       </form>
 
       <form id="register-form" hidden>
@@ -84,7 +82,11 @@
         <h1>Dashboard</h1>
         <div class="who-line" id="who-line">&nbsp;</div>
       </div>
-      <div style="display:flex; align-items:center; gap:10px;">
+      <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+        <label class="admin-toggle" id="admin-preview-toggle" hidden>
+          <span>Adminweergave</span>
+          <button type="button" class="switch on" id="admin-preview-switch" aria-label="Adminweergave aan/uit"></button>
+        </label>
         <div class="view-toggle" id="view-toggle" hidden>
           <button data-view="mine" class="active">Mijn domeinen</button>
           <button data-view="all">Alle domeinen</button>
@@ -114,6 +116,12 @@
           <div class="form-row" id="new-domain-url-row">
             <label class="field-label" for="new-domain-url">Bestemmings-URL</label>
             <input type="url" id="new-domain-url" placeholder="https://voorbeeld.com/mijn-pagina">
+          </div>
+          <div class="form-row" id="new-domain-template-row">
+            <label style="display:flex; align-items:center; gap:8px; font-size:13.5px; color:var(--ink-soft); cursor:pointer;">
+              <input type="checkbox" id="new-domain-template" checked style="width:auto;">
+              Begin met een kant-en-klaar sjabloon (index.html, style.css, script.js) — nog geen eigen site nodig
+            </label>
           </div>
           <div class="form-row">
             <label class="field-label" for="new-domain-desc">Omschrijving (optioneel)</label>
@@ -200,9 +208,10 @@
 
 <script type="module">
   import {
-    supabase, getSession, isAdmin, signIn, signUp, signOut,
+    supabase, getSession, isAdmin, effectiveIsAdmin, isAdminPreviewDisabled, setAdminPreviewDisabled,
+    signIn, signUp, signOut, resetPassword,
     renderTopbarAuth, toast, isValidDomain, normalizeDomain, guessMimeType,
-    registerServiceWorker,
+    registerServiceWorker, starterTemplateFiles,
   } from './app.js';
 
   registerServiceWorker();
@@ -247,21 +256,48 @@
     app.style.display = 'none';
   }
 
+  let realIsAdmin = false;
+
   async function enterApp(session) {
     currentUser = session.user;
-    currentIsAdmin = await isAdmin();
+    realIsAdmin = await isAdmin();
+    currentIsAdmin = await effectiveIsAdmin(); // wat de UI daadwerkelijk toont
     authGate.style.display = 'none';
     app.style.display = 'block';
     renderTopbarAuth();
 
-    document.getElementById('who-line').innerHTML =
-      `Ingelogd als <span class="mono">${escapeHtml(currentUser.email)}</span>` +
-      (currentIsAdmin ? ' <span class="badge-admin" style="margin-left:6px;">ADMIN</span>' : '');
+    refreshWhoLine();
+
+    const toggleWrap = document.getElementById('admin-preview-toggle');
+    toggleWrap.hidden = !realIsAdmin;
+    const sw = document.getElementById('admin-preview-switch');
+    sw.classList.toggle('on', currentIsAdmin);
 
     document.getElementById('view-toggle').hidden = !currentIsAdmin;
+    if (!currentIsAdmin) viewMode = 'mine';
 
     await loadDomains();
   }
+
+  function refreshWhoLine() {
+    document.getElementById('who-line').innerHTML =
+      `Ingelogd als <span class="mono">${escapeHtml(currentUser.email)}</span>` +
+      (currentIsAdmin ? ' <span class="badge-admin" style="margin-left:6px;">ADMIN</span>' : '') +
+      (realIsAdmin && !currentIsAdmin ? ' <span class="pill pill-ink" style="margin-left:6px;">weergave: normale gebruiker</span>' : '');
+  }
+
+  document.getElementById('admin-preview-switch').addEventListener('click', async () => {
+    const nowOn = !document.getElementById('admin-preview-switch').classList.contains('on');
+    setAdminPreviewDisabled(!nowOn);
+    currentIsAdmin = await effectiveIsAdmin();
+    document.getElementById('admin-preview-switch').classList.toggle('on', currentIsAdmin);
+    document.getElementById('view-toggle').hidden = !currentIsAdmin;
+    if (!currentIsAdmin) { viewMode = 'mine'; document.getElementById('domain-list-title').textContent = 'Mijn domeinen'; }
+    refreshWhoLine();
+    renderTopbarAuth();
+    await loadDomains();
+    toast(currentIsAdmin ? 'Adminweergave weer aan ✓' : 'Je ziet het dashboard nu als een normale gebruiker', 'success');
+  });
 
   function escapeHtml(str) {
     const d = document.createElement('div');
@@ -306,10 +342,21 @@
     await signOut();
   });
 
+  document.getElementById('forgot-password-link').addEventListener('click', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('login-email').value.trim() || prompt('Voor welk e-mailadres wil je je wachtwoord resetten?');
+    if (!email) return;
+    const { error } = await resetPassword(email);
+    if (error) { toast(error.message, 'error'); return; }
+    toast(`Reset-link verstuurd naar ${email} (check je mail) ✓`, 'success');
+  });
+
   // ---------------- domain: add ----------------
   const modeSelect = document.getElementById('new-domain-mode');
   function syncUrlRowVisibility() {
-    document.getElementById('new-domain-url-row').style.display = modeSelect.value === 'hosted' ? 'none' : 'block';
+    const hosted = modeSelect.value === 'hosted';
+    document.getElementById('new-domain-url-row').style.display = hosted ? 'none' : 'block';
+    document.getElementById('new-domain-template-row').style.display = hosted ? 'block' : 'none';
   }
   modeSelect.addEventListener('change', syncUrlRowVisibility);
   syncUrlRowVisibility();
@@ -334,7 +381,9 @@
       target_url: mode === 'hosted' ? (url || null) : url,
       description: desc || null,
     };
-    const { error } = await supabase.from('domains').insert(payload);
+    const wantsTemplate = mode === 'hosted' && document.getElementById('new-domain-template').checked;
+
+    const { data: inserted, error } = await supabase.from('domains').insert(payload).select().single();
 
     btn.disabled = false; btn.textContent = 'Domein toevoegen →';
 
@@ -342,11 +391,29 @@
       toast(error.code === '23505' ? 'Dat domein bestaat al.' : error.message, 'error');
       return;
     }
-    toast(`${name} geregistreerd ✓`, 'success');
+
+    if (wantsTemplate && inserted) {
+      const files = starterTemplateFiles(name).map((f) => ({ ...f, domain_id: inserted.id }));
+      await supabase.from('site_files').upsert(files, { onConflict: 'domain_id,file_path' });
+      toast(`${name} geregistreerd met startsjabloon ✓`, 'success');
+    } else {
+      toast(`${name} geregistreerd ✓`, 'success');
+    }
+
     document.getElementById('add-domain-form').reset();
     syncUrlRowVisibility();
     await loadDomains();
   });
+
+  // ---------------- starter template: fill an existing empty hosted domain ----------------
+  async function insertStarterTemplate(domainRow) {
+    if (!domainRow) return;
+    const files = starterTemplateFiles(domainRow.domain_name).map((f) => ({ ...f, domain_id: domainRow.id }));
+    const { error } = await supabase.from('site_files').upsert(files, { onConflict: 'domain_id,file_path' });
+    if (error) { toast(error.message, 'error'); return; }
+    toast('Sjabloon-site geplaatst ✓', 'success');
+    await loadFiles();
+  }
 
   // ---------------- domain: list ----------------
   document.querySelectorAll('#view-toggle button').forEach((b) => {
@@ -504,7 +571,13 @@
   function renderFileTree() {
     const tree = document.getElementById('file-tree');
     if (!activeFiles.length) {
-      tree.innerHTML = `<div class="empty-state">Nog geen bestanden. Voeg hieronder "index.html" toe om te beginnen.</div>`;
+      tree.innerHTML = `
+        <div class="empty-state">
+          Nog geen bestanden.<br>
+          <button class="btn btn-accent btn-sm" id="fill-template-btn" style="margin-top:12px;">Vul met sjabloon-site →</button>
+          <div style="margin-top:8px;">of voeg hieronder handmatig "index.html" toe.</div>
+        </div>`;
+      document.getElementById('fill-template-btn').addEventListener('click', () => insertStarterTemplate(activeFilesDomain));
       return;
     }
     tree.innerHTML = activeFiles.map((f) => {
