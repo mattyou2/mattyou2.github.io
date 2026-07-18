@@ -6,6 +6,35 @@ een URL óf hosten er zelf bestanden op, en navigeren ernaartoe via de
 website zelf, of — na installatie als PWA — direct vanuit de browser-
 adresbalk met het keyword `browseport`.
 
+## Belangrijk: als de site er "kapot" uitziet na een update
+
+Dit was de daadwerkelijke oorzaak toen knoppen leken te verdwijnen en
+styling kapot leek na de vorige update: de **service worker** (`sw.js`)
+cachete de app-shell (`index.html`, `app.js`, `style.css`, …)
+cache-eerst. Zodra die bestanden op de server veranderden, bleef je
+browser toch de oude, gecachete versie tonen — nieuwe HTML gecombineerd
+met oude CSS ziet er inderdaad kapot uit (ongestylede tekst die woord
+voor woord onder elkaar valt, verdwenen knoppen, een "kapotte"
+installeerknop). Dat is nu opgelost:
+
+1. `sw.js` gebruikt nu **netwerk-eerst** in plaats van cache-eerst voor
+   de app-shell — je krijgt altijd de nieuwste versie zolang je online
+   bent, en pas offline valt hij terug op de laatste gecachete kopie.
+2. De cache-naam is gebumpt (`browseport-shell-v2`) zodat de oude cache
+   sowieso wordt opgeruimd.
+3. `style.css` en `app.js` worden nu aangeroepen met `?v=2`, wat de
+   service worker sowieso negeert (query-string-requests worden altijd
+   direct van het netwerk gehaald) — een extra garantie tegen dit type
+   bug.
+4. De topbar heeft nu **altijd** een statische Inloggen/Account
+   maken-fallback in de kale HTML staan (niet alleen via JavaScript),
+   zodat de knoppen nooit meer kunnen "verdwijnen" door een trage of
+   mislukte scriptload.
+
+**Tip voor jezelf tijdens testen:** als je ooit weer rare, oude content
+ziet na een update, open DevTools → Application → Service Workers →
+"Unregister", of hard-refresh met Ctrl/Cmd+Shift+R.
+
 ## Wat er al staat (Supabase-project "Domainport")
 
 Project-ref: `puljajfgjyzipgdrvioy` · regio eu-west-1
@@ -127,17 +156,19 @@ niet — daar is de geïnstalleerde PWA het alternatief.
 
 ## Wat er nieuw is in deze versie
 
-- **Echt werkende zoekbalk op de homepage.** De adresbalk-demo in het
-  midden is nu een écht `<input>`-veld. Zolang je niet typt, speelt er een
+- **De adresbalk-demo bovenaan is nu een écht `<input>`-veld** — precies
+  zoals 'm hoort te zijn. Zolang je 'm niet aanklikt speelt er een
   **grijze** ghost-typing-animatie op de achtergrond (`browseport
-  mattyou.cool`) om te laten zien hoe het werkt — zodra je zelf typt of
-  focust verdwijnt die animatie en zie je gewoon je eigen tekst. Enter of
-  op de groene pijl klikken stuurt je naar `go.html?domain=…`, precies als
-  het losse zoekformulier hieronder deed.
+  mattyou.cool`) die laat zien hoe het werkt. Klik erin of begin te typen
+  en de animatie stopt meteen — je ziet dan gewoon je eigen tekst in de
+  normale (niet-grijze) kleur. Enter of op de groene pijl klikken stuurt
+  je naar `go.html?domain=…`. Het aparte "Domein opzoeken"-zoekformulier
+  daaronder is gewoon blijven staan, zoals in het origineel.
 - **Publieke domein-directory** op de homepage (`#directory`) en een
   live tellertje (aantal geregistreerde / gehoste domeinen), beide direct
   uit de `domains`-tabel — geen extra Supabase-configuratie nodig, de
-  bestaande publieke lees-policy is voldoende.
+  bestaande publieke lees-policy is voldoende. Dit staat er extra bij,
+  niet in plaats van iets.
 - **Startsjabloon voor nieuwe sites.** Bij het registreren van een
   "zelf gehoste" domein staat er een aangevinkt vakje "begin met een
   kant-en-klaar sjabloon" — dat zet meteen een werkend `index.html` +
