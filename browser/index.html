@@ -11,7 +11,7 @@
 <link rel="search" type="application/opensearchdescription+xml" title="Browseport" href="opensearch.xml">
 <link rel="icon" type="image/svg+xml" href="icon.svg">
 <link rel="apple-touch-icon" href="icon.svg">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=2">
 </head>
 <body>
 
@@ -21,7 +21,15 @@
       <svg class="mark" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="#101828"/><path d="M18 40 V24 a6 6 0 0 1 6 -6 h6" stroke="#00C48C" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M46 24 V40 a6 6 0 0 1 -6 6 h-6" stroke="#FF6B35" stroke-width="5" fill="none" stroke-linecap="round"/><circle cx="24" cy="18" r="4.5" fill="#00C48C"/><circle cx="40" cy="46" r="4.5" fill="#FF6B35"/></svg>
       browse<span class="port">port</span>
     </a>
-    <div class="nav-actions" id="topbar-actions"></div>
+    <!-- Statische fallback-knoppen staan hier altijd al in de HTML, dus
+         zelfs als het JS-moduletje traag laadt of even faalt (netwerk-
+         hikje, ad-blocker, verouderde cache) zie je meteen Inloggen /
+         Account maken — renderTopbarAuth() overschrijft dit zodra de
+         sessiestatus bekend is (bijv. met een Dashboard-knop). -->
+    <div class="nav-actions" id="topbar-actions">
+      <a class="btn btn-ghost" href="dashboard.html">Inloggen</a>
+      <a class="btn btn-primary" href="dashboard.html?tab=register">Account maken</a>
+    </div>
   </div>
 </div>
 
@@ -41,18 +49,29 @@
         </div>
         <button class="omnibox-go" type="submit" aria-label="Ga naar domein">→</button>
       </form>
-      <div class="omnibox-status" id="omnibox-status">Dit is een echt zoekveld — typ gewoon je domein en druk op enter</div>
+      <div class="omnibox-status" id="omnibox-status">klik erin en typ je eigen domein, of druk op enter voor het voorbeeld</div>
     </div>
 
     <div class="hero-actions">
       <button class="btn btn-accent" data-install-btn hidden>⤓ Installeer Browseport als app</button>
-      <a class="btn btn-ghost" href="#directory">Bekijk live domeinen</a>
+      <a class="btn btn-ghost" href="#lookup">Zoek een domein op</a>
     </div>
 
     <div class="stats-bar" id="stats-bar">
       <div class="stat"><span class="stat-n skeleton" id="stat-total">&nbsp;</span><span class="stat-l">domeinen geregistreerd</span></div>
       <div class="stat"><span class="stat-n skeleton" id="stat-hosted">&nbsp;</span><span class="stat-l">zelf gehoste sites</span></div>
       <div class="stat"><span class="stat-n">2</span><span class="stat-l">admins bewaken het systeem</span></div>
+    </div>
+  </section>
+
+  <section id="lookup">
+    <div class="lookup-card">
+      <label class="field-label" for="domain-input">Domein opzoeken</label>
+      <form class="lookup-row" id="lookup-form">
+        <input type="text" id="domain-input" class="mono" placeholder="mattyou.cool" autocomplete="off" autocapitalize="off" spellcheck="false" required>
+        <button class="btn btn-primary" type="submit">Ga naar site →</button>
+      </form>
+      <p class="lookup-hint">Sneller: installeer Browseport (knop hierboven) en typ voortaan <code>browseport&nbsp;mattyou.cool</code> direct in je browser-adresbalk.</p>
     </div>
   </section>
 
@@ -63,7 +82,7 @@
       <div class="hop">
         <div class="hop-index"><span class="n">01</span> · adresbalk</div>
         <h3>Jij typt het keyword</h3>
-        <p>Na installatie herkent je browser Browseport als zoekmachine. Typ <code class="mono">browseport</code>, spatie, en het domein — geen tabblad wisselen nodig. Of gebruik het zoekveld hierboven.</p>
+        <p>Na installatie herkent je browser Browseport als zoekmachine. Typ <code class="mono">browseport</code>, spatie, en het domein — geen tabblad wisselen nodig.</p>
       </div>
       <div class="hop">
         <div class="hop-index"><span class="n">02</span> · resolver</div>
@@ -79,12 +98,8 @@
   </section>
 
   <section id="directory">
-    <div style="display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap;">
-      <div>
-        <h2 class="section-title" style="margin-bottom:6px;">Live op Browseport</h2>
-        <p class="section-lede" style="margin-bottom:22px;">Een greep uit de recent geregistreerde domeinen — allemaal doorzoekbaar via het adresveld hierboven.</p>
-      </div>
-    </div>
+    <h2 class="section-title" style="margin-bottom:6px;">Live op Browseport</h2>
+    <p class="section-lede" style="margin-bottom:22px;">Een greep uit de recent geregistreerde domeinen — allemaal doorzoekbaar via het adresveld hierboven.</p>
     <div class="directory-grid" id="directory-grid">
       <div class="directory-card skeleton" style="height:96px;"></div>
       <div class="directory-card skeleton" style="height:96px;"></div>
@@ -148,7 +163,7 @@
   import {
     renderTopbarAuth, wireInstallButtons, registerServiceWorker, normalizeDomain,
     fetchPublicDomains, fetchDomainStats,
-  } from './app.js';
+  } from './app.js?v=2';
 
   renderTopbarAuth();
   wireInstallButtons();
@@ -160,29 +175,35 @@
     return d.innerHTML;
   }
 
+  // ---- lookup form (real search box) ----
+  document.getElementById('lookup-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const val = normalizeDomain(document.getElementById('domain-input').value);
+    if (!val) return;
+    window.location.href = `go.html?domain=${encodeURIComponent(val)}`;
+  });
+
   // ---- functional omnibox: real input + gray ghost-typing animation ----
   const ghostEl = document.getElementById('ghost-type');
   const inputEl = document.getElementById('omnibox-input');
   const statusEl = document.getElementById('omnibox-status');
   const formEl = document.getElementById('omnibox-form');
+  const defaultStatus = statusEl.textContent;
   const script = 'browseport mattyou.cool';
   const keywordLen = 'browseport'.length;
-  let ghostRunning = false;
   let userEngaged = false;
 
   function renderGhost(n) {
     const shown = script.slice(0, n);
     if (n <= keywordLen) {
-      ghostEl.innerHTML = `<span class="ghost-keyword">${shown}</span>`;
+      ghostEl.innerHTML = `<span class="ghost-keyword">${escapeHtml(shown)}</span>`;
     } else {
-      ghostEl.innerHTML = `<span class="ghost-keyword">${script.slice(0, keywordLen)}</span>${escapeHtml(shown.slice(keywordLen))}`;
+      ghostEl.innerHTML = `<span class="ghost-keyword">${escapeHtml(script.slice(0, keywordLen))}</span>${escapeHtml(shown.slice(keywordLen))}`;
     }
   }
   function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
 
   async function playGhostLoop() {
-    if (ghostRunning) return;
-    ghostRunning = true;
     while (!userEngaged) {
       for (let i = 0; i <= script.length && !userEngaged; i++) { renderGhost(i); await sleep(55); }
       if (userEngaged) break;
@@ -190,7 +211,6 @@
       for (let i = script.length; i >= 0 && !userEngaged; i--) { renderGhost(i); await sleep(18); }
       await sleep(500);
     }
-    ghostRunning = false;
   }
 
   function stopGhostForGood() {
@@ -201,15 +221,13 @@
   }
 
   inputEl.addEventListener('focus', stopGhostForGood);
-  inputEl.addEventListener('input', () => {
-    if (inputEl.value) stopGhostForGood();
-  });
+  inputEl.addEventListener('input', () => { if (inputEl.value) stopGhostForGood(); });
   inputEl.addEventListener('blur', () => {
-    // Als het veld weer helemaal leeg is, mag de ghost-animatie terugkomen.
+    // Veld weer leeg? Dan mag de demo-animatie terugkomen.
     if (!inputEl.value) {
       userEngaged = false;
       ghostEl.style.opacity = '1';
-      statusEl.textContent = 'Dit is een echt zoekveld — typ gewoon je domein en druk op enter';
+      statusEl.textContent = defaultStatus;
       playGhostLoop();
     }
   });
