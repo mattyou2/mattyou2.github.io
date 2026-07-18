@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  BROWSEPORT: OpenSearch description.
+  Vaste, live URLs voor mattyou2.github.io/browser/.
+  Dankzij de link rel="search" tag in index.html herkennen
+  Chrome, Edge en Firefox de site automatisch, en kunnen
+  gebruikers in de adresbalk typen:
+  browseport [spatie] mattyou.cool
+-->
+<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/">
+  <ShortName>Browseport</ShortName>
+  <Description>Zoek en navigeer direct naar custom domeinen via Browseport</Description>
+  <InputEncoding>UTF-8</InputEncoding>
+  <Image height="64" width="64" type="image/svg+xml">https://mattyou2.github.io/browser/icon.svg</Image>
+  <Url type="text/html" method="get" template="https://mattyou2.github.io/browser/go.html?domain={searchTerms}"/>
+  <moz:SearchForm xmlns:moz="http://www.mozilla.org/2006/browser/search/">https://mattyou2.github.io/browser/index.html</moz:SearchForm>
+</OpenSearchDescription>
