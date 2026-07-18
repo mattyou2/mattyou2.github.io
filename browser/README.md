@@ -201,6 +201,48 @@ vereist (Authentication → Providers → Email in het dashboard) — de
 bevestigingslink in hun mail aanklikt, heeft die sessie automatisch
 adminrechten zodra ze inloggen. Geen aparte "maak mij admin"-stap nodig.
 
+## Nieuw: domeinnaam-blocklist + API-tokens per domein
+
+Beide zijn al live toegepast op het Supabase-project "Domainport" (migratie
+`domain_blocklist_and_api_tokens` + edge function `site-api`) — je hoeft
+hier zelf niets meer voor te installeren, alleen deze aangepaste
+`app.js`/`dashboard.html` te (her)plaatsen.
+
+**Blocklist.** Nieuwe tabel `domain_blocklist` met een kleine startlijst
+van scheldwoorden/verboden termen. Een database-trigger op `domains`
+weigert elke insert/update waarvan de domeinnaam (genormaliseerd —
+lowercase, simpele leetspeak zoals "0"→"o", streepjes/cijfers eruit) zo'n
+woord bevat — dit geldt altijd, ook los van het dashboard. Het dashboard
+laat daarnaast live een waarschuwing zien terwijl je typt. Extra woorden
+toevoegen kan met:
+
+```sql
+insert into public.domain_blocklist (word) values ('extra-woord');
+```
+
+**API-tokens.** Nieuwe tabel `api_tokens` + edge function `site-api`
+(`https://puljajfgjyzipgdrvioy.supabase.co/functions/v1/site-api`).
+In het dashboard, bij "Bestanden beheren" per domein, staat nu een sectie
+"API-toegang": maak daar een token aan (wordt maar één keer getoond — er
+staat alleen een SHA-256 hash van in de database) en gebruik 'm vanuit
+elke andere tool om bestanden van dat ene domein te listen/lezen/
+schrijven/verwijderen, zonder in te loggen:
+
+```bash
+curl -X POST "https://puljajfgjyzipgdrvioy.supabase.co/functions/v1/site-api" \
+  -H "Authorization: Bearer <token>" -H "Content-Type: application/json" \
+  -d '{"file_path":"index.html","content":"<h1>Hoi</h1>"}'
+```
+
+Een token geeft alléén toegang tot `site_files` van het domein waarvoor
+het is aangemaakt — nooit tot andere domeinen, domeinregistratie, of
+accountgegevens. Intrekken kan met één klik in het dashboard.
+
+**Mappen.** Er is geen aparte "map aanmaken"-actie nodig: een map is
+gewoon een gedeeld pad-voorvoegsel (zoals `assets/img/logo.svg`). Het
+dashboard toont dat nu als een echte, inklapbare mappenboom in plaats van
+een platte lijst.
+
 ## Snel testen
 
 Open `dashboard.html`, maak een account aan met een van de twee
