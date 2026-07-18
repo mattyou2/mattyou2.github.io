@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Browse — Resource Pack Creator</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+</head>
+<body>
+<div class="app" id="app"></div>
+
+<script src="app.js"></script>
+<script>
+window.IS_DATAPACK_PAGE=false;
+let browseCategory='All Textures', browseSearch='', browseEditingEntry=null;
+
+function render(){
+  const app=document.getElementById('app');
+  app.innerHTML='';
+  app.appendChild(renderHeader('browse'));
+  const main=document.createElement('main');
+  main.appendChild(renderBrowsePage());
+  app.appendChild(main);
+  app.appendChild(renderFooter());
+  if(state.authModal) app.appendChild(renderAuthModal());
+  if(state.myPacksModal) app.appendChild(renderMyPacksModal());
+}
+
+function catalogCounts(){
+  const counts={};
+  Object.keys(TEXTURE_CATALOG).forEach(cat=>{ counts[cat]=TEXTURE_CATALOG[cat].length; });
+  counts['All Textures']=ALL_CATALOG_ENTRIES.length;
+  return counts;
+}
+
+function renderBrowsePage(){
+  const wrap=document.createElement('div');
+  wrap.innerHTML=`
+    <h1 style="font-size:24px;margin:0 0 6px;">Browse Minecraft Textures — Blocks, Items, Armor &amp; meer</h1>
+    <p style="color:var(--text-dim);font-size:13px;max-width:820px;line-height:1.7;margin:0 0 20px;">
+      Dit is een naam-catalogus van vanilla Minecraft blocks/items — <b>geen</b> originele Mojang-pixelart.
+      We nemen bewust geen echte Minecraft-textures over, ook niet vanaf externe sites die ze hosten: dat blijft
+      auteursrechtelijk beschermd werk van Mojang, ongeacht de bron. Klik op een naam om 'm zelf te tekenen, of
+      upload je eigen (legaal verkregen) afbeelding als basis.
+    </p>
+  `;
+  const layout=document.createElement('div');
+  layout.className='browse-layout';
+
+  const sidebar=document.createElement('div');
+  sidebar.className='panel cat-sidebar';
+  const counts=catalogCounts();
+  const cats=['All Textures',...Object.keys(TEXTURE_CATALOG)];
+  sidebar.innerHTML=`
+    <div style="padding:8px 10px;">
+      <input type="text" id="browseSearchInput" placeholder="Zoek textures…" value="${escapeHtml(browseSearch)}">
+    </div>
+    ${cats.map(c=>`<div class="cat-row ${browseCategory===c?'active':''}" data-cat="${escapeHtml(c)}"><span>${escapeHtml(c)}</span><span class="cnt">${counts[c]||0}</span></div>`).join('')}
+  `;
+  layout.appendChild(sidebar);
+
+  const right=document.createElement('div');
+  const q=browseSearch.trim().toLowerCase();
+  let entries = browseCategory==='All Textures' ? ALL_CATALOG_ENTRIES : ALL_CATALOG_ENTRIES.filter(e=>e.group===browseCategory);
+  if(q) entries = entries.filter(e=>e.name.toLowerCase().includes(q));
+
+  const gridWrap=document.createElement('div');
+  gridWrap.className='catalog-grid';
+  if(!entries.length){
+    gridWrap.innerHTML='<div class="empty-hint">Niks gevonden voor die zoekterm.</div>';
+  } else {
+    entries.forEach(ce=>{
+      const existing=state.textureLibrary.find(t=>t.name===ce.name && t.category===ce.category && (t.ns||'minecraft')==='minecraft');
+      const tile=document.createElement('div');
+      tile.className='catalog-tile'+(existing&&existing.dataUrl?' has-art':'');
+      tile.innerHTML=`
+        <div class="ct-thumb">${existing&&existing.dataUrl?`<img src="${existing.dataUrl}">`:`<span class="placeholder-icon">${ce.category==='block'?'🧱':(ce.category==='gui'?'🖤':'⛏️')}</span>`}</div>
+        <div class="ct-name">${prettyName(ce.name)}</div>
+        <div class="ct-cat">${ce.category}/${escapeHtml(ce.name)}.png</div>
+      `;
+      tile.onclick=()=>{ location.href='editor.html#'+encodeURIComponent(ce.name); };
+      gridWrap.appendChild(tile);
+    });
+  }
+  right.appendChild(gridWrap);
+
+  layout.appendChild(right);
+  wrap.appendChild(layout);
+
+  setTimeout(()=>{
+    wrap.querySelector('#browseSearchInput').addEventListener('input',e=>{ browseSearch=e.target.value; render(); });
+    wrap.querySelectorAll('.cat-row').forEach(r=>{ r.onclick=()=>{ browseCategory=r.dataset.cat; render(); }; });
+  },0);
+  return wrap;
+}
+
+render();
+</script>
+</body>
+</html>

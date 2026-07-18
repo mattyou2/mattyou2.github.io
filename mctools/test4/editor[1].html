@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Editor — Resource Pack Creator</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+</head>
+<body>
+<div class="app" id="app"></div>
+
+<script src="app.js"></script>
+<script>
+window.IS_DATAPACK_PAGE=false;
+
+const WOOD_TYPES=['oak','spruce','birch','jungle','acacia','dark_oak','mangrove','cherry','pale_oak','crimson','warped','bamboo'];
+const COLOR_TYPES=['white','orange','magenta','light_blue','yellow','lime','pink','gray','light_gray','cyan','purple','blue','brown','green','red','black'];
+
+function currentName(){ return decodeURIComponent((location.hash||'').slice(1)); }
+
+function findFamily(name){
+  for(const w of WOOD_TYPES){ if(name.startsWith(w+'_')) return {list:WOOD_TYPES, prefix:w, suffix:name.slice(w.length+1), label:'Houtsoort'}; }
+  for(const c of COLOR_TYPES){ if(name.startsWith(c+'_')) return {list:COLOR_TYPES, prefix:c, suffix:name.slice(c.length+1), label:'Kleur'}; }
+  return null;
+}
+function familySiblings(name){
+  const fam=findFamily(name);
+  if(!fam) return null;
+  const siblings=fam.list.map(p=>`${p}_${fam.suffix}`).filter(n=>ALL_CATALOG_ENTRIES.some(e=>e.name===n));
+  return siblings.length>1 ? {...fam, siblings} : null;
+}
+
+/* ---- page state ---- */
+let ed = { tool:'pencil', size:1, zoom:1600, showGrid:true, color:'#ff5555', alpha:255,
+  recent:[], history:[], historyIndex:-1, activeVariant:-1 /* -1 = hoofdtexture */ };
+
+function render(){
+  const app=document.getElementById('app');
+  app.innerHTML='';
+  app.appendChild(renderHeader(null));
+  const main=document.createElement('main');
+  main.style.padding='0';
+  main.style.maxWidth='none';
+  main.appendChild(renderEditorPage());
+  app.appendChild(main);
+  app.appendChild(renderFooter());
+  if(state.authModal) app.appendChild(renderAuthModal());
+  if(state.myPacksModal) app.appendChild(renderMyPacksModal());
+}
+
+function renderEditorPage(){
+  const wrap=document.createElement('div');
+  const name=currentName();
+  if(!name){ wrap.innerHTML='<div style="padding:40px;" class="empty-hint">Geen texture geselecteerd. <a href="browse.html">← Terug naar Browse</a></div>'; return wrap; }
+  const catalogEntry=ALL_CATALOG_ENTRIES.find(e=>e.name===name);
+  if(!catalogEntry){ wrap.innerHTML=`<div style="padding:40px;" class="empty-hint">"${escapeHtml(name)}" staat niet in de catalogus. <a href="browse.html">← Terug naar Browse</a></div>`; return wrap; }
+
+  const entry=findOrCreateLibraryEntry(catalogEntry);
+  if(!entry.variants) entry.variants=[];
+  const isBlock = catalogEntry.category==='block';
+  const isItem = catalogEntry.category==='item';
+  const fam = isBlock ? familySiblings(name) : null;
+
+  // reset transient edit state when navigating to a new texture
+  if(ed._loadedFor !== name){
+    ed.history=[]; ed.historyIndex=-1; ed.activeVariant=-1; ed._loadedFor=name;
+  }
+
+  /* ---- top bar ---- */
+  const top=document.createElement('div');
+  top.className='editor-topbar';
+  top.innerHTML=`
+    <span class="back-link" id="edBack">← Back</span>
+    <span class="et-name">${prettyName(name)}</span>
+    <span class="et-file">${name}.png</span>
+    ${fam?`<div class="field" style="max-width:190px;margin-left:8px;">
+      <select id="famSelect">${fam.siblings.map(s=>`<option value="${s}" ${s===name?'selected':''}>${prettyName(s.slice(fam.prefix.length+1))} — ${prettyName(s)}</option>`).join('')}</select>
+    </div>`:''}
+    <div class="spacer"></div>
+    <span style="font-size:11.5px;color:var(--text-faint);">16×16 · ${catalogEntry.category}/${name}.png</span>
+  `;
+  wrap.appendChild(top);
+
+  /* ---- toolbar row ---- */
+  const toolbar=document.createElement('div');
+  toolbar.className='editor-toolbar-row';
+  const tools=[['pencil','✏️','Potlood'],['eraser','🧽','Gum'],['bucket','🪣','Emmer (fill)'],
+    ['eyedrop','💧','Kleurenkiezer'],['rect','▭','Rechthoek (ingedrukt slepen)']];
+  toolbar.innerHTML=`
+    ${tools.map(([id,icon,title])=>`<div class="tool-btn ${ed.tool===id?'active':''}" data-tool="${id}" title="${title}">${icon}</div>`).join('')}
+    <div style="width:1px;height:22px;background:var(--border-soft);margin:0 6px;"></div>
+    <span style="font-size:11.5px;color:var(--text-dim);">Grootte</span>
+    <input type="range" id="sizeSlider" min="1" max="4" value="${ed.size}" style="width:80px;">
+    <span style="width:1px;height:22px;background:var(--border-soft);margin:0 6px;"></span>
+    <div class="tool-btn ${ed.showGrid?'active':''}" id="gridToggle" title="Pixelraster aan/uit">▦</div>
+    <span style="font-size:11.5px;color:var(--text-dim);">Zoom</span>
+    <input type="range" id="zoomSlider" min="400" max="3200" step="100" value="${ed.zoom}" style="width:100px;">
+    <span class="zoom-label">${ed.zoom}%</span>
+    <span style="width:1px;height:22px;background:var(--border-soft);margin:0 6px;"></span>
+    <div class="tool-btn" id="undoBtn" title="Ongedaan maken">↶</div>
+    <div class="tool-btn" id="redoBtn" title="Opnieuw">↷</div>
+    <div class="tool-btn" id="resetBtn" title="Wis alles (transparant)">🗑️</div>
+    <label class="tool-btn" title="Afbeelding uploaden" style="cursor:pointer;">⬆<input type="file" id="uploadInput" accept="image/*" style="display:none;"></label>
+  `;
+  wrap.appendChild(toolbar);
+
+  /* ---- body: preview(s) + canvas + sidebar ---- */
+  const body=document.createElement('div');
+  body.className='editor-body';
+
+  const leftPane=document.createElement('div');
+  leftPane.className = isBlock ? 'preview-pane-3d' : 'preview-pane-flat';
+  if(isBlock){
+    leftPane.innerHTML=`
+      <div class="cube-stage"><div class="cube" id="previewCube">
+        <div class="cube-face cube-top"><img id="faceTop"></div>
+        <div class="cube-face cube-bottom"><img id="faceBottom"></div>
+        <div class="cube-face cube-front"><img id="faceFront"></div>
+        <div class="cube-face cube-back"><img id="faceBack"></div>
+        <div class="cube-face cube-right"><img id="faceRight"></div>
+        <div class="cube-face cube-left"><img id="faceLeft"></div>
+      </div></div>
+    `;
+  } else {
+    leftPane.innerHTML=`<div class="flat-preview-box"><img id="flatPreviewImg"></div>`;
+  }
+
+  const canvasHost=document.createElement('div');
+  canvasHost.style.cssText='display:flex;align-items:center;justify-content:center;background:#0e0e0f;position:relative;overflow:auto;';
+  const canvas=document.createElement('canvas');
+  canvas.id='pixelCanvas';
+  canvasHost.appendChild(canvas);
+
+  body.appendChild(leftPane);
+  body.appendChild(canvasHost);
+  wrap.appendChild(body);
+
+  /* ---- right sidebar: color picker + variants (items) + actions ---- */
+  const sidebar=document.createElement('div');
+  sidebar.className='panel side-panel-editor';
+  sidebar.style.cssText='margin:16px 20px;';
+  sidebar.innerHTML=`
+    <div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:14px;">
+      <canvas id="hueRing" width="120" height="120" style="border-radius:50%;cursor:crosshair;"></canvas>
+      <canvas id="svSquare" width="90" height="90" style="border-radius:6px;cursor:crosshair;margin-top:15px;"></canvas>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">
+      <div id="curColorBox" style="width:28px;height:28px;border-radius:6px;border:2px solid var(--border-soft);background:${ed.color};flex-shrink:0;"></div>
+      <input type="text" id="hexInput" value="${ed.color}" maxlength="7" style="flex:1;">
+    </div>
+    <label style="display:block;font-size:11px;color:var(--text-dim);margin-bottom:4px;">Alpha</label>
+    <input type="range" id="alphaSlider" min="0" max="255" value="${ed.alpha}" style="width:100%;margin-bottom:12px;">
+    <div id="recentSwatches" style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:16px;"></div>
+    ${isItem?`
+      <h4 style="font-size:11px;color:var(--gold);text-transform:uppercase;letter-spacing:.5px;margin:0 0 4px;">Item variants</h4>
+      <p style="font-size:11px;color:var(--text-dim);margin:0 0 10px;line-height:1.6;">Geef één item meerdere looks. Elke variant is een eigen tekening — handig voor bijv. gekleurde versies.</p>
+      <div id="variantList"></div>
+      <button class="btn small ghost" id="addVariantBtn" style="width:100%;margin-top:6px;">+ Variant toevoegen</button>
+      <div style="height:1px;background:var(--border-soft);margin:16px 0;"></div>
+    `:''}
+    <button class="btn primary" id="pngDownloadBtn" style="width:100%;margin-bottom:8px;">↓ Download PNG</button>
+    <a href="texture-pack-maker.html" class="btn ghost" style="width:100%;display:block;text-align:center;box-sizing:border-box;">Openen in Texture Pack Maker</a>
+  `;
+  wrap.appendChild(sidebar);
+
+  /* =====================================================================
+     WIRE UP: canvas engine
+     ===================================================================== */
+  setTimeout(()=>{
+    top.querySelector('#edBack').onclick=()=>{ location.href='browse.html'; };
+    const famSelect=top.querySelector('#famSelect');
+    if(famSelect) famSelect.onchange=(e)=>{ location.hash=e.target.value; };
+
+    const N=16;
+    const scalePx = Math.round(ed.zoom/100 * 20); // baseline 20px per pixel at 100%... but we store zoom as %, map to px
+    const pxScale = Math.max(6, Math.round(ed.zoom/100)); // simpler: zoom% / 100 gives multiplier, min 6
+    const dispSize = N*pxScale;
+    canvas.width=dispSize; canvas.height=dispSize;
+    canvas.style.imageRendering='pixelated';
+
+    const ctx=canvas.getContext('2d'); ctx.imageSmoothingEnabled=false;
+    let buf=document.createElement('canvas'); buf.width=N; buf.height=N;
+    let bctx=buf.getContext('2d');
+
+    function currentDataUrl(){ return ed.activeVariant===-1 ? entry.dataUrl : (entry.variants[ed.activeVariant]&&entry.variants[ed.activeVariant].dataUrl); }
+    function setCurrentDataUrl(url){
+      if(ed.activeVariant===-1) entry.dataUrl=url; else if(entry.variants[ed.activeVariant]) entry.variants[ed.activeVariant].dataUrl=url;
+      saveTextureLibrary();
+    }
+
+    function loadBufferFrom(url){
+      return new Promise(resolve=>{
+        bctx.clearRect(0,0,N,N);
+        if(!url){ resolve(); return; }
+        const img=new Image();
+        img.onload=()=>{ bctx.drawImage(img,0,0,N,N); resolve(); };
+        img.src=url;
+      });
+    }
+
+    function redraw(){
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      ctx.drawImage(buf,0,0,N,N,0,0,canvas.width,canvas.height);
+      if(ed.showGrid){
+        ctx.strokeStyle='rgba(255,255,255,0.08)';
+        for(let i=0;i<=N;i++){
+          ctx.beginPath();ctx.moveTo(i*pxScale,0);ctx.lineTo(i*pxScale,canvas.height);ctx.stroke();
+          ctx.beginPath();ctx.moveTo(0,i*pxScale);ctx.lineTo(canvas.width,i*pxScale);ctx.stroke();
+        }
+      }
+      updatePreviews();
+    }
+    function updatePreviews(){
+      const url=buf.toDataURL('image/png');
+      if(isBlock){
+        ['faceTop','faceBottom','faceFront','faceBack','faceLeft','faceRight'].forEach(id=>{
+          const im=document.getElementById(id); if(im) im.src=url;
+        });
+      } else {
+        const im=document.getElementById('flatPreviewImg'); if(im) im.src=url;
+      }
+    }
+    function commit(){
+      const url=buf.toDataURL('image/png');
+      setCurrentDataUrl(url);
+      pushHistory();
+      renderVariantList();
+    }
+    function pushHistory(){
+      ed.history=ed.history.slice(0,ed.historyIndex+1);
+      ed.history.push(buf.toDataURL('image/png'));
+      if(ed.history.length>40) ed.history.shift();
+      ed.historyIndex=ed.history.length-1;
+    }
+
+    loadBufferFrom(currentDataUrl()).then(()=>{ redraw(); pushHistory(); });
+
+    /* --- tools --- */
+    toolbar.querySelectorAll('[data-tool]').forEach(b=>{
+      b.onclick=()=>{ ed.tool=b.dataset.tool; toolbar.querySelectorAll('[data-tool]').forEach(x=>x.classList.remove('active')); b.classList.add('active'); };
+    });
+    toolbar.querySelector('#sizeSlider').oninput=(e)=>{ ed.size=+e.target.value; };
+    toolbar.querySelector('#gridToggle').onclick=(e)=>{ ed.showGrid=!ed.showGrid; e.target.classList.toggle('active'); redraw(); };
+    toolbar.querySelector('#zoomSlider').oninput=(e)=>{ ed.zoom=+e.target.value; render(); };
+    toolbar.querySelector('#undoBtn').onclick=()=>{
+      if(ed.historyIndex>0){ ed.historyIndex--; loadBufferFrom(ed.history[ed.historyIndex]).then(()=>{ redraw(); setCurrentDataUrl(ed.history[ed.historyIndex]); }); }
+    };
+    toolbar.querySelector('#redoBtn').onclick=()=>{
+      if(ed.historyIndex<ed.history.length-1){ ed.historyIndex++; loadBufferFrom(ed.history[ed.historyIndex]).then(()=>{ redraw(); setCurrentDataUrl(ed.history[ed.historyIndex]); }); }
+    };
+    toolbar.querySelector('#resetBtn').onclick=()=>{ bctx.clearRect(0,0,N,N); redraw(); commit(); };
+    toolbar.querySelector('#uploadInput').addEventListener('change',e=>{
+      const file=e.target.files[0]; if(!file) return;
+      const reader=new FileReader();
+      reader.onload=ev=>{ const img=new Image(); img.onload=()=>{ bctx.clearRect(0,0,N,N); bctx.drawImage(img,0,0,N,N); redraw(); commit(); }; img.src=ev.target.result; };
+      reader.readAsDataURL(file);
+    });
+
+    /* --- drawing --- */
+    function pxFromEvent(e){
+      const rect=canvas.getBoundingClientRect();
+      const x=Math.floor((e.clientX-rect.left)/(rect.width/N));
+      const y=Math.floor((e.clientY-rect.top)/(rect.height/N));
+      return [Math.max(0,Math.min(N-1,x)),Math.max(0,Math.min(N-1,y))];
+    }
+    function hexToRgba(hex,alpha){ const v=parseInt(hex.slice(1),16); return [(v>>16)&255,(v>>8)&255,v&255,alpha]; }
+    function floodFill(sx,sy,hex,alpha){
+      const data=bctx.getImageData(0,0,N,N); const idx=(x,y)=>(y*N+x)*4;
+      const target=data.data.slice(idx(sx,sy),idx(sx,sy)+4); const fc=hexToRgba(hex,alpha);
+      if(target[0]===fc[0]&&target[1]===fc[1]&&target[2]===fc[2]&&target[3]===fc[3]) return;
+      const stack=[[sx,sy]];
+      while(stack.length){
+        const [x,y]=stack.pop(); if(x<0||x>=N||y<0||y>=N) continue; const i=idx(x,y);
+        if(data.data[i]!==target[0]||data.data[i+1]!==target[1]||data.data[i+2]!==target[2]||data.data[i+3]!==target[3]) continue;
+        data.data[i]=fc[0];data.data[i+1]=fc[1];data.data[i+2]=fc[2];data.data[i+3]=fc[3];
+        stack.push([x+1,y],[x-1,y],[x,y+1],[x,y-1]);
+      }
+      bctx.putImageData(data,0,0);
+    }
+    function paintAt(x,y){
+      const half=Math.floor(ed.size/2);
+      for(let dx=0;dx<ed.size;dx++) for(let dy=0;dy<ed.size;dy++){
+        const px=x-half+dx, py=y-half+dy;
+        if(px<0||px>=N||py<0||py>=N) continue;
+        if(ed.tool==='pencil'){ bctx.clearRect(px,py,1,1); bctx.fillStyle=ed.color; bctx.globalAlpha=ed.alpha/255; bctx.fillRect(px,py,1,1); bctx.globalAlpha=1; }
+        else if(ed.tool==='eraser'){ bctx.clearRect(px,py,1,1); }
+      }
+    }
+    let painting=false, rectStart=null;
+    canvas.addEventListener('mousedown',e=>{
+      const [x,y]=pxFromEvent(e); painting=true;
+      if(ed.tool==='bucket'){ floodFill(x,y,ed.color,ed.alpha); redraw(); commit(); painting=false; }
+      else if(ed.tool==='eyedrop'){
+        const d=bctx.getImageData(x,y,1,1).data;
+        if(d[3]>0){ setColor('#'+[d[0],d[1],d[2]].map(n=>n.toString(16).padStart(2,'0')).join('')); }
+        painting=false;
+      }
+      else if(ed.tool==='rect'){ rectStart=[x,y]; }
+      else { paintAt(x,y); redraw(); }
+    });
+    canvas.addEventListener('mousemove',e=>{
+      if(!painting) return;
+      if(ed.tool==='pencil'||ed.tool==='eraser'){ const [x,y]=pxFromEvent(e); paintAt(x,y); redraw(); }
+    });
+    window.addEventListener('mouseup',e=>{
+      if(!painting) return;
+      if(ed.tool==='rect' && rectStart){
+        const [x2,y2]=pxFromEvent(e);
+        const x0=Math.min(rectStart[0],x2), x1=Math.max(rectStart[0],x2);
+        const y0=Math.min(rectStart[1],y2), y1=Math.max(rectStart[1],y2);
+        bctx.globalAlpha=ed.alpha/255; bctx.fillStyle=ed.color; bctx.fillRect(x0,y0,x1-x0+1,y1-y0+1); bctx.globalAlpha=1;
+        redraw(); rectStart=null;
+      }
+      painting=false;
+      commit();
+    });
+
+    /* --- color picker (hue ring + SV square) --- */
+    const hueCanvas=sidebar.querySelector('#hueRing'), hueCtx=hueCanvas.getContext('2d');
+    const svCanvas=sidebar.querySelector('#svSquare'), svCtx=svCanvas.getContext('2d');
+    let hue=0, sat=1, val=1;
+
+    function hsvToHex(h,s,v){
+      const c=v*s, x=c*(1-Math.abs((h/60)%2-1)), m=v-c;
+      let r,g,b;
+      if(h<60){r=c;g=x;b=0;}else if(h<120){r=x;g=c;b=0;}else if(h<180){r=0;g=c;b=x;}
+      else if(h<240){r=0;g=x;b=c;}else if(h<300){r=x;g=0;b=c;}else{r=c;g=0;b=x;}
+      const to255=n=>Math.round((n+m)*255);
+      return '#'+[to255(r),to255(g),to255(b)].map(n=>n.toString(16).padStart(2,'0')).join('');
+    }
+    function hexToHsv(hex){
+      const v=parseInt(hex.slice(1),16); let r=((v>>16)&255)/255,g=((v>>8)&255)/255,b=(v&255)/255;
+      const max=Math.max(r,g,b),min=Math.min(r,g,b),d=max-min;
+      let h=0; if(d!==0){ if(max===r) h=60*(((g-b)/d)%6); else if(max===g) h=60*((b-r)/d+2); else h=60*((r-g)/d+4); }
+      if(h<0) h+=360;
+      return [h, max===0?0:d/max, max];
+    }
+
+    function drawHueRing(){
+      const cx=60,cy=60,rOuter=58,rInner=42;
+      hueCtx.clearRect(0,0,120,120);
+      for(let a=0;a<360;a+=1){
+        const rad=a*Math.PI/180;
+        hueCtx.beginPath();
+        hueCtx.strokeStyle=`hsl(${a},100%,50%)`;
+        hueCtx.lineWidth=rOuter-rInner;
+        hueCtx.arc(cx,cy,(rOuter+rInner)/2,rad,rad+Math.PI/180+0.02);
+        hueCtx.stroke();
+      }
+      // handle
+      const hr=(rOuter+rInner)/2, hrad=hue*Math.PI/180;
+      hueCtx.beginPath(); hueCtx.arc(cx+hr*Math.cos(hrad), cy+hr*Math.sin(hrad), 5, 0, 7); hueCtx.strokeStyle='#fff'; hueCtx.lineWidth=2; hueCtx.stroke();
+    }
+    function drawSvSquare(){
+      svCtx.clearRect(0,0,90,90);
+      const satGrad=svCtx.createLinearGradient(0,0,90,0);
+      satGrad.addColorStop(0,'#fff'); satGrad.addColorStop(1,hsvToHex(hue,1,1));
+      svCtx.fillStyle=satGrad; svCtx.fillRect(0,0,90,90);
+      const valGrad=svCtx.createLinearGradient(0,0,0,90);
+      valGrad.addColorStop(0,'rgba(0,0,0,0)'); valGrad.addColorStop(1,'#000');
+      svCtx.fillStyle=valGrad; svCtx.fillRect(0,0,90,90);
+      svCtx.beginPath(); svCtx.arc(sat*90, (1-val)*90, 4, 0, 7); svCtx.strokeStyle='#fff'; svCtx.lineWidth=2; svCtx.stroke();
+    }
+    function setColor(hex){
+      if(!/^#[0-9a-fA-F]{6}$/.test(hex)) return;
+      ed.color=hex;
+      [hue,sat,val]=hexToHsv(hex);
+      sidebar.querySelector('#hexInput').value=hex;
+      sidebar.querySelector('#curColorBox').style.background=hex;
+      drawHueRing(); drawSvSquare();
+      addRecent(hex);
+    }
+    function addRecent(hex){
+      ed.recent=[hex,...ed.recent.filter(c=>c!==hex)].slice(0,10);
+      renderRecent();
+    }
+    function renderRecent(){
+      const host=sidebar.querySelector('#recentSwatches');
+      host.innerHTML=ed.recent.map(c=>`<div class="swatch" data-c="${c}" style="width:20px;height:20px;border-radius:4px;background:${c};cursor:pointer;border:1px solid var(--border-soft);"></div>`).join('');
+      host.querySelectorAll('.swatch').forEach(s=>{ s.onclick=()=>setColor(s.dataset.c); });
+    }
+    [hue,sat,val]=hexToHsv(ed.color);
+    drawHueRing(); drawSvSquare(); renderRecent();
+
+    let draggingHue=false, draggingSv=false;
+    hueCanvas.addEventListener('mousedown',e=>{ draggingHue=true; hueMove(e); });
+    window.addEventListener('mousemove',e=>{ if(draggingHue) hueMove(e); if(draggingSv) svMove(e); });
+    window.addEventListener('mouseup',()=>{ draggingHue=false; draggingSv=false; });
+    function hueMove(e){
+      const rect=hueCanvas.getBoundingClientRect();
+      const x=e.clientX-rect.left-60, y=e.clientY-rect.top-60;
+      let a=Math.atan2(y,x)*180/Math.PI; if(a<0)a+=360;
+      hue=a; const hex=hsvToHex(hue,sat,val); setColor(hex);
+    }
+    svCanvas.addEventListener('mousedown',e=>{ draggingSv=true; svMove(e); });
+    function svMove(e){
+      const rect=svCanvas.getBoundingClientRect();
+      let x=(e.clientX-rect.left)/rect.width, y=(e.clientY-rect.top)/rect.height;
+      x=Math.max(0,Math.min(1,x)); y=Math.max(0,Math.min(1,y));
+      sat=x; val=1-y; const hex=hsvToHex(hue,sat,val); setColor(hex);
+    }
+    sidebar.querySelector('#hexInput').addEventListener('change',e=>{
+      let v=e.target.value.trim(); if(!v.startsWith('#')) v='#'+v; setColor(v);
+    });
+    sidebar.querySelector('#alphaSlider').addEventListener('input',e=>{ ed.alpha=+e.target.value; });
+
+    /* --- item variants --- */
+    function renderVariantList(){
+      const listHost=sidebar.querySelector('#variantList');
+      if(!listHost) return;
+      const rows=[{label:'Default', idx:-1, dataUrl:entry.dataUrl}, ...entry.variants.map((v,i)=>({label:v.name, idx:i, dataUrl:v.dataUrl}))];
+      listHost.innerHTML=rows.map(r=>`
+        <div class="variant-row ${ed.activeVariant===r.idx?'active':''}" data-idx="${r.idx}">
+          <div class="vr-thumb">${r.dataUrl?`<img src="${r.dataUrl}">`:''}</div>
+          <div class="vr-name">${escapeHtml(r.label)}</div>
+          ${r.idx===-1?'':'<span class="vr-tag" data-rm="'+r.idx+'">✕</span>'}
+        </div>`).join('');
+      listHost.querySelectorAll('.variant-row').forEach(row=>{
+        row.onclick=(ev)=>{
+          if(ev.target.dataset.rm!==undefined && ev.target.dataset.rm!==''){
+            entry.variants.splice(+ev.target.dataset.rm,1); saveTextureLibrary();
+            if(ed.activeVariant>=entry.variants.length) ed.activeVariant=-1;
+            renderVariantList(); loadBufferFrom(currentDataUrl()).then(()=>{ redraw(); pushHistory(); });
+            return;
+          }
+          ed.activeVariant=+row.dataset.idx;
+          loadBufferFrom(currentDataUrl()).then(()=>{ redraw(); pushHistory(); renderVariantList(); });
+        };
+      });
+    }
+    if(isItem){
+      renderVariantList();
+      sidebar.querySelector('#addVariantBtn').onclick=()=>{
+        const vname=prompt('Naam voor deze variant (bijv. "GG" of "Rood"):','Variant '+(entry.variants.length+1));
+        if(!vname) return;
+        entry.variants.push({name:vname, dataUrl:null});
+        saveTextureLibrary();
+        ed.activeVariant=entry.variants.length-1;
+        loadBufferFrom(null).then(()=>{ redraw(); pushHistory(); renderVariantList(); });
+      };
+    }
+
+    sidebar.querySelector('#pngDownloadBtn').onclick=()=>{
+      downloadBlob(dataUrlToBlob(buf.toDataURL('image/png')), name+'.png');
+    };
+  },0);
+
+  return wrap;
+}
+
+window.addEventListener('hashchange', render);
+render();
+</script>
+</body>
+</html>
