@@ -15,7 +15,7 @@
   <ShortName>Browseport</ShortName>
   <Description>Zoek en navigeer direct naar custom domeinen via Browseport</Description>
   <InputEncoding>UTF-8</InputEncoding>
-  <Image height="64" width="64" type="image/svg+xml">https://YOUR-DOMAIN.tld/assets/icon.svg</Image>
+  <Image height="64" width="64" type="image/svg+xml">https://mattyou2.github.io/assets/icon.svg</Image>
   <Url type="text/html" method="get" template="https://YOUR-DOMAIN.tld/go.html?domain={searchTerms}"/>
-  <moz:SearchForm xmlns:moz="http://www.mozilla.org/2006/browser/search/">https://YOUR-DOMAIN.tld/index.html</moz:SearchForm>
+  <moz:SearchForm xmlns:moz="http://www.mozilla.org/2006/browser/search/">https://mattyou2.github.io.tld/index.html</moz:SearchForm>
 </OpenSearchDescription>
