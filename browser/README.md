@@ -125,6 +125,51 @@ niet — daar is de geïnstalleerde PWA het alternatief.
   geschikt voor sites die `fetch` naar relatieve paden op "hun eigen
   domein" doen.
 
+## Wat er nieuw is in deze versie
+
+- **Echt werkende zoekbalk op de homepage.** De adresbalk-demo in het
+  midden is nu een écht `<input>`-veld. Zolang je niet typt, speelt er een
+  **grijze** ghost-typing-animatie op de achtergrond (`browseport
+  mattyou.cool`) om te laten zien hoe het werkt — zodra je zelf typt of
+  focust verdwijnt die animatie en zie je gewoon je eigen tekst. Enter of
+  op de groene pijl klikken stuurt je naar `go.html?domain=…`, precies als
+  het losse zoekformulier hieronder deed.
+- **Publieke domein-directory** op de homepage (`#directory`) en een
+  live tellertje (aantal geregistreerde / gehoste domeinen), beide direct
+  uit de `domains`-tabel — geen extra Supabase-configuratie nodig, de
+  bestaande publieke lees-policy is voldoende.
+- **Startsjabloon voor nieuwe sites.** Bij het registreren van een
+  "zelf gehoste" domein staat er een aangevinkt vakje "begin met een
+  kant-en-klaar sjabloon" — dat zet meteen een werkend `index.html` +
+  `style.css` + `script.js` neer via `starterTemplateFiles()` in
+  `app.js`. Heb je al een leeg gehost domein zonder bestanden? In de
+  bestandenbeheerder staat dan een knop "Vul met sjabloon-site →" die
+  hetzelfde doet. Zo hoeft niemand met een leeg scherm te beginnen.
+- **Echte adminweergave-schakelaar.** Log je in met een van de twee
+  admin-e-mailadressen (na Supabase e-mailverificatie, zie hieronder),
+  dan zie je in het dashboard een schakelaar "Adminweergave". Zet 'm uit
+  en het dashboard gedraagt zich exact als bij een normale gebruiker
+  (geen ADMIN-badge, geen "alle domeinen"-weergave, geen eigenaar-kolom)
+  — handig om te controleren wat gewone bezoekers zien. Zet 'm weer aan
+  en je bent direct weer admin. Dit is een puur cosmetische, per-browser
+  instelling (`localStorage`) — de eigenlijke rechten in de database
+  (RLS via `is_admin()`) veranderen niet, dus er verandert niets aan de
+  beveiliging.
+- **Wachtwoord vergeten-link** op het inlogscherm, gebruikt Supabase's
+  ingebouwde `resetPasswordForEmail`.
+- Registreren stuurt na e-mailbevestiging automatisch terug naar
+  `dashboard.html` (`emailRedirectTo`).
+
+### Hoe e-mailverificatie voor admins precies werkt
+
+Er is niets extra's te configureren: `is_admin()` in de database
+controleert het e-mailadres van de ingelogde gebruiker. Zodra iemand
+zich registreert met `treurmattheo@gmail.com` of
+`mattyougaming@gmail.com` én — als jouw Supabase-project e-mailbevestiging
+vereist (Authentication → Providers → Email in het dashboard) — de
+bevestigingslink in hun mail aanklikt, heeft die sessie automatisch
+adminrechten zodra ze inloggen. Geen aparte "maak mij admin"-stap nodig.
+
 ## Snel testen
 
 Open `dashboard.html`, maak een account aan met een van de twee
