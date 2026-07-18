@@ -5,15 +5,17 @@
 // ============================================================
 
 const CACHE_NAME = 'browseport-shell-v1';
-const SHELL_ASSETS = [
-  '/index.html',
-  '/dashboard.html',
-  '/go.html',
-  '/manifest.json',
-  '/assets/style.css',
-  '/assets/app.js',
-  '/assets/icon.svg',
+const BASE = new URL(self.registration.scope).pathname; // bijv. "/browser/"
+const SHELL_FILES = [
+  'index.html',
+  'dashboard.html',
+  'go.html',
+  'manifest.json',
+  'style.css',
+  'app.js',
+  'icon.svg',
 ];
+const SHELL_ASSETS = SHELL_FILES.map((f) => BASE + f);
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -39,7 +41,7 @@ self.addEventListener('fetch', (event) => {
   if (
     event.request.method !== 'GET' ||
     url.origin.includes('supabase.co') ||
-    url.pathname.startsWith('/go.html') ||
+    url.pathname.endsWith('/go.html') ||
     url.search
   ) {
     return;
