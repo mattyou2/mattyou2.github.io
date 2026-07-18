@@ -16,6 +16,11 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 
 export const ADMIN_EMAILS = ['treurmattheo@gmail.com', 'mattyougaming@gmail.com'];
 
+// Edge function die externe tools (buiten dit dashboard om) toegang geeft
+// tot de bestanden van ÉÉN domein, via een API-token — zie de functies
+// hieronder onder "API-tokens".
+export const SITE_API_URL = `${SUPABASE_URL}/functions/v1/site-api`;
+
 // ------------------------------------------------------------
 // Domeinnaam-validatie/normalisatie (client-side spiegel van de
 // database check-constraint, voor snelle feedback in formulieren)
@@ -275,6 +280,83 @@ export function debounce(fn, ms = 250) {
     clearTimeout(t);
     t = setTimeout(() => fn(...args), ms);
   };
+}
+
+// ------------------------------------------------------------
+// Domeinnaam-blocklist (scheldwoorden / verboden termen)
+// ------------------------------------------------------------
+// Let op: dit is alleen voor SNELLE UI-feedback. De echte poortwachter
+// is de database-trigger `trg_domains_enforce_blocklist` — die geldt
+// altijd, ook als iemand rechtstreeks op de Supabase-API schrijft.
+function normalizeForBlocklist(input) {
+  const leet = { '0': 'o', '1': 'l', '3': 'e', '4': 'a' };
+  return (input || '')
+    .toLowerCase()
+    .split('')
+    .map((ch) => leet[ch] || ch)
+    .join('')
+    .replace(/[^a-z]/g, '');
+}
+
+export async function fetchBlocklist() {
+  const { data, error } = await supabase.from('domain_blocklist').select('word');
+  if (error) return [];
+  return (data || []).map((r) => r.word);
+}
+
+export function isDomainBlocked(name, blockedWords) {
+  const norm = normalizeForBlocklist(name);
+  if (!norm) return false;
+  return (blockedWords || []).some((w) => norm.includes(w));
+}
+
+// ------------------------------------------------------------
+// API-tokens: scoped toegang tot de bestanden van één domein voor
+// externe tools (CLI, editor-plugin, script, …) — zie SITE_API_URL.
+// Het plaintext-token wordt maar één keer getoond (bij aanmaken); in
+// de database staat alleen de SHA-256 hash ervan.
+// ------------------------------------------------------------
+function randomToken() {
+  const bytes = new Uint8Array(24);
+  crypto.getRandomValues(bytes);
+  const hex = Array.from(bytes).map((b) => b.toString(16).padStart(2, '0')).join('');
+  return 'bp_' + hex;
+}
+
+async function sha256Hex(str) {
+  const bytes = new TextEncoder().encode(str);
+  const digest = await crypto.subtle.digest('SHA-256', bytes);
+  return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+export async function createApiToken(domainId, name) {
+  const session = await getSession();
+  if (!session) return { error: new Error('Niet ingelogd.') };
+  const token = randomToken();
+  const token_hash = await sha256Hex(token);
+  const token_preview = token.slice(-4);
+  const { data, error } = await supabase
+    .from('api_tokens')
+    .insert({ domain_id: domainId, owner_id: session.user.id, name: name || 'API token', token_hash, token_preview })
+    .select('id, name, token_preview, created_at, last_used_at')
+    .single();
+  if (error) return { error };
+  // token = het enige moment dat het plaintext-token beschikbaar is
+  return { token, row: data };
+}
+
+export async function listApiTokens(domainId) {
+  const { data, error } = await supabase
+    .from('api_tokens')
+    .select('id, name, token_preview, created_at, last_used_at')
+    .eq('domain_id', domainId)
+    .order('created_at', { ascending: false });
+  if (error) return [];
+  return data || [];
+}
+
+export async function revokeApiToken(id) {
+  return supabase.from('api_tokens').delete().eq('id', id);
 }
 
 // ------------------------------------------------------------
