@@ -83,13 +83,13 @@ export async function renderTopbarAuth() {
   if (!el) return;
   const session = await getSession();
   if (!session) {
-    el.innerHTML = `<a class="btn btn-ghost" href="dashboard.html">Inloggen</a>
-                     <a class="btn btn-primary" href="dashboard.html?tab=register">Domein registreren</a>`;
+    el.innerHTML = `<a class="btn btn-ghost" href="browser/dashboard.html">Inloggen</a>
+                     <a class="btn btn-primary" href="browser/dashboard.html?tab=register">Domein registreren</a>`;
     return;
   }
   const admin = await isAdmin();
   el.innerHTML = `${admin ? '<span class="badge-admin">ADMIN</span>' : ''}
-                   <a class="btn btn-ghost" href="dashboard.html">Dashboard</a>`;
+                   <a class="btn btn-ghost" href="browser/dashboard.html">Dashboard</a>`;
 }
 
 // ------------------------------------------------------------
