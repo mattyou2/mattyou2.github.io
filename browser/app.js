@@ -1,7 +1,7 @@
 // ============================================================
 // BROWSEPORT — shared app module
 // Supabase client + auth helpers + kleine UI-utilities.
-// Wordt geïmporteerd als ES module: <script type="module" src="/assets/app.js">
+// Wordt geïmporteerd als ES module: <script type="module" src="app.js">
 // ============================================================
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -135,7 +135,7 @@ export function wireInstallButtons() {
 export function registerServiceWorker() {
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/sw.js').catch(() => {
+      navigator.serviceWorker.register('sw.js').catch(() => {
         /* stil falen — PWA-installatie is een progressive enhancement */
       });
     });
