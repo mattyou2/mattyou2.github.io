@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Browseport — typ een domein, kom er direct</title>
+<meta name="description" content="Browseport is een decentraal domeinsysteem naast het gewone DNS. Registreer een custom domein, host er een site op, en navigeer ernaartoe door 'browseport [domein]' in je adresbalk te typen.">
+<meta name="theme-color" content="#101828">
+
+<link rel="manifest" href="/manifest.json">
+<link rel="search" type="application/opensearchdescription+xml" title="Browseport" href="/opensearch.xml">
+<link rel="icon" type="image/svg+xml" href="/assets/icon.svg">
+<link rel="apple-touch-icon" href="/assets/icon.svg">
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="/index.html">
+      <svg class="mark" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="#101828"/><path d="M18 40 V24 a6 6 0 0 1 6 -6 h6" stroke="#00C48C" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M46 24 V40 a6 6 0 0 1 -6 6 h-6" stroke="#FF6B35" stroke-width="5" fill="none" stroke-linecap="round"/><circle cx="24" cy="18" r="4.5" fill="#00C48C"/><circle cx="40" cy="46" r="4.5" fill="#FF6B35"/></svg>
+      browse<span class="port">port</span>
+    </a>
+    <div class="nav-actions" id="topbar-actions">
+      <a class="btn btn-ghost" href="/dashboard.html">Inloggen</a>
+      <a class="btn btn-primary" href="/dashboard.html?tab=register">Domein registreren</a>
+    </div>
+  </div>
+</div>
+
+<div class="shell">
+
+  <section class="hero">
+    <span class="eyebrow"><span class="dot"></span> geen ICANN, geen wachtrij — direct live</span>
+    <h1 class="headline">Domeinen die je<br><em>vanuit je adresbalk</em> bereikt.</h1>
+    <p class="subhead">Browseport is een eigen, decentraal namensysteem naast het gewone DNS. Registreer een custom domein, host er een site op, en kom er — na installatie — met één zoekopdracht.</p>
+
+    <div class="omnibox-stage">
+      <div class="omnibox">
+        <div class="browser-dots"><span></span><span></span><span></span></div>
+        <div class="field"><span id="omnibox-text"></span><span class="caret"></span></div>
+      </div>
+      <div class="omnibox-status" id="omnibox-status">&nbsp;</div>
+    </div>
+
+    <div class="hero-actions">
+      <button class="btn btn-accent" data-install-btn hidden>⤓ Installeer Browseport als app</button>
+      <a class="btn btn-ghost" href="#lookup">Zoek een domein op</a>
+    </div>
+  </section>
+
+  <section id="lookup">
+    <div class="lookup-card">
+      <label class="field-label" for="domain-input">Domein opzoeken</label>
+      <form class="lookup-row" id="lookup-form">
+        <input type="text" id="domain-input" class="mono" placeholder="mattyou.cool" autocomplete="off" autocapitalize="off" spellcheck="false" required>
+        <button class="btn btn-primary" type="submit">Ga naar site →</button>
+      </form>
+      <p class="lookup-hint">Sneller: installeer Browseport (knop hierboven) en typ voortaan <code>browseport&nbsp;mattyou.cool</code> direct in je browser-adresbalk.</p>
+    </div>
+  </section>
+
+  <section class="hops">
+    <h2 class="section-title">Hoe een opzoeking reist</h2>
+    <p class="section-lede">Elke navigatie doorloopt dezelfde drie hops — net als een echte DNS-resolutie, maar dan op onze eigen tabel.</p>
+    <div class="hop-list">
+      <div class="hop">
+        <div class="hop-index"><span class="n">01</span> · adresbalk</div>
+        <h3>Jij typt het keyword</h3>
+        <p>Na installatie herkent je browser Browseport als zoekmachine. Typ <code class="mono">browseport</code>, spatie, en het domein — geen tabblad wisselen nodig.</p>
+      </div>
+      <div class="hop">
+        <div class="hop-index"><span class="n">02</span> · resolver</div>
+        <h3>go.html zoekt het op</h3>
+        <p>De resolverpagina doet één query op de <code class="mono">domains</code>-tabel in Supabase en vindt binnen milliseconden de bijbehorende bestemming.</p>
+      </div>
+      <div class="hop">
+        <div class="hop-index"><span class="n">03</span> · bestemming</div>
+        <h3>Doorverwijzing of gehoste site</h3>
+        <p>Wijst het domein naar een externe URL? Dan stuurt Browseport je direct door. Host je er zelf bestanden op? Dan wordt de site ter plekke gerenderd.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="section-title">Wat je krijgt</h2>
+    <p class="section-lede">Eén account, onbeperkt domeinen, en een eigen mini-hosting per domein — mappen en al.</p>
+    <div class="grid-3">
+      <div class="feature-card">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        <h3>Eigen domeinregister</h3>
+        <p>Registreer een custom naam zoals <code class="mono">mattyou.cool</code> en koppel 'm aan een bestaande URL — geen registrar, geen jaarlijkse kosten.</p>
+      </div>
+      <div class="feature-card">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/><path d="M8 4v5"/></svg>
+        <h3>Mini-hosting per domein</h3>
+        <p>Zet <code class="mono">index.html</code>, <code class="mono">style.css</code> en <code class="mono">script.js</code> in mappen neer en Browseport rendert je site rechtstreeks — geen losse hostingprovider nodig.</p>
+      </div>
+      <div class="feature-card">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
+        <h3>Installeerbaar &amp; snel</h3>
+        <p>Als PWA werkt Browseport als standalone app én als adresbalk-zoekmachine — het dichtst bij "echt DNS" zonder een browserextensie te hoeven installeren.</p>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <div class="shell" style="display:flex; justify-content:space-between; width:100%; flex-wrap:wrap; gap:10px;">
+    <span>Browseport — een decentraal domeinsysteem op Supabase.</span>
+    <span><a href="/dashboard.html">Dashboard</a> · <a href="/go.html">Resolver</a></span>
+  </div>
+</footer>
+
+<script type="module">
+  import { renderTopbarAuth, wireInstallButtons, registerServiceWorker, normalizeDomain } from '/assets/app.js';
+
+  renderTopbarAuth();
+  wireInstallButtons();
+  registerServiceWorker();
+
+  // ---- lookup form ----
+  document.getElementById('lookup-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const val = normalizeDomain(document.getElementById('domain-input').value);
+    if (!val) return;
+    window.location.href = `/go.html?domain=${encodeURIComponent(val)}`;
+  });
+
+  // ---- signature omnibox typing animation ----
+  const textEl = document.getElementById('omnibox-text');
+  const statusEl = document.getElementById('omnibox-status');
+  const script = 'browseport mattyou.cool';
+  const keywordLen = 'browseport'.length;
+
+  function renderTyped(n) {
+    const shown = script.slice(0, n);
+    if (n <= keywordLen) {
+      textEl.innerHTML = `<span class="keyword">${shown}</span>`;
+    } else {
+      textEl.innerHTML = `<span class="keyword">${script.slice(0, keywordLen)}</span>${shown.slice(keywordLen)}`;
+    }
+  }
+
+  async function playOmniboxLoop() {
+    while (true) {
+      statusEl.textContent = '';
+      for (let i = 0; i <= script.length; i++) {
+        renderTyped(i);
+        await sleep(55);
+      }
+      await sleep(400);
+      statusEl.innerHTML = '<span class="spinner" style="width:11px;height:11px;border-width:2px;"></span> resolving domain…';
+      await sleep(700);
+      statusEl.innerHTML = '<span class="arrow">→</span> opgelost naar mattyou.cool/index.html';
+      await sleep(1800);
+      for (let i = script.length; i >= 0; i--) {
+        renderTyped(i);
+        await sleep(18);
+      }
+      await sleep(500);
+    }
+  }
+  function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
+
+  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    playOmniboxLoop();
+  } else {
+    renderTyped(script.length);
+    statusEl.innerHTML = '<span class="arrow">→</span> opgelost naar mattyou.cool/index.html';
+  }
+</script>
+
+</body>
+</html>

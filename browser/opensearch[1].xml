@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  BROWSEPORT: OpenSearch description.
+  BELANGRIJK: OpenSearch vereist ABSOLUTE URLs (relatieve paden
+  worden door browsers genegeerd). Vervang YOUR-DOMAIN.tld hieronder
+  door het echte domein waar je deze site host, bijvoorbeeld
+  "browseport.app", zowel in Url als in Image als in SearchForm.
+
+  Nadat je dit hebt aangepast en gedeployed, herkent Chrome, Edge en
+  Firefox de site automatisch (dankzij de link rel="search" tag in
+  index.html) en kunnen gebruikers in de adresbalk typen:
+  browseport [spatie] mattyou.cool
+-->
+<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/">
+  <ShortName>Browseport</ShortName>
+  <Description>Zoek en navigeer direct naar custom domeinen via Browseport</Description>
+  <InputEncoding>UTF-8</InputEncoding>
+  <Image height="64" width="64" type="image/svg+xml">https://YOUR-DOMAIN.tld/assets/icon.svg</Image>
+  <Url type="text/html" method="get" template="https://YOUR-DOMAIN.tld/go.html?domain={searchTerms}"/>
+  <moz:SearchForm xmlns:moz="http://www.mozilla.org/2006/browser/search/">https://YOUR-DOMAIN.tld/index.html</moz:SearchForm>
+</OpenSearchDescription>

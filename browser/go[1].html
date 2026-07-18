@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Browseport — bezig met opzoeken…</title>
+<meta name="theme-color" content="#101828">
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" type="image/svg+xml" href="/assets/icon.svg">
+<link rel="stylesheet" href="/assets/style.css">
+<style>
+  .resolve-stage { min-height: 70vh; display: flex; align-items: center; justify-content: center; padding: 40px 20px; }
+  .resolve-card { max-width: 460px; width: 100%; text-align: center; }
+  .resolve-mono { font-family: var(--font-mono); font-size: 15px; color: var(--ink-soft); margin: 14px 0 22px; word-break: break-all; }
+  .resolve-mono .target { color: var(--port-green-ink); font-weight: 600; }
+  .pulse-ring { width: 46px; height: 46px; margin: 0 auto 20px; border-radius: 50%; border: 3px solid var(--port-green-bg); border-top-color: var(--port-green); animation: spin 0.8s linear infinite; }
+  #site-frame { position: fixed; inset: 0; width: 100%; height: 100%; border: none; display: none; background: #fff; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="/index.html">
+      <svg class="mark" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="#101828"/><path d="M18 40 V24 a6 6 0 0 1 6 -6 h6" stroke="#00C48C" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M46 24 V40 a6 6 0 0 1 -6 6 h-6" stroke="#FF6B35" stroke-width="5" fill="none" stroke-linecap="round"/><circle cx="24" cy="18" r="4.5" fill="#00C48C"/><circle cx="40" cy="46" r="4.5" fill="#FF6B35"/></svg>
+      browse<span class="port">port</span>
+    </a>
+    <div class="nav-actions" id="topbar-actions"></div>
+  </div>
+</div>
+
+<div class="resolve-stage" id="resolve-stage">
+  <div class="resolve-card">
+    <div class="pulse-ring"></div>
+    <div class="eyebrow"><span class="dot"></span> resolving</div>
+    <h1 class="headline" style="font-size:24px;" id="resolve-heading">Domein opzoeken…</h1>
+    <div class="resolve-mono" id="resolve-detail">&nbsp;</div>
+    <div id="resolve-actions"></div>
+  </div>
+</div>
+
+<iframe id="site-frame" title="Gehoste site" sandbox="allow-scripts allow-forms allow-popups allow-modals"></iframe>
+
+<script type="module">
+  import { supabase, renderTopbarAuth, normalizeDomain } from '/assets/app.js';
+
+  renderTopbarAuth();
+
+  const params = new URLSearchParams(window.location.search);
+  const rawDomain = params.get('domain') || '';
+  const domain = normalizeDomain(rawDomain);
+
+  const stage = document.getElementById('resolve-stage');
+  const heading = document.getElementById('resolve-heading');
+  const detail = document.getElementById('resolve-detail');
+  const actions = document.getElementById('resolve-actions');
+  const frame = document.getElementById('site-frame');
+
+  function showNotFound() {
+    heading.textContent = 'Domein niet gevonden';
+    document.title = 'Browseport — domein niet gevonden';
+    detail.innerHTML = domain
+      ? `<span class="mono">${escapeHtml(domain)}</span> staat nog niet in het Browseport-register.`
+      : 'Er is geen domeinnaam meegegeven.';
+    actions.innerHTML = `
+      <a class="btn btn-accent" href="/dashboard.html?tab=register${domain ? '&domain=' + encodeURIComponent(domain) : ''}">Dit domein registreren →</a>
+      <a class="btn btn-ghost" href="/index.html" style="margin-left:8px;">Terug naar Browseport</a>
+    `;
+    document.querySelector('.pulse-ring').style.display = 'none';
+  }
+
+  function showInvalid() {
+    heading.textContent = 'Ongeldige domeinnaam';
+    detail.textContent = 'Gebruik een formaat zoals "voorbeeld.cool".';
+    actions.innerHTML = `<a class="btn btn-ghost" href="/index.html">Terug naar Browseport</a>`;
+    document.querySelector('.pulse-ring').style.display = 'none';
+  }
+
+  function escapeHtml(str) {
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  // very small path joiner for resolving relative asset references
+  function resolveRelative(basePath, relPath) {
+    if (relPath.startsWith('/')) return relPath.slice(1);
+    const baseDir = basePath.includes('/') ? basePath.slice(0, basePath.lastIndexOf('/') + 1) : '';
+    const parts = (baseDir + relPath).split('/');
+    const out = [];
+    for (const p of parts) {
+      if (p === '.' || p === '') continue;
+      if (p === '..') out.pop();
+      else out.push(p);
+    }
+    return out.join('/');
+  }
+
+  async function renderHostedSite(domainRow) {
+    const { data: files, error } = await supabase
+      .from('site_files')
+      .select('file_path, content, mime_type')
+      .eq('domain_id', domainRow.id);
+
+    if (error || !files || files.length === 0) {
+      heading.textContent = 'Site is nog leeg';
+      detail.innerHTML = `<span class="mono">${escapeHtml(domain)}</span> is ingesteld als gehoste site, maar bevat nog geen bestanden.`;
+      actions.innerHTML = `<a class="btn btn-accent" href="/dashboard.html">Bestanden toevoegen →</a>`;
+      document.querySelector('.pulse-ring').style.display = 'none';
+      return;
+    }
+
+    const fileMap = {};
+    files.forEach((f) => { fileMap[f.file_path.replace(/^\//, '')] = f; });
+
+    const entry = fileMap['index.html'] || files.find((f) => f.file_path.toLowerCase().endsWith('index.html'));
+    if (!entry) {
+      heading.textContent = 'Geen index.html gevonden';
+      detail.textContent = 'Voeg een bestand met pad "index.html" toe aan dit domein.';
+      actions.innerHTML = `<a class="btn btn-accent" href="/dashboard.html">Naar bestandsbeheer →</a>`;
+      document.querySelector('.pulse-ring').style.display = 'none';
+      return;
+    }
+
+    let html = entry.content;
+
+    // Inline gekoppelde CSS-bestanden: <link ... href="style.css">
+    html = html.replace(/<link\s+[^>]*href=["']([^"']+\.css)["'][^>]*>/gi, (match, href) => {
+      const key = resolveRelative(entry.file_path, href);
+      const file = fileMap[key];
+      return file ? `<style data-inlined="${escapeHtml(key)}">${file.content}</style>` : match;
+    });
+
+    // Inline gekoppelde JS-bestanden (via <script src="…js">)
+    const scriptCloseTag = '</' + 'script>';
+    html = html.replace(/<script\s+[^>]*src=["']([^"']+\.js)["'][^>]*>\s*<\/script>/gi, (match, src) => {
+      const key = resolveRelative(entry.file_path, src);
+      const file = fileMap[key];
+      return file ? `<script data-inlined="${escapeHtml(key)}">${file.content}${scriptCloseTag}` : match;
+    });
+
+    stage.style.display = 'none';
+    frame.style.display = 'block';
+    frame.srcdoc = html;
+    document.title = domain;
+  }
+
+  async function resolve() {
+    if (!domain) { showNotFound(); return; }
+    const DOMAIN_RE = /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)+$/;
+    if (!DOMAIN_RE.test(domain)) { showInvalid(); return; }
+
+    detail.innerHTML = `<span class="mono">${escapeHtml(domain)}</span>`;
+
+    const { data, error } = await supabase
+      .from('domains')
+      .select('id, domain_name, target_url, is_hosted')
+      .eq('domain_name', domain)
+      .maybeSingle();
+
+    if (error || !data) { showNotFound(); return; }
+
+    if (data.is_hosted) {
+      heading.textContent = 'Site laden…';
+      await renderHostedSite(data);
+      return;
+    }
+
+    heading.textContent = 'Doorverwijzen…';
+    detail.innerHTML = `<span class="mono">${escapeHtml(domain)}</span> <span style="color:var(--ink-faint)">→</span> <span class="mono target">${escapeHtml(data.target_url)}</span>`;
+    actions.innerHTML = `<a class="btn btn-ghost" href="${escapeHtml(data.target_url)}">Klik hier als je niet automatisch wordt doorgestuurd</a>`;
+    setTimeout(() => { window.location.href = data.target_url; }, 350);
+  }
+
+  resolve();
+</script>
+
+</body>
+</html>
