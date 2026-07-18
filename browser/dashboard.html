@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Dashboard — Browseport</title>
 <meta name="theme-color" content="#101828">
-<link rel="manifest" href="/manifest.json">
-<link rel="icon" type="image/svg+xml" href="/assets/icon.svg">
-<link rel="stylesheet" href="/assets/style.css">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="stylesheet" href="style.css">
 <style>
   .dash-head { display: flex; align-items: center; justify-content: space-between; padding: 34px 0 24px; flex-wrap: wrap; gap: 14px; }
   .dash-head h1 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.02em; }
@@ -29,7 +29,7 @@
 
 <div class="topbar">
   <div class="topbar-inner">
-    <a class="brand" href="/index.html">
+    <a class="brand" href="index.html">
       <svg class="mark" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="#101828"/><path d="M18 40 V24 a6 6 0 0 1 6 -6 h6" stroke="#00C48C" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M46 24 V40 a6 6 0 0 1 -6 6 h-6" stroke="#FF6B35" stroke-width="5" fill="none" stroke-linecap="round"/><circle cx="24" cy="18" r="4.5" fill="#00C48C"/><circle cx="40" cy="46" r="4.5" fill="#FF6B35"/></svg>
       browse<span class="port">port</span>
     </a>
@@ -200,7 +200,7 @@
     supabase, getSession, isAdmin, signIn, signUp, signOut,
     renderTopbarAuth, toast, isValidDomain, normalizeDomain, guessMimeType,
     registerServiceWorker,
-  } from '/assets/app.js';
+  } from './app.js';
 
   registerServiceWorker();
   renderTopbarAuth();
@@ -398,7 +398,7 @@
         </td>
         <td>
           <div style="display:flex; gap:6px; flex-wrap:wrap;">
-            <a class="btn btn-ghost btn-sm" href="/go.html?domain=${encodeURIComponent(d.domain_name)}" target="_blank">Bekijk</a>
+            <a class="btn btn-ghost btn-sm" href="go.html?domain=${encodeURIComponent(d.domain_name)}" target="_blank">Bekijk</a>
             ${d.is_hosted ? `<button class="btn btn-ghost btn-sm" data-manage-files="${d.id}">Bestanden</button>` : ''}
             <button class="btn btn-ghost btn-sm" data-edit-domain="${d.id}">Bewerken</button>
             <button class="btn btn-danger btn-sm" data-delete-domain="${d.id}">Verwijderen</button>
