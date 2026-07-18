@@ -22,6 +22,7 @@
   .file-editor { display: grid; grid-template-columns: 1fr; gap: 10px; }
   .file-list-wrap { margin-top: 18px; }
   .folder-indent { color: var(--ink-faint); }
+  .folder-row:hover { background: var(--bg-sunken); }
   #app { display: none; }
 </style>
 </head>
@@ -107,6 +108,7 @@
             <div class="form-row">
               <label class="field-label" for="new-domain-name">Domeinnaam</label>
               <input type="text" id="new-domain-name" class="mono" placeholder="mattyou.cool" required autocapitalize="off" spellcheck="false">
+              <div id="new-domain-name-warn" style="display:none; font-size:12.5px; color:var(--danger); margin-top:6px;">Deze domeinnaam is niet toegestaan.</div>
             </div>
             <div class="form-row">
               <label class="field-label" for="new-domain-mode">Type</label>
@@ -197,7 +199,7 @@
     <h3 style="font-size:14px; margin:22px 0 10px;">Bestand toevoegen / bewerken</h3>
     <div class="file-editor">
       <div class="form-row">
-        <label class="field-label" for="file-path-input">Pad (map/bestand.ext) — bijv. <code>index.html</code>, <code>css/style.css</code>, <code>js/script.js</code></label>
+        <label class="field-label" for="file-path-input">Pad (map/bestand.ext) — bijv. <code>index.html</code>, <code>css/style.css</code>, <code>js/script.js</code>. Een map maak je niet apart aan: typ 'm gewoon als onderdeel van het pad, bijv. <code>assets/img/logo.svg</code>.</label>
         <input type="text" id="file-path-input" class="mono" placeholder="index.html" autocapitalize="off" spellcheck="false">
       </div>
       <div class="form-row">
@@ -206,6 +208,35 @@
       </div>
       <button class="btn btn-primary" id="save-file-btn" style="justify-self:start;">Bestand opslaan</button>
     </div>
+
+    <h3 style="font-size:14px; margin:26px 0 6px;">API-toegang</h3>
+    <p class="lookup-hint" style="margin:0 0 12px;">Geef een extern programma (CLI, editor-plugin, script, …) toegang om de bestanden van dít domein te lezen/schrijven/verwijderen — zonder in te loggen. Zie de voorbeeld-aanroepen onderaan.</p>
+    <div id="api-tokens-list" class="file-tree" style="margin-bottom:12px;">
+      <div class="empty-state">Tokens laden…</div>
+    </div>
+    <div style="display:flex; gap:8px; margin-bottom:14px;">
+      <input type="text" id="new-token-name-input" placeholder="naam, bijv. 'mijn CLI'" style="flex:1;">
+      <button class="btn btn-ghost btn-sm" id="new-token-btn" style="white-space:nowrap;">+ Nieuw token</button>
+    </div>
+    <details>
+      <summary style="cursor:pointer; font-size:12.5px; color:var(--ink-soft);">Voorbeeld-aanroepen</summary>
+      <pre class="mono" id="api-example" style="font-size:11.5px; white-space:pre-wrap; word-break:break-all; background:var(--bg-sunken); border:1px solid var(--line); border-radius:8px; padding:10px; margin-top:8px;"></pre>
+    </details>
+  </div>
+</div>
+
+<!-- ===================== MODAL: nieuw token tonen (eenmalig) ===================== -->
+<div class="modal-backdrop" id="token-modal" hidden>
+  <div class="modal">
+    <div class="modal-head">
+      <h2>Nieuw API-token</h2>
+      <button class="icon-btn" data-close-modal="token-modal">✕</button>
+    </div>
+    <p class="lookup-hint" style="margin-top:0;">Bewaar dit token nu ergens veilig — het wordt hierna nergens meer getoond.</p>
+    <div class="form-row">
+      <input type="text" id="new-token-value" class="mono" readonly style="font-size:12.5px;">
+    </div>
+    <button class="btn btn-primary" id="copy-token-btn" style="width:100%;">Kopiëren</button>
   </div>
 </div>
 
@@ -215,6 +246,8 @@
     signIn, signUp, signOut, resetPassword,
     renderTopbarAuth, toast, isValidDomain, normalizeDomain, guessMimeType,
     registerServiceWorker, starterTemplateFiles,
+    fetchBlocklist, isDomainBlocked,
+    SITE_API_URL, createApiToken, listApiTokens, revokeApiToken,
   } from './app.js?v=2';
 
   registerServiceWorker();
@@ -227,12 +260,17 @@
   let viewMode = 'mine';
   let activeFilesDomain = null;
   let activeFiles = [];
+  let apiTokens = [];
+  let blockedWords = [];
+  let collapsedFolders = new Set();
 
   const authGate = document.getElementById('auth-gate');
   const app = document.getElementById('app');
 
   // ---------------- boot ----------------
   async function boot() {
+    fetchBlocklist().then((words) => { blockedWords = words; });
+
     const session = await getSession();
     if (session) {
       await enterApp(session);
@@ -364,6 +402,13 @@
   modeSelect.addEventListener('change', syncUrlRowVisibility);
   syncUrlRowVisibility();
 
+  const newDomainNameInput = document.getElementById('new-domain-name');
+  const newDomainNameWarn = document.getElementById('new-domain-name-warn');
+  newDomainNameInput.addEventListener('input', () => {
+    const blocked = isDomainBlocked(newDomainNameInput.value, blockedWords);
+    newDomainNameWarn.style.display = blocked ? 'block' : 'none';
+  });
+
   document.getElementById('add-domain-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const name = normalizeDomain(document.getElementById('new-domain-name').value);
@@ -372,6 +417,7 @@
     const desc = document.getElementById('new-domain-desc').value.trim();
 
     if (!isValidDomain(name)) { toast('Ongeldige domeinnaam, gebruik bijv. "voorbeeld.cool".', 'error'); return; }
+    if (isDomainBlocked(name, blockedWords)) { toast('Deze domeinnaam is niet toegestaan.', 'error'); return; }
     if (mode === 'redirect' && !url) { toast('Geef een bestemmings-URL op.', 'error'); return; }
 
     const btn = document.getElementById('add-domain-submit');
@@ -554,8 +600,29 @@
     document.getElementById('files-domain-label').textContent = activeFilesDomain.domain_name;
     document.getElementById('file-path-input').value = '';
     document.getElementById('file-content-input').value = '';
+    collapsedFolders = new Set();
+    document.getElementById('api-example').textContent = apiExampleText(activeFilesDomain);
     openModal('files-modal');
     await loadFiles();
+    await loadApiTokens();
+  }
+
+  function apiExampleText(domainRow) {
+    return [
+      `# bestanden opvragen`,
+      `curl "${SITE_API_URL}" -H "Authorization: Bearer <token>"`,
+      ``,
+      `# 1 bestand opvragen`,
+      `curl "${SITE_API_URL}?path=index.html" -H "Authorization: Bearer <token>"`,
+      ``,
+      `# bestand aanmaken/bijwerken`,
+      `curl -X POST "${SITE_API_URL}" \\`,
+      `  -H "Authorization: Bearer <token>" -H "Content-Type: application/json" \\`,
+      `  -d '{"file_path":"index.html","content":"<h1>Hoi</h1>"}'`,
+      ``,
+      `# bestand verwijderen`,
+      `curl -X DELETE "${SITE_API_URL}?path=index.html" -H "Authorization: Bearer <token>"`,
+    ].join('\n');
   }
 
   async function loadFiles() {
@@ -571,6 +638,52 @@
     renderFileTree();
   }
 
+  // Bouwt een mappenboom uit de platte lijst site_files (net als GitHub's
+  // bestandenweergave, maar dan afgeleid uit "map/sub/bestand.ext"-paden
+  // — er bestaat geen aparte "map"-rij in de database, een map is puur
+  // een gedeeld pad-voorvoegsel.
+  function buildFileTree(files) {
+    const root = { dirs: new Map(), files: [] };
+    for (const f of files) {
+      const parts = f.file_path.split('/');
+      let node = root;
+      let pathSoFar = '';
+      for (let i = 0; i < parts.length - 1; i++) {
+        pathSoFar += (pathSoFar ? '/' : '') + parts[i];
+        if (!node.dirs.has(parts[i])) node.dirs.set(parts[i], { dirs: new Map(), files: [], fullPath: pathSoFar });
+        node = node.dirs.get(parts[i]);
+      }
+      node.files.push(f);
+    }
+    return root;
+  }
+
+  function renderTreeNode(node, depth) {
+    let html = '';
+    const sortedDirs = [...node.dirs.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+    for (const [dirName, dirNode] of sortedDirs) {
+      const collapsed = collapsedFolders.has(dirNode.fullPath);
+      html += `
+        <div class="file-row folder-row" data-toggle-folder="${escapeHtml(dirNode.fullPath)}" style="padding-left:${10 + depth * 18}px; cursor:pointer;">
+          <span class="path"><span class="folder-indent">${collapsed ? '▸' : '▾'} 📁</span> ${escapeHtml(dirName)}/</span>
+        </div>`;
+      if (!collapsed) html += renderTreeNode(dirNode, depth + 1);
+    }
+    const sortedFiles = [...node.files].sort((a, b) => a.file_path.localeCompare(b.file_path));
+    for (const f of sortedFiles) {
+      const name = f.file_path.split('/').pop();
+      html += `
+        <div class="file-row" style="padding-left:${10 + depth * 18}px;">
+          <span class="path">📄 ${escapeHtml(name)}</span>
+          <span class="actions">
+            <button class="btn btn-ghost btn-sm" data-load-file="${f.id}">Bewerken</button>
+            <button class="btn btn-danger btn-sm" data-delete-file="${f.id}">✕</button>
+          </span>
+        </div>`;
+    }
+    return html;
+  }
+
   function renderFileTree() {
     const tree = document.getElementById('file-tree');
     if (!activeFiles.length) {
@@ -583,28 +696,24 @@
       document.getElementById('fill-template-btn').addEventListener('click', () => insertStarterTemplate(activeFilesDomain));
       return;
     }
-    tree.innerHTML = activeFiles.map((f) => {
-      const parts = f.file_path.split('/');
-      const name = parts.pop();
-      const folder = parts.length ? parts.join('/') + '/' : '';
-      return `
-        <div class="file-row">
-          <span class="path"><span class="folder-indent">${escapeHtml(folder)}</span>${escapeHtml(name)}</span>
-          <span class="actions">
-            <button class="btn btn-ghost btn-sm" data-load-file="${f.id}">Bewerken</button>
-            <button class="btn btn-danger btn-sm" data-delete-file="${f.id}">✕</button>
-          </span>
-        </div>
-      `;
-    }).join('');
 
-    tree.querySelectorAll('[data-load-file]').forEach((b) => b.addEventListener('click', () => {
+    const treeData = buildFileTree(activeFiles);
+    tree.innerHTML = renderTreeNode(treeData, 0);
+
+    tree.querySelectorAll('[data-toggle-folder]').forEach((row) => row.addEventListener('click', () => {
+      const path = row.dataset.toggleFolder;
+      if (collapsedFolders.has(path)) collapsedFolders.delete(path); else collapsedFolders.add(path);
+      renderFileTree();
+    }));
+    tree.querySelectorAll('[data-load-file]').forEach((b) => b.addEventListener('click', (e) => {
+      e.stopPropagation();
       const f = activeFiles.find((x) => x.id === b.dataset.loadFile);
       document.getElementById('file-path-input').value = f.file_path;
       document.getElementById('file-content-input').value = f.content;
       document.getElementById('file-content-input').focus();
     }));
-    tree.querySelectorAll('[data-delete-file]').forEach((b) => b.addEventListener('click', async () => {
+    tree.querySelectorAll('[data-delete-file]').forEach((b) => b.addEventListener('click', async (e) => {
+      e.stopPropagation();
       if (!confirm('Dit bestand verwijderen?')) return;
       const { error } = await supabase.from('site_files').delete().eq('id', b.dataset.deleteFile);
       if (error) { toast(error.message, 'error'); return; }
@@ -612,6 +721,62 @@
       await loadFiles();
     }));
   }
+
+  // ---------------- API-tokens ----------------
+  async function loadApiTokens() {
+    const wrap = document.getElementById('api-tokens-list');
+    wrap.innerHTML = '<div class="empty-state">Tokens laden…</div>';
+    apiTokens = await listApiTokens(activeFilesDomain.id);
+    renderApiTokens();
+  }
+
+  function renderApiTokens() {
+    const wrap = document.getElementById('api-tokens-list');
+    if (!apiTokens.length) {
+      wrap.innerHTML = `<div class="empty-state">Nog geen tokens voor dit domein.</div>`;
+      return;
+    }
+    wrap.innerHTML = apiTokens.map((t) => `
+      <div class="file-row">
+        <span class="path">${escapeHtml(t.name)} <span class="folder-indent mono">···${escapeHtml(t.token_preview)}</span></span>
+        <span class="actions">
+          <span style="font-size:11.5px; color:var(--ink-faint); margin-right:4px;">${t.last_used_at ? 'laatst gebruikt: ' + new Date(t.last_used_at).toLocaleDateString('nl-NL') : 'nog niet gebruikt'}</span>
+          <button class="btn btn-danger btn-sm" data-revoke-token="${t.id}">Intrekken</button>
+        </span>
+      </div>
+    `).join('');
+    wrap.querySelectorAll('[data-revoke-token]').forEach((b) => b.addEventListener('click', async () => {
+      if (!confirm('Dit token intrekken? Tools die dit token gebruiken verliezen meteen de toegang.')) return;
+      const { error } = await revokeApiToken(b.dataset.revokeToken);
+      if (error) { toast(error.message, 'error'); return; }
+      toast('Token ingetrokken', 'success');
+      await loadApiTokens();
+    }));
+  }
+
+  document.getElementById('new-token-btn').addEventListener('click', async () => {
+    const nameInput = document.getElementById('new-token-name-input');
+    const name = nameInput.value.trim() || 'API token';
+    const btn = document.getElementById('new-token-btn');
+    btn.disabled = true;
+    const { token, error } = await createApiToken(activeFilesDomain.id, name);
+    btn.disabled = false;
+    if (error) { toast(error.message, 'error'); return; }
+    nameInput.value = '';
+    document.getElementById('new-token-value').value = token;
+    openModal('token-modal');
+    await loadApiTokens();
+  });
+
+  document.getElementById('copy-token-btn').addEventListener('click', async () => {
+    const val = document.getElementById('new-token-value').value;
+    try {
+      await navigator.clipboard.writeText(val);
+      toast('Token gekopieerd ✓', 'success');
+    } catch {
+      toast('Kopiëren mislukt — selecteer en kopieer het handmatig.', 'error');
+    }
+  });
 
   document.getElementById('save-file-btn').addEventListener('click', async () => {
     let path = document.getElementById('file-path-input').value.trim().replace(/^\/+/, '');
