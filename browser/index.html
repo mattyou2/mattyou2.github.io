@@ -7,23 +7,23 @@
 <meta name="description" content="Browseport is een decentraal domeinsysteem naast het gewone DNS. Registreer een custom domein, host er een site op, en navigeer ernaartoe door 'browseport [domein]' in je adresbalk te typen.">
 <meta name="theme-color" content="#101828">
 
-<link rel="manifest" href="/manifest.json">
-<link rel="search" type="application/opensearchdescription+xml" title="Browseport" href="/opensearch.xml">
-<link rel="icon" type="image/svg+xml" href="/assets/icon.svg">
-<link rel="apple-touch-icon" href="/assets/icon.svg">
-<link rel="stylesheet" href="/assets/style.css">
+<link rel="manifest" href="manifest.json">
+<link rel="search" type="application/opensearchdescription+xml" title="Browseport" href="opensearch.xml">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <div class="topbar">
   <div class="topbar-inner">
-    <a class="brand" href="/index.html">
+    <a class="brand" href="index.html">
       <svg class="mark" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="#101828"/><path d="M18 40 V24 a6 6 0 0 1 6 -6 h6" stroke="#00C48C" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M46 24 V40 a6 6 0 0 1 -6 6 h-6" stroke="#FF6B35" stroke-width="5" fill="none" stroke-linecap="round"/><circle cx="24" cy="18" r="4.5" fill="#00C48C"/><circle cx="40" cy="46" r="4.5" fill="#FF6B35"/></svg>
       browse<span class="port">port</span>
     </a>
     <div class="nav-actions" id="topbar-actions">
-      <a class="btn btn-ghost" href="/dashboard.html">Inloggen</a>
-      <a class="btn btn-primary" href="/dashboard.html?tab=register">Domein registreren</a>
+      <a class="btn btn-ghost" href="dashboard.html">Inloggen</a>
+      <a class="btn btn-primary" href="dashboard.html?tab=register">Domein registreren</a>
     </div>
   </div>
 </div>
@@ -109,12 +109,12 @@
 <footer>
   <div class="shell" style="display:flex; justify-content:space-between; width:100%; flex-wrap:wrap; gap:10px;">
     <span>Browseport — een decentraal domeinsysteem op Supabase.</span>
-    <span><a href="/dashboard.html">Dashboard</a> · <a href="/go.html">Resolver</a></span>
+    <span><a href="dashboard.html">Dashboard</a> · <a href="go.html">Resolver</a></span>
   </div>
 </footer>
 
 <script type="module">
-  import { renderTopbarAuth, wireInstallButtons, registerServiceWorker, normalizeDomain } from '/assets/app.js';
+  import { renderTopbarAuth, wireInstallButtons, registerServiceWorker, normalizeDomain } from './app.js';
 
   renderTopbarAuth();
   wireInstallButtons();
@@ -125,7 +125,7 @@
     e.preventDefault();
     const val = normalizeDomain(document.getElementById('domain-input').value);
     if (!val) return;
-    window.location.href = `/go.html?domain=${encodeURIComponent(val)}`;
+    window.location.href = `go.html?domain=${encodeURIComponent(val)}`;
   });
 
   // ---- signature omnibox typing animation ----
