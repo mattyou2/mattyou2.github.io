@@ -38,6 +38,13 @@ export async function getSession() {
   return data.session;
 }
 
+export async function getCurrentEmail() {
+  const session = await getSession();
+  return session?.user?.email || null;
+}
+
+// True account privilege — always reflects the database, never the
+// client-side "preview as normal user" override below.
 export async function isAdmin() {
   const session = await getSession();
   if (!session) return false;
@@ -47,7 +54,11 @@ export async function isAdmin() {
 }
 
 export async function signUp(email, password) {
-  return supabase.auth.signUp({ email, password });
+  return supabase.auth.signUp({
+    email,
+    password,
+    options: { emailRedirectTo: window.location.origin + window.location.pathname.replace(/[^/]*$/, '') + 'dashboard.html' },
+  });
 }
 
 export async function signIn(email, password) {
@@ -56,6 +67,37 @@ export async function signIn(email, password) {
 
 export async function signOut() {
   return supabase.auth.signOut();
+}
+
+export async function resetPassword(email) {
+  return supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + window.location.pathname.replace(/[^/]*$/, '') + 'dashboard.html',
+  });
+}
+
+// ------------------------------------------------------------
+// Admin "preview as normal user" toggle
+// ------------------------------------------------------------
+// Puur cosmetisch/UI-niveau: schakelt de adminweergave uit zodat een
+// admin-account precies kan zien wat een gewone bezoeker ziet, zonder
+// echt uit te loggen. De database-rechten (RLS) blijven ongewijzigd —
+// dit bepaalt alleen wat de front-end laat zien.
+const ADMIN_PREVIEW_KEY = 'browseport_admin_preview_off';
+
+export function isAdminPreviewDisabled() {
+  return localStorage.getItem(ADMIN_PREVIEW_KEY) === '1';
+}
+
+export function setAdminPreviewDisabled(off) {
+  if (off) localStorage.setItem(ADMIN_PREVIEW_KEY, '1');
+  else localStorage.removeItem(ADMIN_PREVIEW_KEY);
+}
+
+// Wat de UI daadwerkelijk mag tonen: waar-admin EN niet handmatig verborgen.
+export async function effectiveIsAdmin() {
+  const real = await isAdmin();
+  if (!real) return false;
+  return !isAdminPreviewDisabled();
 }
 
 // ------------------------------------------------------------
@@ -83,13 +125,95 @@ export async function renderTopbarAuth() {
   if (!el) return;
   const session = await getSession();
   if (!session) {
-    el.innerHTML = `<a class="btn btn-ghost" href="browser/dashboard.html">Inloggen</a>
-                     <a class="btn btn-primary" href="browser/dashboard.html?tab=register">Domein registreren</a>`;
+    el.innerHTML = `<a class="btn btn-ghost" href="dashboard.html">Inloggen</a>
+                     <a class="btn btn-primary" href="dashboard.html?tab=register">Domein registreren</a>`;
     return;
   }
-  const admin = await isAdmin();
+  const admin = await effectiveIsAdmin();
   el.innerHTML = `${admin ? '<span class="badge-admin">ADMIN</span>' : ''}
-                   <a class="btn btn-ghost" href="browser/dashboard.html">Dashboard</a>`;
+                   <a class="btn btn-ghost" href="dashboard.html">Dashboard</a>`;
+}
+
+// ------------------------------------------------------------
+// Publieke domein-directory (voor de homepage showcase)
+// ------------------------------------------------------------
+export async function fetchPublicDomains(limit = 6) {
+  const { data, error } = await supabase
+    .from('domains')
+    .select('domain_name, description, is_hosted, created_at')
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  if (error) return { domains: [], error };
+  return { domains: data || [], error: null };
+}
+
+export async function fetchDomainStats() {
+  const { count: totalCount } = await supabase.from('domains').select('*', { count: 'exact', head: true });
+  const { count: hostedCount } = await supabase.from('domains').select('*', { count: 'exact', head: true }).eq('is_hosted', true);
+  return { total: totalCount || 0, hosted: hostedCount || 0 };
+}
+
+// ------------------------------------------------------------
+// Starter-sjabloon voor nieuwe gehoste sites
+// Zodat "ik heb nog geen site" nooit een doodlopend leeg scherm is —
+// één klik zet een compleet, werkend 3-bestanden-sitetje neer.
+// ------------------------------------------------------------
+export function starterTemplateFiles(domainName) {
+  const title = domainName || 'mijn-site';
+  const html = `<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${title}</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <h1>Welkom op ${title}</h1>
+    <p>Deze site draait op <strong>Browseport</strong> — bewerk <code>index.html</code>,
+       <code>style.css</code> en <code>script.js</code> in het dashboard om 'm te maken tot wat je wil.</p>
+    <button id="hi-btn">Zeg hoi</button>
+  </main>
+  <script src="script.js"></script>
+</body>
+</html>`;
+
+  const css = `body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: system-ui, sans-serif;
+  background: #101828;
+  color: #eef1f6;
+}
+main { max-width: 560px; padding: 40px; text-align: center; }
+h1 { font-size: 32px; margin-bottom: 12px; }
+p { color: #b7c0cf; line-height: 1.6; }
+code { background: #1c2536; padding: 2px 6px; border-radius: 4px; }
+button {
+  margin-top: 20px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  background: #00c48c;
+  color: #05261c;
+  font-weight: 700;
+  cursor: pointer;
+}
+button:hover { background: #00e0a1; }`;
+
+  const js = `document.getElementById('hi-btn').addEventListener('click', () => {
+  alert('Hoi! 👋 Deze site is live via Browseport.');
+});`;
+
+  return [
+    { file_path: 'index.html', content: html, mime_type: 'text/html' },
+    { file_path: 'style.css', content: css, mime_type: 'text/css' },
+    { file_path: 'script.js', content: js, mime_type: 'application/javascript' },
+  ];
 }
 
 // ------------------------------------------------------------
