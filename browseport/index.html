@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Domainport · Basic</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+  :root{
+    --bg:#0B1220;
+    --bg-elev:#121B2E;
+    --bg-elev-2:#182338;
+    --bg-elev-3:#1F2C48;
+    --text:#E8ECF3;
+    --text-dim:#8B96AE;
+    --text-dimmer:#5D6883;
+    --accent:#4FD1C5;
+    --accent-dim:#2C9C90;
+    --accent-glow: rgba(79,209,197,0.35);
+    --warn:#F0A868;
+    --danger:#E8697A;
+    --danger-dim:#B44B5A;
+    --border:#263252;
+    --border-soft:#1B2540;
+    --radius:10px;
+    --font-display:'Space Grotesk', sans-serif;
+    --font-body:'Inter', sans-serif;
+    --font-mono:'JetBrains Mono', monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 15% 0%, rgba(79,209,197,0.08), transparent 40%),
+      radial-gradient(circle at 85% 15%, rgba(240,168,104,0.05), transparent 35%),
+      var(--bg);
+    color:var(--text);
+    font-family:var(--font-body);
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;}
+  button{font-family:var(--font-body);cursor:pointer;}
+  ::selection{background:var(--accent-glow);}
+  input,textarea,select{
+    font-family:var(--font-body);
+    background:var(--bg-elev-2);
+    border:1px solid var(--border);
+    color:var(--text);
+    border-radius:8px;
+    padding:10px 12px;
+    font-size:14px;
+    outline:none;
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  input:focus,textarea:focus,select:focus{
+    border-color:var(--accent-dim);
+    box-shadow:0 0 0 3px rgba(79,209,197,0.15);
+  }
+  code, .mono{font-family:var(--font-mono);}
+
+  /* ---------- layout ---------- */
+  #app{min-height:100vh;display:flex;flex-direction:column;}
+  .container{max-width:920px;margin:0 auto;padding:0 24px;width:100%;}
+
+  .navbar{
+    border-bottom:1px solid var(--border-soft);
+    background:rgba(11,18,32,0.85);
+    backdrop-filter:blur(8px);
+    position:sticky;top:0;z-index:50;
+  }
+  .navbar-inner{
+    max-width:920px;margin:0 auto;padding:14px 24px;
+    display:flex;align-items:center;justify-content:space-between;gap:16px;
+  }
+  .brand{display:flex;align-items:center;gap:9px;font-family:var(--font-display);font-weight:700;font-size:18px;letter-spacing:.2px;cursor:pointer;user-select:none;}
+  .brand .dot{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent-glow);flex-shrink:0;}
+  .brand small{font-family:var(--font-mono);font-weight:400;font-size:11px;color:var(--text-dimmer);margin-left:2px;}
+  .nav-links{display:flex;align-items:center;gap:4px;flex-wrap:wrap;}
+  .nav-link{
+    font-size:13.5px;color:var(--text-dim);padding:7px 11px;border-radius:7px;border:1px solid transparent;
+    background:transparent;transition:all .15s ease;
+  }
+  .nav-link:hover{color:var(--text);background:var(--bg-elev-2);}
+  .nav-link.active{color:var(--accent);background:rgba(79,209,197,0.08);border-color:rgba(79,209,197,0.25);}
+  .nav-link.admin{color:var(--warn);}
+  .btn{
+    font-size:13.5px;padding:8px 14px;border-radius:7px;border:1px solid var(--border);
+    background:var(--bg-elev-2);color:var(--text);font-weight:500;transition:all .15s ease;
+  }
+  .btn:hover{border-color:var(--text-dimmer);}
+  .btn-accent{background:var(--accent);border-color:var(--accent);color:#08201D;font-weight:600;}
+  .btn-accent:hover{background:#5FE0D4;box-shadow:0 0 0 3px var(--accent-glow);}
+  .btn-danger{background:transparent;border-color:var(--danger-dim);color:var(--danger);}
+  .btn-danger:hover{background:rgba(232,105,122,0.1);}
+  .btn-ghost{background:transparent;border-color:transparent;color:var(--text-dim);}
+  .btn-ghost:hover{color:var(--text);}
+  .btn:disabled{opacity:.45;cursor:not-allowed;}
+  .btn-sm{padding:5px 10px;font-size:12.5px;}
+
+  main{flex:1;padding:48px 24px 80px;}
+  footer{border-top:1px solid var(--border-soft);padding:22px 24px;text-align:center;color:var(--text-dimmer);font-size:12.5px;}
+  footer a{color:var(--text-dim);text-decoration:underline;text-underline-offset:2px;}
+
+  /* ---------- home / hero ---------- */
+  .hero{max-width:720px;margin:0 auto;text-align:center;}
+  .hero-eyebrow{
+    display:inline-flex;align-items:center;gap:7px;font-family:var(--font-mono);font-size:12px;color:var(--accent);
+    background:rgba(79,209,197,0.08);border:1px solid rgba(79,209,197,0.25);padding:5px 12px;border-radius:20px;margin-bottom:22px;
+  }
+  .hero-eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+  .hero h1{font-family:var(--font-display);font-size:44px;line-height:1.12;margin:0 0 14px;font-weight:700;letter-spacing:-.5px;}
+  .hero p{color:var(--text-dim);font-size:16px;line-height:1.6;max-width:520px;margin:0 auto 34px;}
+
+  .search-bar{
+    display:flex;align-items:center;gap:0;background:var(--bg-elev);border:1px solid var(--border);
+    border-radius:10px;padding:4px 4px 4px 16px;max-width:520px;margin:0 auto;
+    box-shadow:0 8px 30px rgba(0,0,0,0.25);transition:border-color .15s ease;
+  }
+  .search-bar:focus-within{border-color:var(--accent-dim);box-shadow:0 0 0 3px var(--accent-glow);}
+  .search-bar .prompt{font-family:var(--font-mono);color:var(--accent);font-size:15px;}
+  .search-bar input{flex:1;background:transparent;border:none;font-family:var(--font-mono);font-size:15px;padding:12px 8px;}
+  .search-bar input:focus{box-shadow:none;}
+  .search-bar button{white-space:nowrap;}
+
+  .search-hint{margin-top:12px;font-size:12.5px;color:var(--text-dimmer);font-family:var(--font-mono);}
+
+  .stat-row{display:flex;justify-content:center;gap:36px;margin-top:56px;flex-wrap:wrap;}
+  .stat{text-align:center;}
+  .stat .num{font-family:var(--font-display);font-size:26px;font-weight:700;color:var(--accent);}
+  .stat .lbl{font-size:12px;color:var(--text-dimmer);margin-top:2px;font-family:var(--font-mono);}
+
+  .feature-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;max-width:820px;margin:70px auto 0;}
+  .feature-card{background:var(--bg-elev);border:1px solid var(--border-soft);border-radius:var(--radius);padding:20px;}
+  .feature-card .ico{width:30px;height:30px;border-radius:8px;background:rgba(79,209,197,0.1);display:flex;align-items:center;justify-content:center;color:var(--accent);margin-bottom:12px;font-family:var(--font-mono);font-weight:600;}
+  .feature-card h3{font-family:var(--font-display);font-size:15px;margin:0 0 6px;font-weight:600;}
+  .feature-card p{font-size:13px;color:var(--text-dim);line-height:1.55;margin:0;}
+
+  /* ---------- panels / cards ---------- */
+  .panel{background:var(--bg-elev);border:1px solid var(--border-soft);border-radius:var(--radius);padding:22px;margin-bottom:18px;}
+  .panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:12px;flex-wrap:wrap;}
+  .panel-head h2{font-family:var(--font-display);font-size:17px;margin:0;font-weight:600;display:flex;align-items:center;gap:9px;}
+  .badge{font-family:var(--font-mono);font-size:11px;color:var(--text-dim);background:var(--bg-elev-2);border:1px solid var(--border);padding:2px 8px;border-radius:20px;}
+  .badge.warn{color:var(--warn);border-color:rgba(240,168,104,0.35);background:rgba(240,168,104,0.08);}
+  .badge.ok{color:var(--accent);border-color:rgba(79,209,197,0.3);background:rgba(79,209,197,0.08);}
+
+  .row-item{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:13px 14px;border:1px solid var(--border-soft);border-radius:8px;background:var(--bg-elev-2);
+    margin-bottom:9px;flex-wrap:wrap;
+  }
+  .row-item .left{display:flex;align-items:center;gap:10px;min-width:0;}
+  .port-light{width:8px;height:8px;border-radius:50%;flex-shrink:0;background:var(--text-dimmer);}
+  .port-light.on{background:var(--accent);box-shadow:0 0 8px var(--accent-glow);}
+  .row-item .name{font-family:var(--font-mono);font-size:13.5px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .row-item .sub{font-size:11.5px;color:var(--text-dimmer);margin-top:2px;}
+  .row-item .actions{display:flex;gap:6px;flex-wrap:wrap;}
+  .empty-state{text-align:center;padding:30px 10px;color:var(--text-dimmer);font-size:13.5px;}
+  .empty-state .big{font-size:26px;margin-bottom:6px;}
+
+  form.inline-form{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;}
+  form.inline-form input, form.inline-form select{flex:1;min-width:160px;}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:12.5px;color:var(--text-dim);margin-bottom:6px;font-weight:500;}
+  .field input, .field textarea, .field select{width:100%;}
+  .field .help{font-size:11.5px;color:var(--text-dimmer);margin-top:5px;}
+
+  .message{padding:11px 14px;border-radius:8px;font-size:13.5px;margin-bottom:16px;border:1px solid;}
+  .message.error{background:rgba(232,105,122,0.08);border-color:rgba(232,105,122,0.3);color:#F5A5B0;}
+  .message.success{background:rgba(79,209,197,0.08);border-color:rgba(79,209,197,0.3);color:var(--accent);}
+  .message.info{background:rgba(240,168,104,0.08);border-color:rgba(240,168,104,0.3);color:var(--warn);}
+
+  .tabs{display:flex;gap:4px;margin-bottom:22px;border-bottom:1px solid var(--border-soft);}
+  .tab{padding:9px 4px;margin-right:20px;font-size:13.5px;color:var(--text-dim);border-bottom:2px solid transparent;font-weight:500;}
+  .tab.active{color:var(--text);border-color:var(--accent);}
+
+  /* ---------- auth ---------- */
+  .auth-box{max-width:380px;margin:20px auto;}
+  .auth-switch{display:flex;background:var(--bg-elev-2);border:1px solid var(--border);border-radius:8px;padding:3px;margin-bottom:22px;}
+  .auth-switch button{flex:1;background:transparent;border:none;padding:8px;border-radius:6px;color:var(--text-dim);font-size:13.5px;font-weight:500;}
+  .auth-switch button.active{background:var(--bg-elev-3);color:var(--text);}
+
+  /* ---------- editor ---------- */
+  .editor-layout{display:grid;grid-template-columns:220px 1fr;gap:16px;align-items:start;}
+  .file-list{background:var(--bg-elev);border:1px solid var(--border-soft);border-radius:var(--radius);padding:10px;}
+  .file-item{
+    display:flex;align-items:center;justify-content:space-between;gap:6px;
+    padding:8px 9px;border-radius:6px;font-family:var(--font-mono);font-size:12.5px;color:var(--text-dim);
+    cursor:pointer;margin-bottom:2px;
+  }
+  .file-item:hover{background:var(--bg-elev-2);}
+  .file-item.active{background:rgba(79,209,197,0.1);color:var(--accent);}
+  .file-item .del{opacity:0;color:var(--danger);font-size:14px;}
+  .file-item:hover .del{opacity:1;}
+  .editor-main textarea{
+    width:100%;min-height:340px;font-family:var(--font-mono);font-size:13px;line-height:1.55;resize:vertical;
+  }
+  .preview-frame{width:100%;height:420px;border:1px solid var(--border-soft);border-radius:8px;background:#fff;margin-top:14px;}
+  .toolbar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center;}
+  .toolbar .spacer{flex:1;}
+
+  /* ---------- site viewer ---------- */
+  .viewer-bar{
+    display:flex;align-items:center;gap:12px;padding:10px 18px;background:var(--bg-elev);border-bottom:1px solid var(--border);
+    position:sticky;top:0;z-index:40;
+  }
+  .viewer-bar .url{font-family:var(--font-mono);font-size:13px;color:var(--text-dim);}
+  .viewer-frame{width:100%;height:calc(100vh - 49px);border:none;background:#fff;}
+
+  .terms-list{padding-left:0;list-style:none;}
+  .terms-list li{padding:12px 0;border-bottom:1px solid var(--border-soft);font-size:14px;color:var(--text-dim);line-height:1.6;display:flex;gap:12px;}
+  .terms-list li b{color:var(--text);}
+  .terms-num{font-family:var(--font-mono);color:var(--accent);flex-shrink:0;}
+
+  .spinner{width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:middle;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .center-loading{display:flex;justify-content:center;padding:60px 0;}
+
+  @media (max-width: 640px){
+    .hero h1{font-size:32px;}
+    .feature-grid{grid-template-columns:1fr;}
+    .editor-layout{grid-template-columns:1fr;}
+    .navbar-inner{flex-direction:column;align-items:flex-start;gap:10px;}
+    .nav-links{width:100%;justify-content:flex-start;}
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+(function(){
+  "use strict";
+  const SUPABASE_URL = "https://puljajfgjyzipgdrvioy.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB1bGphamZnanl6aXBnZHJ2aW95Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQzNjU1NDUsImV4cCI6MjA5OTk0MTU0NX0.F9r4TxzjfOLieUaslnvG8cwgKPlEjSrWEPCHM2miJtU";
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const state = {
+    session: null,
+    profile: null,
+    view: "home",
+    authMode: "login",
+    websites: [],
+    domains: [],
+    currentWebsiteId: null,
+    currentFiles: [],
+    currentPath: null,
+    draftContent: "",
+    draftIsNew: false,
+    newFilePath: "",
+    siteViewer: null,
+    adminData: null,
+    adminTab: "domains",
+    loading: false,
+    message: null,
+    booting: true,
+  };
+
+  const app = document.getElementById("app");
+
+  function esc(s){
+    return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  }
+  function setMsg(type, text){ state.message = {type, text}; render(); }
+  function clearMsg(){ state.message = null; }
+  function go(view){ clearMsg(); state.view = view; render(); window.scrollTo(0,0); }
+
+  function mimeFromPath(path){
+    const ext = (path.split(".").pop() || "").toLowerCase();
+    const map = {
+      html:"text/html", htm:"text/html", css:"text/css", js:"application/javascript",
+      json:"application/json", svg:"image/svg+xml", txt:"text/plain", md:"text/markdown",
+      xml:"application/xml"
+    };
+    return map[ext] || "text/plain";
+  }
+
+  // ---------------- AUTH ----------------
+  async function refreshSession(){
+    const { data } = await sb.auth.getSession();
+    state.session = data.session;
+    if (state.session){
+      const { data: prof } = await sb.from("v2_profiles").select("*").eq("id", state.session.user.id).maybeSingle();
+      state.profile = prof || null;
+    } else {
+      state.profile = null;
+    }
+  }
+
+  sb.auth.onAuthStateChange(async (_event, session) => {
+    state.session = session;
+    if (session){
+      const { data: prof } = await sb.from("v2_profiles").select("*").eq("id", session.user.id).maybeSingle();
+      state.profile = prof || null;
+    } else {
+      state.profile = null;
+    }
+    render();
+  });
+
+  async function doRegister(email, password){
+    clearMsg();
+    if (!email || !password || password.length < 6){
+      setMsg("error", "Vul een e-mailadres in en een wachtwoord van minstens 6 tekens.");
+      return;
+    }
+    state.loading = true; render();
+    const { data, error } = await sb.auth.signUp({ email, password });
+    state.loading = false;
+    if (error){ setMsg("error", error.message); return; }
+    if (data.session){
+      await refreshSession();
+      setMsg("success", "Account aangemaakt. Welkom!");
+      go("dashboard");
+    } else {
+      setMsg("info", "Account aangemaakt. Check je e-mail om je account te bevestigen, log daarna in.");
+      state.authMode = "login";
+      render();
+    }
+  }
+
+  async function doLogin(email, password){
+    clearMsg();
+    state.loading = true; render();
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
+    state.loading = false;
+    if (error){ setMsg("error", error.message === "Invalid login credentials" ? "Onjuiste inloggegevens." : error.message); return; }
+    state.session = data.session;
+    await refreshSession();
+    setMsg("success", "Ingelogd.");
+    go("dashboard");
+  }
+
+  async function doLogout(){
+    await sb.auth.signOut();
+    state.session = null; state.profile = null; state.websites = []; state.domains = [];
+    go("home");
+  }
+
+  // ---------------- DATA LOADING ----------------
+  async function loadDashboardData(){
+    if (!state.session) return;
+    state.loading = true; render();
+    const uid = state.session.user.id;
+    const [{ data: sites }, { data: doms }] = await Promise.all([
+      sb.from("v2_websites").select("*").eq("owner_id", uid).order("created_at"),
+      sb.from("v2_domains").select("*").eq("owner_id", uid).order("created_at"),
+    ]);
+    state.websites = sites || [];
+    state.domains = doms || [];
+    state.loading = false; render();
+  }
+
+  async function createWebsite(name, slug){
+    clearMsg();
+    if (!slug || !/^[a-z0-9]([a-z0-9-]{0,48}[a-z0-9])?$/.test(slug)){
+      setMsg("error", "Ongeldige slug. Gebruik alleen kleine letters, cijfers en koppeltekens.");
+      return;
+    }
+    state.loading = true; render();
+    const { error } = await sb.from("v2_websites").insert({
+      owner_id: state.session.user.id,
+      name: name || "Naamloze website",
+      slug,
+    });
+    state.loading = false;
+    if (error){ setMsg("error", error.message.includes("Limiet") ? error.message : (error.message.includes("duplicate") ? "Deze slug is al in gebruik." : error.message)); return; }
+    setMsg("success", "Website aangemaakt.");
+    await loadDashboardData();
+  }
+
+  async function deleteWebsite(id){
+    if (!confirm("Deze website en alle bestanden verwijderen?")) return;
+    state.loading = true; render();
+    const { error } = await sb.from("v2_websites").delete().eq("id", id);
+    state.loading = false;
+    if (error){ setMsg("error", error.message); return; }
+    setMsg("success", "Website verwijderd.");
+    await loadDashboardData();
+  }
+
+  async function createDomain(name){
+    clearMsg();
+    const clean = (name || "").trim().toLowerCase();
+    if (!/^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/.test(clean)){
+      setMsg("error", "Ongeldige domeinnaam. Gebruik alleen kleine letters, cijfers en koppeltekens (geen puntjes nodig).");
+      return;
+    }
+    state.loading = true; render();
+    const { data: blocked } = await sb.from("v2_domain_blocklist").select("word").eq("word", clean).maybeSingle();
+    if (blocked){
+      state.loading = false;
+      setMsg("error", "Deze domeinnaam is gereserveerd en niet beschikbaar.");
+      return;
+    }
+    const { error } = await sb.from("v2_domains").insert({
+      owner_id: state.session.user.id,
+      domain_name: clean,
+    });
+    state.loading = false;
+    if (error){ setMsg("error", error.message.includes("Limiet") ? error.message : (error.message.includes("duplicate") ? "Dit domein is al bezet." : error.message)); return; }
+    setMsg("success", "Domein aangemaakt.");
+    await loadDashboardData();
+  }
+
+  async function deleteDomain(id){
+    if (!confirm("Dit domein verwijderen?")) return;
+    state.loading = true; render();
+    const { error } = await sb.from("v2_domains").delete().eq("id", id);
+    state.loading = false;
+    if (error){ setMsg("error", error.message); return; }
+    setMsg("success", "Domein verwijderd.");
+    await loadDashboardData();
+  }
+
+  async function updateDomain(id, patch){
+    state.loading = true; render();
+    const { error } = await sb.from("v2_domains").update(patch).eq("id", id);
+    state.loading = false;
+    if (error){ setMsg("error", error.message); return; }
+    await loadDashboardData();
+  }
+
+  async function openWebsiteEditor(id){
+    clearMsg();
+    state.currentWebsiteId = id;
+    state.currentPath = null;
+    state.loading = true; state.view = "editor"; render();
+    const { data, error } = await sb.from("v2_website_files").select("*").eq("website_id", id).order("file_path");
+    state.loading = false;
+    if (error){ setMsg("error", error.message); }
+    state.currentFiles = data || [];
+    render();
+  }
+
+  function selectFile(path){
+    const f = state.currentFiles.find(f => f.file_path === path);
+    state.currentPath = path;
+    state.draftContent = f ? f.content : "";
+    state.draftIsNew = false;
+    render();
+  }
+
+  function startNewFile(){
+    state.currentPath = null;
+    state.draftContent = "";
+    state.draftIsNew = true;
+    state.newFilePath = "";
+    render();
+  }
+
+  async function saveCurrentFile(){
+    clearMsg();
+    const path = state.draftIsNew ? state.newFilePath.trim().replace(/^\/+/, "") : state.currentPath;
+    if (!path || path.includes("..")){
+      setMsg("error", "Ongeldig bestandspad.");
+      return;
+    }
+    state.loading = true; render();
+    const { error } = await sb.from("v2_website_files").upsert({
+      website_id: state.currentWebsiteId,
+      file_path: path,
+      content: state.draftContent,
+      mime_type: mimeFromPath(path),
+      updated_at: new Date().toISOString(),
+    }, { onConflict: "website_id,file_path" });
+    state.loading = false;
+    if (error){ setMsg("error", error.message); return; }
+    setMsg("success", "Bestand opgeslagen: " + path);
+    state.draftIsNew = false;
+    state.currentPath = path;
+    const { data } = await sb.from("v2_website_files").select("*").eq("website_id", state.currentWebsiteId).order("file_path");
+    state.currentFiles = data || [];
+    render();
+  }
+
+  async function deleteFile(id, path){
+    if (!confirm("Bestand '" + path + "' verwijderen?")) return;
+    state.loading = true; render();
+    const { error } = await sb.from("v2_website_files").delete().eq("id", id);
+    state.loading = false;
+    if (error){ setMsg("error", error.message); return; }
+    if (state.currentPath === path){ state.currentPath = null; state.draftContent = ""; }
+    const { data } = await sb.from("v2_website_files").select("*").eq("website_id", state.currentWebsiteId).order("file_path");
+    state.currentFiles = data || [];
+    render();
+  }
+
+  // ---------------- PREVIEW ENGINE (cross-file linking) ----------------
+  function buildFileMap(files){
+    const map = {};
+    files.forEach(f => { map[f.file_path] = f; });
+    return map;
+  }
+
+  function resolvePath(basePath, rel){
+    if (/^(https?:)?\/\//i.test(rel) || rel.startsWith("data:") || rel.startsWith("#") || rel.startsWith("mailto:")) return null;
+    const baseParts = basePath.split("/"); baseParts.pop();
+    const relParts = rel.split("/");
+    const stack = baseParts.slice();
+    for (const part of relParts){
+      if (part === "." || part === "") continue;
+      if (part === "..") stack.pop();
+      else stack.push(part);
+    }
+    return stack.join("/");
+  }
+
+  function renderHtmlWithAssets(path, fileMap, blobCache, visited){
+    if (blobCache[path]) return blobCache[path];
+    if (visited.has(path)) return null;
+    visited.add(path);
+    const file = fileMap[path];
+    if (!file) return null;
+    let html = file.content;
+
+    const attrRegex = /((?:src|href)\s*=\s*)(["'])(.*?)\2/gi;
+    html = html.replace(attrRegex, (match, prefix, quote, val) => {
+      const resolved = resolvePath(path, val);
+      if (!resolved || !fileMap[resolved]) return match;
+      let assetUrl;
+      if (mimeFromPath(resolved) === "text/html"){
+        assetUrl = renderHtmlWithAssets(resolved, fileMap, blobCache, visited);
+      } else {
+        assetUrl = blobUrlFor(resolved, fileMap, blobCache);
+      }
+      if (!assetUrl) return match;
+      return prefix + quote + assetUrl + quote;
+    });
+
+    html = html.replace(/url\((["']?)(.*?)\1\)/gi, (match, quote, val) => {
+      const resolved = resolvePath(path, val);
+      if (!resolved || !fileMap[resolved]) return match;
+      const assetUrl = blobUrlFor(resolved, fileMap, blobCache);
+      return assetUrl ? "url(" + quote + assetUrl + quote + ")" : match;
+    });
+
+    const blob = new Blob([html], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    blobCache[path] = url;
+    return url;
+  }
+
+  function blobUrlFor(path, fileMap, blobCache){
+    if (blobCache[path]) return blobCache[path];
+    const file = fileMap[path];
+    if (!file) return null;
+    const blob = new Blob([file.content], { type: mimeFromPath(path) });
+    const url = URL.createObjectURL(blob);
+    blobCache[path] = url;
+    return url;
+  }
+
+  function buildPreviewUrl(files){
+    const fileMap = buildFileMap(files);
+    if (!fileMap["index.html"]){
+      return null;
+    }
+    const blobCache = {};
+    return renderHtmlWithAssets("index.html", fileMap, blobCache, new Set());
+  }
+
+  // ---------------- DOMAIN SEARCH / VIEWER ----------------
+  async function searchDomain(name){
+    clearMsg();
+    const clean = (name || "").trim().toLowerCase();
+    if (!clean){ setMsg("error", "Typ eerst een domeinnaam in."); return; }
+    state.loading = true; render();
+    const { data: dom } = await sb.from("v2_domains").select("*").eq("domain_name", clean).maybeSingle();
+    if (!dom){
+      state.loading = false;
+      setMsg("error", "Domein '" + clean + "' bestaat niet op dit platform.");
+      return;
+    }
+    if (!dom.is_published || !dom.website_id){
+      state.loading = false;
+      setMsg("info", "Domein '" + clean + "' bestaat, maar is (nog) niet gepubliceerd door de eigenaar.");
+      return;
+    }
+    const { data: files } = await sb.from("v2_website_files").select("*").eq("website_id", dom.website_id);
+    state.loading = false;
+    if (!files || !files.length){
+      setMsg("error", "Deze website heeft nog geen bestanden.");
+      return;
+    }
+    const url = buildPreviewUrl(files);
+    if (!url){
+      setMsg("error", "Deze website heeft geen index.html en kan niet worden weergegeven.");
+      return;
+    }
+    state.siteViewer = { domain: clean, url };
+    state.view = "site";
+    render();
+  }
+
+  // ---------------- ADMIN ----------------
+  async function loadAdminData(){
+    state.loading = true; render();
+    const [{ data: domains }, { data: websites }, { data: profiles }] = await Promise.all([
+      sb.from("v2_domains").select("*").order("created_at"),
+      sb.from("v2_websites").select("*").order("created_at"),
+      sb.from("v2_profiles").select("*").order("created_at"),
+    ]);
+    state.adminData = { domains: domains || [], websites: websites || [], profiles: profiles || [] };
+    state.loading = false; render();
+  }
+
+  async function adminDeleteDomain(id){
+    if (!confirm("Domein verwijderen?")) return;
+    await sb.from("v2_domains").delete().eq("id", id);
+    await loadAdminData();
+  }
+  async function adminDeleteWebsite(id){
+    if (!confirm("Website verwijderen?")) return;
+    await sb.from("v2_websites").delete().eq("id", id);
+    await loadAdminData();
+  }
+  async function adminTogglePublish(dom){
+    await sb.from("v2_domains").update({ is_published: !dom.is_published }).eq("id", dom.id);
+    await loadAdminData();
+  }
+
+  // ---------------- VIEWS ----------------
+  function Navbar(){
+    const isAuthed = !!state.session;
+    return `
+    <div class="navbar">
+      <div class="navbar-inner">
+        <div class="brand" onclick="Domainport.go('home')">
+          <span class="dot"></span>Domainport<small>/ basic</small>
+        </div>
+        <div class="nav-links">
+          <button class="nav-link ${state.view==='home'?'active':''}" onclick="Domainport.go('home')">Home</button>
+          ${isAuthed ? `<button class="nav-link ${state.view==='dashboard'||state.view==='editor'?'active':''}" onclick="Domainport.goDashboard()">Dashboard</button>` : ""}
+          ${state.profile && state.profile.is_admin ? `<button class="nav-link admin ${state.view==='admin'?'active':''}" onclick="Domainport.goAdmin()">Admin</button>` : ""}
+          <button class="nav-link ${state.view==='terms'?'active':''}" onclick="Domainport.go('terms')">Voorwaarden</button>
+          ${isAuthed
+            ? `<span class="badge" style="margin-left:6px;">${esc(state.session.user.email)}</span><button class="btn btn-ghost btn-sm" onclick="Domainport.logout()">Uitloggen</button>`
+            : `<button class="btn btn-sm" onclick="Domainport.goAuth('login')">Inloggen</button><button class="btn btn-accent btn-sm" onclick="Domainport.goAuth('register')">Registreren</button>`
+          }
+        </div>
+      </div>
+    </div>`;
+  }
+
+  function MessageBox(){
+    if (!state.message) return "";
+    return `<div class="message ${state.message.type}">${esc(state.message.text)}</div>`;
+  }
+
+  function HomeView(){
+    return `
+    <div class="hero">
+      <div class="hero-eyebrow"><span class="dot"></span>Systeem 2 — basic hosting</div>
+      <h1>Typ een domein.<br/>Kom uit bij de site.</h1>
+      <p>Domainport Basic is een lichtgewicht platform waar iedereen gratis websites host: maak een account, upload bestanden en koppel er een domein aan. Anderen vinden je site simpelweg door de naam hieronder te typen.</p>
+      <div class="search-bar">
+        <span class="prompt">&gt;</span>
+        <input id="domainSearchInput" type="text" placeholder="bijv. mijn-portfolio" autocomplete="off"
+          onkeydown="if(event.key==='Enter'){Domainport.search(this.value)}" />
+        <button class="btn btn-accent" onclick="Domainport.search(document.getElementById('domainSearchInput').value)">
+          ${state.loading ? '<span class="spinner"></span>' : "Ga naar site →"}
+        </button>
+      </div>
+      <div class="search-hint">geen puntjes nodig — alleen de domeinnaam, bv. "koffieblog"</div>
+      ${MessageBox()}
+    </div>
+
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="ico">01</div>
+        <h3>Eigen websites</h3>
+        <p>Elke gebruiker host tot 2 websites: een map met bestanden zoals index.html, style.css en script.js, die gewoon naar elkaar mogen verwijzen.</p>
+      </div>
+      <div class="feature-card">
+        <div class="ico">02</div>
+        <h3>Eigen domeinen</h3>
+        <p>Koppel tot 2 domeinnamen aan je websites en publiceer wanneer je klaar bent. Niet gepubliceerd = niet zichtbaar voor anderen.</p>
+      </div>
+      <div class="feature-card">
+        <div class="ico">03</div>
+        <h3>Opgeslagen in Supabase</h3>
+        <p>Alle accounts, sites en bestanden staan veilig per gebruiker opgeslagen, met rijbeveiliging zodat niemand bij elkaars data kan.</p>
+      </div>
+    </div>
+
+    <div class="stat-row">
+      <div class="stat"><div class="num">2</div><div class="lbl">max. websites</div></div>
+      <div class="stat"><div class="num">2</div><div class="lbl">max. domeinen</div></div>
+      <div class="stat"><div class="num">∞</div><div class="lbl">voor de admin</div></div>
+    </div>
+    `;
+  }
+
+  function AuthView(){
+    return `
+    <div class="auth-box">
+      <div class="panel-head" style="justify-content:center;margin-bottom:8px;">
+        <h2>${state.authMode === 'login' ? 'Inloggen' : 'Account aanmaken'}</h2>
+      </div>
+      <div class="auth-switch">
+        <button class="${state.authMode==='login'?'active':''}" onclick="Domainport.goAuth('login')">Inloggen</button>
+        <button class="${state.authMode==='register'?'active':''}" onclick="Domainport.goAuth('register')">Registreren</button>
+      </div>
+      ${MessageBox()}
+      <div class="panel">
+        <div class="field">
+          <label>E-mailadres</label>
+          <input id="authEmail" type="email" placeholder="jij@voorbeeld.nl" autocomplete="username" />
+        </div>
+        <div class="field">
+          <label>Wachtwoord</label>
+          <input id="authPassword" type="password" placeholder="••••••••" autocomplete="${state.authMode==='login'?'current-password':'new-password'}"
+            onkeydown="if(event.key==='Enter'){Domainport.submitAuth()}" />
+          ${state.authMode==='register' ? '<div class="help">Minstens 6 tekens.</div>' : ''}
+        </div>
+        <button class="btn btn-accent" style="width:100%;" ${state.loading?'disabled':''} onclick="Domainport.submitAuth()">
+          ${state.loading ? '<span class="spinner"></span>' : (state.authMode === 'login' ? 'Inloggen' : 'Account aanmaken')}
+        </button>
+      </div>
+    </div>`;
+  }
+
+  function DashboardView(){
+    if (!state.session) return AuthView();
+    const isAdmin = state.profile && state.profile.is_admin;
+    const siteLimit = isAdmin ? "∞" : "2";
+    const domLimit = isAdmin ? "∞" : "2";
+    const websiteRows = state.websites.map(w => {
+      const dom = state.domains.find(d => d.website_id === w.id);
+      return `
+      <div class="row-item">
+        <div class="left">
+          <span class="port-light ${dom && dom.is_published ? 'on' : ''}"></span>
+          <div>
+            <div class="name">${esc(w.name)} <span style="color:var(--text-dimmer);">/ ${esc(w.slug)}</span></div>
+            <div class="sub">${dom ? ('gekoppeld aan ' + esc(dom.domain_name) + (dom.is_published ? ' · live' : ' · niet gepubliceerd')) : 'geen domein gekoppeld'}</div>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="btn btn-sm" onclick="Domainport.openEditor('${w.id}')">Bewerken</button>
+          <button class="btn btn-danger btn-sm" onclick="Domainport.deleteWebsite('${w.id}')">Verwijderen</button>
+        </div>
+      </div>`;
+    }).join("");
+
+    const domainRows = state.domains.map(d => {
+      const linkedSite = state.websites.find(w => w.id === d.website_id);
+      const options = state.websites.map(w => `<option value="${w.id}" ${d.website_id===w.id?'selected':''}>${esc(w.name)}</option>`).join("");
+      return `
+      <div class="row-item">
+        <div class="left">
+          <span class="port-light ${d.is_published ? 'on' : ''}"></span>
+          <div>
+            <div class="name">${esc(d.domain_name)}</div>
+            <div class="sub">${linkedSite ? 'wijst naar "' + esc(linkedSite.name) + '"' : 'nog geen website gekoppeld'}</div>
+          </div>
+        </div>
+        <div class="actions">
+          <select class="btn-sm" style="padding:6px 8px;" onchange="Domainport.linkDomain('${d.id}', this.value)">
+            <option value="">— koppel website —</option>
+            ${options}
+          </select>
+          <button class="btn btn-sm ${d.is_published ? '' : 'btn-accent'}" onclick="Domainport.togglePublish('${d.id}', ${d.is_published})" ${!d.website_id?'disabled title="Koppel eerst een website"':''}>
+            ${d.is_published ? 'Depubliceren' : 'Publiceren'}
+          </button>
+          <button class="btn btn-danger btn-sm" onclick="Domainport.deleteDomain('${d.id}')">✕</button>
+        </div>
+      </div>`;
+    }).join("");
+
+    return `
+    <div class="panel-head" style="margin-bottom:26px;">
+      <h2 style="font-size:22px;">Dashboard</h2>
+      ${isAdmin ? '<span class="badge warn">admin — onbeperkt</span>' : ''}
+    </div>
+    ${MessageBox()}
+
+    <div class="panel">
+      <div class="panel-head">
+        <h2>Mijn websites <span class="badge">${state.websites.length}/${siteLimit}</span></h2>
+      </div>
+      ${websiteRows || '<div class="empty-state"><div class="big">📁</div>nog geen websites — maak er hieronder een</div>'}
+      <form class="inline-form" onsubmit="event.preventDefault(); Domainport.createWebsite()">
+        <input id="newSiteName" type="text" placeholder="Naam (bv. Mijn portfolio)" />
+        <input id="newSiteSlug" type="text" placeholder="slug (bv. mijn-portfolio)" />
+        <button class="btn btn-accent" type="submit" ${(!isAdmin && state.websites.length>=2)?'disabled':''}>+ Website</button>
+      </form>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h2>Mijn domeinen <span class="badge">${state.domains.length}/${domLimit}</span></h2>
+      </div>
+      ${domainRows || '<div class="empty-state"><div class="big">🌐</div>nog geen domeinen — claim er hieronder een</div>'}
+      <form class="inline-form" onsubmit="event.preventDefault(); Domainport.createDomain()">
+        <input id="newDomainName" type="text" placeholder="domeinnaam (bv. koffieblog)" />
+        <button class="btn btn-accent" type="submit" ${(!isAdmin && state.domains.length>=2)?'disabled':''}>+ Domein</button>
+      </form>
+    </div>
+    `;
+  }
+
+  function EditorView(){
+    const website = state.websites.find(w => w.id === state.currentWebsiteId) ||
+      (state.adminData && state.adminData.websites.find(w => w.id === state.currentWebsiteId));
+    const files = state.currentFiles.slice().sort((a,b) => a.file_path.localeCompare(b.file_path));
+    const fileItems = files.map(f => `
+      <div class="file-item ${state.currentPath===f.file_path?'active':''}" onclick="Domainport.selectFile('${f.file_path.replace(/'/g,"\\'")}')">
+        <span>${esc(f.file_path)}</span>
+        <span class="del" onclick="event.stopPropagation(); Domainport.deleteFile('${f.id}','${f.file_path.replace(/'/g,"\\'")}')">✕</span>
+      </div>`).join("");
+
+    const editingLabel = state.draftIsNew ? "Nieuw bestand" : (state.currentPath || "");
+    return `
+    <div class="panel-head">
+      <h2>${website ? esc(website.name) : 'Website'} <span class="badge">${esc(website ? website.slug : '')}</span></h2>
+      <button class="btn btn-ghost btn-sm" onclick="Domainport.goDashboard()">← Terug</button>
+    </div>
+    ${MessageBox()}
+    <div class="editor-layout">
+      <div class="file-list">
+        ${fileItems || '<div class="empty-state" style="padding:16px 6px;">geen bestanden</div>'}
+        <button class="btn btn-sm" style="width:100%;margin-top:8px;" onclick="Domainport.startNewFile()">+ Nieuw bestand</button>
+      </div>
+      <div class="editor-main">
+        <div class="panel" style="margin-bottom:12px;">
+          ${state.draftIsNew ? `
+            <div class="field">
+              <label>Bestandspad</label>
+              <input id="newFilePathInput" type="text" placeholder="bv. index.html of css/style.css" value="${esc(state.newFilePath)}" oninput="Domainport.setNewPath(this.value)" />
+              <div class="help">Gebruik / voor mappen, bv. "afbeeldingen/logo.svg". Begin met index.html als hoofdpagina.</div>
+            </div>
+          ` : (state.currentPath ? `<div class="field"><label>Bestand</label><div class="mono" style="font-size:13.5px;color:var(--accent);">${esc(state.currentPath)}</div></div>` : '<div class="empty-state">Selecteer een bestand of maak een nieuwe aan.</div>')}
+          ${(state.draftIsNew || state.currentPath) ? `
+            <div class="field" style="margin-bottom:8px;">
+              <label>Inhoud</label>
+              <textarea id="fileContentArea" placeholder="&lt;html&gt;...&lt;/html&gt;" oninput="Domainport.setDraft(this.value)">${esc(state.draftContent)}</textarea>
+            </div>
+            <div class="toolbar">
+              <button class="btn btn-accent" onclick="Domainport.saveFile()">Opslaan</button>
+              <div class="spacer"></div>
+              <span style="font-size:11.5px;color:var(--text-dimmer);">bestanden mogen naar elkaar verwijzen (src/href)</span>
+            </div>
+          ` : ''}
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h2 style="font-size:14px;">Voorweergave</h2><button class="btn btn-sm" onclick="Domainport.refreshPreview()">↻ Ververs</button></div>
+          <iframe id="previewFrame" class="preview-frame"></iframe>
+        </div>
+      </div>
+    </div>
+    `;
+  }
+
+  function AdminView(){
+    if (!state.adminData) return `<div class="center-loading"><span class="spinner"></span></div>`;
+    const { domains, websites, profiles } = state.adminData;
+    const nameOf = uid => { const p = profiles.find(p => p.id === uid); return p ? p.email : uid.slice(0,8); };
+    const siteOf = id => websites.find(w => w.id === id);
+
+    const domainRows = domains.map(d => `
+      <div class="row-item">
+        <div class="left">
+          <span class="port-light ${d.is_published?'on':''}"></span>
+          <div>
+            <div class="name">${esc(d.domain_name)}</div>
+            <div class="sub">eigenaar: ${esc(nameOf(d.owner_id))} ${d.website_id ? '· → ' + esc((siteOf(d.website_id)||{}).name || '?') : '· geen website'}</div>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="btn btn-sm ${d.is_published?'':'btn-accent'}" onclick="Domainport.adminToggle('${d.id}', ${d.is_published})">${d.is_published?'Depubliceren':'Publiceren'}</button>
+          <button class="btn btn-danger btn-sm" onclick="Domainport.adminDelDomain('${d.id}')">Verwijderen</button>
+        </div>
+      </div>`).join("") || '<div class="empty-state">Geen domeinen.</div>';
+
+    const websiteRows = websites.map(w => `
+      <div class="row-item">
+        <div class="left">
+          <div>
+            <div class="name">${esc(w.name)} <span style="color:var(--text-dimmer);">/ ${esc(w.slug)}</span></div>
+            <div class="sub">eigenaar: ${esc(nameOf(w.owner_id))}</div>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="btn btn-sm" onclick="Domainport.openEditor('${w.id}')">Bekijk bestanden</button>
+          <button class="btn btn-danger btn-sm" onclick="Domainport.adminDelWebsite('${w.id}')">Verwijderen</button>
+        </div>
+      </div>`).join("") || '<div class="empty-state">Geen websites.</div>';
+
+    const userRows = profiles.map(p => `
+      <div class="row-item">
+        <div class="left">
+          <span class="port-light ${p.is_admin?'on':''}"></span>
+          <div>
+            <div class="name">${esc(p.email)}</div>
+            <div class="sub">${p.is_admin ? 'admin · onbeperkt' : 'normale gebruiker · max 2 + 2'}</div>
+          </div>
+        </div>
+      </div>`).join("");
+
+    return `
+    <div class="panel-head" style="margin-bottom:26px;">
+      <h2 style="font-size:22px;">Admin</h2>
+      <span class="badge warn">${esc(state.session.user.email)}</span>
+    </div>
+    <div class="tabs">
+      <div class="tab ${state.adminTab==='domains'?'active':''}" onclick="Domainport.adminTab('domains')">Domeinen (${domains.length})</div>
+      <div class="tab ${state.adminTab==='websites'?'active':''}" onclick="Domainport.adminTab('websites')">Websites (${websites.length})</div>
+      <div class="tab ${state.adminTab==='users'?'active':''}" onclick="Domainport.adminTab('users')">Gebruikers (${profiles.length})</div>
+    </div>
+    <div class="panel">
+      ${state.adminTab==='domains' ? domainRows : state.adminTab==='websites' ? websiteRows : userRows}
+    </div>
+    `;
+  }
+
+  function TermsView(){
+    const items = [
+      ["Gebruikslimiet", "Elke normale gebruiker mag maximaal <b>2 websites</b> en <b>2 domeinen</b> aanmaken. De beheerder (admin) heeft geen limiet."],
+      ["Toegestane inhoud", "Je mag geen illegale, misleidende, discriminerende of haatdragende content hosten, en geen malware, phishing-pagina's of content die anderen schade toebrengt."],
+      ["Eigendom", "Je blijft verantwoordelijk voor de bestanden die je uploadt. Host geen materiaal waar je geen recht op hebt."],
+      ["Publiceren", "Een domein is pas publiek zichtbaar via de zoekbalk wanneer je het expliciet publiceert en aan een website koppelt."],
+      ["Moderatie", "De admin kan elk domein of elke website verwijderen of depubliceren bij misbruik, zonder voorafgaande melding."],
+      ["Geen garanties", "Dit is een eenvoudig ('basic') hobby-/demoplatform. Er wordt geen uptime, back-up of dataretentie gegarandeerd."],
+      ["Data", "Accounts, websites, bestanden en domeinen worden opgeslagen in Supabase en zijn per gebruiker afgeschermd met rijbeveiliging."],
+      ["Contact", "Voor vragen of meldingen van misbruik: treurmattheo@gmail.com."],
+    ];
+    return `
+    <div class="panel-head"><h2 style="font-size:22px;">Voorwaarden</h2></div>
+    <div class="panel">
+      <ul class="terms-list">
+        ${items.map((it,i) => `<li><span class="terms-num">${String(i+1).padStart(2,'0')}</span><span><b>${esc(it[0])}.</b> ${it[1]}</span></li>`).join("")}
+      </ul>
+    </div>`;
+  }
+
+  function SiteViewerView(){
+    return `
+    <div class="viewer-bar">
+      <button class="btn btn-sm" onclick="Domainport.closeViewer()">← Terug</button>
+      <span class="url mono">${esc(state.siteViewer.domain)}</span>
+    </div>
+    <iframe class="viewer-frame" src="${state.siteViewer.url}"></iframe>
+    `;
+  }
+
+  // ---------------- MASTER RENDER ----------------
+  function render(){
+    let body;
+    if (state.view === "site" && state.siteViewer){
+      app.innerHTML = SiteViewerView();
+      return;
+    }
+    switch(state.view){
+      case "home": body = HomeView(); break;
+      case "auth": body = AuthView(); break;
+      case "dashboard": body = state.loading && !state.websites.length ? `<div class="center-loading"><span class="spinner"></span></div>` : DashboardView(); break;
+      case "editor": body = EditorView(); break;
+      case "admin": body = AdminView(); break;
+      case "terms": body = TermsView(); break;
+      default: body = HomeView();
+    }
+    app.innerHTML = `
+      ${Navbar()}
+      <main><div class="container">${body}</div></main>
+      <footer>Domainport · Basic — systeem 2, los van het hoofdplatform. · <a onclick="Domainport.go('terms')">Voorwaarden</a> · beheerd door de site-admin</footer>
+    `;
+    if (state.view === "editor"){
+      setTimeout(refreshPreviewFrame, 0);
+    }
+  }
+
+  function refreshPreviewFrame(){
+    const frame = document.getElementById("previewFrame");
+    if (!frame) return;
+    const url = buildPreviewUrl(state.currentFiles);
+    frame.srcdoc = "";
+    if (url){
+      frame.src = url;
+    } else {
+      frame.srcdoc = "<div style='font-family:sans-serif;padding:20px;color:#888;'>Geen index.html gevonden. Maak een bestand met pad <b>index.html</b> aan.</div>";
+    }
+  }
+
+  // ---------------- PUBLIC API (bound to window) ----------------
+  window.Domainport = {
+    go, goDashboard: async () => { go("dashboard"); await loadDashboardData(); },
+    goAdmin: async () => { go("admin"); await loadAdminData(); },
+    goAuth: (mode) => { state.authMode = mode; go("auth"); },
+    adminTab: (tab) => { state.adminTab = tab; render(); },
+    logout: doLogout,
+    submitAuth: () => {
+      const email = document.getElementById("authEmail").value.trim();
+      const password = document.getElementById("authPassword").value;
+      if (state.authMode === "login") doLogin(email, password);
+      else doRegister(email, password);
+    },
+    search: (val) => searchDomain(val),
+    closeViewer: () => { if (state.siteViewer) URL.revokeObjectURL(state.siteViewer.url); state.siteViewer = null; go("home"); },
+    createWebsite: () => {
+      const name = document.getElementById("newSiteName").value.trim();
+      const slug = document.getElementById("newSiteSlug").value.trim().toLowerCase();
+      createWebsite(name, slug);
+    },
+    deleteWebsite,
+    createDomain: () => { const v = document.getElementById("newDomainName").value; createDomain(v); },
+    deleteDomain,
+    linkDomain: (domainId, websiteId) => updateDomain(domainId, { website_id: websiteId || null }),
+    togglePublish: (id, current) => updateDomain(id, { is_published: !current }),
+    openEditor: openWebsiteEditor,
+    selectFile,
+    startNewFile,
+    setDraft: (v) => { state.draftContent = v; },
+    setNewPath: (v) => { state.newFilePath = v; },
+    saveFile: saveCurrentFile,
+    deleteFile,
+    refreshPreview: refreshPreviewFrame,
+    adminDelDomain: adminDeleteDomain,
+    adminDelWebsite: adminDeleteWebsite,
+    adminToggle: adminTogglePublish,
+  };
+
+  // ---------------- BOOT ----------------
+  (async function boot(){
+    await refreshSession();
+    state.booting = false;
+    if (state.session){
+      go("dashboard");
+      await loadDashboardData();
+    } else {
+      render();
+    }
+  })();
+})();
+</script>
+</body>
+</html>
