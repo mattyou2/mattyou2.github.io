@@ -1,10 +1,17 @@
 // ============================================================
 // BROWSEPORT — service worker
-// Cachet alleen de statische app-shell (niet de opgezochte
-// bestemmingen — die moeten altijd live/vers zijn).
+// v2: netwerk-eerst voor de app-shell (met cache als offline-fallback).
+// Reden voor de wijziging t.o.v. v1 (cache-eerst): bij elke update van
+// de site bleven browsers die de site al eerder hadden bezocht de OUDE
+// gecachete index.html/app.js/style.css tonen totdat de cache met de
+// hand geleegd werd — knoppen, styling en scripts leken dan "kapot"
+// terwijl de broncode allang gefixt was. Netwerk-eerst voorkomt dat:
+// je krijgt altijd de nieuwste versie zodra er verbinding is, en pas
+// bij een verbroken verbinding valt hij terug op de laatst gecachete
+// kopie.
 // ============================================================
 
-const CACHE_NAME = 'browseport-shell-v1';
+const CACHE_NAME = 'browseport-shell-v2';
 const BASE = new URL(self.registration.scope).pathname; // bijv. "/browser/"
 const SHELL_FILES = [
   'index.html',
@@ -36,8 +43,8 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  // Nooit Supabase-calls, go.html (resolver) of query-string requests cachen —
-  // die moeten altijd live data ophalen.
+  // Nooit Supabase-calls, go.html (resolver) of query-string requests
+  // aanraken — die moeten altijd live data ophalen.
   if (
     event.request.method !== 'GET' ||
     url.origin.includes('supabase.co') ||
@@ -47,18 +54,20 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  if (!SHELL_ASSETS.includes(url.pathname)) return;
+
+  // Netwerk-eerst: probeer altijd de laatste versie te halen en werk de
+  // cache bij; alleen als het netwerk faalt (offline) grijpen we terug
+  // op wat er nog in de cache staat.
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) return cached;
-      return fetch(event.request)
-        .then((response) => {
-          if (response.ok && SHELL_ASSETS.includes(url.pathname)) {
-            const clone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-          }
-          return response;
-        })
-        .catch(() => cached);
-    })
+    fetch(event.request)
+      .then((response) => {
+        if (response.ok) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        }
+        return response;
+      })
+      .catch(() => caches.match(event.request))
   );
 });
