@@ -53,7 +53,21 @@ De credentials (project-URL + anon key) staan al hardcoded in
 want alle toegangscontrole gebeurt via RLS-policies in de database, niet
 via geheime sleutels in de front-end.
 
-## Bestanden in deze map
+## Deployen — jouw situatie (mattyou2.github.io/browser/)
+
+Deze versie is aangepast aan hoe jij de bestanden hebt neergezet: **alles
+plat in dezelfde map** (geen aparte `assets/`-submap), gepubliceerd op
+`https://mattyou2.github.io/browser/`. Alle interne links (stylesheet,
+script-import, manifest, service worker, navigatie tussen pagina's)
+gebruiken nu **relatieve paden zonder `/` vooraan** — die werken vanzelf
+op elk pad waar je de map ook plaatst, mocht je later verhuizen.
+
+Alleen `opensearch.xml` bevat noodgedwongen **absolute** URLs (dat vereist
+de OpenSearch-standaard) — die staan al goed ingevuld op
+`https://mattyou2.github.io/browser/...`. Verhuis je de site naar een
+ander pad of domein, pas dan alleen dat ene bestand aan.
+
+## Bestanden in deze map (plat, geen submappen)
 
 | Bestand | Doel |
 |---|---|
@@ -63,9 +77,9 @@ via geheime sleutels in de front-end.
 | `opensearch.xml` | Maakt de site herkenbaar als adresbalk-zoekmachine |
 | `manifest.json` | PWA-manifest (installeerbaar als standalone app) |
 | `sw.js` | Service worker (cachet enkel de app-shell, nooit opgezochte bestemmingen) |
-| `assets/app.js` | Gedeelde Supabase-client + auth/UI-helpers |
-| `assets/style.css` | Het volledige design-systeem |
-| `assets/icon.svg` | Logo, gebruikt als favicon/app-icoon |
+| `app.js` | Gedeelde Supabase-client + auth/UI-helpers |
+| `style.css` | Het volledige design-systeem |
+| `icon.svg` | Logo, gebruikt als favicon/app-icoon |
 
 ## Deployen — 3 stappen
 
