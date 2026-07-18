@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Site bewerken — Browseport</title>
+<meta name="theme-color" content="#101828">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="stylesheet" href="style.css?v=3">
+<style>
+  #app { display: none; }
+  .site-title-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="index.html">
+      <svg class="mark" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="#101828"/><path d="M18 40 V24 a6 6 0 0 1 6 -6 h6" stroke="#00C48C" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M46 24 V40 a6 6 0 0 1 -6 6 h-6" stroke="#FF6B35" stroke-width="5" fill="none" stroke-linecap="round"/><circle cx="24" cy="18" r="4.5" fill="#00C48C"/><circle cx="40" cy="46" r="4.5" fill="#FF6B35"/></svg>
+      browse<span class="port">port</span>
+    </a>
+    <div class="nav-actions" id="topbar-actions">
+      <a class="btn btn-ghost" href="login.html">Inloggen</a>
+      <a class="btn btn-primary" href="login.html?tab=register">Account maken</a>
+    </div>
+  </div>
+</div>
+
+<div class="shell">
+  <div id="not-found" style="display:none; max-width:420px; margin:60px auto; text-align:center;">
+    <p>Deze site bestaat niet (meer), of je hebt er geen toegang toe.</p>
+    <a class="btn btn-primary" href="dashboard.html">Terug naar dashboard →</a>
+  </div>
+
+  <div id="app">
+    <div class="editor-head">
+      <div>
+        <div class="site-title-row">
+          <a class="btn btn-ghost btn-sm" href="dashboard.html">← Dashboard</a>
+          <h1 class="mono" id="site-title">…</h1>
+          <span class="pill pill-green">live</span>
+        </div>
+        <div class="who-line" style="margin-top:6px;">
+          <a href="#" id="visit-link" target="_blank" class="mono">go.html?site=…</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="editor-tabs">
+      <button data-tab="files" class="active">Bestanden</button>
+      <button data-tab="settings">Instellingen</button>
+    </div>
+
+    <!-- ===================== BESTANDEN ===================== -->
+    <div class="editor-panel active" id="panel-files">
+      <div class="editor-shell">
+        <div>
+          <div class="file-tree-toolbar">
+            <button class="btn btn-primary btn-sm" id="new-file-btn">+ Nieuw bestand</button>
+            <button class="btn btn-ghost btn-sm" id="upload-file-btn">⤒ Uploaden</button>
+            <input type="file" id="upload-file-input" hidden multiple>
+          </div>
+          <div class="dropzone" id="dropzone">sleep bestanden hierheen om te uploaden (tekstbestanden: html, css, js, json, svg, txt, md)</div>
+          <div class="file-tree" id="file-tree" style="margin-top:10px;">
+            <div class="empty-state">Bestanden laden…</div>
+          </div>
+        </div>
+
+        <div>
+          <div id="editor-empty" class="editor-empty">
+            Kies een bestand om te bewerken, of klik op "+ Nieuw bestand".
+          </div>
+          <div id="code-editor-wrap" class="code-editor-wrap" style="display:none;">
+            <div class="form-row" style="margin-bottom:0;">
+              <label class="field-label" for="file-path-input">Pad (map/bestand.ext) — bijv. <code>index.html</code> of <code>css/style.css</code></label>
+              <input type="text" id="file-path-input" class="mono" placeholder="index.html" autocapitalize="off" spellcheck="false">
+            </div>
+            <textarea id="file-content-input" class="code-editor" spellcheck="false" placeholder="&lt;!doctype html&gt;..."></textarea>
+            <div class="code-editor-toolbar">
+              <span class="mono" id="file-status">&nbsp;</span>
+              <div style="display:flex; gap:8px;">
+                <button class="btn btn-danger btn-sm" id="delete-file-btn">Verwijderen</button>
+                <button class="btn btn-primary" id="save-file-btn">Bestand opslaan</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== INSTELLINGEN ===================== -->
+    <div class="editor-panel" id="panel-settings">
+      <div class="card" style="max-width:560px; margin-bottom:20px;">
+        <h2 style="margin:0 0 16px; font-size:16px;">Algemeen</h2>
+        <form id="settings-form">
+          <div class="form-row">
+            <label class="field-label" for="settings-name">Weergavenaam</label>
+            <input type="text" id="settings-name">
+          </div>
+          <div class="form-row">
+            <label class="field-label" for="settings-slug">Sitenaam</label>
+            <input type="text" id="settings-slug" class="mono" autocapitalize="off" spellcheck="false">
+            <div id="settings-slug-warn" style="display:none; font-size:12.5px; color:var(--danger); margin-top:6px;">Deze sitenaam is niet toegestaan.</div>
+          </div>
+          <div class="form-row">
+            <label class="field-label" for="settings-desc">Omschrijving</label>
+            <input type="text" id="settings-desc">
+          </div>
+          <button class="btn btn-primary" type="submit">Wijzigingen opslaan</button>
+        </form>
+      </div>
+
+      <div class="card" style="max-width:560px; margin-bottom:20px;">
+        <h2 style="margin:0 0 6px; font-size:16px;">API-key</h2>
+        <p class="lookup-hint" style="margin:0 0 12px;">Met deze key kan een extern programma de bestanden van déze site beheren, zonder in te loggen.</p>
+        <div class="key-box">
+          <span class="key-value mono" id="api-key-value">…</span>
+          <button class="btn btn-ghost btn-sm" id="copy-key-btn">Kopiëren</button>
+        </div>
+        <button class="btn btn-ghost btn-sm" id="regen-key-btn" style="margin-top:10px;">↻ Nieuwe key genereren</button>
+        <details style="margin-top:14px;">
+          <summary style="cursor:pointer; font-size:12.5px; color:var(--ink-soft);">Voorbeeld-aanroepen</summary>
+          <pre class="mono" id="api-example" style="font-size:11.5px; white-space:pre-wrap; word-break:break-all; background:var(--bg-sunken); border:1px solid var(--line); border-radius:8px; padding:10px; margin-top:8px;"></pre>
+        </details>
+      </div>
+
+      <div class="card" style="max-width:560px;">
+        <div class="danger-zone">
+          <h3>Site verwijderen</h3>
+          <p>Dit verwijdert de site en al z'n bestanden definitief. Dit kan niet ongedaan gemaakt worden.</p>
+          <button class="btn btn-danger btn-sm" id="delete-site-btn">Site verwijderen</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import {
+    getSession, isHosterAdmin, renderTopbarAuth, registerServiceWorker, toast, escapeHtml, guessMimeType,
+    getSiteById, updateSite, deleteSite, regenerateApiKey, normalizeSlug, isValidSlug,
+    fetchBlocklist, isSlugBlocked, listFiles, upsertFile, deleteFile, HOSTER_API_URL,
+  } from './hoster.js?v=3';
+
+  registerServiceWorker();
+  renderTopbarAuth();
+
+  const params = new URLSearchParams(window.location.search);
+  const siteId = params.get('site');
+
+  let currentUser = null;
+  let currentIsAdmin = false;
+  let site = null;
+  let files = [];
+  let blockedWords = [];
+  let collapsedFolders = new Set();
+  let activeFilePath = null; // null = nieuw bestand / niets geselecteerd
+
+  async function boot() {
+    fetchBlocklist().then((w) => { blockedWords = w; });
+    const session = await getSession();
+    if (!session || !siteId) { showNotFound(); return; }
+    currentUser = session.user;
+    currentIsAdmin = await isHosterAdmin();
+
+    site = await getSiteById(siteId);
+    if (!site || (site.owner_id !== currentUser.id && !currentIsAdmin)) { showNotFound(); return; }
+
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('site-title').textContent = site.slug;
+    const visitLink = document.getElementById('visit-link');
+    visitLink.href = `go.html?site=${encodeURIComponent(site.slug)}`;
+    visitLink.textContent = `go.html?site=${site.slug}`;
+
+    fillSettingsForm();
+    document.getElementById('api-example').textContent = apiExampleText();
+
+    await loadFiles();
+  }
+
+  function showNotFound() {
+    document.getElementById('not-found').style.display = 'block';
+  }
+
+  function apiExampleText() {
+    return [
+      `curl "${HOSTER_API_URL}" -H "Authorization: Bearer <API-key>"`,
+      ``,
+      `curl -X POST "${HOSTER_API_URL}" \\`,
+      `  -H "Authorization: Bearer <API-key>" -H "Content-Type: application/json" \\`,
+      `  -d '{"file_path":"index.html","content":"<h1>Hoi</h1>"}'`,
+      ``,
+      `curl -X DELETE "${HOSTER_API_URL}?path=index.html" -H "Authorization: Bearer <API-key>"`,
+    ].join('\n');
+  }
+
+  // ---------------- tabs ----------------
+  document.querySelectorAll('.editor-tabs button').forEach((b) => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('.editor-tabs button').forEach((x) => x.classList.toggle('active', x === b));
+      document.querySelectorAll('.editor-panel').forEach((p) => p.classList.toggle('active', p.id === `panel-${b.dataset.tab}`));
+    });
+  });
+
+  // ---------------- bestandenboom ----------------
+  function buildFileTree(list) {
+    const root = { dirs: new Map(), files: [] };
+    for (const f of list) {
+      const parts = f.file_path.split('/');
+      let node = root, pathSoFar = '';
+      for (let i = 0; i < parts.length - 1; i++) {
+        pathSoFar += (pathSoFar ? '/' : '') + parts[i];
+        if (!node.dirs.has(parts[i])) node.dirs.set(parts[i], { dirs: new Map(), files: [], fullPath: pathSoFar });
+        node = node.dirs.get(parts[i]);
+      }
+      node.files.push(f);
+    }
+    return root;
+  }
+
+  function renderTreeNode(node, depth) {
+    let html = '';
+    for (const [dirName, dirNode] of [...node.dirs.entries()].sort((a, b) => a[0].localeCompare(b[0]))) {
+      const collapsed = collapsedFolders.has(dirNode.fullPath);
+      html += `
+        <div class="file-row folder-row" data-toggle-folder="${escapeHtml(dirNode.fullPath)}" style="padding-left:${10 + depth * 18}px; cursor:pointer;">
+          <span class="path"><span class="folder-indent">${collapsed ? '▸' : '▾'} 📁</span> ${escapeHtml(dirName)}/</span>
+        </div>`;
+      if (!collapsed) html += renderTreeNode(dirNode, depth + 1);
+    }
+    for (const f of [...node.files].sort((a, b) => a.file_path.localeCompare(b.file_path))) {
+      const name = f.file_path.split('/').pop();
+      const active = f.file_path === activeFilePath;
+      html += `
+        <div class="file-row" data-open-file="${escapeHtml(f.file_path)}" style="padding-left:${10 + depth * 18}px; cursor:pointer; ${active ? 'background:var(--bg-sunken);' : ''}">
+          <span class="path">📄 ${escapeHtml(name)}</span>
+        </div>`;
+    }
+    return html;
+  }
+
+  function renderFileTree() {
+    const tree = document.getElementById('file-tree');
+    if (!files.length) {
+      tree.innerHTML = `<div class="empty-state">Nog geen bestanden. Klik op "+ Nieuw bestand" om te beginnen.</div>`;
+      return;
+    }
+    tree.innerHTML = renderTreeNode(buildFileTree(files), 0);
+    tree.querySelectorAll('[data-toggle-folder]').forEach((row) => row.addEventListener('click', () => {
+      const p = row.dataset.toggleFolder;
+      if (collapsedFolders.has(p)) collapsedFolders.delete(p); else collapsedFolders.add(p);
+      renderFileTree();
+    }));
+    tree.querySelectorAll('[data-open-file]').forEach((row) => row.addEventListener('click', () => openFile(row.dataset.openFile)));
+  }
+
+  async function loadFiles() {
+    files = await listFiles(site.id);
+    renderFileTree();
+  }
+
+  function openFile(path) {
+    const f = files.find((x) => x.file_path === path);
+    if (!f) return;
+    activeFilePath = path;
+    document.getElementById('editor-empty').style.display = 'none';
+    document.getElementById('code-editor-wrap').style.display = 'flex';
+    document.getElementById('file-path-input').value = f.file_path;
+    document.getElementById('file-content-input').value = f.content;
+    document.getElementById('file-status').textContent = `bewerkt: ${new Date(f.updated_at).toLocaleString('nl-NL')}`;
+    document.getElementById('delete-file-btn').style.display = 'inline-flex';
+    renderFileTree();
+  }
+
+  document.getElementById('new-file-btn').addEventListener('click', () => {
+    activeFilePath = null;
+    document.getElementById('editor-empty').style.display = 'none';
+    document.getElementById('code-editor-wrap').style.display = 'flex';
+    document.getElementById('file-path-input').value = '';
+    document.getElementById('file-content-input').value = '';
+    document.getElementById('file-status').textContent = 'nieuw bestand';
+    document.getElementById('delete-file-btn').style.display = 'none';
+    document.getElementById('file-path-input').focus();
+    renderFileTree();
+  });
+
+  document.getElementById('save-file-btn').addEventListener('click', async () => {
+    const path = document.getElementById('file-path-input').value.trim().replace(/^\/+/, '');
+    const content = document.getElementById('file-content-input').value;
+    if (!path) { toast('Geef een bestandspad op, bijv. "index.html".', 'error'); return; }
+    if (path.includes('..')) { toast('Ongeldig pad.', 'error'); return; }
+
+    const oldPath = activeFilePath;
+    const { error } = await upsertFile(site.id, path, content, guessMimeType(path));
+    if (error) { toast(error.message, 'error'); return; }
+
+    // Pad gewijzigd tijdens bewerken? Dan is dit een hernoeming — oude rij opruimen.
+    if (oldPath && oldPath !== path) {
+      const oldFile = files.find((f) => f.file_path === oldPath);
+      if (oldFile) await deleteFile(oldFile.id);
+    }
+
+    toast(`${path} opgeslagen ✓`, 'success');
+    activeFilePath = path;
+    await loadFiles();
+    document.getElementById('file-status').textContent = 'zojuist opgeslagen';
+    document.getElementById('delete-file-btn').style.display = 'inline-flex';
+  });
+
+  document.getElementById('delete-file-btn').addEventListener('click', async () => {
+    const f = files.find((x) => x.file_path === activeFilePath);
+    if (!f) return;
+    if (!confirm(`"${f.file_path}" verwijderen?`)) return;
+    const { error } = await deleteFile(f.id);
+    if (error) { toast(error.message, 'error'); return; }
+    toast('Bestand verwijderd', 'success');
+    activeFilePath = null;
+    document.getElementById('editor-empty').style.display = 'block';
+    document.getElementById('code-editor-wrap').style.display = 'none';
+    await loadFiles();
+  });
+
+  // ---------------- uploaden ----------------
+  async function handleUploadFiles(fileList) {
+    const items = Array.from(fileList);
+    if (!items.length) return;
+    let ok = 0;
+    for (const f of items) {
+      try {
+        const text = await f.text();
+        const { error } = await upsertFile(site.id, f.name, text, guessMimeType(f.name));
+        if (!error) ok++;
+      } catch { /* skip */ }
+    }
+    toast(`${ok} bestand(en) geüpload ✓`, 'success');
+    await loadFiles();
+  }
+
+  document.getElementById('upload-file-btn').addEventListener('click', () => document.getElementById('upload-file-input').click());
+  document.getElementById('upload-file-input').addEventListener('change', (e) => handleUploadFiles(e.target.files));
+
+  const dropzone = document.getElementById('dropzone');
+  ['dragenter', 'dragover'].forEach((ev) => dropzone.addEventListener(ev, (e) => { e.preventDefault(); dropzone.classList.add('dragover'); }));
+  ['dragleave', 'drop'].forEach((ev) => dropzone.addEventListener(ev, (e) => { e.preventDefault(); dropzone.classList.remove('dragover'); }));
+  dropzone.addEventListener('drop', (e) => handleUploadFiles(e.dataTransfer.files));
+  dropzone.addEventListener('click', () => document.getElementById('upload-file-input').click());
+
+  // ---------------- instellingen ----------------
+  function fillSettingsForm() {
+    document.getElementById('settings-name').value = site.name || '';
+    document.getElementById('settings-slug').value = site.slug || '';
+    document.getElementById('settings-desc').value = site.description || '';
+    document.getElementById('api-key-value').textContent = site.api_key;
+  }
+
+  const settingsSlugInput = document.getElementById('settings-slug');
+  settingsSlugInput.addEventListener('input', () => {
+    document.getElementById('settings-slug-warn').style.display = isSlugBlocked(settingsSlugInput.value, blockedWords) ? 'block' : 'none';
+  });
+
+  document.getElementById('settings-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = document.getElementById('settings-name').value.trim();
+    const slug = normalizeSlug(settingsSlugInput.value);
+    const desc = document.getElementById('settings-desc').value.trim();
+
+    if (!isValidSlug(slug)) { toast('Ongeldige sitenaam.', 'error'); return; }
+    if (isSlugBlocked(slug, blockedWords)) { toast('Deze sitenaam is niet toegestaan.', 'error'); return; }
+
+    const { data, error } = await updateSite(site.id, { name, slug, description: desc || null });
+    if (error) { toast(error.code === '23505' ? 'Die sitenaam is al in gebruik.' : error.message, 'error'); return; }
+    site = data;
+    document.getElementById('site-title').textContent = site.slug;
+    const visitLink = document.getElementById('visit-link');
+    visitLink.href = `go.html?site=${encodeURIComponent(site.slug)}`;
+    visitLink.textContent = `go.html?site=${site.slug}`;
+    toast('Instellingen opgeslagen ✓', 'success');
+  });
+
+  document.getElementById('copy-key-btn').addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(site.api_key);
+      toast('API-key gekopieerd ✓', 'success');
+    } catch {
+      toast('Kopiëren mislukt — selecteer 'm handmatig.', 'error');
+    }
+  });
+
+  document.getElementById('regen-key-btn').addEventListener('click', async () => {
+    if (!confirm('Nieuwe API-key genereren? De oude key werkt daarna meteen niet meer.')) return;
+    const { apiKey, error } = await regenerateApiKey(site.id);
+    if (error) { toast(error.message, 'error'); return; }
+    site.api_key = apiKey;
+    document.getElementById('api-key-value').textContent = apiKey;
+    toast('Nieuwe API-key gegenereerd ✓', 'success');
+  });
+
+  document.getElementById('delete-site-btn').addEventListener('click', async () => {
+    if (!confirm(`Site "${site.slug}" en al z'n bestanden definitief verwijderen?`)) return;
+    if (!confirm('Weet je het zeker? Dit kan niet ongedaan gemaakt worden.')) return;
+    const { error } = await deleteSite(site.id);
+    if (error) { toast(error.message, 'error'); return; }
+    toast('Site verwijderd', 'success');
+    window.location.href = 'dashboard.html';
+  });
+
+  boot();
+</script>
+
+</body>
+</html>
