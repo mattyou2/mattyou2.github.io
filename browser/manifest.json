@@ -1,33 +1,15 @@
 {
-  "name": "Browseport — decentraal domeinsysteem",
-  "short_name": "Browseport",
-  "description": "Zoek, registreer en host custom domeinen buiten het reguliere DNS om. Typ 'browseport [domein]' in je adresbalk.",
-  "id": "index.html",
-  "start_url": "index.html",
+  "name": "BrowsePort Browser",
+  "short_name": "BrowsePort",
+  "description": "Browser en zoekmachine met ingebouwde toegang tot BrowsePort-domeinen.",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
+  "background_color": "#0B1220",
+  "theme_color": "#0B1220",
   "orientation": "any",
-  "background_color": "#eef1f6",
-  "theme_color": "#101828",
-  "lang": "nl",
-  "dir": "ltr",
-  "categories": ["utilities", "productivity"],
   "icons": [
     { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
     { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
-  ],
-  "shortcuts": [
-    {
-      "name": "Domein opzoeken",
-      "short_name": "Opzoeken",
-      "url": "go.html",
-      "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }]
-    },
-    {
-      "name": "Dashboard",
-      "short_name": "Dashboard",
-      "url": "dashboard.html",
-      "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }]
-    }
   ]
 }
