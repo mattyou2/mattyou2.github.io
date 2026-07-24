@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lumen — helder antwoord uit het hele internet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.11.0/math.min.js"></script>
+<style>
+  :root{
+    --bg:#0a0d1a;
+    --bg-2:#10152a;
+    --panel: rgba(17, 22, 42, 0.72);
+    --panel-solid:#11162a;
+    --border: rgba(232, 196, 104, 0.16);
+    --border-strong: rgba(232, 196, 104, 0.35);
+    --gold:#e8c468;
+    --gold-dim: rgba(232, 196, 104, 0.55);
+    --cyan:#5eead4;
+    --text:#f1f0ec;
+    --muted:#8b93a7;
+    --muted-2:#5c637a;
+    --danger:#e8685e;
+    --radius: 14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background: radial-gradient(ellipse 80% 60% at 50% -10%, #1a2244 0%, var(--bg) 55%), var(--bg);
+    color:var(--text);
+    font-family:'Inter', sans-serif;
+    overflow:hidden;
+  }
+
+  #stars{ position:fixed; inset:0; z-index:0; pointer-events:none; }
+  .star{
+    position:absolute; background:#fff; border-radius:50%;
+    animation: twinkle 4s ease-in-out infinite; opacity:0.4;
+  }
+  @keyframes twinkle{ 0%,100%{opacity:0.15;} 50%{opacity:0.9;} }
+
+  #app{
+    position:relative; z-index:1;
+    height:100vh; max-width:900px; margin:0 auto;
+    display:flex; flex-direction:column;
+    padding: 20px 18px 0 18px;
+  }
+
+  header{ display:flex; align-items:center; gap:14px; padding-bottom:16px; border-bottom:1px solid var(--border); flex-shrink:0; }
+  .orb-wrap{ position:relative; width:46px; height:46px; flex-shrink:0; }
+  .orb{
+    width:46px; height:46px; border-radius:50%;
+    background: radial-gradient(circle at 35% 30%, #fff6de 0%, var(--gold) 38%, #7a5b1e 100%);
+    box-shadow: 0 0 18px rgba(232,196,104,0.55), 0 0 2px rgba(232,196,104,0.9) inset;
+    position:relative; z-index:2; transition: box-shadow .3s ease;
+  }
+  .orb.thinking{ animation: pulse 1.4s ease-in-out infinite; }
+  @keyframes pulse{
+    0%,100%{ box-shadow: 0 0 18px rgba(232,196,104,0.55), 0 0 2px rgba(232,196,104,0.9) inset; transform:scale(1);}
+    50%{ box-shadow: 0 0 34px rgba(94,234,212,0.75), 0 0 4px rgba(94,234,212,0.9) inset; transform:scale(1.08);}
+  }
+  .ring{ position:absolute; inset:-9px; border-radius:50%; border:1px solid var(--border-strong); animation: spin 12s linear infinite; }
+  .ring::before, .ring::after{ content:''; position:absolute; width:4px; height:4px; border-radius:50%; background:var(--cyan); box-shadow:0 0 6px var(--cyan); }
+  .ring::before{ top:-2px; left:50%; margin-left:-2px; }
+  .ring::after{ bottom:6px; right:2px; }
+  @keyframes spin{ to{ transform:rotate(360deg);} }
+
+  .title-block h1{ font-family:'Fraunces', serif; font-weight:600; font-size:1.5rem; margin:0; letter-spacing:0.02em; color:var(--text); }
+  .title-block p{ margin:2px 0 0 0; font-size:0.78rem; color:var(--muted); letter-spacing:0.01em; }
+  .credit{ margin-left:auto; text-align:right; font-size:0.68rem; color:var(--muted-2); line-height:1.4; }
+  .credit b{ color:var(--gold-dim); font-weight:600; }
+  #resetBtn, #infoBtn{
+    background:transparent; border:1px solid var(--border); color:var(--muted);
+    font-size:0.72rem; padding:6px 10px; border-radius:8px; cursor:pointer;
+    font-family:'Inter',sans-serif; transition:.2s; white-space:nowrap; margin-left:8px;
+  }
+  #infoBtn{ width:32px; padding:0; height:32px; font-size:0.9rem; }
+  #resetBtn:hover, #infoBtn:hover{ border-color:var(--border-strong); color:var(--gold); }
+  #infoBtn.active{ color:var(--gold); border-color:var(--border-strong); }
+
+  #infoPanel{
+    display:none; flex-shrink:0; margin-top:14px; padding:16px 18px;
+    background:var(--panel); border:1px solid var(--border); border-radius:var(--radius);
+    backdrop-filter:blur(6px); font-size:0.82rem; color:var(--muted); line-height:1.6;
+  }
+  #infoPanel.open{ display:block; }
+  #infoPanel h3{ margin:0 0 8px 0; font-family:'Fraunces',serif; font-weight:600; font-size:0.95rem; color:var(--text); }
+  #infoPanel a{ color:var(--cyan); text-decoration:none; border-bottom:1px dotted var(--cyan); }
+  #infoPanel ul{ margin:8px 0; padding-left:18px; }
+  #infoPanel li{ margin-bottom:4px; }
+
+
+  .chips{ display:flex; gap:8px; flex-wrap:wrap; padding:14px 0; flex-shrink:0; }
+  .chip{ font-size:0.72rem; color:var(--muted); background:rgba(255,255,255,0.03); border:1px solid var(--border); padding:5px 10px; border-radius:20px; display:flex; align-items:center; gap:5px; }
+
+  #chat{ flex:1; overflow-y:auto; padding: 6px 4px 20px 4px; display:flex; flex-direction:column; gap:18px; }
+  #chat::-webkit-scrollbar{ width:8px; }
+  #chat::-webkit-scrollbar-thumb{ background:var(--border-strong); border-radius:4px; }
+
+  .empty-state{ margin:auto; text-align:center; max-width:500px; color:var(--muted); }
+  .empty-state h2{ font-family:'Fraunces', serif; font-style:italic; font-weight:500; color:var(--text); font-size:1.3rem; margin-bottom:8px; }
+  .suggestions{ display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-top:18px; }
+  .sugg{ font-size:0.78rem; padding:8px 14px; border:1px solid var(--border); border-radius:20px; cursor:pointer; color:var(--text); background:rgba(255,255,255,0.02); transition:.2s; }
+  .sugg:hover{ border-color:var(--gold-dim); background:rgba(232,196,104,0.06); }
+
+  .msg{ display:flex; gap:12px; max-width:100%; animation:rise .35s ease; }
+  @keyframes rise{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+  .msg.user{ flex-direction:row-reverse; }
+  .avatar{ width:30px; height:30px; border-radius:50%; flex-shrink:0; margin-top:2px; display:flex; align-items:center; justify-content:center; font-size:0.85rem; }
+  .avatar.bot{ background: radial-gradient(circle at 35% 30%, #fff6de, var(--gold) 60%, #7a5b1e); box-shadow:0 0 10px rgba(232,196,104,.4);}
+  .avatar.user{ background:var(--bg-2); border:1px solid var(--border-strong); color:var(--cyan); }
+
+  .bubble{ padding:14px 16px; border-radius:var(--radius); line-height:1.55; font-size:0.92rem; max-width:82%; word-wrap:break-word; }
+  .msg.bot .bubble{ background:var(--panel); border:1px solid var(--border); border-top-left-radius:4px; backdrop-filter:blur(6px); }
+  .msg.user .bubble{ background:linear-gradient(135deg, rgba(232,196,104,0.14), rgba(94,234,212,0.06)); border:1px solid var(--border-strong); border-top-right-radius:4px; }
+  .bubble p{ margin:0 0 10px 0; } .bubble p:last-child{ margin-bottom:0; }
+  .bubble a{ color:var(--cyan); text-decoration:none; border-bottom:1px dotted var(--cyan); }
+
+  .calc-answer{
+    border:1px solid var(--border-strong); border-radius:12px; padding:16px 18px; margin-bottom:14px;
+    background:linear-gradient(135deg, rgba(232,196,104,0.09), rgba(94,234,212,0.04));
+  }
+  .calc-answer .tag{ font-size:0.65rem; text-transform:uppercase; letter-spacing:0.07em; color:var(--gold-dim); margin-bottom:6px; display:block; }
+  .calc-answer .expr{ font-family:'JetBrains Mono', monospace; color:var(--muted); font-size:0.85rem; }
+  .calc-answer .result{ font-family:'Fraunces', serif; font-size:1.8rem; font-weight:600; color:var(--text); margin-top:4px; }
+
+  .ai-summary{
+    border:1px solid var(--border-strong); border-radius:10px; padding:10px 12px; margin-bottom:14px;
+    background:rgba(94,234,212,0.05);
+  }
+  .ai-summary .tag{ font-size:0.65rem; text-transform:uppercase; letter-spacing:0.07em; color:var(--cyan); margin-bottom:5px; display:block; }
+
+  .source-group{ margin-bottom:14px; }
+  .source-group-title{
+    font-size:0.68rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--muted-2);
+    margin-bottom:6px; display:flex; align-items:center; gap:6px;
+  }
+  .source-card{
+    border:1px solid var(--border); border-radius:10px; padding:10px 12px; margin-bottom:8px;
+    background:rgba(255,255,255,0.02);
+  }
+  .source-card a.title{ color:var(--text); font-weight:600; text-decoration:none; font-size:0.88rem; border:none; }
+  .source-card a.title:hover{ color:var(--gold); }
+  .source-card .snippet{ color:var(--muted); font-size:0.82rem; margin-top:4px; line-height:1.5; }
+  .source-card .snippet mark{ background:rgba(232,196,104,0.25); color:var(--text); border-radius:2px; }
+
+  .quicklinks{ display:flex; flex-wrap:wrap; gap:8px; margin-top:4px; }
+  .quicklink-btn{
+    display:inline-flex; align-items:center; gap:6px; font-size:0.78rem; color:var(--text);
+    background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:20px;
+    padding:6px 12px; text-decoration:none; transition:.2s;
+  }
+  .quicklink-btn:hover{ border-color:var(--border-strong); background:rgba(232,196,104,0.06); }
+
+  .note-line{ font-size:0.74rem; color:var(--muted-2); font-style:italic; margin-top:6px; }
+
+  .typing{ display:flex; gap:4px; padding:4px 0; }
+  .typing span{ width:6px; height:6px; border-radius:50%; background:var(--gold-dim); animation: bounce 1.2s infinite ease-in-out; }
+  .typing span:nth-child(2){ animation-delay:0.15s; } .typing span:nth-child(3){ animation-delay:0.3s; }
+  @keyframes bounce{ 0%,60%,100%{ transform:translateY(0); opacity:.5;} 30%{ transform:translateY(-5px); opacity:1;} }
+  .status-line{ font-size:0.72rem; color:var(--muted-2); margin-top:6px; font-style:italic; }
+
+  #inputbar{ flex-shrink:0; padding:16px 0 18px 0; display:flex; gap:10px; align-items:flex-end; }
+  #textInput{
+    flex:1; resize:none; background:var(--panel-solid); border:1px solid var(--border);
+    border-radius:var(--radius); padding:12px 14px; color:var(--text); font-size:0.92rem;
+    font-family:'Inter',sans-serif; max-height:140px; line-height:1.4;
+  }
+  #textInput:focus{ outline:none; border-color:var(--border-strong); }
+  #textInput::placeholder{ color:var(--muted-2); }
+  #sendBtn{
+    background:linear-gradient(135deg, var(--gold), #c99a3d); color:#1a1200; border:none;
+    width:46px; height:46px; border-radius:12px; cursor:pointer; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; transition:.2s; font-size:1.1rem; font-weight:600;
+  }
+  #sendBtn:hover{ filter:brightness(1.08); transform:translateY(-1px); }
+  #sendBtn:disabled{ opacity:0.4; cursor:default; transform:none; }
+
+  ::selection{ background:rgba(232,196,104,0.3); }
+  @media (prefers-reduced-motion: reduce){ .orb.thinking, .ring, .star, .typing span, .msg{ animation:none !important; } }
+  @media (max-width:600px){ .bubble{ max-width:90%; } .credit{ display:none; } .title-block h1{ font-size:1.25rem; } }
+</style>
+</head>
+<body>
+
+<div id="stars"></div>
+
+<div id="app">
+  <header>
+    <div class="orb-wrap"><div class="ring"></div><div class="orb" id="orb"></div></div>
+    <div class="title-block">
+      <h1>Lumen</h1>
+      <p>doorzoekt live het internet en onthoudt het gesprek — zonder AI-model, zonder sleutel</p>
+    </div>
+    <div class="credit">Gemaakt door <b>Claude</b><br>(Anthropic)</div>
+    <button id="resetBtn" title="Nieuw gesprek">↺ nieuw</button>
+    <button id="infoBtn" title="Hoe werkt Lumen?">ⓘ</button>
+  </header>
+
+  <div id="infoPanel">
+    <h3>Hoe Lumen werkt</h3>
+    <p>Lumen draait volledig op eigen logica — er zit <b>geen enkel AI-taalmodel</b> onder de motorkap, ook niet van Anthropic/Claude. Alles wat je ziet komt rechtstreeks uit gratis, publieke bronnen:</p>
+    <ul>
+      <li><b>🧮 Rekenmachine</b> — sommen (ook procenten, wortels, machten) worden exact berekend met mathjs, geen giswerk.</li>
+      <li><b>📖 Wikipedia</b> — live doorzocht in het Nederlands én Engels; treffers worden op relevantie herschikt (titel-match telt zwaarder dan een toevallig woord), en het beste treffer wordt met eigen code samengevat tot een lopende alinea.</li>
+      <li><b>🦆 DuckDuckGo</b> — live "instant answers" die de Wikipedia-samenvatting aanvullen waar nuttig.</li>
+      <li><b>📚 Microsoft Learn, Google, Bing</b> — als directe doorklik-knoppen, want die kunnen niet zonder eigen server rechtstreeks worden ingeladen.</li>
+      <li><b>💬 Gespreksgeheugen</b> — de laatste vragen blijven zichtbaar in de chat, zodat vervolgvragen in context staan.</li>
+    </ul>
+    <p style="margin-top:10px; font-size:0.76rem;">Omdat er geen taalmodel meeleest, kan Lumen niet écht "redeneren" over tegenstrijdige bronnen of dingen buiten wat er letterlijk in de fragmenten staat — hij zet ze alleen zo leesbaar mogelijk voor je neer.</p>
+  </div>
+
+  <div class="chips">
+    <span class="chip">🧮 Rekenmachine (altijd exact)</span>
+    <span class="chip">📖 Wikipedia (live, NL + EN)</span>
+    <span class="chip">🦆 DuckDuckGo (live)</span>
+    <span class="chip">📚 Microsoft Learn (snelkoppeling)</span>
+    <span class="chip">💬 Onthoudt het gesprek</span>
+    <span class="chip">🚫 Geen AI-model — pure logica</span>
+  </div>
+
+  <div id="chat">
+    <div class="empty-state" id="emptyState">
+      <h2>"Stel je vraag — ik zoek het uit."</h2>
+      <p>Lumen rekent sommen exact zelf uit, doorzoekt Wikipedia (NL én EN) en DuckDuckGo in real-time, en zet er direct doorklikbare zoeklinks naast voor Microsoft Learn, Google en Bing.</p>
+      <div class="suggestions">
+        <div class="sugg" data-q="wat is 24% van 850">24% van 850</div>
+        <div class="sugg" data-q="kernfusie">Kernfusie</div>
+        <div class="sugg" data-q="Azure Functions">Azure Functions</div>
+        <div class="sugg" data-q="wortel van 289 plus 12 keer 3">Wortel van 289 + 12×3</div>
+        <div class="sugg" data-q="Hoi, wie ben jij?">Hoi, wie ben jij?</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="inputbar">
+    <textarea id="textInput" rows="1" placeholder="Vraag Lumen iets... (Enter om te versturen)"></textarea>
+    <button id="sendBtn" title="Versturen">➤</button>
+  </div>
+</div>
+
+<script>
+/* ---------------- starfield ---------------- */
+(function(){
+  const container = document.getElementById('stars');
+  for(let i=0;i<90;i++){
+    const s = document.createElement('div');
+    s.className='star';
+    const size = Math.random()*2 + 0.5;
+    s.style.width = size+'px'; s.style.height = size+'px';
+    s.style.left = Math.random()*100+'%'; s.style.top = Math.random()*100+'%';
+    s.style.animationDelay = (Math.random()*4)+'s';
+    s.style.animationDuration = (3+Math.random()*4)+'s';
+    container.appendChild(s);
+  }
+})();
+
+/* ---------------- state ---------------- */
+let convoHistory = []; // { role:'user'|'assistant', content:'plain text' } — laatste paar beurten, voor een écht gesprek
+const chatEl = document.getElementById('chat');
+const emptyState = document.getElementById('emptyState');
+const input = document.getElementById('textInput');
+const sendBtn = document.getElementById('sendBtn');
+const orb = document.getElementById('orb');
+const resetBtn = document.getElementById('resetBtn');
+const infoBtn = document.getElementById('infoBtn');
+const infoPanel = document.getElementById('infoPanel');
+
+infoBtn.addEventListener('click', ()=>{
+  infoPanel.classList.toggle('open');
+  infoBtn.classList.toggle('active');
+});
+
+function escapeHtml(str){
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function stripTags(str){
+  return str.replace(/<[^>]+>/g,'');
+}
+// Decode HTML entities (bv. &#039; -> ' ) via een textarea-trucje — zet geen scripts uit, puur tekst-decode.
+function decodeEntities(str){
+  const ta = document.createElement('textarea');
+  ta.innerHTML = str;
+  return ta.value;
+}
+// Wikipedia's snippet bevat platte tekst met HTML-entities (bv. &#039; voor een apostrof) plus
+// <span class="searchmatch"> tags om de matchende woorden. Als we die entities niet eerst decoderen
+// en dan zelf weer escapen, zie je letterlijke tekst als "&#039;" in beeld — vandaar deze volgorde:
+// 1) bescherm de span-tags met tijdelijke markers, 2) decodeer entities, 3) escape veilig, 4) zet markers om in <mark>.
+function wikiSnippetToHtml(str){
+  const withMarkers = str
+    .replace(/<span class="searchmatch">/g, '\u0001')
+    .replace(/<\/span>/g, '\u0002');
+  const decoded = decodeEntities(withMarkers);
+  const escaped = escapeHtml(decoded);
+  return escaped
+    .replace(/\u0001/g, '<mark>')
+    .replace(/\u0002/g, '</mark>');
+}
+
+/* ---------------- small talk (menselijk, geen zoekopdracht nodig) ---------------- */
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+function detectSmallTalk(raw){
+  const q = raw.trim().toLowerCase().replace(/[!?.]+$/,'');
+
+  const greetings = ['hoi','hallo','hey','hey lumen','hoi lumen','hallo lumen','hi','goedemorgen','goeiemorgen','goedemiddag','goeiemiddag','goedenavond','goeienavond','yo','hola'];
+  if(greetings.includes(q)){
+    return pick([
+      'Hoi! Fijn dat je er bent. Waar kan ik je vandaag mee helpen? Ik kan sommen exact uitrekenen of het internet voor je afspeuren.',
+      "Hey! Stel gerust je vraag — hoe specifieker, hoe beter ik 'm kan beantwoorden.",
+      'Hallo daar 👋 Waar ben je nieuwsgierig naar? Gooi maar een onderwerp, een som of een naam.'
+    ]);
+  }
+
+  if(/^(hoe gaat het( met (je|jou))?|hoe is het|alles goed)\??$/.test(q)){
+    return pick([
+      'Met mij gaat het altijd prima, ik hoef niet te slapen of koffie te drinken 😄 Belangrijker: waar kan ik jóu mee helpen?',
+      'Goed, dank je! Ik sta klaar om iets voor je uit te zoeken of te berekenen — wat wil je weten?'
+    ]);
+  }
+
+  if(/^(wie ben je|wie ben jij|wat ben je|wat voor bot ben je)\??$/.test(q)){
+    return 'Ik ben Lumen, gebouwd door Claude (Anthropic) — maar ik draai zelf op pure logica, zonder AI-model onder de motorkap. Ik reken sommen exact zelf uit en doorzoek live Wikipedia en DuckDuckGo om je vragen te beantwoorden. Waar ben je benieuwd naar?';
+  }
+
+  if(/^(wat kan je|wat kun je|wat doe je|help)\??$/.test(q)){
+    return 'Ik kan drie dingen goed: <b>1)</b> sommen exact uitrekenen (ook procenten, wortels en machten), <b>2)</b> live Wikipedia en DuckDuckGo doorzoeken en samenvatten, en <b>3)</b> je snel doorverwijzen naar Microsoft Learn, Google of Bing als je dieper wil graven. Probeer bijvoorbeeld "24% van 850" of "leg kernfusie uit".';
+  }
+
+  if(/^(dank(je| u)?( wel)?|bedankt|thanks|thx)\!?$/.test(q)){
+    return pick([
+      'Graag gedaan! Nog iets anders waar ik je mee kan helpen?',
+      'Geen dank — vraag gerust verder als er meer is.'
+    ]);
+  }
+
+  if(/^(doei|dag|tot ziens|bye|cya|later)\!?$/.test(q)){
+    return pick([
+      'Tot de volgende keer! 👋',
+      'Doei! Kom gerust terug als je weer iets wilt weten.'
+    ]);
+  }
+
+  return null;
+}
+
+/* ---------------- built-in calculator ---------------- */
+function preprocessMathQuery(raw){
+  let q = raw.trim().toLowerCase();
+  // strip common Dutch question wrappers
+  q = q.replace(/^(wat is|bereken|hoeveel is|los op)\s*:?\s*/i, '');
+  q = q.replace(/\?$/, '');
+  // decimal comma -> dot (only between digits)
+  q = q.replace(/(\d),(\d)/g, '$1.$2');
+  // "X% van Y" / "X procent van Y" -> (X/100)*Y
+  q = q.replace(/(\d+(?:\.\d+)?)\s*%?\s*procent\s*van\s*(\d+(?:\.\d+)?)/g, '(($1)/100)*($2)');
+  q = q.replace(/(\d+(?:\.\d+)?)\s*%\s*van\s*(\d+(?:\.\d+)?)/g, '(($1)/100)*($2)');
+  // roots / squares / powers phrased in words
+  q = q.replace(/wortel\s*van\s*(\d+(?:\.\d+)?)/g, 'sqrt($1)');
+  q = q.replace(/(\d+(?:\.\d+)?)\s*kwadraat/g, '($1)^2');
+  q = q.replace(/(\d+(?:\.\d+)?)\s*tot\s*de\s*macht\s*(\d+(?:\.\d+)?)/g, '($1)^($2)');
+  // word operators
+  q = q.replace(/\bkeer\b/g, '*');
+  q = q.replace(/\bmaal\b/g, '*');
+  q = q.replace(/gedeeld\s*door/g, '/');
+  q = q.replace(/\bplus\b/g, '+');
+  q = q.replace(/\bmin\b/g, '-');
+  q = q.replace(/\ben\b/g, '+'); // e.g. "5 en 3" in some sums
+  return q.trim();
+}
+
+function tryCalculate(rawQuery){
+  if(typeof math === 'undefined') return null;
+  const cleaned = preprocessMathQuery(rawQuery);
+  // only attempt if what's left looks purely mathematical — otherwise leave normal search alone
+  const safePattern = /^[\d\s+\-*/^().%a-z]+$/i;
+  const hasDigit = /\d/.test(cleaned);
+  const knownWords = /(sqrt|pi|log|sin|cos|tan|abs|e)/;
+  const looksTextHeavy = cleaned.replace(/[\d+\-*/^().%\s]/g,'').length > 6 && !knownWords.test(cleaned);
+  if(!hasDigit || !safePattern.test(cleaned) || looksTextHeavy) return null;
+  try{
+    const result = math.evaluate(cleaned);
+    if(result === undefined || result === null) return null;
+    if(typeof result === 'function') return null; // guard against weird assignments
+    return { expression: cleaned, result: math.format(result, {precision:14}) };
+  } catch(e){
+    return null;
+  }
+}
+
+function addMessage(role, innerHtml){
+  emptyState.style.display = 'none';
+  const msg = document.createElement('div');
+  msg.className = 'msg ' + role;
+  const avatar = document.createElement('div');
+  avatar.className = 'avatar ' + role;
+  avatar.textContent = role === 'user' ? '🜂' : '✦';
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble';
+  bubble.innerHTML = innerHtml;
+  msg.appendChild(avatar);
+  msg.appendChild(bubble);
+  chatEl.appendChild(msg);
+  chatEl.scrollTop = chatEl.scrollHeight;
+  return bubble;
+}
+
+function addStatusBubble(){
+  emptyState.style.display = 'none';
+  const msg = document.createElement('div');
+  msg.className = 'msg bot'; msg.id = 'statusMsg';
+  const avatar = document.createElement('div');
+  avatar.className = 'avatar bot'; avatar.textContent = '✦';
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble';
+  bubble.innerHTML = `<div class="typing"><span></span><span></span><span></span></div><div class="status-line" id="statusLine">Doorzoekt gratis bronnen...</div>`;
+  msg.appendChild(avatar); msg.appendChild(bubble);
+  chatEl.appendChild(msg);
+  chatEl.scrollTop = chatEl.scrollHeight;
+}
+function removeStatusBubble(){ const el = document.getElementById('statusMsg'); if(el) el.remove(); }
+function setStatus(text){ const el = document.getElementById('statusLine'); if(el) el.textContent = text; }
+
+/* ---------------- free source fetchers ---------------- */
+function cleanSearchQuery(raw){
+  let q = raw.trim();
+  q = q.replace(/^(wat is|wat zijn|wie is|wie was|hoe werkt|hoe werken|leg\s+.*\s+uit|vertel\s+(me\s+)?over|geef\s+info\s+over)\s+/i, '');
+  q = q.replace(/\?$/, '').trim();
+  return q || raw.trim();
+}
+
+// Nederlandse/Engelse "stopwoorden" tellen niet mee voor relevantie — anders scoort elke pagina
+// die toevallig "een" of "populair" bevat even hoog als de pagina waar het écht over gaat.
+const STOPWORDS = new Set(['de','het','een','en','of','van','voor','met','op','in','is','zijn','was','waren','wat','wie','hoe','waarom','welke','welk','naar','over','bij','als','dat','dit','die','deze','er','niet','ook','maar','the','a','an','and','or','is','are','was','were','what','who','how','why','of','for','with','on']);
+function extractTerms(text){
+  return (text||'').toLowerCase()
+    .normalize('NFKD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z0-9\s]/g,' ')
+    .split(/\s+/)
+    .filter(w => w.length >= 3 && !STOPWORDS.has(w));
+}
+// Scoort hoe relevant een treffer is t.o.v. de vraag: een match in de titel telt zwaarder dan een match in de snippet.
+function scoreRelevance(title, snippetPlain, terms){
+  if(!terms.length) return 1; // geen sterke zoektermen om op te toetsen — niet straffen
+  let score = 0;
+  const t = (title||'').toLowerCase();
+  const s = (snippetPlain||'').toLowerCase();
+  terms.forEach(term=>{
+    if(t.includes(term)) score += 3;
+    else if(s.includes(term)) score += 1;
+  });
+  return score;
+}
+
+async function fetchWikipedia(query){
+  const term = cleanSearchQuery(query);
+  async function siteSearch(host){
+    const searchUrl = `https://${host}/w/api.php?action=query&list=search&format=json&origin=*&srlimit=6&srsearch=${encodeURIComponent(term)}`;
+    const res = await fetch(searchUrl);
+    const data = await res.json();
+    const hits = (data && data.query && data.query.search) || [];
+    return hits.map(h => ({
+      title: h.title,
+      snippetHtml: wikiSnippetToHtml(h.snippet),
+      url: `https://${host}/wiki/${encodeURIComponent(h.title.replace(/ /g,'_'))}`,
+      lang: host.startsWith('nl') ? 'nl' : 'en',
+      host
+    }));
+  }
+  try {
+    const [nlHits, enHits] = await Promise.all([
+      siteSearch('nl.wikipedia.org').catch(()=>[]),
+      siteSearch('en.wikipedia.org').catch(()=>[])
+    ]);
+    // merge, dedupe near-identical titles (case-insensitive) — geen limiet hier, want we sorteren zo op relevantie
+    const seen = new Set();
+    const merged = [];
+    for(const r of [...nlHits, ...enHits]){
+      const key = r.title.toLowerCase();
+      if(seen.has(key)) continue;
+      seen.add(key);
+      merged.push(r);
+    }
+    if(!merged.length) return { ok:true, results: [] };
+
+    // relevantie-score toekennen en sorteren, zodat toevalstreffers (matchen op een los woord) niet
+    // bovenaan of tussen de écht relevante pagina's terechtkomen
+    const terms = extractTerms(term);
+    merged.forEach(r => { r.score = scoreRelevance(r.title, stripTags(r.snippetHtml), terms); });
+    merged.sort((a,b)=> b.score - a.score);
+    const top = merged.slice(0, 6);
+
+    // fetch een echte lopende samenvatting + korte omschrijving voor de beste (eerste) treffer
+    try{
+      const best = top[0];
+      const sumRes = await fetch(`https://${best.host}/api/rest_v1/page/summary/${encodeURIComponent(best.title.replace(/ /g,'_'))}`);
+      const sum = await sumRes.json();
+      const isDisambig = sum && sum.type === 'disambiguation';
+      if(sum && sum.extract && !isDisambig && sum.extract.length > 40){
+        top[0].snippetHtml = escapeHtml(sum.extract);
+        top[0].hasSummary = true;
+        if(sum.description) top[0].description = sum.description;
+      }
+    } catch(e){ /* keep search snippet as fallback */ }
+
+    return { ok:true, results: top };
+  } catch(e){
+    return { ok:false, error: e.message };
+  }
+}
+
+async function fetchDuckDuckGo(query){
+  try{
+    const url = `https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_redirect=1&no_html=1&skip_disambig=1`;
+    const res = await fetch(url);
+    const data = await res.json();
+    const items = [];
+    let hasAbstract = false;
+    if(data.AbstractText){
+      hasAbstract = true;
+      items.push({ title: data.Heading || query, snippet: data.AbstractText, url: data.AbstractURL || ('https://duckduckgo.com/?q=' + encodeURIComponent(query)) });
+    }
+    if(items.length === 0 && Array.isArray(data.RelatedTopics)){
+      for(const t of data.RelatedTopics){
+        if(t.Text && t.FirstURL){ items.push({ title: t.Text.split(' - ')[0], snippet: t.Text, url: t.FirstURL }); }
+        if(items.length >= 3) break;
+      }
+    }
+    return { ok:true, results: items, hasAbstract };
+  } catch(e){
+    return { ok:false, error: e.message };
+  }
+}
+
+function buildQuickLinks(query){
+  const q = encodeURIComponent(query);
+  return [
+    { label: '📚 Microsoft Learn', url: `https://learn.microsoft.com/search/?terms=${q}` },
+    { label: '🌐 Google', url: `https://www.google.com/search?q=${q}` },
+    { label: '🔎 Bing', url: `https://www.bing.com/search?q=${q}` },
+    { label: '🦆 DuckDuckGo (volledig)', url: `https://duckduckgo.com/?q=${q}` }
+  ];
+}
+
+/* ---------------- fallback synthesis (geen sleutel nodig) ---------------- */
+// Bouwt zonder AI-sleutel toch een vloeiend, samengesteld antwoord uit de gevonden fragmenten,
+// in plaats van alleen rauwe brokstukken naast elkaar te zetten.
+function buildFallbackSummary(query, wikiData, ddgData){
+  const hasTopWiki = wikiData.ok && wikiData.results.length > 0;
+  const topIsRealSummary = hasTopWiki && wikiData.results[0].hasSummary;
+  if(!topIsRealSummary) return null;
+
+  const top = wikiData.results[0];
+  const plain = stripTags(top.snippetHtml);
+  const sentences = plain.match(/[^.!?]+[.!?]+/g) || [plain];
+
+  // vraagt de gebruiker om uitleg/achtergrond? geef dan een uitgebreider antwoord dan bij een kort feitje
+  const wantsDetail = /^(leg\s+.*\s+uit|vertel\s+(me\s+)?over|geef\s+info\s+over|hoe werkt|hoe werken)/i.test(query.trim());
+  const sentenceCount = wantsDetail ? Math.min(5, sentences.length) : Math.min(3, sentences.length);
+  const gist = sentences.slice(0, sentenceCount).join(' ').trim();
+
+  const intros = [
+    `Op basis van wat ik vond: `,
+    `Hier komt het op neer: `,
+    `Kort gezegd: `
+  ];
+  let text = pick(intros) + gist;
+
+  // voeg een extra zin toe uit DuckDuckGo als die iets toevoegt dat niet al in de Wikipedia-tekst zit
+  if(ddgData.ok && ddgData.hasAbstract && ddgData.results.length){
+    const ddgText = ddgData.results[0].snippet;
+    const overlap = ddgText && gist.toLowerCase().includes(ddgText.slice(0, 25).toLowerCase());
+    if(ddgText && !overlap && ddgText.length < 220){
+      text += ` DuckDuckGo vult aan: ${ddgText}`;
+    }
+  }
+  return { text, sourceUrl: top.url, sourceTitle: top.title, description: top.description || null };
+}
+
+/* ---------------- follow-up chips (menselijk gesprek uitnodigen) ---------------- */
+function buildFollowUps(query, wikiData, ddgData){
+  const seen = new Set([query.toLowerCase()]);
+  const out = [];
+  if(wikiData.ok){
+    // relevante treffers eerst (score > 0), pas daarna de rest — voorkomt vervolgsuggesties die nergens op slaan
+    const sorted = [...wikiData.results].sort((a,b)=> (b.score||0) - (a.score||0));
+    for(const r of sorted){
+      const key = r.title.toLowerCase();
+      if(seen.has(key)) continue;
+      if(r.score === 0 && out.length > 0) continue; // vul alleen met score-0 items als er nog niets anders is
+      seen.add(key); out.push(r.title);
+      if(out.length >= 3) break;
+    }
+  }
+  return out;
+}
+function renderFollowUps(list){
+  if(!list.length) return '';
+  let html = `<div class="suggestions" style="justify-content:flex-start; margin-top:12px;">`;
+  list.forEach(q=> html += `<div class="sugg followup" data-q="${escapeHtml(q)}">${escapeHtml(q)}</div>`);
+  html += `</div>`;
+  return html;
+}
+function wireFollowUps(container){
+  container.querySelectorAll('.followup').forEach(el=>{
+    el.addEventListener('click', ()=> askLumen(el.dataset.q));
+  });
+}
+
+/* ---------------- main flow ---------------- */
+async function askLumen(query){
+  addMessage('user', escapeHtml(query));
+  input.value = ''; input.style.height = 'auto';
+  sendBtn.disabled = true;
+  orb.classList.add('thinking');
+  convoHistory.push({ role:'user', content: query });
+
+  // 1. Menselijke small talk — geen zoekopdracht nodig
+  const chit = detectSmallTalk(query);
+  if(chit){
+    addMessage('bot', chit);
+    convoHistory.push({ role:'assistant', content: stripTags(chit) });
+    orb.classList.remove('thinking');
+    sendBtn.disabled = false;
+    input.focus();
+    return;
+  }
+
+  // 2. Calculator short-circuit — exact math, no search needed
+  const calc = tryCalculate(query);
+  if(calc){
+    const html = `<div class="calc-answer"><span class="tag">🧮 Rekenmachine</span><div class="expr">${escapeHtml(calc.expression)} =</div><div class="result">${escapeHtml(String(calc.result))}</div></div>`;
+    addMessage('bot', html);
+    convoHistory.push({ role:'assistant', content: `${calc.expression} = ${calc.result}` });
+    orb.classList.remove('thinking');
+    sendBtn.disabled = false;
+    input.focus();
+    return;
+  }
+
+  // 3. Doorzoek het internet — met een levendige, meelopende statusmelding
+  addStatusBubble();
+  const statusSteps = ['Wikipedia doorzoeken...', 'DuckDuckGo raadplegen...', 'Bronnen tegen elkaar afwegen...'];
+  let stepI = 0;
+  const statusTimer = setInterval(()=>{ stepI = (stepI+1) % statusSteps.length; setStatus(statusSteps[stepI]); }, 900);
+  setStatus(statusSteps[0]);
+
+  const [wikiData, ddgData] = await Promise.all([
+    fetchWikipedia(query),
+    fetchDuckDuckGo(query)
+  ]);
+  clearInterval(statusTimer);
+  removeStatusBubble();
+
+  let html = '';
+  let plainSummaryForHistory = '';
+  const hasTopWiki = wikiData.ok && wikiData.results.length > 0;
+  const topIsRealSummary = hasTopWiki && wikiData.results[0].hasSummary;
+
+  // Bouw zelf een vloeiend, samengesteld antwoord uit de fragmenten — geen AI-model, pure logica
+  const fallback = buildFallbackSummary(query, wikiData, ddgData);
+  if(fallback){
+    const descLine = fallback.description ? `<div style="font-size:0.76rem; color:var(--muted); font-style:italic; margin:2px 0 8px 0;">${escapeHtml(fallback.description)}</div>` : '';
+    html += `<div class="ai-summary"><span class="tag">✦ Lumen</span>${descLine}${escapeHtml(fallback.text)} <a href="${fallback.sourceUrl}" target="_blank" rel="noopener" style="font-size:0.78rem;">(bron: ${escapeHtml(fallback.sourceTitle)} — Wikipedia)</a></div>`;
+    plainSummaryForHistory = fallback.text;
+  } else if(hasTopWiki && !topIsRealSummary){
+    html += `<div class="note-line">Geen eenduidig antwoord — "${escapeHtml(query)}" heeft meerdere betekenissen of geen directe Wikipedia-pagina. Hieronder de losse treffers.</div>`;
+    plainSummaryForHistory = `Geen eenduidig antwoord gevonden voor "${query}".`;
+  } else if(!hasTopWiki && (!ddgData.ok || !ddgData.results.length)){
+    html += `<div class="note-line">Ik kon hier geen duidelijk antwoord op vinden in de gratis bronnen — probeer het specifieker, of klik hieronder door naar Google/Bing.</div>`;
+    plainSummaryForHistory = `Geen duidelijk antwoord gevonden voor "${query}".`;
+  }
+
+  // Secundaire Wikipedia-treffers: compacte doorklik-chips i.p.v. losse kaartjes met (vaak toevallige) fragmenten.
+  // Alleen treffers tonen die écht relevantie-score hebben, zodat willekeurige woordmatches ("een", "populair") wegvallen.
+  const wikiRest = hasTopWiki ? (topIsRealSummary ? wikiData.results.slice(1,6) : wikiData.results.slice(0,6)) : [];
+  let relevantRest = wikiRest.filter(r => r.score > 0);
+  if(!relevantRest.length && !topIsRealSummary) relevantRest = wikiRest.slice(0, 3); // val terug op top-3 als niets scoort (bv. korte/obscure term)
+
+  if(relevantRest.length){
+    html += `<div class="source-group"><div class="source-group-title">📖 ${topIsRealSummary ? 'Zie ook op Wikipedia' : 'Mogelijke betekenissen op Wikipedia'}</div><div class="quicklinks">`;
+    relevantRest.forEach(r=>{
+      const flag = r.lang === 'nl' ? '🇳🇱' : '🇬🇧';
+      html += `<a class="quicklink-btn" href="${r.url}" target="_blank" rel="noopener">${flag} ${escapeHtml(r.title)}</a>`;
+    });
+    html += `</div></div>`;
+  } else if(!hasTopWiki){
+    html += `<div class="source-group"><div class="source-group-title">📖 Wikipedia</div>`;
+    html += wikiData.ok
+      ? `<div class="note-line">Geen directe Wikipedia-treffer gevonden.</div>`
+      : `<div class="note-line">Wikipedia kon niet bereikt worden (${escapeHtml(wikiData.error||'')}).</div>`;
+    html += `</div>`;
+  }
+
+  // DuckDuckGo group — only a strong abstract counts as reliable; related topics are clearly hedged
+  html += `<div class="source-group"><div class="source-group-title">🦆 DuckDuckGo</div>`;
+  if(ddgData.ok && ddgData.results.length){
+    const strong = ddgData.hasAbstract;
+    ddgData.results.slice(0, strong ? 3 : 1).forEach(r=>{
+      html += `<div class="source-card"><a class="title" href="${r.url}" target="_blank" rel="noopener">${escapeHtml(r.title)}</a><div class="snippet">${escapeHtml(r.snippet)}</div></div>`;
+    });
+    if(!strong) html += `<div class="note-line">Dit is een losjes gerelateerde treffer, geen bevestigd antwoord — check de link.</div>`;
+  } else if(ddgData.ok){
+    html += `<div class="note-line">Geen instant answer van DuckDuckGo voor deze vraag — probeer de volledige zoekopdracht via de knop hieronder.</div>`;
+  } else {
+    html += `<div class="note-line">DuckDuckGo kon niet bereikt worden (${escapeHtml(ddgData.error||'')}).</div>`;
+  }
+  html += `</div>`;
+
+  // Quick links
+  html += `<div class="source-group"><div class="source-group-title">🔗 Snel verder zoeken</div><div class="quicklinks">`;
+  buildQuickLinks(query).forEach(l=>{
+    html += `<a class="quicklink-btn" href="${l.url}" target="_blank" rel="noopener">${l.label}</a>`;
+  });
+  html += `</div></div>`;
+
+  // Vervolg-suggesties — nodigt uit tot doorpraten, net als een mens dat zou doen
+  const followUps = buildFollowUps(query, wikiData, ddgData);
+  html += renderFollowUps(followUps);
+
+  const bubble = addMessage('bot', html);
+  wireFollowUps(bubble);
+  convoHistory.push({ role:'assistant', content: plainSummaryForHistory || 'Losse bronnen getoond zonder samenvatting.' });
+  // houd het geheugen beperkt, zodat de context relevant en snel blijft
+  if(convoHistory.length > 16) convoHistory = convoHistory.slice(-16);
+
+  orb.classList.remove('thinking');
+  sendBtn.disabled = false;
+  input.focus();
+}
+
+/* ---------------- events ---------------- */
+sendBtn.addEventListener('click', ()=>{ const v = input.value.trim(); if(v) askLumen(v); });
+input.addEventListener('keydown', (e)=>{
+  if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); const v = input.value.trim(); if(v) askLumen(v); }
+});
+input.addEventListener('input', ()=>{ input.style.height = 'auto'; input.style.height = Math.min(input.scrollHeight, 140) + 'px'; });
+document.querySelectorAll('.sugg').forEach(el=> el.addEventListener('click', ()=> askLumen(el.dataset.q)));
+resetBtn.addEventListener('click', ()=>{
+  chatEl.innerHTML = ''; chatEl.appendChild(emptyState); emptyState.style.display = 'block'; input.value='';
+  convoHistory = [];
+});
+</script>
+</body>
+</html>
