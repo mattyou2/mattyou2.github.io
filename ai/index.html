@@ -606,12 +606,12 @@ function renderFollowUps(list){
 }
 function wireFollowUps(container){
   container.querySelectorAll('.followup').forEach(el=>{
-    el.addEventListener('click', ()=> askLumen(el.dataset.q));
+    el.addEventListener('click', ()=> askMattyou(el.dataset.q));
   });
 }
 
 /* ---------------- main flow ---------------- */
-async function askLumen(query){
+async function askMattyou(query){
   addMessage('user', escapeHtml(query));
   input.value = ''; input.style.height = 'auto';
   sendBtn.disabled = true;
@@ -733,12 +733,12 @@ async function askLumen(query){
 }
 
 /* ---------------- events ---------------- */
-sendBtn.addEventListener('click', ()=>{ const v = input.value.trim(); if(v) askLumen(v); });
+sendBtn.addEventListener('click', ()=>{ const v = input.value.trim(); if(v) askMattyou(v); });
 input.addEventListener('keydown', (e)=>{
-  if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); const v = input.value.trim(); if(v) askLumen(v); }
+  if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); const v = input.value.trim(); if(v) askMattyou(v); }
 });
 input.addEventListener('input', ()=>{ input.style.height = 'auto'; input.style.height = Math.min(input.scrollHeight, 140) + 'px'; });
-document.querySelectorAll('.sugg').forEach(el=> el.addEventListener('click', ()=> askLumen(el.dataset.q)));
+document.querySelectorAll('.sugg').forEach(el=> el.addEventListener('click', ()=> askMattyou(el.dataset.q)));
 resetBtn.addEventListener('click', ()=>{
   chatEl.innerHTML = ''; chatEl.appendChild(emptyState); emptyState.style.display = 'block'; input.value='';
   convoHistory = [];
