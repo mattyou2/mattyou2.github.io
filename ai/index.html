@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Lumen — helder antwoord uit het hele internet</title>
+<title>InVision — helder antwoord uit het hele internet</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.11.0/math.min.js"></script>
@@ -191,17 +191,17 @@
   <header>
     <div class="orb-wrap"><div class="ring"></div><div class="orb" id="orb"></div></div>
     <div class="title-block">
-      <h1>Lumen</h1>
+      <h1>InVision</h1>
       <p>doorzoekt live het internet en onthoudt het gesprek — zonder AI-model, zonder sleutel</p>
     </div>
-    <div class="credit">Gemaakt door <b>Claude</b><br>(Anthropic)</div>
+    <div class="credit">Gemaakt door <b>Mattyou Studios™</b><br>(by Mattyou Studios™)</div>
     <button id="resetBtn" title="Nieuw gesprek">↺ nieuw</button>
-    <button id="infoBtn" title="Hoe werkt Lumen?">ⓘ</button>
+    <button id="infoBtn" title="Hoe werkt InVision?">ⓘ</button>
   </header>
 
   <div id="infoPanel">
-    <h3>Hoe Lumen werkt</h3>
-    <p>Lumen draait volledig op eigen logica — er zit <b>geen enkel AI-taalmodel</b> onder de motorkap, ook niet van Anthropic/Claude. Alles wat je ziet komt rechtstreeks uit gratis, publieke bronnen:</p>
+    <h3>Hoe InVision werkt</h3>
+    <p>InVision draait volledig op eigen logica — er zit <b>geen enkel AI-taalmodel</b> onder de motorkap. Alles wat je ziet komt rechtstreeks uit gratis, publieke bronnen:</p>
     <ul>
       <li><b>🧮 Rekenmachine</b> — sommen (ook procenten, wortels, machten) worden exact berekend met mathjs, geen giswerk.</li>
       <li><b>📖 Wikipedia</b> — live doorzocht in het Nederlands én Engels; treffers worden op relevantie herschikt (titel-match telt zwaarder dan een toevallig woord), en het beste treffer wordt met eigen code samengevat tot een lopende alinea.</li>
@@ -306,7 +306,7 @@ function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 function detectSmallTalk(raw){
   const q = raw.trim().toLowerCase().replace(/[!?.]+$/,'');
 
-  const greetings = ['hoi','hallo','hey','hey lumen','hoi lumen','hallo lumen','hi','goedemorgen','goeiemorgen','goedemiddag','goeiemiddag','goedenavond','goeienavond','yo','hola'];
+  const greetings = ['hoi','hallo','hey','hey InVision','hoi InVision','hallo InVision','hi','goedemorgen','goeiemorgen','goedemiddag','goeiemiddag','goedenavond','goeienavond','yo','hola'];
   if(greetings.includes(q)){
     return pick([
       'Hoi! Fijn dat je er bent. Waar kan ik je vandaag mee helpen? Ik kan sommen exact uitrekenen of het internet voor je afspeuren.',
@@ -323,7 +323,7 @@ function detectSmallTalk(raw){
   }
 
   if(/^(wie ben je|wie ben jij|wat ben je|wat voor bot ben je)\??$/.test(q)){
-    return 'Ik ben Lumen, gebouwd door Claude (Anthropic) — maar ik draai zelf op pure logica, zonder AI-model onder de motorkap. Ik reken sommen exact zelf uit en doorzoek live Wikipedia en DuckDuckGo om je vragen te beantwoorden. Waar ben je benieuwd naar?';
+    return 'Ik ben InVision, gebouwd door Mattyou Studios™ — maar ik draai zelf op pure logica, zonder AI-model onder de motorkap. Ik reken sommen exact zelf uit en doorzoek live Wikipedia en DuckDuckGo om je vragen te beantwoorden. Waar ben je benieuwd naar?';
   }
 
   if(/^(wat kan je|wat kun je|wat doe je|help)\??$/.test(q)){
