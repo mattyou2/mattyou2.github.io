@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Display Page</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #0f172a;
+      color: #ffffff;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+    #text-overlay {
+      font-size: 3rem;
+      font-weight: bold;
+      padding: 20px;
+      text-shadow: 0 4px 10px rgba(0, 0, 0, 0.7);
+      z-index: 10;
+    }
+    #iframe-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      display: none;
+      z-index: 20;
+    }
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+    #status-bar {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(0,0,0,0.6);
+      padding: 8px 12px;
+      font-size: 0.8rem;
+      border-radius: 6px;
+      z-index: 30;
+      cursor: pointer;
+    }
+  </style>
+  
+  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+</head>
+<body>
+
+  <div id="status-bar" onclick="enableAudio()">🔊 Klik hier voor audio-rechten | Status: Verbinden...</div>
+  <div id="text-overlay">Wachten op signaal...</div>
+
+  <div id="iframe-container">
+    <iframe id="target-iframe" src=""></iframe>
+  </div>
+
+  <script>
+    // Vaste ID voor de ontvanger zodat de afstandsbediening altijd weet waar hij naartoe moet sturen
+    const RECEIVER_ID = "mattyou-remote-receiver-screen";
+    
+    // Maak PeerJS verbinding aan
+    const peer = new Peer(RECEIVER_ID);
+
+    const statusBar = document.getElementById("status-bar");
+
+    peer.on('open', (id) => {
+      statusBar.innerText = "🔊 Klik voor audio | Status: Gereed (ID: Connected)";
+    });
+
+    // Luister naar inkomende verbindingen vanaf het bedieningspaneel
+    peer.on('connection', (conn) => {
+      statusBar.innerText = "🔊 Klik voor audio | Status: Verbonden met afstandsbediening!";
+
+      conn.on('data', (data) => {
+        handleCommand(data);
+      });
+    });
+
+    peer.on('error', (err) => {
+      console.error(err);
+      // Als de ID al bezet is of herverbindt
+      statusBar.innerText = "⚠️ Verbindingsfout of ID al in gebruik.";
+    });
+
+    // Geluidsbibliotheek met directe MP3-links
+    const soundLibrary = {
+      fart: "https://www.soundjay.com/human/sounds/fart-01.mp3",
+      scream: "https://www.soundjay.com/human/sounds/man-screaming-01.mp3",
+      airhorn: "https://myinstants.org/media/sounds/mlg-airhorn.mp3",
+      bell: "https://www.soundjay.com/buttons/sounds/button-1.mp3",
+      error: "https://www.soundjay.com/buttons/sounds/button-10.mp3"
+    };
+
+    function enableAudio() {
+      speakText("Audio ingeschakeld");
+      statusBar.style.background = "rgba(22, 163, 74, 0.8)";
+    }
+
+    // Spraak via de ingebouwde Web Speech API van de browser
+    function speakText(text) {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'nl-NL';
+        window.speechSynthesis.speak(utterance);
+      }
+    }
+
+    function playSound(soundKey) {
+      const url = soundLibrary[soundKey] || soundKey;
+      if (url) {
+        const audio = new Audio(url);
+        audio.play().catch(e => console.log("Audio fout:", e));
+      }
+    }
+
+    // Verwerk de commando's die binnenkomen
+    function handleCommand(data) {
+      if (data.type === 'tts') {
+        speakText(data.value);
+      } else if (data.type === 'sound') {
+        playSound(data.value);
+      } else if (data.type === 'text') {
+        document.getElementById('text-overlay').innerText = data.value;
+      } else if (data.type === 'iframe') {
+        const container = document.getElementById('iframe-container');
+        const iframe = document.getElementById('target-iframe');
+        if (data.value) {
+          iframe.src = data.value;
+          container.style.display = "block";
+        } else {
+          container.style.display = "none";
+          iframe.src = "";
+        }
+      }
+    }
+  </script>
+</body>
+</html>
