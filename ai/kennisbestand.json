@@ -1,7 +1,7 @@
 {
   "meta": {
-    "titel": "InVision Master Knowledge & Personal AI Training Base",
-    "versie": "4.0-ULTIMATE",
+    "titel": "InVision Master Knowledge & Extended Personal AI Base",
+    "versie": "5.0-ULTIMATE-EXPANDED",
     "auteur": "Mattyou Studios",
     "laatste_update": "2026-07-24",
     "status": "actief"
@@ -14,7 +14,7 @@
   },
   "beveiliging": {
     "actief": true,
-    "blokkade_melding": "⚠️ Dit type vraag of onderwerp wordt niet verwerkt door InVision. Schakel over naar een geldig of gepast onderwerp.",
+    "blokkade_melding": "⚠️ Dit type vraag, ongezonde uitlating of ongepaste content wordt niet verwerkt door InVision. Schakel over naar een geldig of gepast onderwerp.",
     "geblokkeerde_onderwerpen": [
       "haatzaaien",
       "schelden",
@@ -22,7 +22,9 @@
       "illegale activiteiten",
       "malware schrijven",
       "persoonlijke gegevens van derden lekken",
-      "onleesbare spam"
+      "onleesbare spam",
+      "zelfbeschadiging",
+      "phishing scripts"
     ],
     "geblokkeerde_woorden": [
       "kanker",
@@ -82,6 +84,20 @@
       "trefwoorden": ["wat vindt mattyou leuk", "hobby mattyou", "interesses mattyou", "wat doet mattyou"],
       "antwoord": "Mattyou heeft een brede passie voor tech en gaming:\n- **Minecraft:** Technisch & competitive PvP (Crystal PvP, Elytra Mace, Sword & Axe) en server-scripting via PaperMC/Skript.\n- **Programming & Web:** Interactieve webapps bouwen, HTML/CSS/JS interfaces en database-integraties.\n- **Hardware:** PC-systemen assembleren, componenten testen en unieke hardware-projecten bouwen.\n- **Muziek:** Hardstyle tracks produceren verrijkt met Minecraft sound effects.",
       "bron_label": "Mattyou Studios Profiel"
+    },
+    {
+      "id": "persoonlijk_praten_hallo",
+      "onderwerp": "Begroeting en Persoonlijk Gesprek",
+      "trefwoorden": ["hallo", "hooi", "hey", "alles goed", "hoe gaat het", "wie ben jij", "goedenavond", "goedemorgen"],
+      "antwoord": "Hey! Welkom bij InVision. Het gaat super! Ik sta helemaal klaar om je te helpen met vragen over programmeren, pc-hardware, Minecraft mechanics, web-development of gewoon een goed gesprek. Waar wil je het vandaag over hebben?",
+      "bron_label": "InVision Persoonlijke Interactie"
+    },
+    {
+      "id": "persoonlijk_praten_advies_motivatie",
+      "onderwerp": "Motivatie en Productiviteitstips",
+      "trefwoorden": ["ik heb geen zin", "hoe blijf ik gemotiveerd", "tips voor programmeren", "focus houden", "geen inspiratie"],
+      "antwoord": "Als je vastloopt of even geen inspiratie hebt, helpt het om grote projecten op te breken in mini-taken van 15 minuten. Begin met iets kleins (bijvoorbeeld één functie schrijven of één bug fixen). Zodra je de eerste stap zet, komt de 'flow' vanzelf weer terug!",
+      "bron_label": "InVision Lifestyle & Productiviteit"
     },
     {
       "id": "youtube_aanbeveling",
@@ -155,6 +171,48 @@
       "trefwoorden": ["modrinth", "curseforge", "minecraft mods downloaden", "modpack launcher"],
       "antwoord": "Modrinth en CurseForge zijn platforms voor het hosten en downloaden van Minecraft mods, datapacks en resourcepacks. Modrinth is een modern, open-source en razendsnel platform met een schone API en transparant verdienmodel voor makers. CurseForge heeft de grootste historische bibliotheek, maar is zwaarder qua advertenties en verouderde software.",
       "bron_label": "Kennisbank Game Platforms"
+    },
+    {
+      "id": "gaming_fps_hz_sync",
+      "onderwerp": "FPS vs Refresh Rate (Hz) & G-Sync/FreeSync",
+      "trefwoorden": ["fps", "refresh rate", "hz vs fps", "gsync", "freesync", "screen tearing", "144hz"],
+      "antwoord": "FPS (Frames Per Second) geeft aan hoeveel beelden je videokaart per seconde berekent. Hz (Hertz) geeft aan hoeveel beelden je monitor per seconde kan tonen. Als je videokaart meer FPS levert dan je scherm Hz heeft, kan er 'screen tearing' ontstaan. Adaptive Sync technologieën zoals G-Sync (NVIDIA) en FreeSync (AMD) passen de ververssnelheid van het scherm dynamisch aan de FPS van de GPU aan om haperingen en tearing te voorkomen.",
+      "bron_label": "Kennisbank Display & Gaming Tech"
+    },
+    {
+      "id": "gaming_ping_tickrate",
+      "onderwerp": "Ping, Latency en Game Server Tickrate",
+      "trefwoorden": ["ping", "latency", "tickrate", "128 tick", "64 tick", "lag", "ms vertraging"],
+      "antwoord": "Ping is de tijd in milliseconden (ms) die data nodig heeft om van jouw pc naar de gameserver en terug te reizen. **Tickrate** is de frequentie waarmee de server de spelwereld bijwerkt (bijv. 20 ticks in Minecraft, 64 of 128 ticks in shooters). Een hogere tickrate zorgt voor nauwkeurigere hit-registratie en vloeiendere combat.",
+      "bron_label": "Kennisbank Multiplayer Gaming"
+    },
+    {
+      "id": "prog_python_basics",
+      "onderwerp": "Python Programmeren",
+      "trefwoorden": ["python", "python3", "wat is python", "python syntax", "pip", "py script"],
+      "antwoord": "Python is een van de meest populaire geprogrammeerde talen ter wereld. Het staat bekend om zijn hele schone en menselijk leesbare syntaxis. Python wordt veel gebruikt voor AI, datawetenschap, web-scraping, automatisering en backend web-development (via frameworks zoals Django en FastAPI).",
+      "bron_label": "Kennisbank Programmeren"
+    },
+    {
+      "id": "prog_javascript_async",
+      "onderwerp": "JavaScript Async / Await & Promises",
+      "trefwoorden": ["javascript async", "async await", "promise", "js event loop", "fetch api js"],
+      "antwoord": "In JavaScript worden asynchrone taken (zoals data ophalen van een internetbron) afgehandeld met `Promises` en de `async/await` syntaxis. Met `await` wacht de code op het resultaat van een belofte zonder de gehele browser/thread te blokkeren.",
+      "bron_label": "Kennisbank JavaScript Development"
+    },
+    {
+      "id": "prog_typescript_vs_js",
+      "onderwerp": "TypeScript vs JavaScript",
+      "trefwoorden": ["typescript", "ts vs js", "type safety", "types in javascript", "tsc"],
+      "antwoord": "TypeScript is een uitbreiding (superset) van JavaScript die statische typering toevoegt. Het helpt ontwikkelaars fouten op te sporen tijdens het typen van de code in plaats van pas wanneer de app draait in de browser. TypeScript wordt uiteindelijk gecompileerd naar normale JavaScript.",
+      "bron_label": "Kennisbank Web Development"
+    },
+    {
+      "id": "prog_csharp_dotnet",
+      "onderwerp": "C# en .NET Ecosystem",
+      "trefwoorden": ["c#", "csharp", "dotnet", ".net core", "unity c#", "microsoft programming"],
+      "antwoord": "C# (C-Sharp) is een door Microsoft ontwikkelde, objectgeoriënteerde programmeertaal. Het draait op het .NET-platform en wordt extreem veel gebruikt voor desktopapplicaties, enterprise backend-systemen en game development in de Unity engine.",
+      "bron_label": "Kennisbank Software Development"
     },
     {
       "id": "rapid_trigger_keyboards",
