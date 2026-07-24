@@ -73,6 +73,7 @@
     }
     .btn-danger { background: #dc2626; }
     .btn-success { background: #16a34a; }
+    .btn-warning { background: #d97706; }
   </style>
 
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
@@ -113,7 +114,7 @@
     <h2>🌐 Website Inladen (Iframe)</h2>
     <input type="text" id="iframeInput" placeholder="https://example.com">
     <button class="btn-success" onclick="sendCommand('iframe', 'iframeInput')">Toon Website</button>
-    <button class="btn-danger" onclick="sendDirectCommand('iframe', '')">Verberg Website</button>
+    <button class="btn-danger" onclick="sendDirectCommand('stopIframe', '')">🛑 Stop Website (Terug naar Hoofdmenu)</button>
   </div>
 
   <script>
@@ -159,7 +160,6 @@
       }
     }
 
-    // Automatisch proberen te verbinden bij het openen
     setTimeout(connectToReceiver, 1000);
   </script>
 </body>
