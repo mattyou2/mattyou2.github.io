@@ -664,7 +664,7 @@ async function askLumen(query){
   const fallback = buildFallbackSummary(query, wikiData, ddgData);
   if(fallback){
     const descLine = fallback.description ? `<div style="font-size:0.76rem; color:var(--muted); font-style:italic; margin:2px 0 8px 0;">${escapeHtml(fallback.description)}</div>` : '';
-    html += `<div class="ai-summary"><span class="tag">✦ Lumen</span>${descLine}${escapeHtml(fallback.text)} <a href="${fallback.sourceUrl}" target="_blank" rel="noopener" style="font-size:0.78rem;">(bron: ${escapeHtml(fallback.sourceTitle)} — Wikipedia)</a></div>`;
+    html += `<div class="ai-summary"><span class="tag">✦ InVision</span>${descLine}${escapeHtml(fallback.text)} <a href="${fallback.sourceUrl}" target="_blank" rel="noopener" style="font-size:0.78rem;">(bron: ${escapeHtml(fallback.sourceTitle)} — Wikipedia)</a></div>`;
     plainSummaryForHistory = fallback.text;
   } else if(hasTopWiki && !topIsRealSummary){
     html += `<div class="note-line">Geen eenduidig antwoord — "${escapeHtml(query)}" heeft meerdere betekenissen of geen directe Wikipedia-pagina. Hieronder de losse treffers.</div>`;
