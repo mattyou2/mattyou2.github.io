@@ -1,0 +1,88 @@
+{
+  "meta": {
+    "titel": "InVision AI Training & Kennisbank",
+    "versie": "2.0",
+    "auteur": "Mattyou Studios",
+    "laatste_update": "2026-07-24"
+  },
+  "gedrag": {
+    "identiteit": "Ik ben InVision — een slimme zoek-assistent gebouwd door Mattyou Studios™. Ik combineer mijn interne kennisbestand direct met live zoekresultaten van internet.",
+    "toon": "helder, direct, behulpzaam, licht formeel maar toegankelijk",
+    "structuur_voorkeur": "Begin met de kern, geef daarna eventuele details of stappen.",
+    "voorrang": "kennisbestand_eerst"
+  },
+  "kennis": [
+    {
+      "id": "mattyou_studios",
+      "onderwerp": "Mattyou Studios",
+      "trefwoorden": ["mattyou studios", "mattyou", "wie heeft je gemaakt", "maker", "ontwikkelaar", "wie is mattyou"],
+      "antwoord": "Mattyou Studios is een onafhankelijk ontwikkel- en contentproject. Ze bouwen webapplicaties, Minecraft-utilities, scripts, custom UI's en tools zoals InVision. Mattyou Studios richt zich op slimme softwareoplossingen die werken op eigen logica zonder afhankelijk te zijn van externe AI-modellen.",
+      "bron_label": "Mattyou Studios Officiële Kennisbank",
+      "bron_url": "https://youtube.com/@mattyou333"
+    },
+    {
+      "id": "invision_systeem",
+      "onderwerp": "Hoe InVision Werkt",
+      "trefwoorden": ["hoe werk je", "hoe werkt invision", "architectuur", "geheimen van invision", "kennisbestand"],
+      "antwoord": "InVision draait op een hybride 'Knowledge Fusion Engine' in de browser. Bij elke vraag doorzoekt hij gelijktijdig een lokaal kennisbestand (JSON) én open internetbronnen (Wikipedia, Microsoft Learn, DuckDuckGo). Vond hij iets in het kennisbestand? Dan combineert hij die info met de nieuwste internetdata voor het meest complete antwoord.",
+      "bron_label": "InVision Systeemdocumentatie"
+    },
+    {
+      "id": "kernfusie",
+      "onderwerp": "Kernfusie",
+      "trefwoorden": ["kernfusie", "fusie energie", "hoe werkt kernfusie", "tokamak", "iter"],
+      "antwoord": "Kernfusie is het proces waarbij de kernen van lichte atomen (zoals waterstof-isotopen deuterium en tritium) onder extreem hoge druk en temperatuur samensmelten tot zwaardere kernen (zoals helium). Hierbij komt gigantisch veel energie vrij, zonder langdurig radioactief afval of CO2-uitstoot. Het is hetzelfde proces dat de zon aandrijft.",
+      "bron_label": "Kennisbank Wetenschap"
+    },
+    {
+      "id": "quantum_computing",
+      "onderwerp": "Quantum Computing",
+      "trefwoorden": ["quantum computer", "quantum computing", "qubit", "superpositie", "verstrengeling"],
+      "antwoord": "Quantum computing maakt gebruik van principes uit de quantummestruis (zoals superpositie en verstrengeling) om berekeningen uit te voeren. In plaats van klassieke bits die een 0 of 1 zijn, gebruikt een quantumcomputer 'qubits' die in een toestand van 0 én 1 tegelijk kunnen bestaan. Dit maakt het mogelijk om complexe berekeningen (zoals cryptografie of moleculaire simulaties) exponentieel sneller uit te voeren.",
+      "bron_label": "Kennisbank Informatica"
+    },
+    {
+      "id": "azure_functions",
+      "onderwerp": "Azure Functions",
+      "trefwoorden": ["azure functions", "serverless azure", "azure function app", "cloud functions"],
+      "antwoord": "Azure Functions is een 'serverless' computingdienst van Microsoft Azure. Hiermee kun je kleine stukjes code (functies) uitvoeren in de cloud zonder dat je zelf servers hoeft te beheren of in te richten. Je betaalt alleen voor de tijd dat de code daadwerkelijk draait (pay-per-use), en de dienst schaalt automatisch mee bij meer verkeer.",
+      "bron_label": "Kennisbank Cloud Architecture",
+      "bron_url": "https://learn.microsoft.com/azure/azure-functions/"
+    },
+    {
+      "id": "docker_containers",
+      "onderwerp": "Docker en Containerisatie",
+      "trefwoorden": ["docker", "container", "docker container", "dockerfile", "containerisatie"],
+      "antwoord": "Docker is een open-source platform waarmee ontwikkelaars applicaties kunnen inpakken met al hun afhankelijkheden (code, libraries, runtime) in een gestandaardiseerde 'container'. Hierdoor draait de applicatie gegarandeerd op dezelfde manier op elke computer of server, ongeacht het besturingssysteem.",
+      "bron_label": "Kennisbank Software Development"
+    },
+    {
+      "id": "minecraft_fabric_forge",
+      "onderwerp": "Minecraft Modding (Fabric vs Forge)",
+      "trefwoorden": ["fabric", "forge", "minecraft modding", "modloader", "paper", "fabricmc"],
+      "antwoord": "Fabric en Forge zijn de twee bekendste modloaders voor Minecraft Java Edition. **Forge** is de klassieke, uitgebreide modloader met veel complexe mods, maar is zwaarder voor de pc. **Fabric** is lichtgewicht, start extreem snel op en wordt veel gebruikt voor prestatie-optimalisaties (zoals Sodium en Lithium) en moderne Minecraft-versies.",
+      "bron_label": "Kennisbank Minecraft Tech"
+    },
+    {
+      "id": "rest_api",
+      "onderwerp": "RESTful API's",
+      "trefwoorden": ["rest api", "restful", "http methoden", "api werking", "json api"],
+      "antwoord": "Een REST API (Representational State Transfer) is een architectuurstijl voor het uitwisselen van gegevens tussen computersystemen via HTTP. Het gebruikt standaard HTTP-methoden zoals GET (ophalen), POST (aanmaken), PUT (aanpassen) en DELETE (verwijderen). Gegevens worden meestal verzonden in JSON-formaat.",
+      "bron_label": "Kennisbank Web Development"
+    },
+    {
+      "id": "zonnestelsel",
+      "onderwerp": "Het Zonnestelsel",
+      "trefwoorden": ["zonnestelsel", "planeten", "hoeveel planeten", "zon", "planetenrij"],
+      "antwoord": "Het zonnestelsel bestaat uit de zon en alle hemellichamen die er door de zwaartekracht omheen draaien. Dit omvat 8 officiële planeten (Mercurius, Venus, Aarde, Mars, Jupiter, Saturnus, Uranus, Neptunus), dwergplaneten (zoals Pluto), manen, asteroïden en kometen.",
+      "bron_label": "Kennisbank Astronomie"
+    },
+    {
+      "id": "cpu_vs_gpu",
+      "onderwerp": "Verschil tussen CPU en GPU",
+      "trefwoorden": ["cpu gpu", "processor videokaart", "verschil cpu gpu", "wat is een gpu", "wat is een cpu"],
+      "antwoord": "De **CPU** (Central Processing Unit) is de 'hersenen' van de computer en is geoptimaliseerd voor het snel uitvoeren van enkele complexe taken achter elkaar. De **GPU** (Graphics Processing Unit) heeft duizenden kleinere kernen die parallel werken, geoptimaliseerd voor het gelijktijdig verwerken van duizenden eenvoudige rekenstappen (zoals 3D-graphics of AI-berekeningen).",
+      "bron_label": "Kennisbank Hardware"
+    }
+  ]
+}
