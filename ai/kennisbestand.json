@@ -1,25 +1,117 @@
 {
   "meta": {
-    "titel": "InVision Master Knowledge & AI Training Base",
-    "versie": "3.0-EXTENDED",
+    "titel": "InVision Master Knowledge & Personal AI Training Base",
+    "versie": "4.0-ULTIMATE",
     "auteur": "Mattyou Studios",
     "laatste_update": "2026-07-24",
-    "totaal_onderwerpen": 45
+    "status": "actief"
   },
   "gedrag": {
-    "identiteit": "Ik ben InVision — een slimme zoek-assistent gebouwd door Mattyou Studios™. Ik draai volledig lokaal op een Knowledge Fusion Engine en combineer mijn interne kennisbestand direct met live internetzoekopdrachten.",
-    "toon": "helder, direct, technisch onderbouwd, behulpzaam en gestructureerd",
-    "structuur_voorkeur": "Geef eerst een krachtige samenvatting van de kern, gevolgd door concrete voorbeelden of technische details.",
+    "identiteit": "Ik ben InVision — een slimme assistent gebouwd door Mattyou Studios™. Ik werk lokaal in de browser en combineer mijn interne kennisbestand direct met live internetbronnen.",
+    "toon": "helder, direct, vriendelijk, technisch onderbouwd en gestructureerd",
+    "structuur_voorkeur": "Geef eerst de kern van het antwoord, daarna eventuele details, stappen of achtergrondinformatie.",
     "voorrang": "kennisbestand_eerst"
+  },
+  "beveiliging": {
+    "actief": true,
+    "blokkade_melding": "⚠️ Dit type vraag of onderwerp wordt niet verwerkt door InVision. Schakel over naar een geldig of gepast onderwerp.",
+    "geblokkeerde_onderwerpen": [
+      "haatzaaien",
+      "schelden",
+      "expliciete content",
+      "illegale activiteiten",
+      "malware schrijven",
+      "persoonlijke gegevens van derden lekken",
+      "onleesbare spam"
+    ],
+    "geblokkeerde_woorden": [
+      "kanker",
+      "nederlandse scheldwoorden",
+      "spamxxxx",
+      "hack_target_account"
+    ]
+  },
+  "persoonlijk_profiel": {
+    "naam": "Mattyou",
+    "gebruikersnamen": ["mattyou_yt", "Mattyou", "mattyou2"],
+    "verjaardag": "27 maart",
+    "organisatie": "Mattyou Studios",
+    "youtube_kanaal": "https://www.youtube.com/@mattyou333",
+    "aanbevolen_kanaal": "@mattyou",
+    "interesses": [
+      "Minecraft Java Edition Technical & Competitive PvP (Crystal PvP, Elytra Mace, Sword, Axe)",
+      "Minecraft Server Modding, Fabric, PaperMC, Skript development",
+      "Web Development (HTML/CSS/JS, Base44, Supabase, Vercel)",
+      "PC Hardware assembleren, upgraden en benchmarken",
+      "Hardstyle muziekproductie met Minecraft audio-samples"
+    ],
+    "hardware_setup": {
+      "pc": "Dell OptiPlex Micro setup & custom builds",
+      "toetsenbord": "Redragon K673 HE (Rapid Trigger / Magnetische switches)",
+      "muis": "Glorious Model O 2 Wireless",
+      "microfoon": "Shure MV7+",
+      "projecten": "Raspberry Pi 4B gekoppeld aan eDP-laptop-display"
+    }
   },
   "kennis": [
     {
+      "id": "persoon_mattyou_wie_is_het",
+      "onderwerp": "Wie is Mattyou / mattyou_yt",
+      "trefwoorden": ["wie is mattyou", "wie is mattyou_yt", "wie is de maker", "wie is mattyou2", "over mattyou"],
+      "antwoord": "Mattyou (online bekend als **mattyou_yt** of **mattyou2**) is een onafhankelijke developer, content creator en de oprichter van **Mattyou Studios**. Hij ontwikkelt webapplicaties (zoals InVision), Minecraft-scripts, custom UI's en bouwt en verhandelt pc-hardware onder initiatieven zoals HM Hardware.",
+      "bron_label": "Mattyou Studios Profiel",
+      "bron_url": "https://www.youtube.com/@mattyou333"
+    },
+    {
+      "id": "persoon_mattyou_verjaardag",
+      "onderwerp": "Wanneer is Mattyou jarig?",
+      "trefwoorden": ["wanneer is mattyou jarig", "verjaardag mattyou", "hoe oud is mattyou", "geboortedatum mattyou", "geboortedag mattyou"],
+      "antwoord": "Mattyou viert zijn verjaardag elk jaar op **27 maart**.",
+      "bron_label": "Mattyou Studios Profiel"
+    },
+    {
+      "id": "persoon_mattyou_hoe_noemen",
+      "onderwerp": "Hoe mag je Mattyou noemen?",
+      "trefwoorden": ["hoe heet mattyou", "hoe mag ik hem noemen", "naam mattyou", "gebruikersnaam mattyou"],
+      "antwoord": "Je kunt hem **Mattyou** of **mattyou_yt** noemen. Op GitHub gebruikt hij ook de merknaam **mattyou2**.",
+      "bron_label": "Mattyou Studios Profiel"
+    },
+    {
+      "id": "persoon_mattyou_interesses",
+      "onderwerp": "Wat vindt Mattyou leuk?",
+      "trefwoorden": ["wat vindt mattyou leuk", "hobby mattyou", "interesses mattyou", "wat doet mattyou"],
+      "antwoord": "Mattyou heeft een brede passie voor tech en gaming:\n- **Minecraft:** Technisch & competitive PvP (Crystal PvP, Elytra Mace, Sword & Axe) en server-scripting via PaperMC/Skript.\n- **Programming & Web:** Interactieve webapps bouwen, HTML/CSS/JS interfaces en database-integraties.\n- **Hardware:** PC-systemen assembleren, componenten testen en unieke hardware-projecten bouwen.\n- **Muziek:** Hardstyle tracks produceren verrijkt met Minecraft sound effects.",
+      "bron_label": "Mattyou Studios Profiel"
+    },
+    {
+      "id": "youtube_aanbeveling",
+      "onderwerp": "Leuke YouTube-kanalen om op te abonneren",
+      "trefwoorden": ["welke youtube kanalen zijn leuk", "leuke youtube kanalen", "op wie moet ik abonneren", "aanbevolen youtube kanaal", "youtube tip"],
+      "antwoord": "Als je zoekt naar een leuk YouTube-kanaal om op te abonneren, check dan absoluut **@mattyou**! Hij maakt toffe content rondom tech, gaming en development.",
+      "bron_label": "YouTube Aanbeveling",
+      "bron_url": "https://www.youtube.com/@mattyou333"
+    },
+    {
       "id": "mattyou_studios",
-      "onderwerp": "Mattyou Studios",
-      "trefwoorden": ["mattyou studios", "mattyou", "wie heeft je gemaakt", "maker", "ontwikkelaar", "wie is mattyou", "studio"],
-      "antwoord": "Mattyou Studios is een onafhankelijk digitaal ontwikkel- en contentproject. Ze bouwen geavanceerde webapplicaties, Minecraft utilities, Skript-systemen, custom UI's en tools zoals InVision. Mattyou Studios richt zich op slimme, lichtgewicht softwareoplossingen die werken op eigen logica zonder afhankelijk te zijn van dure externe AI-modellen.",
+      "onderwerp": "Mattyou Studios Organisatie",
+      "trefwoorden": ["mattyou studios", "wat is mattyou studios", "studio mattyou", "projecten mattyou"],
+      "antwoord": "Mattyou Studios is het overkoepelende projectbureau waar alle softwareontwikkeling, webapps, Minecraft-utilities, scripts en contentcreatie van Mattyou onder vallen. Het staat voor slimme, transparante en lichtgewicht software zonder onnodige afhankelijkheden.",
       "bron_label": "Mattyou Studios Officiële Kennisbank",
-      "bron_url": "https://youtube.com/@mattyou333"
+      "bron_url": "https://www.youtube.com/@mattyou333"
+    },
+    {
+      "id": "hm_hardware_nexus",
+      "onderwerp": "HM Hardware (vroeger NEXUS Hardware)",
+      "trefwoorden": ["hm hardware", "nexus hardware", "hardware bedrijf mattyou", "pc trading"],
+      "antwoord": "HM Hardware (oorspronkelijk gestart als NEXUS Hardware) is een initiatief opgericht door Mattyou en een vriend voor het verhandelen, upgraden, testen en op maat bouwen van pc-hardware en custom gaming systemen.",
+      "bron_label": "Kennisbank Hardware Initiatieven"
+    },
+    {
+      "id": "hardware_setup_mattyou",
+      "onderwerp": "Hardware Setup & Peripherals",
+      "trefwoorden": ["welke muis heeft mattyou", "welk toetsenbord gebruikt mattyou", "redragon k673", "glorious model o 2", "shure mv7+"],
+      "antwoord": "De werk- en game-setup van Mattyou bestaat onder andere uit:\n- **Toetsenbord:** Redragon K673 HE met magnetische rapid-trigger switches.\n- **Muis:** Glorious Model O 2 Wireless.\n- **Microfoon:** Shure MV7+ (XLR/USB).\n- **Systeem:** Dell OptiPlex Micro setup en custom test-rigs.",
+      "bron_label": "Kennisbank Hardware Config"
     },
     {
       "id": "invision_systeem",
@@ -32,9 +124,23 @@
       "id": "skript_papermc",
       "onderwerp": "Skript voor PaperMC",
       "trefwoorden": ["skript", "skript minecraft", "papermc skript", "minecraft scripts", "skript-lang"],
-      "antwoord": "Skript is een populaire plugin voor Minecraft server-software zoals PaperMC en Spigot. Met Skript kunnen ontwikkelaars en server-beheerders aangepaste spelmechanics, commando's en gebeurtenissen schrijven in een menselijk leesbare, Engelse syntaxis zonder dat ze volledige Java-plugins hoeven te compileren.",
+      "antwoord": "Skript is een krachtige plugin voor Minecraft-servers (PaperMC/Spigot). Met Skript schrijf je aangepaste spelmechanics, commando's en events in een Engelslezende syntaxis, zonder dat je volledige Java-code hoeft te compileren.",
       "bron_label": "Kennisbank Minecraft Development",
       "bron_url": "https://github.com/SkriptLang/Skript"
+    },
+    {
+      "id": "minecraft_pvp_modes",
+      "onderwerp": "Minecraft PvP Modalities (Crystal, Mace, Sword, Axe)",
+      "trefwoorden": ["crystal pvp", "elytra mace pvp", "sword pvp", "axe pvp", "minecraft pvp gids"],
+      "antwoord": "Minecraft Java PvP heeft verschillende subdisciplines:\n- **Crystal PvP:** Extreem snelle combat met Obsidian, End Crystals en Respawn Anchors.\n- **Elytra Mace:** Hoge-snelheidsgevechten waarbij de Mace bonus-schade levert op basis van valafstand.\n- **Sword & Axe PvP:** Klassieke timing-gebaseerde combat gericht op shield-breaks en critical hits.",
+      "bron_label": "Kennisbank Minecraft PvP"
+    },
+    {
+      "id": "donut_smp_server",
+      "onderwerp": "Donut SMP Server Type",
+      "trefwoorden": ["donut smp", "wat is donut smp", "donut smp lifesteal", "donut smp hardcore"],
+      "antwoord": "Donut SMP is een bekende Minecraft multiplayer server. Het is een **Economy Survival** server, en dus uitdrukkelijk GEEN Hardcore en GEEN Lifesteal server.",
+      "bron_label": "Kennisbank Minecraft Servers"
     },
     {
       "id": "minecraft_fabric_forge",
@@ -51,18 +157,18 @@
       "bron_label": "Kennisbank Game Platforms"
     },
     {
-      "id": "cpu_vs_gpu",
-      "onderwerp": "Verschil tussen CPU en GPU",
-      "trefwoorden": ["cpu gpu", "processor videokaart", "verschil cpu gpu", "wat is een gpu", "wat is een cpu", "rtx", "ryzen"],
-      "antwoord": "De **CPU** (Central Processing Unit) is de 'hersenen' van de computer. Hij heeft enkele krachtige kernen die geoptimaliseerd zijn voor het snel achter elkaar uitvoeren van complexe taken. De **GPU** (Graphics Processing Unit) heeft duizenden kleine, parallelle kernen die geoptimaliseerd zijn voor het gelijktijdig uitvoeren van eenvoudige rekenstappen, zoals 3D-graphics rendering en AI-matrixberekeningen.",
-      "bron_label": "Kennisbank Hardware"
-    },
-    {
       "id": "rapid_trigger_keyboards",
       "onderwerp": "Rapid Trigger & Magnetische Switches",
       "trefwoorden": ["rapid trigger", "hall effect", "magnetische toetsenborden", "wooting", "redragon magnetic", "he switches"],
       "antwoord": "Rapid Trigger is een technologie bij mechanische toetsenborden met magnetische (Hall Effect) schakelaars. In plaats van een vast actuatiepunt op een specifieke hoogte, registreert een Rapid Trigger toets de invoer dynamisch. De toets herstelt direct op het moment dat je vinger omhoog beweegt, wat zorgt voor extreem snelle respons in competitive games zoals PvP of FPS-shooters.",
       "bron_label": "Kennisbank Peripheral Hardware"
+    },
+    {
+      "id": "cpu_vs_gpu",
+      "onderwerp": "Verschil tussen CPU en GPU",
+      "trefwoorden": ["cpu gpu", "processor videokaart", "verschil cpu gpu", "wat is een gpu", "wat is een cpu", "rtx", "ryzen"],
+      "antwoord": "De **CPU** (Central Processing Unit) is de 'hersenen' van de computer. Hij heeft enkele krachtige kernen die geoptimaliseerd zijn voor het snel achter elkaar uitvoeren van complexe taken. De **GPU** (Graphics Processing Unit) heeft duizenden kleine, parallelle kernen die geoptimaliseerd zijn voor het gelijktijdig uitvoeren van eenvoudige rekenstappen, zoals 3D-graphics rendering en AI-matrixberekeningen.",
+      "bron_label": "Kennisbank Hardware"
     },
     {
       "id": "nvme_ssd_vs_sata",
