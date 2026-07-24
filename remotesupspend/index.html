@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Remote Control Panel</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #1e293b;
+      color: #f8fafc;
+      padding: 20px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 10px;
+      color: #38bdf8;
+      font-size: 1.5rem;
+    }
+    #status {
+      text-align: center;
+      font-size: 0.9rem;
+      margin-bottom: 20px;
+      padding: 8px;
+      border-radius: 6px;
+      background: #334155;
+    }
+    .card {
+      background: #0f172a;
+      padding: 15px;
+      border-radius: 12px;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    }
+    h2 {
+      font-size: 1.1rem;
+      margin-bottom: 10px;
+      color: #94a3b8;
+    }
+    input, button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 8px;
+      border-radius: 8px;
+      border: none;
+      font-size: 1rem;
+    }
+    input {
+      background: #334155;
+      color: #fff;
+    }
+    button {
+      background: #2563eb;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:active {
+      transform: scale(0.98);
+    }
+    .btn-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+    .btn-danger { background: #dc2626; }
+    .btn-success { background: #16a34a; }
+  </style>
+
+  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+</head>
+<body>
+
+  <h1>🎛️ Remote Controller</h1>
+  <div id="status">🔴 Niet verbonden. Klik op 'Verbinden'...</div>
+
+  <div class="card">
+    <button class="btn-success" onclick="connectToReceiver()">⚡ Verbind met Scherm</button>
+  </div>
+
+  <div class="card">
+    <h2>🗣️ Tekst Voorlezen (TTS)</h2>
+    <input type="text" id="ttsInput" placeholder="Typ tekst om voor te lezen...">
+    <button onclick="sendCommand('tts', 'ttsInput')">Spreek Af</button>
+  </div>
+
+  <div class="card">
+    <h2>🔊 Geluidseffecten</h2>
+    <div class="btn-grid">
+      <button onclick="sendDirectCommand('sound', 'fart')">💨 Scheet</button>
+      <button onclick="sendDirectCommand('sound', 'scream')">😱 Schreeuw</button>
+      <button onclick="sendDirectCommand('sound', 'airhorn')">📢 Airhorn</button>
+      <button onclick="sendDirectCommand('sound', 'bell')">🔔 Bel</button>
+      <button onclick="sendDirectCommand('sound', 'error')">❌ Error</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>🖥️ Tekst op Scherm</h2>
+    <input type="text" id="screenInput" placeholder="Tekst voor op het scherm...">
+    <button onclick="sendCommand('text', 'screenInput')">Toon Tekst</button>
+  </div>
+
+  <div class="card">
+    <h2>🌐 Website Inladen (Iframe)</h2>
+    <input type="text" id="iframeInput" placeholder="https://example.com">
+    <button class="btn-success" onclick="sendCommand('iframe', 'iframeInput')">Toon Website</button>
+    <button class="btn-danger" onclick="sendDirectCommand('iframe', '')">Verberg Website</button>
+  </div>
+
+  <script>
+    const RECEIVER_ID = "mattyou-remote-receiver-screen";
+    const peer = new Peer();
+    let conn = null;
+
+    const statusDiv = document.getElementById("status");
+
+    function connectToReceiver() {
+      statusDiv.innerText = "🟡 Verbinden met scherm...";
+      conn = peer.connect(RECEIVER_ID);
+
+      conn.on('open', () => {
+        statusDiv.innerText = "🟢 Live verbonden met het scherm!";
+        statusDiv.style.background = "#16a34a";
+      });
+
+      conn.on('close', () => {
+        statusDiv.innerText = "🔴 Verbinding verbroken.";
+        statusDiv.style.background = "#dc2626";
+      });
+    }
+
+    function sendCommand(type, inputId) {
+      const input = document.getElementById(inputId);
+      const val = input.value;
+      if (!val) return;
+
+      if (conn && conn.open) {
+        conn.send({ type: type, value: val });
+        input.value = '';
+      } else {
+        alert("Geen actieve verbinding! Klik eerst op 'Verbind met Scherm'.");
+      }
+    }
+
+    function sendDirectCommand(type, val) {
+      if (conn && conn.open) {
+        conn.send({ type: type, value: val });
+      } else {
+        alert("Geen actieve verbinding! Klik eerst op 'Verbind met Scherm'.");
+      }
+    }
+
+    // Automatisch proberen te verbinden bij het openen
+    setTimeout(connectToReceiver, 1000);
+  </script>
+</body>
+</html>
