@@ -1,88 +1,336 @@
 {
   "meta": {
-    "titel": "InVision AI Training & Kennisbank",
-    "versie": "2.0",
+    "titel": "InVision Master Knowledge & AI Training Base",
+    "versie": "3.0-EXTENDED",
     "auteur": "Mattyou Studios",
-    "laatste_update": "2026-07-24"
+    "laatste_update": "2026-07-24",
+    "totaal_onderwerpen": 45
   },
   "gedrag": {
-    "identiteit": "Ik ben InVision — een slimme zoek-assistent gebouwd door Mattyou Studios™. Ik combineer mijn interne kennisbestand direct met live zoekresultaten van internet.",
-    "toon": "helder, direct, behulpzaam, licht formeel maar toegankelijk",
-    "structuur_voorkeur": "Begin met de kern, geef daarna eventuele details of stappen.",
+    "identiteit": "Ik ben InVision — een slimme zoek-assistent gebouwd door Mattyou Studios™. Ik draai volledig lokaal op een Knowledge Fusion Engine en combineer mijn interne kennisbestand direct met live internetzoekopdrachten.",
+    "toon": "helder, direct, technisch onderbouwd, behulpzaam en gestructureerd",
+    "structuur_voorkeur": "Geef eerst een krachtige samenvatting van de kern, gevolgd door concrete voorbeelden of technische details.",
     "voorrang": "kennisbestand_eerst"
   },
   "kennis": [
     {
       "id": "mattyou_studios",
       "onderwerp": "Mattyou Studios",
-      "trefwoorden": ["mattyou studios", "mattyou", "wie heeft je gemaakt", "maker", "ontwikkelaar", "wie is mattyou"],
-      "antwoord": "Mattyou Studios is een onafhankelijk ontwikkel- en contentproject. Ze bouwen webapplicaties, Minecraft-utilities, scripts, custom UI's en tools zoals InVision. Mattyou Studios richt zich op slimme softwareoplossingen die werken op eigen logica zonder afhankelijk te zijn van externe AI-modellen.",
+      "trefwoorden": ["mattyou studios", "mattyou", "wie heeft je gemaakt", "maker", "ontwikkelaar", "wie is mattyou", "studio"],
+      "antwoord": "Mattyou Studios is een onafhankelijk digitaal ontwikkel- en contentproject. Ze bouwen geavanceerde webapplicaties, Minecraft utilities, Skript-systemen, custom UI's en tools zoals InVision. Mattyou Studios richt zich op slimme, lichtgewicht softwareoplossingen die werken op eigen logica zonder afhankelijk te zijn van dure externe AI-modellen.",
       "bron_label": "Mattyou Studios Officiële Kennisbank",
       "bron_url": "https://youtube.com/@mattyou333"
     },
     {
       "id": "invision_systeem",
       "onderwerp": "Hoe InVision Werkt",
-      "trefwoorden": ["hoe werk je", "hoe werkt invision", "architectuur", "geheimen van invision", "kennisbestand"],
-      "antwoord": "InVision draait op een hybride 'Knowledge Fusion Engine' in de browser. Bij elke vraag doorzoekt hij gelijktijdig een lokaal kennisbestand (JSON) én open internetbronnen (Wikipedia, Microsoft Learn, DuckDuckGo). Vond hij iets in het kennisbestand? Dan combineert hij die info met de nieuwste internetdata voor het meest complete antwoord.",
+      "trefwoorden": ["hoe werk je", "hoe werkt invision", "architectuur", "geheimen van invision", "kennisbestand", "fusion engine"],
+      "antwoord": "InVision draait op een client-side 'Knowledge Fusion Engine' in de browser. Bij elke zoekopdracht doorzoekt hij lokaal een gestructureerd JSON-kennisbestand én raadpleegt hij tegelijk open internetbronnen (Wikipedia, Microsoft Learn, DuckDuckGo). Vond hij een match in het kennisbestand? Dan combineert hij die informatie met de nieuwste internetdata voor het meest accurate antwoord.",
       "bron_label": "InVision Systeemdocumentatie"
     },
     {
-      "id": "kernfusie",
-      "onderwerp": "Kernfusie",
-      "trefwoorden": ["kernfusie", "fusie energie", "hoe werkt kernfusie", "tokamak", "iter"],
-      "antwoord": "Kernfusie is het proces waarbij de kernen van lichte atomen (zoals waterstof-isotopen deuterium en tritium) onder extreem hoge druk en temperatuur samensmelten tot zwaardere kernen (zoals helium). Hierbij komt gigantisch veel energie vrij, zonder langdurig radioactief afval of CO2-uitstoot. Het is hetzelfde proces dat de zon aandrijft.",
-      "bron_label": "Kennisbank Wetenschap"
+      "id": "skript_papermc",
+      "onderwerp": "Skript voor PaperMC",
+      "trefwoorden": ["skript", "skript minecraft", "papermc skript", "minecraft scripts", "skript-lang"],
+      "antwoord": "Skript is een populaire plugin voor Minecraft server-software zoals PaperMC en Spigot. Met Skript kunnen ontwikkelaars en server-beheerders aangepaste spelmechanics, commando's en gebeurtenissen schrijven in een menselijk leesbare, Engelse syntaxis zonder dat ze volledige Java-plugins hoeven te compileren.",
+      "bron_label": "Kennisbank Minecraft Development",
+      "bron_url": "https://github.com/SkriptLang/Skript"
     },
     {
-      "id": "quantum_computing",
-      "onderwerp": "Quantum Computing",
-      "trefwoorden": ["quantum computer", "quantum computing", "qubit", "superpositie", "verstrengeling"],
-      "antwoord": "Quantum computing maakt gebruik van principes uit de quantummestruis (zoals superpositie en verstrengeling) om berekeningen uit te voeren. In plaats van klassieke bits die een 0 of 1 zijn, gebruikt een quantumcomputer 'qubits' die in een toestand van 0 én 1 tegelijk kunnen bestaan. Dit maakt het mogelijk om complexe berekeningen (zoals cryptografie of moleculaire simulaties) exponentieel sneller uit te voeren.",
-      "bron_label": "Kennisbank Informatica"
+      "id": "minecraft_fabric_forge",
+      "onderwerp": "Minecraft Modding (Fabric vs Forge)",
+      "trefwoorden": ["fabric", "forge", "minecraft modding", "modloader", "paper", "fabricmc", "modrinth"],
+      "antwoord": "Fabric en Forge zijn de twee bekendste modloaders voor Minecraft Java Edition. **Forge** is de klassieke, zware modloader met een enorm ecosysteem aan complexe mods. **Fabric** is lichtgewicht, start extreem snel op en is de standaard voor moderne prestatie-mods (zoals Sodium, Lithium en Indium) en snelle game-updates.",
+      "bron_label": "Kennisbank Minecraft Tech"
+    },
+    {
+      "id": "modrinth_vs_curseforge",
+      "onderwerp": "Modrinth vs CurseForge",
+      "trefwoorden": ["modrinth", "curseforge", "minecraft mods downloaden", "modpack launcher"],
+      "antwoord": "Modrinth en CurseForge zijn platforms voor het hosten en downloaden van Minecraft mods, datapacks en resourcepacks. Modrinth is een modern, open-source en razendsnel platform met een schone API en transparant verdienmodel voor makers. CurseForge heeft de grootste historische bibliotheek, maar is zwaarder qua advertenties en verouderde software.",
+      "bron_label": "Kennisbank Game Platforms"
+    },
+    {
+      "id": "cpu_vs_gpu",
+      "onderwerp": "Verschil tussen CPU en GPU",
+      "trefwoorden": ["cpu gpu", "processor videokaart", "verschil cpu gpu", "wat is een gpu", "wat is een cpu", "rtx", "ryzen"],
+      "antwoord": "De **CPU** (Central Processing Unit) is de 'hersenen' van de computer. Hij heeft enkele krachtige kernen die geoptimaliseerd zijn voor het snel achter elkaar uitvoeren van complexe taken. De **GPU** (Graphics Processing Unit) heeft duizenden kleine, parallelle kernen die geoptimaliseerd zijn voor het gelijktijdig uitvoeren van eenvoudige rekenstappen, zoals 3D-graphics rendering en AI-matrixberekeningen.",
+      "bron_label": "Kennisbank Hardware"
+    },
+    {
+      "id": "rapid_trigger_keyboards",
+      "onderwerp": "Rapid Trigger & Magnetische Switches",
+      "trefwoorden": ["rapid trigger", "hall effect", "magnetische toetsenborden", "wooting", "redragon magnetic", "he switches"],
+      "antwoord": "Rapid Trigger is een technologie bij mechanische toetsenborden met magnetische (Hall Effect) schakelaars. In plaats van een vast actuatiepunt op een specifieke hoogte, registreert een Rapid Trigger toets de invoer dynamisch. De toets herstelt direct op het moment dat je vinger omhoog beweegt, wat zorgt voor extreem snelle respons in competitive games zoals PvP of FPS-shooters.",
+      "bron_label": "Kennisbank Peripheral Hardware"
+    },
+    {
+      "id": "nvme_ssd_vs_sata",
+      "onderwerp": "NVMe SSD vs SATA SSD",
+      "trefwoorden": ["nvme", "sata ssd", "m.2 ssd", "opslagsnelheid", "pcie ssd"],
+      "antwoord": "SATA SSD's gebruiken het oudere protocol van traditionele harde schijven en halen snelheden tot zo'n 550 MB/s. NVMe (Non-Volatile Memory Express) SSD's worden rechtstreeks aangesloten op de PCIe-bus via een M.2 slot en kunnen leessnelheden behalen van 3.500 MB/s (PCIe 3.0) tot wel 14.000 MB/s (PCIe 5.0).",
+      "bron_label": "Kennisbank Opslagmedia"
+    },
+    {
+      "id": "ddr4_vs_ddr5",
+      "onderwerp": "DDR4 vs DDR5 Werkgeheugen",
+      "trefwoorden": ["ddr4", "ddr5", "ram geheugen", "werkgeheugen snelheid", "mhz vs mt/s"],
+      "antwoord": "DDR5 is de opvolger van DDR4 werkgeheugen. DDR5 biedt aanzienlijk hogere bandbreedtes (startend vanaf 4800 MT/s tot boven de 8000 MT/s, vergeleken met DDR4's 2133-3600 MT/s), hogere capaciteit per module en ingebouwde power management (PMIC) op de RAM-stick zelf voor betere stabiliteit.",
+      "bron_label": "Kennisbank PC Hardware"
+    },
+    {
+      "id": "psu_80_plus_ratings",
+      "onderwerp": "80 Plus Voeding Efficientie (PSU)",
+      "trefwoorden": ["80 plus", "psu gold", "voeding computer", "80 plus bronze", "80 plus platinum", "power supply"],
+      "antwoord": "80 Plus is een certificering voor computervoedingen die aangeeft dat de voeding minstens 80% efficiënt is bij verschillende belastingen (20%, 50% en 100%). De niveaus lopen op van Bronze, Silver, Gold, Platinum tot Titanium. Een hogere klasse betekent minder energieverlies als warmte en een lagere stroomrekening.",
+      "bron_label": "Kennisbank Computervoedingen"
     },
     {
       "id": "azure_functions",
       "onderwerp": "Azure Functions",
-      "trefwoorden": ["azure functions", "serverless azure", "azure function app", "cloud functions"],
-      "antwoord": "Azure Functions is een 'serverless' computingdienst van Microsoft Azure. Hiermee kun je kleine stukjes code (functies) uitvoeren in de cloud zonder dat je zelf servers hoeft te beheren of in te richten. Je betaalt alleen voor de tijd dat de code daadwerkelijk draait (pay-per-use), en de dienst schaalt automatisch mee bij meer verkeer.",
+      "trefwoorden": ["azure functions", "serverless azure", "azure function app", "cloud functions", "microsoft azure"],
+      "antwoord": "Azure Functions is een 'serverless' computingdienst van Microsoft Azure. Hiermee kun je kleine stukjes code (functies) uitvoeren in de cloud zonder zelf servers in te richten of te onderhouden. Je betaalt uitsluitend voor de milliseconden dat de code daadwerkelijk draait (pay-per-use), en het systeem schaalt automatisch op bij hoge vraag.",
       "bron_label": "Kennisbank Cloud Architecture",
       "bron_url": "https://learn.microsoft.com/azure/azure-functions/"
     },
     {
       "id": "docker_containers",
       "onderwerp": "Docker en Containerisatie",
-      "trefwoorden": ["docker", "container", "docker container", "dockerfile", "containerisatie"],
-      "antwoord": "Docker is een open-source platform waarmee ontwikkelaars applicaties kunnen inpakken met al hun afhankelijkheden (code, libraries, runtime) in een gestandaardiseerde 'container'. Hierdoor draait de applicatie gegarandeerd op dezelfde manier op elke computer of server, ongeacht het besturingssysteem.",
-      "bron_label": "Kennisbank Software Development"
+      "trefwoorden": ["docker", "container", "docker container", "dockerfile", "containerisatie", "docker compose"],
+      "antwoord": "Docker is een open-source platform waarmee ontwikkelaars applicaties kunnen inpakken samen met al hun afhankelijkheden (libraries, runtime, instellingen) in een lichtgewicht 'container'. Hierdoor draait de applicatie gegarandeerd identiek op elke computer of cloud-server, onafhankelijk van het besturingssysteem.",
+      "bron_label": "Kennisbank DevOps"
     },
     {
-      "id": "minecraft_fabric_forge",
-      "onderwerp": "Minecraft Modding (Fabric vs Forge)",
-      "trefwoorden": ["fabric", "forge", "minecraft modding", "modloader", "paper", "fabricmc"],
-      "antwoord": "Fabric en Forge zijn de twee bekendste modloaders voor Minecraft Java Edition. **Forge** is de klassieke, uitgebreide modloader met veel complexe mods, maar is zwaarder voor de pc. **Fabric** is lichtgewicht, start extreem snel op en wordt veel gebruikt voor prestatie-optimalisaties (zoals Sodium en Lithium) en moderne Minecraft-versies.",
-      "bron_label": "Kennisbank Minecraft Tech"
+      "id": "kubernetes_k8s",
+      "onderwerp": "Kubernetes (K8s)",
+      "trefwoorden": ["kubernetes", "k8s", "container orchestratie", "cluster beheer", "pods"],
+      "antwoord": "Kubernetes (vaak afgekort als K8s) is een open-source container-orchestratieplatform, oorspronkelijk ontwikkeld door Google. Het automatiseert het uitrollen, schalen, herstellen en beheren van duizenden gecontaineriseerde applicaties (zoals Docker) in een cloud-netwerk.",
+      "bron_label": "Kennisbank Cloud Infrastructure"
     },
     {
       "id": "rest_api",
-      "onderwerp": "RESTful API's",
-      "trefwoorden": ["rest api", "restful", "http methoden", "api werking", "json api"],
-      "antwoord": "Een REST API (Representational State Transfer) is een architectuurstijl voor het uitwisselen van gegevens tussen computersystemen via HTTP. Het gebruikt standaard HTTP-methoden zoals GET (ophalen), POST (aanmaken), PUT (aanpassen) en DELETE (verwijderen). Gegevens worden meestal verzonden in JSON-formaat.",
+      "onderwerp": "RESTful API Architecture",
+      "trefwoorden": ["rest api", "restful", "http methoden", "api werking", "json api", "endpoints"],
+      "antwoord": "Een REST API (Representational State Transfer) is een architectuurstijl voor communicatie tussen computersystemen via HTTP. Het gebruikt standaard methoden: GET (ophalen), POST (aanmaken), PUT/PATCH (bewerken) en DELETE (verwijderen). Gegevens uitwisseling gebeurt vrijwel altijd in JSON-formaat.",
       "bron_label": "Kennisbank Web Development"
+    },
+    {
+      "id": "websockets_vs_http",
+      "onderwerp": "WebSockets vs HTTP",
+      "trefwoorden": ["websocket", "websockets", "http vs websocket", "realtime communicatie", "socket.io"],
+      "antwoord": "HTTP is een request-response protocol: de client moet steeds om gegevens vragen. WebSockets bieden een permanente, bi-directionele (full-duplex) verbinding tussen de browser en de server. Dit maakt het ideaal voor realtime toepassingen zoals chats, live multiplayer games en financiële koersupdates.",
+      "bron_label": "Kennisbank Web Protocollen"
+    },
+    {
+      "id": "react_vs_vue",
+      "onderwerp": "React vs Vue.js",
+      "trefwoorden": ["react", "vue", "vuejs", "frontend frameworks", "javascript framework", "jsx"],
+      "antwoord": "React (onderhouden door Meta) is een bibliotheek gebaseerd op componenten en JSX, beroemd om zijn Virtual DOM en enorme ecosysteem. Vue.js is een progressief framework met een hele schone scheiding van HTML, CSS en JS, dat bekend staat om een zeer zachte leercurve en uitstekende officiële documentatie.",
+      "bron_label": "Kennisbank Frontend Development"
+    },
+    {
+      "id": "sql_vs_nosql",
+      "onderwerp": "SQL vs NoSQL Databases",
+      "trefwoorden": ["sql", "nosql", "relational database", "mongodb", "postgresql", "database verschil"],
+      "antwoord": "SQL-databases (zoals PostgreSQL, MySQL) zijn relationele databases die data opslaan in gestructureerde tabellen met vaste schema's. NoSQL-databases (zoals MongoDB, Redis) zijn niet-relationeel en slaan data op als documenten (JSON), key-value paren of grafen, wat meer flexibiliteit biedt bij ongestructureerde data.",
+      "bron_label": "Kennisbank Database Design"
+    },
+    {
+      "id": "supabase_backend",
+      "onderwerp": "Supabase (Open Source Firebase)",
+      "trefwoorden": ["supabase", "firebase alternatief", "postgres cloud", "row level security", "baas"],
+      "antwoord": "Supabase is een open-source Backend-as-a-Service (BaaS) platform dat gebouwd is bovenop een krachtige PostgreSQL-database. Het biedt automatische REST en WebSocket API's, authenticatie, bestandsopslag en Row Level Security (RLS) zonder dat je zelf een traditionele backend server hoeft te programmeren.",
+      "bron_label": "Kennisbank Backend Platforms",
+      "bron_url": "https://supabase.com"
+    },
+    {
+      "id": "git_version_control",
+      "onderwerp": "Git Versiebeheer",
+      "trefwoorden": ["git", "github", "git commit", "git push", "versiebeheer", "git branch"],
+      "antwoord": "Git is een gedistribueerd versiebeheersysteem waarmee ontwikkelaars veranderingen in broncode bijhouden, terugkeren naar eerdere versies en naadloos samenwerken in takken (branches). GitHub en GitLab zijn webplatforms die Git-repositories hosten en voorzien van extra projectmanagementtools.",
+      "bron_label": "Kennisbank Software Tools"
+    },
+    {
+      "id": "ddos_aanvallen",
+      "onderwerp": "DDoS Aanvallen (Distributed Denial of Service)",
+      "trefwoorden": ["ddos", "dos aanval", "botnet", "cloud flare", "overbelasting netwerk"],
+      "antwoord": "Een DDoS-aanval is een poging om een server, service of netwerk onbereikbaar te maken door het te overspoelen met een gigantische hoeveelheid internetverkeer. Dit verkeer is afkomstig van een 'botnet': een gedistribueerd netwerk van gehackte apparaten wereldwijd die allemaal tegelijkertijd verzoeken sturen.",
+      "bron_label": "Kennisbank Cybersecurity"
+    },
+    {
+      "id": "vpn_werking",
+      "onderwerp": "VPN (Virtual Private Network)",
+      "trefwoorden": ["vpn", "virtual private network", "versleuteld verkeer", "ip adres verbergen", "wireguard"],
+      "antwoord": "Een VPN legt een versleutelde 'tunnel' aan tussen jouw apparaat en een externe VPN-server. Al jouw internetverkeer gaat door deze tunnel. Hierdoor wordt je echte IP-adres verborgen voor websites en is je data beveiligd tegen meelezen op openbare wifi-netwerken.",
+      "bron_label": "Kennisbank Netwerkbeveiliging"
+    },
+    {
+      "id": "ssl_tls_encryption",
+      "onderwerp": "SSL / TLS Certificaten (HTTPS)",
+      "trefwoorden": ["ssl", "tls", "https", "slotje browser", "encryptie", "certificaat"],
+      "antwoord": "TLS (Transport Layer Security, de opvolger van SSL) is het beveiligingsprotocol dat HTTPS mogelijk maakt. Het versleutelt de gegevens die heen en weer gestuurd worden tussen jouw browser en de webserver met behulp van cryptografische sleutels, waardoor hackers je wachtwoorden of gegevens niet kunnen onderscheppen.",
+      "bron_label": "Kennisbank Webbeveiliging"
+    },
+    {
+      "id": "dns_werking",
+      "onderwerp": "DNS (Domain Name System)",
+      "trefwoorden": ["dns", "domain name system", "ip adres opzoeken", "nameserver", "dns records"],
+      "antwoord": "Het DNS fungeert als het 'telefoonboek van het internet'. Omdat computers communiceren via numerieke IP-adressen (zoals 142.250.179.206) en mensen namen onthouden (zoals google.com), vertaalt een DNS-server domeinnamen razendsnel naar de bijbehorende IP-adressen.",
+      "bron_label": "Kennisbank Netwerken"
+    },
+    {
+      "id": "kernfusie",
+      "onderwerp": "Kernfusie",
+      "trefwoorden": ["kernfusie", "fusie energie", "hoe werkt kernfusie", "tokamak", "iter", "zonne-energie"],
+      "antwoord": "Kernfusie is het proces waarbij de kernen van lichte atomen (zoals de waterstof-isotopen deuterium en tritium) onder extreem hoge druk en temperatuur samensmelten tot zwaardere kernen (zoals helium). Hierbij komt gigantisch veel schone energie vrij, zonder langdurig radioactief afval of CO2-uitstoot.",
+      "bron_label": "Kennisbank Wetenschap"
+    },
+    {
+      "id": "quantum_computing",
+      "onderwerp": "Quantum Computing",
+      "trefwoorden": ["quantum computer", "quantum computing", "qubit", "superpositie", "verstrengeling", "quantum entangling"],
+      "antwoord": "Quantum computing maakt gebruik van principes uit de quantummechanica (zoals superpositie en verstrengeling). Waar een normale computer rekent met bits die een 0 of 1 zijn, gebruikt een quantumcomputer 'qubits' die in een toestand van 0 én 1 tegelijk kunnen bestaan, wat complexe berekeningen exponentieel versnelt.",
+      "bron_label": "Kennisbank Informatica & Natuurkunde"
+    },
+    {
+      "id": "zwarte_gaten",
+      "onderwerp": "Zwarte Gaten & Event Horizon",
+      "trefwoorden": ["zwart gat", "event horizon", "gebeurtenishorizon", "zwaartekracht", "singulariteit"],
+      "antwoord": "Een zwart gat is een gebied in de ruimte waar de zwaartekracht zo extreem sterk is dat niets — zelfs licht niet — eruit kan ontsnappen. De grens waarachter ontsnappen onmogelijk is, heet de 'gebeurtenishorizon' (event horizon). In het centrum bevindt zich volgens de theorie een singulariteit met een oneindige dichtheid.",
+      "bron_label": "Kennisbank Astrofysica"
+    },
+    {
+      "id": "relativiteitstheorie",
+      "onderwerp": "Einstein's Relativiteitstheorie",
+      "trefwoorden": ["relativiteitstheorie", "einstein", "e=mc2", "ruimtetijd", "speciale relativiteit"],
+      "antwoord": "Albert Einstein's relativiteitstheorie bestaat uit twee delen. De **Speciale Relativiteit** (1905) stelt dat de lichtsnelheid altijd constant is en dat tijd en ruimte relatief zijn aan de waarnemer. De **Algemene Relativiteit** (1915) beschrijft zwaartekracht niet als een kracht, maar als een kromming van de ruimtetijd veroorzaakt door massa.",
+      "bron_label": "Kennisbank Natuurkunde"
     },
     {
       "id": "zonnestelsel",
       "onderwerp": "Het Zonnestelsel",
-      "trefwoorden": ["zonnestelsel", "planeten", "hoeveel planeten", "zon", "planetenrij"],
-      "antwoord": "Het zonnestelsel bestaat uit de zon en alle hemellichamen die er door de zwaartekracht omheen draaien. Dit omvat 8 officiële planeten (Mercurius, Venus, Aarde, Mars, Jupiter, Saturnus, Uranus, Neptunus), dwergplaneten (zoals Pluto), manen, asteroïden en kometen.",
+      "trefwoorden": ["zonnestelsel", "planeten", "hoeveel planeten", "zon", "planetenrij", "mercurius mars jupiter"],
+      "antwoord": "Het zonnestelsel bestaat uit de zon en alle hemellichamen die er door de zwaartekracht omheen draaien. Dit omvat 8 officiële planeten (Mercurius, Venus, Aarde, Mars, Jupiter, Saturnus, Uranus, Neptunus), dwergplaneten (zoals Pluto), honderden manen en miljoenen asteroïden.",
       "bron_label": "Kennisbank Astronomie"
     },
     {
-      "id": "cpu_vs_gpu",
-      "onderwerp": "Verschil tussen CPU en GPU",
-      "trefwoorden": ["cpu gpu", "processor videokaart", "verschil cpu gpu", "wat is een gpu", "wat is een cpu"],
-      "antwoord": "De **CPU** (Central Processing Unit) is de 'hersenen' van de computer en is geoptimaliseerd voor het snel uitvoeren van enkele complexe taken achter elkaar. De **GPU** (Graphics Processing Unit) heeft duizenden kleinere kernen die parallel werken, geoptimaliseerd voor het gelijktijdig verwerken van duizenden eenvoudige rekenstappen (zoals 3D-graphics of AI-berekeningen).",
-      "bron_label": "Kennisbank Hardware"
+      "id": "machine_learning_basics",
+      "onderwerp": "Machine Learning (Machinaal Leren)",
+      "trefwoorden": ["machine learning", "machinaal leren", "ml", "supervised learning", "algoritmes"],
+      "antwoord": "Machine Learning is een tak van kunstmatige intelligentie waarbij computersystemen leren van data en patronen herkennen, zonder expliciet voor elke regel geprogrammeerd te zijn. Bekende vormen zijn Supervised Learning (met gelabelde data), Unsupervised Learning (patronen zoeken in ongestructureerde data) en Reinforcement Learning (leren door beloning en straf).",
+      "bron_label": "Kennisbank AI & Data Science"
+    },
+    {
+      "id": "neuraal_netwerk",
+      "onderwerp": "Neurale Netwerken & Deep Learning",
+      "trefwoorden": ["neuraal netwerk", "deep learning", "neural network", "kunstmatige neuronen", "backpropagation"],
+      "antwoord": "Een kunstmatig neuraal netwerk is een rekenmodel geïnspireerd op de biologische werking van menselijke hersenen. Het bestaat uit lagen van 'neuronen' die gewichten aanpassen op basis van invoer. Deep Learning maakt gebruik van neurale netwerken met tientallen of honderden verborgen lagen voor complexe taken zoals beeldherkenning en spraakanalyse.",
+      "bron_label": "Kennisbank Kunstmatige Intelligentie"
+    },
+    {
+      "id": "json_formaat",
+      "onderwerp": "JSON (JavaScript Object Notation)",
+      "trefwoorden": ["json", "javascript object notation", "json data", "json formaat", "data structuur"],
+      "antwoord": "JSON is een lichtgewicht data-uitwisselingsformaat dat gemakkelijk te lezen en te schrijven is voor mensen, én eenvoudig te parseren is door computers. Het gebruikt een tekstgebaseerde structuur bestaande uit sleutel-waarde paren (`\"sleutel\": \"waarde\"`) en lijsten (arrays).",
+      "bron_label": "Kennisbank Datastructuren"
+    },
+    {
+      "id": "html_css_js",
+      "onderwerp": "De Drie Pijlers van het Web (HTML, CSS, JS)",
+      "trefwoorden": ["html", "css", "javascript", "drie pijlers web", "frontend basis", "webontwikkeling"],
+      "antwoord": "Websites worden gebouwd met drie kerntalen: **HTML** vormt de structuur en inhoud van de pagina, **CSS** zorgt voor de vormgeving, kleuren, layout en responsive design, en **JavaScript** voegt interactiviteit, logica en dynamische functionaliteit toe.",
+      "bron_label": "Kennisbank Web Fundamentals"
+    },
+    {
+      "id": "binary_hexadecimal",
+      "onderwerp": "Binair en Hexadecimaal Stelsel",
+      "trefwoorden": ["binair", "hexadecimaal", "0 en 1", "talstelsel", "hex naar binair", "bits en bytes"],
+      "antwoord": "Het **binaire stelsel** (2-tallig) gebruikt alleen de cijfers 0 en 1, wat exact overeenkomt met de aan/uit-toestanden van transistors in processors. Het **hexadecimale stelsel** (16-tallig) gebruikt de cijfers 0-9 en letters A-F. Hexadecimaal wordt veel gebruikt om binaire data korter en leesbaarder weer te geven voor mensen (bijv. kleurcodes `#DA7756`).",
+      "bron_label": "Kennisbank Informatica Basis"
+    },
+    {
+      "id": "linux_vs_windows",
+      "onderwerp": "Linux vs Windows Servers",
+      "trefwoorden": ["linux", "windows server", "ubuntu", "debian", "open source server", "bash"],
+      "antwoord": "Linux is een open-source besturingssysteem dat de wereldwijde servermarkt domineert (Ubuntu, Debian, CentOS). Het staat bekend om zijn extreem lage systeemeisen, stabiliteit, beveiliging en krachtige Command Line Interface (CLI/Bash). Windows Server wordt vooral gebruikt binnen bedrijfsorganisaties die sterk leunen op Active Directory en Microsoft-technologie.",
+      "bron_label": "Kennisbank Serverbeheer"
+    },
+    {
+      "id": "ci_cd_pipelines",
+      "onderwerp": "CI/CD Pipelines",
+      "trefwoorden": ["ci/cd", "continuous integration", "continuous deployment", "devops pipeline", "github actions"],
+      "antwoord": "CI/CD staat voor Continuous Integration en Continuous Deployment. Het is een DevOps-praktijk waarbij code-wijzigingen automatisch worden getest, gebouwd en uitgerold naar productie zodra een ontwikkelaar nieuwe code naar een repository (zoals GitHub) pusht. Dit voorkomt menselijke fouten en versnelt het uitbrengen van software.",
+      "bron_label": "Kennisbank Software Engineering"
+    },
+    {
+      "id": "cache_werking",
+      "onderwerp": "Caching & Geheugen-buffering",
+      "trefwoorden": ["cache", "caching", "browser cache", "redis", "geheugen buffer", "snellere laadtijd"],
+      "antwoord": "Caching is het tijdelijk opslaan van veelgebruikte gegevens in een supersnel interim-geheugen (zoals het RAM-geheugen of de browser-cache). Hierdoor hoeft een applicatie niet telkens de trage database of netwerkverbinding te raadplegen, wat laadtijden drastisch verkort.",
+      "bron_label": "Kennisbank Systeemprestaties"
+    },
+    {
+      "id": "open_source_software",
+      "onderwerp": "Open Source Software",
+      "trefwoorden": ["open source", "foss", "vrije software", "github open source", "mit licentie", "gpl"],
+      "antwoord": "Open Source Software is software waarvan de broncode publiek toegankelijk is. Iedereen kan de code bekijken, aanpassen, verbeteren en verspreiden. Bekende voorbeelden zijn Linux, Docker, Blender en Firefox. Het maakt gebruik van licenties zoals MIT, Apache 2.0 of GNU GPL.",
+      "bron_label": "Kennisbank Licenties & Software"
+    },
+    {
+      "id": "cryptografie_public_key",
+      "onderwerp": "Asymmetrische Cryptografie (Public/Private Key)",
+      "trefwoorden": ["cryptografie", "public key", "private key", "rsa", "asymmetrische encryptie", "ssh key"],
+      "antwoord": "Asymmetrische cryptografie gebruikt twee verschillende sleutels die wiskundig aan elkaar gekoppeld zijn: een **Public Key** (die iedereen mag zien en gebruikt wordt om data te versleutelen) en een **Private Key** (die geheim blijft en gebruikt wordt om data te ontsleutelen). Dit vormt de basis van SSH, RSA en beveiligde e-mail.",
+      "bron_label": "Kennisbank Cryptografie"
+    },
+    {
+      "id": "raspberry_pi",
+      "onderwerp": "Raspberry Pi & Single-Board Computers",
+      "trefwoorden": ["raspberry pi", "rpi", "single board computer", "arm processor", "pihole", "gpio"],
+      "antwoord": "De Raspberry Pi is een creditcard-grote single-board computer die draait op een zuinige ARM-processor. Ondanks het kleine formaat en de lage prijs is het een volledige computer met USB-poorten, HDMI, ethernet en GPIO-pinnen, veel gebruikt voor home-servers, Pi-hole adblockers, domotica en hardware-projecten.",
+      "bron_label": "Kennisbank Micro hardware"
+    },
+    {
+      "id": "bluetooth_protocollen",
+      "onderwerp": "Bluetooth & Bluetooth Low Energy (BLE)",
+      "trefwoorden": ["bluetooth", "ble", "bluetooth low energy", "draadloze verbinding", "2.4ghz draadloos"],
+      "antwoord": "Bluetooth is een protocol voor korte-afstand draadloze communicatie op de 2.4 GHz frequentieband. Bluetooth Low Energy (BLE) is een variant die speciaal is ontworpen om extreem weinig stroom te verbruiken, ideaal voor draadloze randapparatuur, IoT-sensoren en smartwatches die maanden op een batterij moeten werken.",
+      "bron_label": "Kennisbank Draadloze Netwerken"
+    },
+    {
+      "id": "audio_latency_asio",
+      "onderwerp": "Audio Latency & ASIO Drivers",
+      "trefwoorden": ["audio latency", "asio", "asio4all", "geluidsvertraging", "buffer size audio", "daw"],
+      "antwoord": "Audio latency is de vertraging (in milliseconden) tussen het genereren van een geluidssignaal en het daadwerkelijk horen uit de speakers. ASIO (Audio Stream Input/Output) is een driver-protocol dat de standaard geluidslagen van het besturingssysteem omzeilt en een directe verbinding legt met de geluidskaart voor een extreem lage latency.",
+      "bron_label": "Kennisbank Audio Engineering"
+    },
+    {
+      "id": "hardstyle_productie_basics",
+      "onderwerp": "Hardstyle & EDM Audio Productie",
+      "trefwoorden": ["hardstyle kick", "edm productie", "sound design", "distortie", "overdrive", "eq2", "daw"],
+      "antwoord": "Hardstyle-audioproductie staat bekend om zijn complexe sound design, met name bij het maken van de 'kick'. Een hardstyle kick wordt opgebouwd door een basis-909 sinusgolf herhaaldelijk te vervormen (overdrive/distortion), af te snijden met EQ (equalization) en te pitch-shiften totdat een agressieve, harmonische 'punch' en 'tail' ontstaat.",
+      "bron_label": "Kennisbank Muziekproductie"
+    },
+    {
+      "id": "display_interfaces_edp_hdmi",
+      "onderwerp": "Display Interfaces (eDP vs HDMI vs DisplayPort)",
+      "trefwoorden": ["edp", "hdmi", "displayport", "laptop scherm aansluiten", "edp controller board"],
+      "antwoord": "HDMI en DisplayPort zijn de standaard externe video-aansluitingen voor monitors en tv's. **eDP** (Embedded DisplayPort) is de interne standaard die op het moederbord van laptops wordt gebruikt om het scherm aan te sturen. Met een externe eDP-naar-HDMI controllerboard kun je een losgehaald laptop-scherm ombouwen tot een stand-alone HDMI-monitor.",
+      "bron_label": "Kennisbank Display Hardware"
+    },
+    {
+      "id": "p2p_netwerken",
+      "onderwerp": "Peer-to-Peer (P2P) Netwerken",
+      "trefwoorden": ["p2p", "peer to peer", "bittorrent", "gedecentraliseerd netwerk", "seeder leContent"],
+      "antwoord": "In een Peer-to-Peer (P2P) netwerk communiceren computers (peers) rechtstreeks met elkaar zonder tussenkomst van een centrale hoofdserver. Elke deelnemer deelt en ontvangt tegelijkertijd gegevens, wat zorgt voor een hoge schaalbaarheid en bestandheid tegen centrale storingen.",
+      "bron_label": "Kennisbank Netwerkarchitectuur"
+    },
+    {
+      "id": "cors_security",
+      "onderwerp": "CORS (Cross-Origin Resource Sharing)",
+      "trefwoorden": ["cors", "cross origin resource sharing", "cors error", "browser beveiliging", "fetch block"],
+      "antwoord": "CORS is een beveiligingsmechanisme dat door webbrowsers wordt afgedwongen. Het voorkomt dat een webpagina op het ene domein zomaar API-verzoeken of bestanden ophaalt van een ander domein, tenzij die externe server via speciale HTTP-headers expliciet toestemming geeft.",
+      "bron_label": "Kennisbank Web Beveiliging"
     }
   ]
 }
