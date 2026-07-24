@@ -103,7 +103,7 @@
     const peer = new Peer(RECEIVER_ID);
     let audioActive = false;
 
-    // Betrouwbare CORS-vriendelijke audio links (Oplossing 2)
+    // Betrouwbare CORS-vriendelijke audio links
     const soundLibrary = {
       fart: "https://upload.wikimedia.org/wikipedia/commons/e/e8/Fart-sound.mp3",
       scream: "https://upload.wikimedia.org/wikipedia/commons/3/3d/Male_Scream.ogg",
@@ -169,6 +169,8 @@
       } else if (data.type === 'sound') {
         playSound(data.value);
       } else if (data.type === 'text') {
+        // Sluit eventueel openstaand iframe zodat de tekst direct te zien is
+        stopIframe();
         document.getElementById('text-overlay').innerText = data.value;
       } else if (data.type === 'iframe') {
         const container = document.getElementById('iframe-container');
