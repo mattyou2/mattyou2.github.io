@@ -19,7 +19,7 @@
       font-family: Arial, sans-serif;
     }
     
-    /* Overlay om eerste klik te verplichten voor Fullscreen + Audio */
+    /* Overlay voor eerste klik (vereist door browsers voor audio & fullscreen) */
     #start-overlay {
       position: fixed;
       top: 0;
@@ -45,7 +45,7 @@
       color: #38bdf8;
     }
 
-    /* Hoofdscherm / Menu */
+    /* Hoofdscherm / Standaard weergave */
     #main-display {
       width: 100%;
       height: 100%;
@@ -103,9 +103,17 @@
     const peer = new Peer(RECEIVER_ID);
     let audioActive = false;
 
+    // Betrouwbare CORS-vriendelijke audio links (Oplossing 2)
+    const soundLibrary = {
+      fart: "https://upload.wikimedia.org/wikipedia/commons/e/e8/Fart-sound.mp3",
+      scream: "https://upload.wikimedia.org/wikipedia/commons/3/3d/Male_Scream.ogg",
+      airhorn: "https://raw.githubusercontent.com/rafaelreis-hotmart/Audio-Samples/main/airhorn.mp3",
+      bell: "https://upload.wikimedia.org/wikipedia/commons/a/a2/Service_bell_ding.wav",
+      error: "https://upload.wikimedia.org/wikipedia/commons/d/dd/Windows_Error_Sound.mp3"
+    };
+
     // Activeer geluid & Volledig Scherm bij de eerste klik
     function activateSystem() {
-      // 1. Ga naar Fullscreen
       const elem = document.documentElement;
       if (elem.requestFullscreen) {
         elem.requestFullscreen().catch(err => console.log(err));
@@ -113,11 +121,9 @@
         elem.webkitRequestFullscreen();
       }
 
-      // 2. Unmute & Audio inschakelen
       audioActive = true;
       speakText("Systeem geactiveerd");
 
-      // 3. Verberg de start overlay
       document.getElementById('start-overlay').style.display = 'none';
     }
 
@@ -127,15 +133,7 @@
       });
     });
 
-    const soundLibrary = {
-      const soundLibrary = {
-      fart: "https://upload.wikimedia.org/wikipedia/commons/e/e8/Fart-sound.mp3",
-      scream: "https://upload.wikimedia.org/wikipedia/commons/3/3d/Male_Scream.ogg",
-      airhorn: "https://raw.githubusercontent.com/rafaelreis-hotmart/Audio-Samples/main/airhorn.mp3",
-      bell: "https://upload.wikimedia.org/wikipedia/commons/a/a2/Service_bell_ding.wav",
-      error: "https://upload.wikimedia.org/wikipedia/commons/d/dd/Windows_Error_Sound.mp3"
-    };
-
+    // Spraakfunctie (TTS)
     function speakText(text) {
       if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
@@ -145,14 +143,18 @@
       }
     }
 
+    // Audio afspelen met foutafhandeling
     function playSound(soundKey) {
       const url = soundLibrary[soundKey] || soundKey;
       if (url) {
         const audio = new Audio(url);
-        audio.play().catch(e => console.log("Audio fout:", e));
+        audio.play().catch(e => {
+          console.error("Audio kon niet worden afgespeeld:", e);
+        });
       }
     }
 
+    // Iframe verbergen en terugkeren naar het hoofdmenu
     function stopIframe() {
       const container = document.getElementById('iframe-container');
       const iframe = document.getElementById('target-iframe');
@@ -160,6 +162,7 @@
       iframe.src = "";
     }
 
+    // Inkomende commando's verwerken
     function handleCommand(data) {
       if (data.type === 'tts') {
         speakText(data.value);
