@@ -1,7 +1,7 @@
 {
   "meta": {
-    "titel": "InVision Master Knowledge & Extended Personal AI Base",
-    "versie": "5.0-ULTIMATE-EXPANDED",
+    "titel": "InVision Master Knowledge Base",
+    "versie": "6.0-EXPANDED-CLEAN",
     "auteur": "Mattyou Studios",
     "laatste_update": "2026-07-24",
     "status": "actief"
@@ -33,64 +33,13 @@
       "hack_target_account"
     ]
   },
-  "persoonlijk_profiel": {
-    "naam": "Mattyou",
-    "gebruikersnamen": ["mattyou_yt", "Mattyou", "mattyou2"],
-    "verjaardag": "27 maart",
-    "organisatie": "Mattyou Studios",
-    "youtube_kanaal": "https://www.youtube.com/@mattyou333",
-    "aanbevolen_kanaal": "@mattyou",
-    "interesses": [
-      "Minecraft Java Edition Technical & Competitive PvP (Crystal PvP, Elytra Mace, Sword, Axe)",
-      "Minecraft Server Modding, Fabric, PaperMC, Skript development",
-      "Web Development (HTML/CSS/JS, Base44, Supabase, Vercel)",
-      "PC Hardware assembleren, upgraden en benchmarken",
-      "Hardstyle muziekproductie met Minecraft audio-samples"
-    ],
-    "hardware_setup": {
-      "pc": "Dell OptiPlex Micro setup & custom builds",
-      "toetsenbord": "Redragon K673 HE (Rapid Trigger / Magnetische switches)",
-      "muis": "Glorious Model O 2 Wireless",
-      "microfoon": "Shure MV7+",
-      "projecten": "Raspberry Pi 4B gekoppeld aan eDP-laptop-display"
-    }
-  },
   "kennis": [
     {
-      "id": "persoon_mattyou_wie_is_het",
-      "onderwerp": "Wie is Mattyou / mattyou_yt",
-      "trefwoorden": ["wie is mattyou", "wie is mattyou_yt", "wie is de maker", "wie is mattyou2", "over mattyou"],
-      "antwoord": "Mattyou (online bekend als **mattyou_yt** of **mattyou2**) is een onafhankelijke developer, content creator en de oprichter van **Mattyou Studios**. Hij ontwikkelt webapplicaties (zoals InVision), Minecraft-scripts, custom UI's en bouwt en verhandelt pc-hardware onder initiatieven zoals HM Hardware.",
-      "bron_label": "Mattyou Studios Profiel",
-      "bron_url": "https://www.youtube.com/@mattyou333"
-    },
-    {
-      "id": "persoon_mattyou_verjaardag",
-      "onderwerp": "Wanneer is Mattyou jarig?",
-      "trefwoorden": ["wanneer is mattyou jarig", "verjaardag mattyou", "hoe oud is mattyou", "geboortedatum mattyou", "geboortedag mattyou"],
-      "antwoord": "Mattyou viert zijn verjaardag elk jaar op **27 maart**.",
-      "bron_label": "Mattyou Studios Profiel"
-    },
-    {
-      "id": "persoon_mattyou_hoe_noemen",
-      "onderwerp": "Hoe mag je Mattyou noemen?",
-      "trefwoorden": ["hoe heet mattyou", "hoe mag ik hem noemen", "naam mattyou", "gebruikersnaam mattyou"],
-      "antwoord": "Je kunt hem **Mattyou** of **mattyou_yt** noemen. Op GitHub gebruikt hij ook de merknaam **mattyou2**.",
-      "bron_label": "Mattyou Studios Profiel"
-    },
-    {
-      "id": "persoon_mattyou_interesses",
-      "onderwerp": "Wat vindt Mattyou leuk?",
-      "trefwoorden": ["wat vindt mattyou leuk", "hobby mattyou", "interesses mattyou", "wat doet mattyou"],
-      "antwoord": "Mattyou heeft een brede passie voor tech en gaming:\n- **Minecraft:** Technisch & competitive PvP (Crystal PvP, Elytra Mace, Sword & Axe) en server-scripting via PaperMC/Skript.\n- **Programming & Web:** Interactieve webapps bouwen, HTML/CSS/JS interfaces en database-integraties.\n- **Hardware:** PC-systemen assembleren, componenten testen en unieke hardware-projecten bouwen.\n- **Muziek:** Hardstyle tracks produceren verrijkt met Minecraft sound effects.",
-      "bron_label": "Mattyou Studios Profiel"
-    },
-    {
       "id": "persoonlijk_praten_hallo",
-      "onderwerp": "Begroeting en Persoonlijk Gesprek",
+      "onderwerp": "Begroeting en Algemeen Gesprek",
       "trefwoorden": ["hallo", "hooi", "hey", "alles goed", "hoe gaat het", "wie ben jij", "goedenavond", "goedemorgen"],
-      "antwoord": "Hey! Welkom bij InVision. Het gaat super! Ik sta helemaal klaar om je te helpen met vragen over programmeren, pc-hardware, Minecraft mechanics, web-development of gewoon een goed gesprek. Waar wil je het vandaag over hebben?",
-      "bron_label": "InVision Persoonlijke Interactie"
+      "antwoord": "Hey! Welkom bij InVision. Het gaat goed! Ik sta helemaal klaar om je te helpen met vragen over programmeren, pc-hardware, Minecraft mechanics, web-development of gewoon een goed gesprek. Waar wil je het vandaag over hebben?",
+      "bron_label": "InVision Interactie"
     },
     {
       "id": "persoonlijk_praten_advies_motivatie",
@@ -111,23 +60,16 @@
       "id": "mattyou_studios",
       "onderwerp": "Mattyou Studios Organisatie",
       "trefwoorden": ["mattyou studios", "wat is mattyou studios", "studio mattyou", "projecten mattyou"],
-      "antwoord": "Mattyou Studios is het overkoepelende projectbureau waar alle softwareontwikkeling, webapps, Minecraft-utilities, scripts en contentcreatie van Mattyou onder vallen. Het staat voor slimme, transparante en lichtgewicht software zonder onnodige afhankelijkheden.",
+      "antwoord": "Mattyou Studios is het overkoepelende projectbureau waar alle softwareontwikkeling, webapps, Minecraft-utilities, scripts en contentcreatie onder vallen. Het staat voor slimme, transparante en lichtgewicht software zonder onnodige afhankelijkheden.",
       "bron_label": "Mattyou Studios Officiële Kennisbank",
       "bron_url": "https://www.youtube.com/@mattyou333"
     },
     {
       "id": "hm_hardware_nexus",
       "onderwerp": "HM Hardware (vroeger NEXUS Hardware)",
-      "trefwoorden": ["hm hardware", "nexus hardware", "hardware bedrijf mattyou", "pc trading"],
-      "antwoord": "HM Hardware (oorspronkelijk gestart als NEXUS Hardware) is een initiatief opgericht door Mattyou en een vriend voor het verhandelen, upgraden, testen en op maat bouwen van pc-hardware en custom gaming systemen.",
+      "trefwoorden": ["hm hardware", "nexus hardware", "hardware bedrijf", "pc trading"],
+      "antwoord": "HM Hardware (oorspronkelijk gestart als NEXUS Hardware) is een initiatief voor het verhandelen, upgraden, testen en op maat bouwen van pc-hardware en custom gaming systemen.",
       "bron_label": "Kennisbank Hardware Initiatieven"
-    },
-    {
-      "id": "hardware_setup_mattyou",
-      "onderwerp": "Hardware Setup & Peripherals",
-      "trefwoorden": ["welke muis heeft mattyou", "welk toetsenbord gebruikt mattyou", "redragon k673", "glorious model o 2", "shure mv7+"],
-      "antwoord": "De werk- en game-setup van Mattyou bestaat onder andere uit:\n- **Toetsenbord:** Redragon K673 HE met magnetische rapid-trigger switches.\n- **Muis:** Glorious Model O 2 Wireless.\n- **Microfoon:** Shure MV7+ (XLR/USB).\n- **Systeem:** Dell OptiPlex Micro setup en custom test-rigs.",
-      "bron_label": "Kennisbank Hardware Config"
     },
     {
       "id": "invision_systeem",
