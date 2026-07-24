@@ -10,24 +10,58 @@
       margin: 0;
       padding: 0;
     }
-    body {
-      font-family: Arial, sans-serif;
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
       background-color: #0f172a;
       color: #ffffff;
+      font-family: Arial, sans-serif;
+    }
+    
+    /* Overlay om eerste klik te verplichten voor Fullscreen + Audio */
+    #start-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
       height: 100vh;
-      overflow: hidden;
+      background: rgba(15, 23, 42, 0.95);
+      z-index: 9999;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+    }
+    #start-card {
+      background: #1e293b;
+      padding: 30px 40px;
+      border-radius: 12px;
+      text-align: center;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
+    #start-card h2 {
+      margin-bottom: 10px;
+      color: #38bdf8;
+    }
+
+    /* Hoofdscherm / Menu */
+    #main-display {
+      width: 100%;
+      height: 100%;
       display: flex;
       justify-content: center;
       align-items: center;
       text-align: center;
     }
     #text-overlay {
-      font-size: 3rem;
+      font-size: 3.5rem;
       font-weight: bold;
       padding: 20px;
       text-shadow: 0 4px 10px rgba(0, 0, 0, 0.7);
-      z-index: 10;
     }
+
+    /* Iframe Container */
     #iframe-container {
       position: absolute;
       top: 0;
@@ -35,66 +69,64 @@
       width: 100vw;
       height: 100vh;
       display: none;
-      z-index: 20;
+      z-index: 50;
+      background: #000;
     }
     iframe {
       width: 100%;
       height: 100%;
       border: none;
     }
-    #status-bar {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      background: rgba(0,0,0,0.6);
-      padding: 8px 12px;
-      font-size: 0.8rem;
-      border-radius: 6px;
-      z-index: 30;
-      cursor: pointer;
-    }
   </style>
-  
+
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 </head>
 <body>
 
-  <div id="status-bar" onclick="enableAudio()">🔊 Klik hier voor audio-rechten | Status: Verbinden...</div>
-  <div id="text-overlay">Wachten op signaal...</div>
+  <div id="start-overlay" onclick="activateSystem()">
+    <div id="start-card">
+      <h2>Klik ergens om te starten</h2>
+      <p>Klik op het scherm om de weergave te laden.</p>
+    </div>
+  </div>
+
+  <div id="main-display">
+    <div id="text-overlay">Wachten op signaal...</div>
+  </div>
 
   <div id="iframe-container">
     <iframe id="target-iframe" src=""></iframe>
   </div>
 
   <script>
-    // Vaste ID voor de ontvanger zodat de afstandsbediening altijd weet waar hij naartoe moet sturen
     const RECEIVER_ID = "mattyou-remote-receiver-screen";
-    
-    // Maak PeerJS verbinding aan
     const peer = new Peer(RECEIVER_ID);
+    let audioActive = false;
 
-    const statusBar = document.getElementById("status-bar");
+    // Activeer geluid & Volledig Scherm bij de eerste klik
+    function activateSystem() {
+      // 1. Ga naar Fullscreen
+      const elem = document.documentElement;
+      if (elem.requestFullscreen) {
+        elem.requestFullscreen().catch(err => console.log(err));
+      } else if (elem.webkitRequestFullscreen) {
+        elem.webkitRequestFullscreen();
+      }
 
-    peer.on('open', (id) => {
-      statusBar.innerText = "🔊 Klik voor audio | Status: Gereed (ID: Connected)";
-    });
+      // 2. Unmute & Audio inschakelen
+      audioActive = true;
+      speakText("Systeem geactiveerd");
 
-    // Luister naar inkomende verbindingen vanaf het bedieningspaneel
+      // 3. Verberg de start overlay
+      document.getElementById('start-overlay').style.display = 'none';
+    }
+
     peer.on('connection', (conn) => {
-      statusBar.innerText = "🔊 Klik voor audio | Status: Verbonden met afstandsbediening!";
-
       conn.on('data', (data) => {
         handleCommand(data);
       });
     });
 
-    peer.on('error', (err) => {
-      console.error(err);
-      // Als de ID al bezet is of herverbindt
-      statusBar.innerText = "⚠️ Verbindingsfout of ID al in gebruik.";
-    });
-
-    // Geluidsbibliotheek met directe MP3-links
     const soundLibrary = {
       fart: "https://www.soundjay.com/human/sounds/fart-01.mp3",
       scream: "https://www.soundjay.com/human/sounds/man-screaming-01.mp3",
@@ -103,12 +135,6 @@
       error: "https://www.soundjay.com/buttons/sounds/button-10.mp3"
     };
 
-    function enableAudio() {
-      speakText("Audio ingeschakeld");
-      statusBar.style.background = "rgba(22, 163, 74, 0.8)";
-    }
-
-    // Spraak via de ingebouwde Web Speech API van de browser
     function speakText(text) {
       if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
@@ -126,7 +152,13 @@
       }
     }
 
-    // Verwerk de commando's die binnenkomen
+    function stopIframe() {
+      const container = document.getElementById('iframe-container');
+      const iframe = document.getElementById('target-iframe');
+      container.style.display = "none";
+      iframe.src = "";
+    }
+
     function handleCommand(data) {
       if (data.type === 'tts') {
         speakText(data.value);
@@ -137,13 +169,14 @@
       } else if (data.type === 'iframe') {
         const container = document.getElementById('iframe-container');
         const iframe = document.getElementById('target-iframe');
-        if (data.value) {
+        if (data.value && data.value.trim() !== "") {
           iframe.src = data.value;
           container.style.display = "block";
         } else {
-          container.style.display = "none";
-          iframe.src = "";
+          stopIframe();
         }
+      } else if (data.type === 'stopIframe') {
+        stopIframe();
       }
     }
   </script>
