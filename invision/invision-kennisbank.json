@@ -1,0 +1,290 @@
+{
+  "_documentatie": [
+    "Dit bestand is het 'kennisbestand' van InVision. Zet het naast invision.html (zelfde map, op een webserver)",
+    "en InVision laadt het automatisch en stil bij het opstarten. Werk je liever lokaal (dubbelklik op het",
+    "HTML-bestand)? Dan blokkeert de browser vaak het automatisch laden van losse bestanden (CORS) — klik in",
+    "dat geval op de knop 📁 boven in InVision en selecteer dit bestand handmatig. Is dit bestand er niet, kapot,",
+    "of leeg? Dan valt InVision gewoon stil terug op de normale werkwijze (puur live internetbronnen).",
+    "",
+    "OPBOUW:",
+    "  meta          -> wie InVision is en hoe hij zich gedraagt (optioneel, mag leeg blijven).",
+    "  instellingen  -> knoppen om het zoekgedrag in het kennisbestand te sturen.",
+    "  kennis        -> lijst met onderwerpen. Elk onderwerp heeft trefwoorden waarop gezocht wordt,",
+    "                   een kort_antwoord (standaard) en een uitgebreid_antwoord (bij 'leg ... uit' / 'vertel over ...').",
+    "                   bron_label/bron_url zijn optioneel, voor eigen bronvermelding.",
+    "",
+    "Zelf uitbreiden: kopieer een blok in 'kennis', geef het een uniek id, vul onderwerp/trefwoorden/antwoorden in.",
+    "Hoe meer trefwoorden (ook synoniemen en schrijfwijzen), hoe vaker InVision het onderwerp herkent."
+  ],
+
+  "meta": {
+    "naam": "InVision",
+    "maker": "Mattyou Studios™",
+    "versie": "2.0",
+    "persoonlijkheid": "Direct, vriendelijk en behulpzaam. Geen overdreven beleefdheidsfrasering, geen omhaal. Mag af en toe een lichte, droge knipoog geven, maar nooit ten koste van duidelijkheid.",
+    "identiteit_antwoord": "Ik ben InVision — gebouwd door Mattyou Studios™. Ik draai op pure logica en handgeschreven regels, zonder AI-taalmodel onder de motorkap: ik reken sommen exact zelf uit, doorzoek live Wikipedia, DuckDuckGo en Microsoft Learn, en raadpleeg — als het geladen is — mijn eigen kennisbestand. Al die bronnen smelt ik samen tot één helder antwoord. Waar ben je benieuwd naar?",
+    "stijl_instructies": [
+      "Gebruik korte, goed leesbare alinea's in plaats van lange lappen tekst.",
+      "Wees eerlijk als iets niet in het kennisbestand of op internet gevonden kan worden — verzin niets.",
+      "Gebruik alleen jargon als de vraag zelf al technisch is; leg anders in gewone taal uit.",
+      "Bij twijfel: geef het meest concrete, controleerbare antwoord, en verwijs naar de bron."
+    ]
+  },
+
+  "instellingen": {
+    "min_score_voor_gebruik": 3,
+    "combineer_met_internet": true,
+    "voorrang": "kennisbestand"
+  },
+
+  "kennis": [
+    {
+      "id": "kf001",
+      "onderwerp": "Kernfusie",
+      "trefwoorden": ["kernfusie", "fusiereactor", "fusie-energie", "tokamak", "iter", "kernversmelting"],
+      "categorie": "natuurkunde",
+      "kort_antwoord": "Kernfusie is het samensmelten van twee lichte atoomkernen (meestal waterstof-isotopen) tot een zwaardere kern, waarbij een enorme hoeveelheid energie vrijkomt — hetzelfde proces dat de zon aandrijft.",
+      "uitgebreid_antwoord": "Kernfusie is het samensmelten van twee lichte atoomkernen — meestal deuterium en tritium, isotopen van waterstof — tot een zwaardere kern (helium), waarbij een klein beetje massa wordt omgezet in een enorme hoeveelheid energie volgens E=mc². Dit is precies het proces dat sterren, waaronder de zon, laat schijnen. Om fusie op aarde op gang te brengen zijn extreme temperaturen nodig (tientallen miljoenen graden), zodat atoomkernen hun onderlinge afstoting overwinnen. Reactorontwerpen zoals de tokamak gebruiken sterke magneetvelden om het hete plasma vast te houden zonder dat het de wanden raakt. Het internationale ITER-project in Frankrijk is momenteel de grootste poging om aan te tonen dat fusie netto meer energie kan opleveren dan erin gestopt wordt. In tegenstelling tot kernsplijting (de huidige kerncentrales) produceert fusie geen langlevend radioactief afval en is er geen risico op een kettingreactie die op hol slaat."
+    },
+    {
+      "id": "az001",
+      "onderwerp": "Azure Functions",
+      "trefwoorden": ["azure functions", "azure function", "serverless azure", "functions app", "azure serverless"],
+      "categorie": "technologie",
+      "kort_antwoord": "Azure Functions is een serverless computeplatform van Microsoft: je schrijft losse stukjes code (functies) die automatisch draaien als reactie op een gebeurtenis, zonder dat je zelf servers hoeft te beheren.",
+      "uitgebreid_antwoord": "Azure Functions is Microsofts serverless computeplatform. In plaats van een hele applicatie op een server te draaien, schrijf je kleine, op zichzelf staande functies die automatisch worden uitgevoerd zodra een bepaalde gebeurtenis (trigger) plaatsvindt — bijvoorbeeld een HTTP-verzoek, een nieuw bestand in opslag, een bericht op een wachtrij, of een tijdschema. Azure beheert de onderliggende infrastructuur volledig: servers, schaling en beschikbaarheid worden automatisch geregeld, en je betaalt doorgaans alleen voor de daadwerkelijke uitvoeringstijd (het 'Consumption plan'). Functions ondersteunt meerdere talen, waaronder C#, JavaScript/TypeScript, Python, Java en PowerShell, en integreert eenvoudig met andere Azure-diensten zoals Storage, Cosmos DB en Event Grid via kant-en-klare bindings."
+    },
+    {
+      "id": "ai001",
+      "onderwerp": "Kunstmatige intelligentie",
+      "trefwoorden": ["kunstmatige intelligentie", "ai", "artificial intelligence", "machine learning", "wat is ai"],
+      "categorie": "technologie",
+      "kort_antwoord": "Kunstmatige intelligentie (AI) is de verzamelnaam voor computersystemen die taken uitvoeren die normaal menselijke intelligentie vereisen, zoals patronen herkennen, taal begrijpen of beslissingen nemen.",
+      "uitgebreid_antwoord": "Kunstmatige intelligentie (AI) is de verzamelnaam voor computersystemen die taken uitvoeren waarvoor normaal gesproken menselijke intelligentie nodig is: patronen herkennen, taal begrijpen, beslissingen nemen of voorspellingen doen. Een grote deelgebied is machine learning, waarbij systemen niet expliciet geprogrammeerd worden met regels, maar zelf patronen leren herkennen uit grote hoeveelheden data. Binnen machine learning bestaat weer deep learning, dat gebruikmaakt van kunstmatige neurale netwerken met veel lagen, geïnspireerd op (een sterk vereenvoudigd model van) hoe hersenen werken. Toepassingen lopen uiteen van beeldherkenning en spraaktechnologie tot aanbevelingssystemen en taalmodellen die tekst kunnen genereren. Belangrijk om te weten: InVision zelf gebruikt geen AI-taalmodel — dit programma werkt met handgeschreven logica en live opzoekingen, geen zelflerend systeem."
+    },
+    {
+      "id": "eu001",
+      "onderwerp": "Europese Unie",
+      "trefwoorden": ["europese unie", "eu", "european union", "lidstaten eu"],
+      "categorie": "geschiedenis",
+      "kort_antwoord": "De Europese Unie is een politiek en economisch samenwerkingsverband van 27 Europese landen, ontstaan uit naoorlogse samenwerkingsverdragen en officieel opgericht in 1993 met het Verdrag van Maastricht.",
+      "uitgebreid_antwoord": "De Europese Unie (EU) is een politiek en economisch samenwerkingsverband van 27 Europese lidstaten. De wortels liggen in de naoorlogse periode: in 1951 richtten zes landen de Europese Gemeenschap voor Kolen en Staal op om herhaling van oorlog economisch onmogelijk te maken. Via verdere verdragen groeide dit uit tot de Europese Economische Gemeenschap en uiteindelijk, met het Verdrag van Maastricht in 1993, tot de Europese Unie zoals we die nu kennen. De EU kent een gemeenschappelijke interne markt met vrij verkeer van goederen, diensten, personen en kapitaal, en negentien lidstaten delen de euro als munt (de eurozone). Belangrijke instellingen zijn het Europees Parlement, de Europese Commissie en de Raad van de Europese Unie, die samen wetgeving maken en beleid uitvoeren op onder meer handel, landbouw, klimaat en mededinging."
+    },
+    {
+      "id": "cl001",
+      "onderwerp": "Klimaatverandering",
+      "trefwoorden": ["klimaatverandering", "opwarming van de aarde", "broeikaseffect", "global warming", "co2 uitstoot"],
+      "categorie": "natuurkunde",
+      "kort_antwoord": "Klimaatverandering is de langdurige opwarming van de aarde, hoofdzakelijk veroorzaakt door menselijke uitstoot van broeikasgassen zoals CO2, die warmte in de atmosfeer vasthouden.",
+      "uitgebreid_antwoord": "Klimaatverandering verwijst naar langdurige veranderingen in temperatuur en weerpatronen op aarde. Sinds het begin van de industriële revolutie is de gemiddelde wereldtemperatuur duidelijk gestegen, vooral door menselijke activiteit: het verbranden van fossiele brandstoffen (kolen, olie, gas) stoot broeikasgassen uit zoals CO2 en methaan. Deze gassen laten zonlicht door maar houden een deel van de warmte die de aarde uitstraalt vast in de atmosfeer — het zogeheten broeikaseffect. Gevolgen zijn onder meer smeltend landijs en zee-ijs, stijgende zeespiegels, vaker voorkomende extreme weersomstandigheden zoals hittegolven en hevige regenval, en verschuivingen in ecosystemen. Internationale akkoorden zoals het Klimaatakkoord van Parijs (2015) proberen landen te binden aan doelen om de opwarming te beperken, onder meer door de overstap naar hernieuwbare energiebronnen zoals zon- en windenergie."
+    },
+    {
+      "id": "sp001",
+      "onderwerp": "Zwart gat",
+      "trefwoorden": ["zwart gat", "zwarte gaten", "black hole", "event horizon", "waarnemingshorizon"],
+      "categorie": "natuurkunde",
+      "kort_antwoord": "Een zwart gat is een gebied in de ruimte met zo'n sterke zwaartekracht dat niets, zelfs licht niet, eraan kan ontsnappen zodra het de waarnemingshorizon is gepasseerd.",
+      "uitgebreid_antwoord": "Een zwart gat is een plek in de ruimte waar de zwaartekracht zo extreem sterk is dat niets — zelfs licht niet — kan ontsnappen zodra het de zogeheten waarnemingshorizon (event horizon) is gepasseerd. Zwarte gaten ontstaan meestal wanneer een zeer zware ster aan het einde van haar leven instort onder haar eigen zwaartekracht, nadat de kernfusie die haar in stand hield is opgehouden. In het centrum van een zwart gat bevindt zich volgens de wiskunde van Einsteins algemene relativiteitstheorie een singulariteit, een punt met (theoretisch) oneindige dichtheid. Sterrenkundigen kunnen zwarte gaten niet direct zien, maar wel hun effect waarnemen: de manier waarop ze omliggende sterren en gas beïnvloeden, of via zwaartekrachtsgolven die ontstaan wanneer twee zwarte gaten samensmelten. In 2019 werd de eerste directe 'foto' van de schaduw van een zwart gat gepubliceerd, gemaakt met de Event Horizon Telescope."
+    },
+    {
+      "id": "bc001",
+      "onderwerp": "Blockchain",
+      "trefwoorden": ["blockchain", "blokketen", "distributed ledger", "cryptocurrency techniek", "hashketen"],
+      "categorie": "technologie",
+      "kort_antwoord": "Blockchain is een gedeelde, digitale grootboektechnologie waarbij gegevens in blokken worden vastgelegd die cryptografisch aan elkaar gekoppeld zijn, zodat eerder vastgelegde informatie vrijwel niet meer te wijzigen is.",
+      "uitgebreid_antwoord": "Een blockchain is een gedeeld, digitaal grootboek waarin transacties of gegevens worden vastgelegd in opeenvolgende 'blokken'. Elk blok bevat een cryptografische verwijzing (hash) naar het vorige blok, waardoor er een keten ontstaat: verander je de inhoud van een ouder blok, dan klopt de hash niet meer en wordt dat direct zichtbaar. In plaats van dat één centrale partij de administratie beheert, staat een kopie van de keten vaak verspreid over veel computers (nodes) in een netwerk, die het via een consensusmechanisme (zoals proof-of-work of proof-of-stake) eens moeten worden over nieuwe blokken. Deze combinatie van verspreiding en cryptografische koppeling maakt een blockchain zeer lastig achteraf te vervalsen. De bekendste toepassing is cryptovaluta zoals Bitcoin, maar de techniek wordt ook onderzocht voor bijvoorbeeld slimme contracten, toeleveringsketens en digitale identiteit."
+    },
+    {
+      "id": "gz001",
+      "onderwerp": "Fotosynthese",
+      "trefwoorden": ["fotosynthese", "photosynthesis", "planten energie", "bladgroen", "chlorofyl"],
+      "categorie": "biologie",
+      "kort_antwoord": "Fotosynthese is het proces waarbij planten, algen en sommige bacteriën met behulp van zonlicht water en CO2 omzetten in glucose (energie) en zuurstof.",
+      "uitgebreid_antwoord": "Fotosynthese is het proces waarmee planten, algen en bepaalde bacteriën zonlicht omzetten in chemische energie. In de bladgroenkorrels (chloroplasten) van plantencellen bevindt zich chlorofyl, een groen pigment dat zonlicht opvangt. Met die lichtenergie zetten planten water (opgenomen via de wortels) en koolstofdioxide (opgenomen via kleine poriën, huidmondjes, in het blad) om in glucose — een suiker die als energiebron en bouwstof dient — en zuurstof, dat als bijproduct wordt uitgestoten. Deze reactie is de basis van vrijwel alle voedselketens op aarde: planten vormen de energiebron voor planteneters, die op hun beurt weer voedsel zijn voor vleeseters. Daarnaast is fotosynthese verantwoordelijk voor het grootste deel van de zuurstof in onze atmosfeer."
+    },
+    {
+      "id": "ru001",
+      "onderwerp": "ISS (International Space Station)",
+      "trefwoorden": ["iss", "international space station", "internationaal ruimtestation", "ruimtestation"],
+      "categorie": "ruimtevaart",
+      "kort_antwoord": "Het ISS is een bewoond ruimtestation in een baan om de aarde, gebouwd en beheerd door meerdere ruimtevaartorganisaties, waar wetenschappers experimenten uitvoeren in gewichtloosheid.",
+      "uitgebreid_antwoord": "Het International Space Station (ISS) is een bemand ruimtestation dat op zo'n 400 kilometer hoogte in een baan om de aarde draait, met een omlooptijd van ongeveer 90 minuten. Het is een gezamenlijk project van meerdere ruimtevaartorganisaties, waaronder NASA (Verenigde Staten), Roscosmos (Rusland), ESA (Europa, inclusief Nederland), JAXA (Japan) en CSA (Canada). De bouw begon in 1998 met de lancering van de eerste modules, en sindsdien is het station continu bemand door bemanningen die elkaar om de paar maanden aflossen. Aan boord voeren astronauten wetenschappelijke experimenten uit op gebieden als biologie, natuurkunde en materiaalkunde, juist omdat de vrijwel gewichtloze omgeving unieke omstandigheden biedt die op aarde niet na te bootsen zijn. Het station is met het blote oog vanaf de aarde te zien als een snel bewegende, heldere stip aan de avond- of ochtendhemel."
+    },
+    {
+      "id": "wi001",
+      "onderwerp": "Wifi",
+      "trefwoorden": ["wifi", "wi-fi", "draadloos internet", "wlan"],
+      "categorie": "technologie",
+      "kort_antwoord": "Wifi is een technologie waarmee apparaten draadloos met elkaar en met internet kunnen verbinden via radiogolven, meestal in de 2,4 GHz- of 5 GHz-band.",
+      "uitgebreid_antwoord": "Wifi (officieel gebaseerd op de IEEE 802.11-standaarden) is een technologie waarmee apparaten zoals laptops, telefoons en smart-tv's draadloos met een netwerk kunnen verbinden, meestal via een router. In plaats van kabels gebruikt wifi radiogolven, doorgaans in de 2,4 GHz-band (groter bereik, gevoeliger voor storing) of de 5 GHz-band (sneller, kleiner bereik). Nieuwere generaties zoals wifi 6 (802.11ax) verbeteren snelheid en efficiëntie, vooral in drukke netwerken met veel gelijktijdig verbonden apparaten. De naam 'Wi-Fi' zelf is een merknaam van de Wi-Fi Alliance en is, in tegenstelling tot wat vaak gedacht wordt, geen letterlijk acroniem voor 'wireless fidelity' — dat is later verzonnen als marketingslogan."
+    },
+    {
+      "id": "eu002",
+      "onderwerp": "Democratie",
+      "trefwoorden": ["democratie", "democratie betekenis", "wat is democratie", "volksregering"],
+      "categorie": "staatsinrichting",
+      "kort_antwoord": "Democratie is een bestuursvorm waarbij de macht uiteindelijk bij het volk ligt, meestal uitgeoefend via gekozen vertegenwoordigers in vrije en eerlijke verkiezingen.",
+      "uitgebreid_antwoord": "Democratie (van het Griekse 'demos', volk, en 'kratos', macht) is een bestuursvorm waarin de politieke macht uiteindelijk berust bij de burgers. In de praktijk gebeurt dit meestal via representatieve democratie: burgers kiezen in vrije en eerlijke verkiezingen vertegenwoordigers die namens hen wetten maken en beleid voeren, zoals leden van een parlement. Kenmerken die vaak met democratie geassocieerd worden zijn scheiding der machten (wetgevende, uitvoerende en rechterlijke macht zijn gescheiden), vrijheid van meningsuiting en pers, en bescherming van minderheidsrechten. Sommige landen kennen daarnaast elementen van directe democratie, zoals referenda, waarbij burgers rechtstreeks over een specifiek onderwerp stemmen. Nederland is bijvoorbeeld een parlementaire democratie met een constitutionele monarchie als staatsvorm."
+    },
+    {
+      "id": "gg001",
+      "onderwerp": "Plaattektoniek",
+      "trefwoorden": ["plaattektoniek", "tektonische platen", "aardplaten", "continentverschuiving"],
+      "categorie": "aardrijkskunde",
+      "kort_antwoord": "Plaattektoniek beschrijft hoe de aardkorst is opgebouwd uit grote, langzaam bewegende platen, waarvan de bewegingen aardbevingen, vulkanen en gebergtevorming veroorzaken.",
+      "uitgebreid_antwoord": "Plaattektoniek is het wetenschappelijke model dat beschrijft hoe de buitenste schil van de aarde (de lithosfeer) is opgedeeld in een aantal grote en kleinere platen, die als puzzelstukken op de deels vloeibare mantel eronder liggen en heel langzaam bewegen — meestal enkele centimeters per jaar, ongeveer zo snel als je nagels groeien. Waar platen uit elkaar bewegen (divergente grenzen) ontstaat nieuwe oceaanbodem, zoals bij de Mid-Atlantische Rug. Waar platen tegen elkaar aan botsen (convergente grenzen) kan de ene plaat onder de andere schuiven (subductie), wat aardbevingen en vulkanisme veroorzaakt, of kunnen ze tegen elkaar opstuwen tot gebergten, zoals de Himalaya die ontstond doordat de Indiase plaat tegen de Euraziatische plaat aan botste. Waar platen langs elkaar heen schuiven (transforme grenzen), zoals bij de San Andreasbreuk in Californië, bouwt zich spanning op die zich plotseling kan ontladen als aardbeving."
+    },
+    {
+      "id": "ec001",
+      "onderwerp": "Inflatie",
+      "trefwoorden": ["inflatie", "geldontwaarding", "prijsstijging economie", "koopkracht"],
+      "categorie": "economie",
+      "kort_antwoord": "Inflatie is de algemene stijging van het prijspeil in een economie over een bepaalde periode, waardoor je met hetzelfde bedrag geld minder kunt kopen.",
+      "uitgebreid_antwoord": "Inflatie is de gemiddelde stijging van de prijzen van goederen en diensten in een economie over een bepaalde periode, meestal uitgedrukt als een percentage per jaar. Het directe gevolg is dat de koopkracht van geld daalt: met hetzelfde bedrag kun je na verloop van tijd minder kopen. Inflatie kan verschillende oorzaken hebben, zoals vraaginflatie (de vraag naar goederen overstijgt het aanbod), kosteninflatie (stijgende productiekosten, bijvoorbeeld door duurdere energie of grondstoffen worden doorberekend), of een sterke toename van de geldhoeveelheid. Centrale banken, zoals de Europese Centrale Bank, proberen inflatie meestal binnen een bepaalde bandbreedte te houden (vaak rond de 2%) door onder meer de rente te verhogen of te verlagen: hogere rente maakt lenen duurder en sparen aantrekkelijker, wat de vraag afremt en inflatie doorgaans doet dalen."
+    },
+    {
+      "id": "gz002",
+      "onderwerp": "DNA",
+      "trefwoorden": ["dna", "deoxyribonucleic acid", "erfelijk materiaal", "genen", "dubbele helix"],
+      "categorie": "biologie",
+      "kort_antwoord": "DNA (desoxyribonucleïnezuur) is het molecuul dat de erfelijke informatie van vrijwel alle levende organismen bevat, opgeslagen in een dubbele-helixstructuur.",
+      "uitgebreid_antwoord": "DNA, of desoxyribonucleïnezuur, is het molecuul dat de erfelijke informatie bevat van vrijwel elk levend organisme. Het heeft de vorm van een dubbele helix: twee lange strengen die om elkaar heen gedraaid zijn, opgebouwd uit kleinere bouwstenen genaamd nucleotiden. Elke nucleotide bevat een van vier basen — adenine, thymine, guanine en cytosine (A, T, G en C) — en deze basen vormen specifieke paren (A met T, G met C) die de twee strengen bij elkaar houden, als de sporten van een gedraaide ladder. De volgorde van deze basen vormt een soort code die bepaalt hoe eiwitten worden opgebouwd, wat op zijn beurt bepaalt hoe een organisme eruitziet en functioneert. Delen van het DNA die coderen voor een specifiek kenmerk of eiwit worden genen genoemd. DNA bevindt zich bij de meeste organismen in de celkern, verpakt in structuren die chromosomen heten."
+    },
+    {
+      "id": "sw001",
+      "onderwerp": "Open source software",
+      "trefwoorden": ["open source", "opensource", "open-source software", "vrije software"],
+      "categorie": "technologie",
+      "kort_antwoord": "Open source software is software waarvan de broncode openbaar beschikbaar is, zodat iedereen deze mag inzien, gebruiken, aanpassen en verspreiden, meestal onder een specifieke licentie.",
+      "uitgebreid_antwoord": "Open source software is software waarvan de broncode publiek beschikbaar wordt gesteld, zodat iedereen deze kan inzien, gebruiken, wijzigen en (onder voorwaarden) opnieuw verspreiden. Dit staat tegenover closed source of propriëtaire software, waarbij alleen de maker de broncode bezit en gebruikers enkel het eindproduct krijgen. Open source-projecten worden vaak gehost op platforms zoals GitHub, waar wereldwijd ontwikkelaars kunnen samenwerken, bugs melden en verbeteringen voorstellen. Licenties zoals de MIT-licentie, Apache 2.0 of de GNU General Public License (GPL) bepalen precies wat wel en niet mag met de code — sommige, zoals de GPL, verplichten bijvoorbeeld dat afgeleide werken ook weer open source moeten blijven. Bekende voorbeelden van open source software zijn het besturingssysteem Linux, de webbrowser Chromium (de basis van onder meer Google Chrome), en programmeertalen zoals Python."
+    },
+    {
+      "id": "gs001",
+      "onderwerp": "Tweede Wereldoorlog",
+      "trefwoorden": ["tweede wereldoorlog", "wo2", "wereldoorlog 2", "world war 2", "wwii"],
+      "categorie": "geschiedenis",
+      "kort_antwoord": "De Tweede Wereldoorlog (1939-1945) was het grootste gewapende conflict in de geschiedenis, waarbij vrijwel de hele wereld betrokken raakte en tientallen miljoenen mensen omkwamen.",
+      "uitgebreid_antwoord": "De Tweede Wereldoorlog duurde van 1939 tot 1945 en was het grootste en dodelijkste gewapende conflict in de menselijke geschiedenis, met tientallen miljoenen slachtoffers wereldwijd. De oorlog begon in Europa met de Duitse inval in Polen op 1 september 1939, waarna Frankrijk en het Verenigd Koninkrijk Duitsland de oorlog verklaarden. Nazi-Duitsland, onder leiding van Adolf Hitler, veroverde in korte tijd grote delen van Europa, waaronder in mei 1940 Nederland. Later breidde het conflict zich uit tot een wereldwijde oorlog tussen de Asmogendheden (Duitsland, Italië, Japan) en de Geallieerden (onder meer het Verenigd Koninkrijk, de Sovjet-Unie en vanaf 1941 de Verenigde Staten). Tijdens de oorlog vond de Holocaust plaats, de systematische vervolging en vermoording van zes miljoen Joden en miljoenen andere slachtoffers door het naziregime. De oorlog eindigde in Europa op 8 mei 1945 met de Duitse capitulatie, en in Azië na de Amerikaanse atoombommen op Hiroshima en Nagasaki, met de Japanse overgave op 15 augustus 1945."
+    },
+    {
+      "id": "ai002",
+      "onderwerp": "Algoritme",
+      "trefwoorden": ["algoritme", "algorithm", "wat is een algoritme"],
+      "categorie": "technologie",
+      "kort_antwoord": "Een algoritme is een stapsgewijze, ondubbelzinnige reeks instructies om een probleem op te lossen of een taak uit te voeren.",
+      "uitgebreid_antwoord": "Een algoritme is een precieze, stapsgewijze reeks instructies om een bepaald probleem op te lossen of een taak uit te voeren, ongeacht of dit met de hand of door een computer gebeurt. Het begrip is veel ouder dan computers: een recept om een gerecht te koken of een handleiding om een wasmachine te installeren zijn in essentie ook algoritmen. In de informatica gebruiken programmeurs algoritmen om bijvoorbeeld gegevens te sorteren, een route te berekenen of te bepalen welke video's iemand op een videoplatform te zien krijgt. Een goed algoritme is ondubbelzinnig (elke stap is duidelijk gedefinieerd), eindig (het stopt uiteindelijk met een antwoord) en effectief (elke stap is in de praktijk uitvoerbaar). InVision zelf werkt ook volgens vaste algoritmen: bijvoorbeeld het algoritme dat bepaalt welke zoekresultaten het meest relevant zijn voor jouw vraag."
+    },
+    {
+      "id": "gz003",
+      "onderwerp": "Vaccinatie",
+      "trefwoorden": ["vaccinatie", "vaccin", "vaccineren", "immunisatie", "hoe werkt een vaccin"],
+      "categorie": "gezondheid",
+      "kort_antwoord": "Een vaccin traint het immuunsysteem om een ziekteverwekker te herkennen en te bestrijden, zonder dat iemand daarvoor eerst echt ziek hoeft te worden.",
+      "uitgebreid_antwoord": "Vaccinatie is een methode om het immuunsysteem alvast voor te bereiden op een specifieke ziekteverwekker, zoals een virus of bacterie, zonder dat iemand daarvoor eerst de bijbehorende ziekte moet doormaken. Een vaccin bevat meestal een onschadelijk gemaakt of verzwakt deel van de ziekteverwekker — of, bij nieuwere technieken zoals mRNA-vaccins, instructies waarmee lichaamscellen tijdelijk zelf een klein, onschadelijk stukje van de ziekteverwekker aanmaken. Het immuunsysteem herkent dit als lichaamsvreemd en reageert erop door onder meer antistoffen aan te maken en 'geheugencellen' te vormen. Kom je later in aanraking met de echte ziekteverwekker, dan herkent het lichaam die veel sneller en kan het een infectie vaak voorkomen of sterk afzwakken voordat je ziek wordt. Op grote schaal gevaccineerde bevolkingsgroepen kunnen bovendien groepsimmuniteit opbouwen, wat ook mensen beschermt die zelf niet gevaccineerd kunnen worden."
+    },
+    {
+      "id": "sp002",
+      "onderwerp": "Lichtjaar",
+      "trefwoorden": ["lichtjaar", "light year", "afstand ruimte", "hoe ver is een lichtjaar"],
+      "categorie": "ruimtevaart",
+      "kort_antwoord": "Een lichtjaar is de afstand die licht in één jaar aflegt, ongeveer 9.460.730.472.580 kilometer — het is een maat voor afstand, geen tijd.",
+      "uitgebreid_antwoord": "Een lichtjaar is een eenheid van afstand, geen tijd, ondanks dat het woord 'jaar' erin voorkomt. Het is de afstand die licht in het luchtledige in precies één jaar aflegt. Omdat licht zich verplaatst met ruim 299.792 kilometer per seconde, komt een lichtjaar neer op ongeveer 9,46 biljoen kilometer (9.460.730.472.580,8 km, om precies te zijn). Sterrenkundigen gebruiken lichtjaren omdat de afstanden in het heelal zo enorm zijn dat kilometers al snel onhandig grote getallen opleveren. Ter vergelijking: de dichtstbijzijnde ster buiten ons zonnestelsel, Proxima Centauri, staat op ongeveer 4,2 lichtjaar afstand, en het licht dat we vandaag van de Andromedanevel zien, is ruim 2,5 miljoen jaar onderweg geweest voordat het onze telescopen bereikte."
+    },
+    {
+      "id": "ec002",
+      "onderwerp": "Aandelen",
+      "trefwoorden": ["aandelen", "aandeel", "beurs", "aandelenmarkt", "wat is een aandeel"],
+      "categorie": "economie",
+      "kort_antwoord": "Een aandeel is een bewijs van eigendom in een bedrijf: als aandeelhouder bezit je een klein stukje van dat bedrijf en deel je mee in de winst en het risico.",
+      "uitgebreid_antwoord": "Een aandeel is een bewijs van (mede-)eigendom in een onderneming. Wie een aandeel koopt, wordt aandeelhouder en bezit daarmee een klein stukje van dat bedrijf, evenredig aan het aantal uitgegeven aandelen. Bedrijven geven aandelen uit om geld op te halen voor investeringen, zonder dat te hoeven lenen. Als aandeelhouder kun je op twee manieren profiteren: via koerswinst (het aandeel wordt meer waard en je verkoopt het voor een hogere prijs dan je betaalde) en via dividend (een deel van de winst dat het bedrijf periodiek uitkeert aan aandeelhouders, als het bedrijf daarvoor kiest). Aandelen van beursgenoteerde bedrijven worden verhandeld op een effectenbeurs, zoals de Amsterdamse effectenbeurs (onderdeel van Euronext). De waarde van een aandeel schommelt voortdurend, onder invloed van onder meer bedrijfsresultaten, economische ontwikkelingen en beleggerssentiment — en kan dus ook dalen, waardoor beleggen in aandelen altijd risico met zich meebrengt."
+    },
+    {
+      "id": "gg002",
+      "onderwerp": "Broeikasgassen versus ozonlaag",
+      "trefwoorden": ["ozonlaag", "ozongat", "gat in de ozonlaag", "ozon"],
+      "categorie": "aardrijkskunde",
+      "kort_antwoord": "De ozonlaag is een laag in de stratosfeer die schadelijke uv-straling van de zon tegenhoudt; deze raakte in de 20e eeuw beschadigd door cfk's, maar herstelt zich sindsdien dankzij internationale verboden.",
+      "uitgebreid_antwoord": "De ozonlaag bevindt zich in de stratosfeer, ongeveer 15 tot 35 kilometer boven het aardoppervlak, en bestaat uit een relatief hoge concentratie ozon (O3) die het grootste deel van de schadelijke ultraviolette (uv-)straling van de zon filtert voordat die het aardoppervlak bereikt. In de jaren zeventig en tachtig ontdekten wetenschappers dat de ozonlaag, vooral boven Antarctica, sterk aan het uitdunnen was — het zogeheten 'ozongat'. De oorzaak bleek het gebruik van chloorfluorkoolwaterstoffen (cfk's), chemische stoffen die destijds veel gebruikt werden in bijvoorbeeld spuitbussen en koelkasten. Cfk's breken in de stratosfeer af tot chlooratomen die ozonmoleculen afbreken. Dit probleem wordt vaak verward met klimaatverandering, maar het gaat om een ander mechanisme. Dankzij het Montreal Protocol (1987), waarin landen wereldwijd afspraken cfk's uit te faseren, is de ozonlaag sindsdien geleidelijk aan het herstellen — een van de meest succesvolle internationale milieuverdragen tot nu toe."
+    },
+    {
+      "id": "ai003",
+      "onderwerp": "Quantumcomputer",
+      "trefwoorden": ["quantumcomputer", "kwantumcomputer", "quantum computing", "qubit"],
+      "categorie": "technologie",
+      "kort_antwoord": "Een quantumcomputer rekent met qubits in plaats van klassieke bits, waardoor hij bepaalde soorten berekeningen in theorie veel sneller kan uitvoeren dan een gewone computer.",
+      "uitgebreid_antwoord": "Een klassieke computer rekent met bits die of een 0 of een 1 zijn. Een quantumcomputer gebruikt in plaats daarvan qubits, die dankzij een kwantummechanisch verschijnsel superpositie tegelijk een combinatie van 0 en 1 kunnen zijn, tot het moment dat ze gemeten worden. Door meerdere qubits daarnaast te verstrengelen (quantum entanglement) kan een quantumcomputer in theorie tegelijk een enorm aantal mogelijke uitkomsten verkennen, wat hem voor specifieke soorten problemen — zoals het ontbinden van grote getallen in factoren of het simuleren van moleculen voor medicijnontwikkeling — potentieel veel sneller maakt dan een klassieke computer. Voor de meeste alledaagse taken, zoals tekstverwerken of internetten, biedt een quantumcomputer geen voordeel en is een gewone computer beter geschikt. De techniek staat nog relatief in de kinderschoenen: huidige quantumcomputers zijn foutgevoelig en moeten vaak tot vlak bij het absolute nulpunt gekoeld worden om te functioneren."
+    },
+    {
+      "id": "gz004",
+      "onderwerp": "Antibiotica",
+      "trefwoorden": ["antibiotica", "antibioticum", "antibioticaresistentie", "penicilline"],
+      "categorie": "gezondheid",
+      "kort_antwoord": "Antibiotica zijn medicijnen die bacteriën doden of hun groei remmen; ze werken niet tegen virussen, en overmatig gebruik kan leiden tot antibioticaresistentie.",
+      "uitgebreid_antwoord": "Antibiotica zijn geneesmiddelen die specifiek bacteriën aanpakken, ofwel door ze direct te doden (bactericide werking) ofwel door hun groei en vermenigvuldiging te remmen (bacteriostatische werking), zodat het eigen immuunsysteem de resterende bacteriën kan opruimen. Het eerste op grote schaal gebruikte antibioticum, penicilline, werd in 1928 bij toeval ontdekt door Alexander Fleming. Belangrijk is dat antibiotica alléén werken tegen bacteriële infecties en niet tegen virussen — een antibioticum helpt dus niet tegen bijvoorbeeld een griep of verkoudheid. Een groeiend wereldwijd probleem is antibioticaresistentie: door onnodig of onjuist gebruik van antibiotica (bijvoorbeeld een kuur niet afmaken) kunnen bacteriën resistentie ontwikkelen, waardoor bestaande antibiotica niet meer werken tegen die stammen. Dit maakt sommige infecties steeds lastiger te behandelen en is een van de redenen waarom artsen terughoudend zijn met het voorschrijven van antibiotica."
+    },
+    {
+      "id": "sw002",
+      "onderwerp": "API",
+      "trefwoorden": ["api", "application programming interface", "wat is een api", "rest api"],
+      "categorie": "technologie",
+      "kort_antwoord": "Een API is een set afspraken waarmee verschillende softwareprogramma's met elkaar kunnen communiceren, zonder dat ze elkaars interne werking hoeven te kennen.",
+      "uitgebreid_antwoord": "Een API (Application Programming Interface) is een set duidelijk gedefinieerde afspraken en regels waarmee verschillende softwareprogramma's met elkaar kunnen communiceren. Je kunt het vergelijken met een menukaart in een restaurant: je hoeft niet te weten hoe de keuken precies werkt, je bestelt via het menu (de API) en krijgt het gewenste gerecht (de data of functionaliteit) terug. Een veelgebruikt type is de REST API, die werkt via het standaard webprotocol HTTP: een programma stuurt een verzoek naar een specifieke url (het 'endpoint'), en krijgt data terug, vaak in JSON-formaat. InVision zelf gebruikt bijvoorbeeld de API's van Wikipedia, DuckDuckGo en Microsoft Learn om live informatie op te halen. API's maken het mogelijk dat apps en websites functionaliteit van andere diensten hergebruiken, zoals een betaalprovider, een kaartendienst of, zoals hier, een zoekmachine — zonder dat de ontwikkelaar die dienst zelf hoeft te bouwen."
+    },
+    {
+      "id": "sp003",
+      "onderwerp": "Zonnestelsel",
+      "trefwoorden": ["zonnestelsel", "planeten", "solar system", "hoeveel planeten"],
+      "categorie": "ruimtevaart",
+      "kort_antwoord": "Ons zonnestelsel bestaat uit de zon en alles wat daaromheen draait: acht planeten, hun manen, dwergplaneten, planetoïden en kometen.",
+      "uitgebreid_antwoord": "Ons zonnestelsel bestaat uit de zon — een gemiddelde ster die zo'n 99,8% van de totale massa van het stelsel bevat — en alles wat er door zwaartekracht aan gebonden is. Er zijn acht officieel erkende planeten, in volgorde van dichtbij naar ver van de zon: Mercurius, Venus, Aarde, Mars (de vier rotsachtige 'aardse' planeten), gevolgd door Jupiter, Saturnus, Uranus en Neptunus (de vier gasreuzen/ijsreuzen). Pluto werd tot 2006 als negende planeet beschouwd, maar is sindsdien geherclassificeerd als dwergplaneet, samen met onder meer Ceres en Eris, omdat het niet voldoet aan alle criteria die de Internationale Astronomische Unie voor een 'volwaardige' planeet hanteert. Daarnaast telt het zonnestelsel tientallen manen, talloze planetoïden (vooral in de planetoïdengordel tussen Mars en Jupiter) en kometen, die vanuit de verre Oortwolk en Kuipergordel soms een baan richting de binnenste planeten maken."
+    },
+    {
+      "id": "gs002",
+      "onderwerp": "Gouden Eeuw Nederland",
+      "trefwoorden": ["gouden eeuw", "nederlandse gouden eeuw", "17e eeuw nederland", "vereenigde oostindische compagnie", "voc"],
+      "categorie": "geschiedenis",
+      "kort_antwoord": "De Gouden Eeuw was de 17e eeuw, waarin de Nederlandse Republiek economisch, wetenschappelijk en cultureel tot de wereldtop behoorde, mede dankzij handel via de VOC en WIC.",
+      "uitgebreid_antwoord": "De Gouden Eeuw verwijst naar de 17e eeuw, een periode waarin de Republiek der Zeven Verenigde Nederlanden op economisch, wetenschappelijk en cultureel gebied tot de wereldtop behoorde. Amsterdam groeide uit tot een van de belangrijkste handelssteden ter wereld, mede dankzij de Vereenigde Oostindische Compagnie (VOC, opgericht in 1602) en de West-Indische Compagnie (WIC), die wereldwijd handelsposten en koloniën beheerden en een groot deel van de wereldhandel in specerijen en andere goederen controleerden. Deze welvaart maakte een bloeiende kunstscene mogelijk, met schilders als Rembrandt van Rijn en Johannes Vermeer, en wetenschappers als Christiaan Huygens en Antoni van Leeuwenhoek deden baanbrekend werk. Tegelijkertijd is deze periode onlosmakelijk verbonden met slavenhandel en kolonialisme: de VOC en WIC waren nauw betrokken bij de trans-Atlantische slavenhandel en de onderdrukking van bevolkingen in onder meer Zuid-Afrika, Indonesië en het Caribisch gebied, iets wat tegenwoordig een belangrijk onderdeel is van hoe er kritisch naar deze periode gekeken wordt."
+    },
+    {
+      "id": "sw003",
+      "onderwerp": "Cloud computing",
+      "trefwoorden": ["cloud computing", "de cloud", "wat is de cloud", "cloud opslag", "saas", "paas", "iaas"],
+      "categorie": "technologie",
+      "kort_antwoord": "Cloud computing betekent dat je computerkracht, opslag of software via internet gebruikt vanaf servers van een aanbieder, in plaats van op je eigen apparaat of server.",
+      "uitgebreid_antwoord": "Cloud computing houdt in dat je rekenkracht, opslagruimte, netwerken of complete softwaretoepassingen via internet afneemt bij een aanbieder, in plaats van dat je zelf fysieke servers en apparatuur bezit en onderhoudt. Grote aanbieders zoals Microsoft Azure, Amazon Web Services en Google Cloud beheren enorme datacenters waar bedrijven en particulieren tegen betaling gebruik van kunnen maken, vaak op basis van 'pay as you go' — je betaalt alleen voor wat je daadwerkelijk gebruikt. Er worden meestal drie servicelagen onderscheiden: IaaS (Infrastructure as a Service, zoals kale virtuele servers), PaaS (Platform as a Service, een kant-en-klaar platform om applicaties op te bouwen, zoals Azure Functions) en SaaS (Software as a Service, complete toepassingen die je direct via internet gebruikt, zoals Microsoft 365 of Netflix). Voordelen van de cloud zijn onder meer schaalbaarheid (makkelijk op- en afschalen naar behoefte), lagere aanschafkosten voor eigen hardware, en toegankelijkheid vanaf vrijwel elke locatie met internetverbinding."
+    },
+    {
+      "id": "gz005",
+      "onderwerp": "Het menselijk brein",
+      "trefwoorden": ["hersenen", "brein", "menselijk brein", "neuronen", "hoe werken hersenen"],
+      "categorie": "biologie",
+      "kort_antwoord": "Het menselijk brein bestaat uit zo'n 86 miljard zenuwcellen (neuronen) die via elektrische en chemische signalen met elkaar communiceren en zo alles aansturen wat we denken, voelen en doen.",
+      "uitgebreid_antwoord": "Het menselijk brein bevat naar schatting zo'n 86 miljard zenuwcellen, neuronen genoemd, die onderling verbonden zijn via biljoenen verbindingen (synapsen). Neuronen communiceren met elkaar door elektrische signalen door te geven binnen de cel, en door chemische boodschapperstoffen (neurotransmitters) af te geven op de plek waar ze een andere cel raken. Het brein is grofweg opgedeeld in gebieden met verschillende hoofdtaken: de grote hersenen (cerebrum) verzorgen onder meer bewust denken, taal en bewegingssturing, de kleine hersenen (cerebellum) zorgen voor coördinatie en balans, en de hersenstam regelt onbewuste, levensnoodzakelijke functies zoals ademhaling en hartslag. Het brein blijft, in tegenstelling tot wat lange tijd werd gedacht, gedurende het hele leven veranderen en nieuwe verbindingen vormen naar aanleiding van ervaringen en leren — dit vermogen heet neuroplasticiteit."
+    },
+    {
+      "id": "ec003",
+      "onderwerp": "Cryptovaluta",
+      "trefwoorden": ["cryptovaluta", "crypto", "bitcoin", "wat is bitcoin", "digitale valuta"],
+      "categorie": "economie",
+      "kort_antwoord": "Cryptovaluta zijn digitale munten die niet door een centrale bank worden uitgegeven, maar via blockchaintechnologie en cryptografie worden beheerd en verhandeld over een gedecentraliseerd netwerk.",
+      "uitgebreid_antwoord": "Cryptovaluta zijn digitale munten die, in tegenstelling tot traditioneel geld, niet worden uitgegeven of gecontroleerd door een centrale bank of overheid. In plaats daarvan draaien ze op blockchaintechnologie: transacties worden vastgelegd in een gedeeld, cryptografisch beveiligd grootboek dat verspreid staat over duizenden computers wereldwijd. De bekendste en eerste cryptovaluta is Bitcoin, geïntroduceerd in 2009 door een anonieme persoon of groep onder de naam Satoshi Nakamoto. Sindsdien zijn er duizenden andere cryptovaluta bijgekomen, zoals Ethereum, dat naast een munt ook een platform biedt voor zogeheten slimme contracten (zelfuitvoerende programmacode op de blockchain). Cryptovaluta staan bekend om hun sterke koersschommelingen, en het ontbreken van centraal toezicht wordt door voorstanders gezien als voordeel (onafhankelijkheid van banken en overheden) en door critici als risico (geen vangnet bij fraude of verlies, en gevoeligheid voor speculatie)."
+    },
+    {
+      "id": "sp004",
+      "onderwerp": "Zwaartekracht",
+      "trefwoorden": ["zwaartekracht", "gravitatie", "gravity", "hoe werkt zwaartekracht"],
+      "categorie": "natuurkunde",
+      "kort_antwoord": "Zwaartekracht is de kracht waarmee alle massa's elkaar aantrekken; hoe groter de massa en hoe kleiner de afstand, hoe sterker de aantrekking.",
+      "uitgebreid_antwoord": "Zwaartekracht, of gravitatie, is de fundamentele kracht waarmee alle objecten met massa elkaar aantrekken. Isaac Newton beschreef in de 17e eeuw dat de aantrekkingskracht tussen twee objecten groter wordt naarmate hun massa toeneemt, en juist afneemt naarmate de afstand ertussen groter wordt (specifiek met het kwadraat van de afstand). Dit verklaart bijvoorbeeld waarom de aarde de maan in een baan om zich heen houdt, en waarom voorwerpen op aarde naar beneden vallen. Albert Einstein gaf begin 20e eeuw met zijn algemene relativiteitstheorie een dieper begrip: zwaartekracht is geen 'kracht' die op afstand werkt, maar het gevolg van de manier waarop massa de ruimtetijd om zich heen kromt — een zware ster of planeet buigt als het ware de ruimte om zich heen, en andere objecten volgen die kromming, wat wij als aantrekking ervaren. Deze theorie verklaart onder meer subtiele verschijnselen die Newtons theorie niet volledig kon voorspellen, zoals de baan van de planeet Mercurius en het buigen van licht rond zware objecten (zwaartekrachtslens)."
+    },
+    {
+      "id": "gg003",
+      "onderwerp": "Waterkringloop",
+      "trefwoorden": ["waterkringloop", "watercyclus", "hydrologische cyclus", "verdamping neerslag"],
+      "categorie": "aardrijkskunde",
+      "kort_antwoord": "De waterkringloop is het voortdurende proces waarbij water verdampt, condenseert tot wolken, als neerslag valt en weer terugstroomt naar zeeën en rivieren.",
+      "uitgebreid_antwoord": "De waterkringloop, ook wel de hydrologische cyclus genoemd, beschrijft hoe water zich voortdurend beweegt tussen zeeën, land, rivieren, de atmosfeer en het grondwater. Onder invloed van zonnewarmte verdampt water vanaf het oppervlak van oceanen, meren en rivieren, en verdampt ook water via planten (transpiratie). Deze waterdamp stijgt op, koelt af in de atmosfeer en condenseert tot minuscule waterdruppeltjes die samen wolken vormen. Wanneer de druppeltjes groot en zwaar genoeg worden, vallen ze als neerslag terug naar de aarde, in de vorm van regen, sneeuw of hagel. Een deel van dat water stroomt via rivieren en beken terug naar zee (oppervlakteafvoer), een ander deel zakt de bodem in en vult het grondwater aan, dat op zijn beurt weer voor een deel in rivieren en zeeën uitkomt. Dit continue proces zorgt voor de aanvoer van zoet water op het land en is essentieel voor al het leven op aarde."
+    }
+  ]
+}
