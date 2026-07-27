@@ -3,81 +3,114 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mijn 100% Lokale AI</title>
+    <title>Praat met mijn AI</title>
     <style>
         body { font-family: sans-serif; background: #121212; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
         .chat-container { width: 500px; height: 600px; background: #1e1e1e; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
-        .status { background: #ff9800; color: black; padding: 10px; text-align: center; font-size: 0.9rem; font-weight: bold; }
+        .status { background: #ff9800; color: black; padding: 15px; text-align: center; font-size: 1rem; font-weight: bold; }
         .chat-box { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-        .msg { padding: 10px 14px; border-radius: 8px; max-width: 80%; line-height: 1.4; }
+        .msg { padding: 12px 16px; border-radius: 8px; max-width: 80%; line-height: 1.4; font-size: 1.1rem; }
         .user { background: #007bff; align-self: flex-end; }
         .ai { background: #333; align-self: flex-start; }
-        .input-box { display: flex; padding: 15px; background: #1a1a1a; gap: 10px; }
-        input { flex: 1; padding: 12px; border: none; background: #2a2a2a; color: white; border-radius: 6px; }
-        button { background: #007bff; color: white; border: none; padding: 0 20px; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        button:disabled { background: #555; cursor: not-allowed; }
+        .control-box { display: flex; justify-content: center; padding: 25px; background: #1a1a1a; }
+        .mic-btn { background: #e50914; color: white; border: none; width: 80px; height: 80px; border-radius: 50%; cursor: pointer; font-weight: bold; font-size: 1rem; box-shadow: 0 4px 15px rgba(229,9,20,0.4); transition: transform 0.2s; }
+        .mic-btn:active { transform: scale(0.9); }
+        .mic-btn:disabled { background: #555; box-shadow: none; cursor: not-allowed; }
+        .listening { background: #4caf50; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
     </style>
 </head>
 <body>
 
     <div class="chat-container">
-        <div id="status" class="status">AI Model laden... (Dit kan even duren bij de eerste keer)</div>
+        <div id="status" class="status">AI Model laden... Een moment geduld.</div>
         <div id="chat-box" class="chat-box"></div>
-        <div class="input-box">
-            <input type="text" id="user-input" placeholder="Typ een bericht..." disabled>
-            <button id="send-btn" disabled>Stuur</button>
+        <div class="control-box">
+            <button id="mic-btn" class="mic-btn" disabled>PRAAT</button>
         </div>
     </div>
 
-    <!-- We laden Transformers.js via een betrouwbare Web-URL (CDN) -->
     <script type="module">
         import { pipeline } from 'https://jsdelivr.net';
 
         let generator;
         const statusDiv = document.getElementById('status');
-        const inputField = document.getElementById('user-input');
-        const sendBtn = document.getElementById('send-btn');
+        const micBtn = document.getElementById('mic-btn');
         const chatBox = document.getElementById('chat-box');
 
-        // Initialiseer de AI (We gebruiken een superklein tekstmodel dat snel laadt in de browser)
+        // Spraakherkenning instellen (Browser functie)
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = SpeechRecognition ? new SpeechRecognition() : null;
+        
+        if (recognition) {
+            recognition.lang = 'nl-NL';
+            recognition.continuous = false;
+            recognition.interimResults = false;
+        } else {
+            alert("Spraakherkenning wordt niet ondersteund in deze browser. Gebruik Google Chrome.");
+        }
+
+        // Start het AI-model
         async function initAI() {
             try {
-                // We laden een 'text2text-generation' model (zoals een mini-versie van T5 of GPT)
                 generator = await pipeline('text2text-generation', 'Xenova/LaMini-Flan-T5-78M');
-                
-                statusDiv.innerText = "AI is 100% lokaal klaar voor gebruik!";
+                statusDiv.innerText = "Klaar! Klik op 'PRAAT' om te spreken.";
                 statusDiv.style.background = "#4caf50";
-                inputField.disabled = false;
-                sendBtn.disabled = false;
+                micBtn.disabled = false;
             } catch (error) {
-                statusDiv.innerText = "Fout bij laden model. Bekijk de console.";
+                statusDiv.innerText = "Fout bij laden AI.";
                 statusDiv.style.background = "#f44336";
                 console.error(error);
             }
         }
 
-        async function handleMessage() {
-            const text = inputField.value.trim();
-            if (!text) return;
+        // Microfoonknop indrukken
+        micBtn.addEventListener('click', () => {
+            if (!recognition) return;
+            recognition.start();
+            micBtn.innerText = "LUISTERT";
+            micBtn.classList.add('listening');
+            statusDiv.innerText = "Spreek nu...";
+        });
 
-            // Toon gebruikersbericht
-            appendMessage(text, 'user');
-            inputField.value = '';
-            
-            statusDiv.innerText = "AI denkt na...";
-            statusDiv.style.background = "#2196f3";
+        // Als je stopt met praten en de browser je stem heeft omgezet
+        if (recognition) {
+            recognition.onresult = async function(event) {
+                const spokenText = event.results[0][0].transcript;
+                micBtn.innerText = "PRAAT";
+                micBtn.classList.remove('listening');
+                
+                // Toon jouw gesproken tekst
+                appendMessage(spokenText, 'user');
+                
+                statusDiv.innerText = "AI denkt na...";
+                statusDiv.style.background = "#2196f3";
 
-            // Genereer lokaal een antwoord met je eigen processor/videokaart
-            const output = await generator(text, {
-                max_new_tokens: 50,
-                temperature: 0.7,
-            });
+                // AI maakt lokaal antwoord
+                const output = await generator(spokenText, { max_new_tokens: 50, temperature: 0.7 });
+                const aiResponse = output.generated_text;
 
-            const aiResponse = output[0].generated_text;
-            appendMessage(aiResponse, 'ai');
+                // Toon antwoord en lees het voor
+                appendMessage(aiResponse, 'ai');
+                speakOutLoud(aiResponse);
 
-            statusDiv.innerText = "AI is 100% lokaal klaar voor gebruik!";
-            statusDiv.style.background = "#4caf50";
+                statusDiv.innerText = "Klaar! Klik op 'PRAAT' voor de volgende vraag.";
+                statusDiv.style.background = "#4caf50";
+            };
+
+            recognition.onerror = function() {
+                micBtn.innerText = "PRAAT";
+                micBtn.classList.remove('listening');
+                statusDiv.innerText = "Niet verstaan. Klik nogmaals op PRAAT.";
+                statusDiv.style.background = "#ff9800";
+            };
+        }
+
+        // Functie om de tekst hardop voor te lezen
+        function speakOutLoud(text) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'nl-NL';
+            window.speechSynthesis.speak(utterance);
         }
 
         function appendMessage(text, sender) {
@@ -88,11 +121,6 @@
             chatBox.scrollTop = chatBox.scrollHeight;
         }
 
-        // Knoppen activeren
-        sendBtn.addEventListener('click', handleMessage);
-        inputField.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleMessage(); });
-
-        // Start de AI op
         initAI();
     </script>
 </body>
