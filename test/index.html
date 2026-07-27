@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mijn AI Webapp</title>
+    <title>Mijn Eigen AI Webapp</title>
     <style>
         body { font-family: Arial, sans-serif; background: #121212; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
         .chat-container { width: 450px; height: 550px; background: #1e1e1e; border-radius: 10px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
@@ -18,22 +18,85 @@
         button { background: #007bff; color: white; border: none; padding: 0 18px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 1rem; }
         button:hover { background: #0056b3; }
     </style>
+    <!-- We laden Brain.js, een AI-bibliotheek die wél lokaal mag draaien van de browser -->
+    <script src="https://unpkg.com"></script>
 </head>
 <body>
 
     <div class="chat-container">
         <div class="header" id="status">Mijn Lokale AI Assistent</div>
         <div id="chat-box" class="chat-box">
-            <div class="msg ai">Hallo! Typ hieronder je vraag. De allereerste reactie kan even 10 seconden duren omdat ik mezelf opstart.</div>
+            <div class="msg ai">Hallo! Ik ben jouw eigen AI. Typ iets leuks (zoals 'hallo', 'hoe gaat het' of 'wie ben jij') en ik antwoord direct!</div>
         </div>
         <div class="input-box">
-            <!-- De balk staat nu direct OPEN zodat je er direct in kunt klikken en typen -->
             <input type="text" id="user-input" placeholder="Typ hier je bericht..." autofocus>
             <button id="send-btn">Stuur</button>
         </div>
     </div>
 
-    <script type="module">
+    <script>
+        // 1. We maken een nieuw neuraal netwerk (AI) aan
+        const net = new brain.recurrent.LSTM();
+
+        // 2. We trainen de AI direct met een JSON-achtige structuur van vragen en antwoorden
+        // Je kunt deze lijst zelf uitbreiden met Claude!
+        net.train([
+            { input: 'hallo', output: 'Hallo daar! Hoe kan ik je vandaag helpen?' },
+            { input: 'hoi', output: 'Hoi! Leuk dat je er bent.' },
+            { input: 'hoe gaat het', output: 'Met mij gaat het super, ik ben een AI die volledig op jouw computer draait!' },
+            { input: 'wie ben jij', output: 'Ik ben een AI die jij zelf hebt gebouwd met HTML en JavaScript.' },
+            { input: 'wat kun jij', output: 'Ik kan praten, leren van JSON-data en supersnel reageren zonder internet.' },
+            { input: 'doei', output: 'Tot ziens! Fijne dag nog.' }
+        ], {
+            iterations: 100, // Hoe vaak de AI oefent om de taal te begrijpen
+            errorThresh: 0.011
+        });
+
+        const statusHeader = document.getElementById('status');
+        const inputField = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+        const chatBox = document.getElementById('chat-box');
+
+        function handleChat() {
+            const text = inputField.value.trim().toLowerCase();
+            if (!text) return;
+
+            // Toon jouw bericht
+            appendMessage(inputField.value, 'user');
+            inputField.value = '';
+
+            // AI berekent NU live het antwoord uit zijn eigen geheugen
+            try {
+                const response = net.run(text);
+                
+                if (response) {
+                    appendMessage(response, 'ai');
+                } else {
+                    appendMessage("Dat heb ik nog niet geleerd. Je kunt mijn JSON-trainingsset uitbreiden!", 'ai');
+                }
+            } catch (error) {
+                appendMessage("Er ging iets mis in mijn AI-brein.", 'ai');
+                console.error(error);
+            }
+        }
+
+        function appendMessage(text, sender) {
+            const div = document.createElement('div');
+            div.classList.add('msg', sender);
+            div.innerText = text;
+            chatBox.appendChild(div);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        sendBtn.addEventListener('click', handleChat);
+        inputField.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleChat(); });
+        
+        // Geef aan dat het laden gelukt is
+        statusHeader.innerText = "AI is 100% Actief";
+        statusHeader.style.background = "#4caf50";
+    </script>
+</body>
+</html>
         // We importeren de AI-bibliotheek
         import { pipeline } from 'https://jsdelivr.net';
 
