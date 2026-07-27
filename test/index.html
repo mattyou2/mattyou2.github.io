@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mijn 100% Lokale AI</title>
+    <style>
+        body { font-family: sans-serif; background: #121212; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .chat-container { width: 500px; height: 600px; background: #1e1e1e; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+        .status { background: #ff9800; color: black; padding: 10px; text-align: center; font-size: 0.9rem; font-weight: bold; }
+        .chat-box { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .msg { padding: 10px 14px; border-radius: 8px; max-width: 80%; line-height: 1.4; }
+        .user { background: #007bff; align-self: flex-end; }
+        .ai { background: #333; align-self: flex-start; }
+        .input-box { display: flex; padding: 15px; background: #1a1a1a; gap: 10px; }
+        input { flex: 1; padding: 12px; border: none; background: #2a2a2a; color: white; border-radius: 6px; }
+        button { background: #007bff; color: white; border: none; padding: 0 20px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        button:disabled { background: #555; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+    <div class="chat-container">
+        <div id="status" class="status">AI Model laden... (Dit kan even duren bij de eerste keer)</div>
+        <div id="chat-box" class="chat-box"></div>
+        <div class="input-box">
+            <input type="text" id="user-input" placeholder="Typ een bericht..." disabled>
+            <button id="send-btn" disabled>Stuur</button>
+        </div>
+    </div>
+
+    <!-- We laden Transformers.js via een betrouwbare Web-URL (CDN) -->
+    <script type="module">
+        import { pipeline } from 'https://jsdelivr.net';
+
+        let generator;
+        const statusDiv = document.getElementById('status');
+        const inputField = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+        const chatBox = document.getElementById('chat-box');
+
+        // Initialiseer de AI (We gebruiken een superklein tekstmodel dat snel laadt in de browser)
+        async function initAI() {
+            try {
+                // We laden een 'text2text-generation' model (zoals een mini-versie van T5 of GPT)
+                generator = await pipeline('text2text-generation', 'Xenova/LaMini-Flan-T5-78M');
+                
+                statusDiv.innerText = "AI is 100% lokaal klaar voor gebruik!";
+                statusDiv.style.background = "#4caf50";
+                inputField.disabled = false;
+                sendBtn.disabled = false;
+            } catch (error) {
+                statusDiv.innerText = "Fout bij laden model. Bekijk de console.";
+                statusDiv.style.background = "#f44336";
+                console.error(error);
+            }
+        }
+
+        async function handleMessage() {
+            const text = inputField.value.trim();
+            if (!text) return;
+
+            // Toon gebruikersbericht
+            appendMessage(text, 'user');
+            inputField.value = '';
+            
+            statusDiv.innerText = "AI denkt na...";
+            statusDiv.style.background = "#2196f3";
+
+            // Genereer lokaal een antwoord met je eigen processor/videokaart
+            const output = await generator(text, {
+                max_new_tokens: 50,
+                temperature: 0.7,
+            });
+
+            const aiResponse = output[0].generated_text;
+            appendMessage(aiResponse, 'ai');
+
+            statusDiv.innerText = "AI is 100% lokaal klaar voor gebruik!";
+            statusDiv.style.background = "#4caf50";
+        }
+
+        function appendMessage(text, sender) {
+            const div = document.createElement('div');
+            div.classList.add('msg', sender);
+            div.innerText = text;
+            chatBox.appendChild(div);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        // Knoppen activeren
+        sendBtn.addEventListener('click', handleMessage);
+        inputField.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleMessage(); });
+
+        // Start de AI op
+        initAI();
+    </script>
+</body>
+</html>
