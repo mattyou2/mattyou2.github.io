@@ -1,168 +1,75 @@
-<!DOCTYPE html>
-<html lang="nl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mijn Eigen AI Webapp</title>
-    <style>
-        body { font-family: Arial, sans-serif; background: #121212; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .chat-container { width: 450px; height: 550px; background: #1e1e1e; border-radius: 10px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        .header { background: #007bff; padding: 15px; text-align: center; font-weight: bold; font-size: 1.1rem; }
-        .chat-box { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-        .msg { padding: 10px 14px; border-radius: 6px; max-width: 80%; line-height: 1.4; word-break: break-word; }
-        .user { background: #007bff; align-self: flex-end; }
-        .ai { background: #333; align-self: flex-start; }
-        .input-box { display: flex; padding: 15px; background: #1a1a1a; gap: 8px; }
-        input { flex: 1; padding: 12px; border: none; background: #2a2a2a; color: white; border-radius: 4px; font-size: 1rem; }
-        input:focus { outline: 2px solid #007bff; }
-        button { background: #007bff; color: white; border: none; padding: 0 18px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 1rem; }
-        button:hover { background: #0056b3; }
-    </style>
-    <!-- We laden Brain.js, een AI-bibliotheek die wél lokaal mag draaien van de browser -->
-    <script src="https://unpkg.com"></script>
-</head>
-<body>
+// We importeren de AI-bibliotheek
+import { pipeline } from 'https://jsdelivr.net';
 
-    <div class="chat-container">
-        <div class="header" id="status">Mijn Lokale AI Assistent</div>
-        <div id="chat-box" class="chat-box">
-            <div class="msg ai">Hallo! Ik ben jouw eigen AI. Typ iets leuks (zoals 'hallo', 'hoe gaat het' of 'wie ben jij') en ik antwoord direct!</div>
-        </div>
-        <div class="input-box">
-            <input type="text" id="user-input" placeholder="Typ hier je bericht..." autofocus>
-            <button id="send-btn">Stuur</button>
-        </div>
-    </div>
+let aiModel = null;
+const statusHeader = document.getElementById('status');
+const inputField = document.getElementById('user-input');
+const sendBtn = document.getElementById('send-btn');
+const chatBox = document.getElementById('chat-box');
 
-    <script>
-        // 1. We maken een nieuw neuraal netwerk (AI) aan
-        const net = new brain.recurrent.LSTM();
-
-        // 2. We trainen de AI direct met een JSON-achtige structuur van vragen en antwoorden
-        // Je kunt deze lijst zelf uitbreiden met Claude!
-        net.train([
-            { input: 'hallo', output: 'Hallo daar! Hoe kan ik je vandaag helpen?' },
-            { input: 'hoi', output: 'Hoi! Leuk dat je er bent.' },
-            { input: 'hoe gaat het', output: 'Met mij gaat het super, ik ben een AI die volledig op jouw computer draait!' },
-            { input: 'wie ben jij', output: 'Ik ben een AI die jij zelf hebt gebouwd met HTML en JavaScript.' },
-            { input: 'wat kun jij', output: 'Ik kan praten, leren van JSON-data en supersnel reageren zonder internet.' },
-            { input: 'doei', output: 'Tot ziens! Fijne dag nog.' }
-        ], {
-            iterations: 100, // Hoe vaak de AI oefent om de taal te begrijpen
-            errorThresh: 0.011
-        });
-
-        const statusHeader = document.getElementById('status');
-        const inputField = document.getElementById('user-input');
-        const sendBtn = document.getElementById('send-btn');
-        const chatBox = document.getElementById('chat-box');
-
-        function handleChat() {
-            const text = inputField.value.trim().toLowerCase();
-            if (!text) return;
-
-            // Toon jouw bericht
-            appendMessage(inputField.value, 'user');
-            inputField.value = '';
-
-            // AI berekent NU live het antwoord uit zijn eigen geheugen
-            try {
-                const response = net.run(text);
-                
-                if (response) {
-                    appendMessage(response, 'ai');
-                } else {
-                    appendMessage("Dat heb ik nog niet geleerd. Je kunt mijn JSON-trainingsset uitbreiden!", 'ai');
-                }
-            } catch (error) {
-                appendMessage("Er ging iets mis in mijn AI-brein.", 'ai');
-                console.error(error);
-            }
+// Functie die de AI op de achtergrond inlaadt
+async function loadModel() {
+    try {
+        if (!aiModel) {
+            // We laden het model
+            aiModel = await pipeline('text2text-generation', 'Xenova/LaMini-Flan-T5-78M');
         }
+        return aiModel;
+    } catch (err) {
+        console.error("Model laadfout:", err);
+        return null;
+    }
+}
 
-        function appendMessage(text, sender) {
-            const div = document.createElement('div');
-            div.classList.add('msg', sender);
-            div.innerText = text;
-            chatBox.appendChild(div);
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }
+async function handleChat() {
+    const text = inputField.value.trim();
+    if (!text) return; // Doe niks als de balk leeg is
 
-        sendBtn.addEventListener('click', handleChat);
-        inputField.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleChat(); });
+    // Toon direct jouw bericht op het scherm
+    appendMessage(text, 'user');
+    inputField.value = ''; // Maak de typbalk meteen weer leeg
+    
+    // Toon dat de AI bezig is
+    statusHeader.innerText = "AI denkt na...";
+    statusHeader.style.background = "#ff9800";
+
+    try {
+        // Laad het model (of pak de al geladen versie)
+        const model = await loadModel();
         
-        // Geef aan dat het laden gelukt is
-        statusHeader.innerText = "AI is 100% Actief";
-        statusHeader.style.background = "#4caf50";
-    </script>
-</body>
-</html>
-        // We importeren de AI-bibliotheek
-        import { pipeline } from 'https://jsdelivr.net';
-
-        let aiModel = null;
-        const statusHeader = document.getElementById('status');
-        const inputField = document.getElementById('user-input');
-        const sendBtn = document.getElementById('send-btn');
-        const chatBox = document.getElementById('chat-box');
-
-        // Functie die de AI op de achtergrond inlaadt
-        async function loadModel() {
-            try {
-                if (!aiModel) {
-                    aiModel = await pipeline('text2text-generation', 'Xenova/LaMini-Flan-T5-78M');
-                }
-                return aiModel;
-            } catch (err) {
-                console.error("Model laadfout:", err);
-                return null;
-            }
-        }
-
-        async function handleChat() {
-            const text = inputField.value.trim();
-            if (!text) return; // Doe niks als de balk leeg is
-
-            // Toon direct jouw bericht op het scherm
-            appendMessage(text, 'user');
-            inputField.value = ''; // Maak de typbalk meteen weer leeg
+        if (model) {
+            // Genereer het antwoord
+            const response = await model(text, { max_new_tokens: 60, temperature: 0.7 });
             
-            // Toon dat de AI bezig is
-            statusHeader.innerText = "AI denkt na...";
-            statusHeader.style.background = "#ff9800";
-
-            try {
-                // Laad het model (of pak de al geladen versie)
-                const model = await loadModel();
-                
-                if (model) {
-                    // Genereer het antwoord
-                    const response = await model(text, { max_new_tokens: 60, temperature: 0.7 });
-                    appendMessage(response[0].generated_text, 'ai');
-                } else {
-                    appendMessage("Oeps, ik kon het AI-model niet lokaal opstarten.", 'ai');
-                }
-            } catch (error) {
-                appendMessage("Er is een fout opgetreden bij het berekenen van het antwoord.", 'ai');
-                console.error(error);
+            // HIER ZAT DE FOUT: we halen de tekst nu op de juiste manier op
+            const aiText = response[0]?.generated_text || response.generated_text;
+            
+            if (aiText) {
+                appendMessage(aiText, 'ai');
+            } else {
+                appendMessage("Ik kon geen logisch antwoord genereren.", 'ai');
             }
-
-            // Zet status weer terug naar normaal
-            statusHeader.innerText = "Mijn Lokale AI Assistent";
-            statusHeader.style.background = "#007bff";
+        } else {
+            appendMessage("Oeps, ik kon het AI-model niet lokaal opstarten.", 'ai');
         }
+    } catch (error) {
+        appendMessage("Er is een fout opgetreden bij het berekenen van het antwoord.", 'ai');
+        console.error(error);
+    }
 
-        function appendMessage(text, sender) {
-            const div = document.createElement('div');
-            div.classList.add('msg', sender);
-            div.innerText = text;
-            chatBox.appendChild(div);
-            chatBox.scrollTop = chatBox.scrollHeight; // Scroll automatisch omlaag
-        }
+    // Zet status weer terug naar normaal
+    statusHeader.innerText = "Mijn Lokale AI Assistent";
+    statusHeader.style.background = "#007bff";
+}
 
-        // Luister naar de klik op de knop en de Enter-toets
-        sendBtn.addEventListener('click', handleChat);
-        inputField.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleChat(); });
-    </script>
-</body>
-</html>
+function appendMessage(text, sender) {
+    const div = document.createElement('div');
+    div.classList.add('msg', sender);
+    div.innerText = text;
+    chatBox.appendChild(div);
+    chatBox.scrollTop = chatBox.scrollHeight; // Scroll automatisch omlaag
+}
+
+// Luister naar de klik op de knop en de Enter-toets
+sendBtn.addEventListener('click', handleChat);
+inputField.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleChat(); });
