@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Aurora — lokaal taalmodel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div class="app">
+
+  <header class="app__header">
+    <div class="brand">
+      <span class="brand__mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32" width="26" height="26">
+          <circle cx="16" cy="16" r="3.2" fill="currentColor"/>
+          <circle cx="16" cy="16" r="10.5" fill="none" stroke="currentColor" stroke-width="1.1" opacity="0.55"/>
+          <circle cx="16" cy="16" r="15" fill="none" stroke="currentColor" stroke-width="1" opacity="0.28"/>
+        </svg>
+      </span>
+      <div class="brand__text">
+        <span class="brand__name">Aurora</span>
+        <span class="brand__tag">lokaal taalmodel · <span id="model-name">—</span></span>
+      </div>
+    </div>
+    <div class="header__meta">
+      <span class="pill">
+        <span class="pill__dot"></span>
+        100% lokaal in de browser
+      </span>
+      <span class="pill pill--muted">
+        vocabulaire: <strong id="vocab-size">—</strong> woorden
+      </span>
+    </div>
+  </header>
+
+  <main class="app__main">
+
+    <section class="panel panel--chat" aria-label="Gesprek">
+      <div class="panel__header">
+        <h2>Gesprek</h2>
+        <span class="status" id="status" data-mode="idle">Model wordt geladen…</span>
+      </div>
+
+      <div class="chat" id="chat" role="log" aria-live="polite"></div>
+
+      <form class="composer" id="composer">
+        <input
+          id="user-input"
+          type="text"
+          autocomplete="off"
+          placeholder="Typ een zin, bijvoorbeeld: de zon komt op boven de bergen…"
+          aria-label="Jouw bericht"
+        />
+        <button type="submit" id="send-btn" class="send-btn" aria-label="Versturen">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none">
+            <path d="M4 12h15M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </form>
+    </section>
+
+    <aside class="panel panel--matrix" aria-label="Live datavisualisatie">
+      <div class="panel__header">
+        <h2>Datamatrix</h2>
+        <span class="panel__subtitle">cosine similarity × bigram-kans</span>
+      </div>
+
+      <div class="matrix-stats">
+        <div class="matrix-stat">
+          <span class="matrix-stat__label">Huidig woord</span>
+          <span class="matrix-stat__value" id="active-word">—</span>
+        </div>
+        <div class="matrix-stat">
+          <span class="matrix-stat__label">Stap</span>
+          <span class="matrix-stat__value" id="step-counter">0</span>
+        </div>
+        <div class="matrix-stat matrix-stat--wide">
+          <span class="matrix-stat__label">Context-vector</span>
+          <span class="matrix-stat__value matrix-stat__value--mono" id="context-vector">—</span>
+        </div>
+      </div>
+
+      <div class="matrix-legend">
+        <span>kandidaat-woord</span>
+        <span>gecombineerde score</span>
+        <span>cos · P</span>
+      </div>
+
+      <div class="matrix-body" id="matrix-body">
+        <p class="matrix-empty">Wacht op invoer…</p>
+      </div>
+    </aside>
+
+  </main>
+
+  <footer class="app__footer">
+    <p>
+      Aurora rekent uitsluitend in je browser: geen servers, geen API-sleutels, geen tracking.
+      Elke reactie ontstaat uit vectorwiskunde op een lokaal geladen woordmodel.
+    </p>
+  </footer>
+
+</div>
+
+<script src="engine.js"></script>
+<script src="ui.js"></script>
+</body>
+</html>
