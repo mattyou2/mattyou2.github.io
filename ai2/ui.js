@@ -73,7 +73,6 @@ function renderMatrixStep(stepInfo) {
     bar.className = "matrix-row__bar";
     const pct = Math.max(4, (c.score / maxScore) * 100);
     barTrack.appendChild(bar);
-    // Animeer de breedte na het toevoegen aan de DOM.
     requestAnimationFrame(() => { bar.style.width = pct + "%"; });
 
     const score = document.createElement("div");
@@ -139,27 +138,38 @@ async function handleSubmit(evt) {
   }
 }
 
+/** Zet het invoerveld op slot (met uitleg) of vrij, afhankelijk van de modelstatus. */
+function setInputLocked(locked, placeholder) {
+  els.input.disabled = locked;
+  els.sendBtn.disabled = locked;
+  if (placeholder) els.input.placeholder = placeholder;
+}
+
 async function init() {
   clearMatrix();
   setStatus("Model wordt geladen…", "busy");
+  setInputLocked(true, "Model wordt geladen…");
+
   try {
     const meta = await auroraEngine.load("model.json");
     els.modelName.textContent = meta.name;
     els.vocabSize.textContent = meta.vocab_size.toLocaleString("nl-NL");
     setStatus("Model geladen — typ iets om te beginnen.", "idle");
+    setInputLocked(false, "Typ een zin, bijvoorbeeld: de zon komt op boven de bergen…");
     addMessage(
       "assistant",
       "Hallo, ik ben Aurora. Ik genereer tekst met cosine similarity en bigram-kansen — geen externe API's, alles lokaal in je browser. Typ een zin om te beginnen."
     );
+    els.form.addEventListener("submit", handleSubmit);
   } catch (err) {
     console.error(err);
-    setStatus("Kon model.json niet laden. Draai een lokale server (zie README).", "error");
+    setStatus("Kon model.json niet laden. Start een lokale server (zie README).", "error");
+    setInputLocked(true, "Model niet geladen — start een lokale server (zie README)");
     addMessage(
       "assistant",
-      "Ik kon model.json niet laden. Dit gebeurt meestal wanneer je index.html rechtstreeks vanaf schijf opent. Start een lokale server — zie de instructies die bij dit project horen."
+      "Ik kon model.json niet laden. Dit gebeurt vrijwel altijd wanneer index.html rechtstreeks vanaf schijf of telefoon is geopend (file://), in plaats van via een webserver. Start een lokale server, of host het project via GitHub Pages — zie README.md voor de exacte stappen. Ververs daarna deze pagina."
     );
   }
-  els.form.addEventListener("submit", handleSubmit);
 }
 
 document.addEventListener("DOMContentLoaded", init);
