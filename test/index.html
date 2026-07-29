@@ -1,75 +1,6077 @@
-// We importeren de AI-bibliotheek
-import { pipeline } from 'https://jsdelivr.net';
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Aurora — lokaal taalmodel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* =========================================================================
+   Aurora — stylesheet
+   Thema: diep bosgroen (nacht) met zand- en amberaccenten (het licht),
+   een subtiele verwijzing naar het noorderlicht boven een donker woud.
+   ========================================================================= */
 
-let aiModel = null;
-const statusHeader = document.getElementById('status');
-const inputField = document.getElementById('user-input');
-const sendBtn = document.getElementById('send-btn');
-const chatBox = document.getElementById('chat-box');
+:root {
+  /* Kleur */
+  --bg:            #0E1912;
+  --bg-glow:       radial-gradient(60% 50% at 50% -10%, rgba(201, 168, 118, 0.10), transparent 60%);
+  --surface:       #15221A;
+  --surface-raised:#1B2B22;
+  --border:        #29392E;
+  --border-soft:   #223229;
+  --text-primary:  #ECE6D6;
+  --text-secondary:#C7CFC5;
+  --text-muted:    #8FA091;
+  --accent-gold:   #C9A876;
+  --accent-gold-dim: #9C875F;
+  --accent-sage:   #7FA184;
+  --accent-copper: #C08857;
+  --danger:        #C97668;
 
-// Functie die de AI op de achtergrond inlaadt
-async function loadModel() {
-    try {
-        if (!aiModel) {
-            // We laden het model
-            aiModel = await pipeline('text2text-generation', 'Xenova/LaMini-Flan-T5-78M');
-        }
-        return aiModel;
-    } catch (err) {
-        console.error("Model laadfout:", err);
-        return null;
-    }
+  /* Typografie */
+  --font-display: "Fraunces", "Iowan Old Style", Georgia, serif;
+  --font-body: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", "SFMono-Regular", Menlo, monospace;
+
+  /* Ritme */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 22px;
+  --shadow-soft: 0 12px 40px -18px rgba(0, 0, 0, 0.55);
 }
 
-async function handleChat() {
-    const text = inputField.value.trim();
-    if (!text) return; // Doe niks als de balk leeg is
+* { box-sizing: border-box; }
 
-    // Toon direct jouw bericht op het scherm
-    appendMessage(text, 'user');
-    inputField.value = ''; // Maak de typbalk meteen weer leeg
-    
-    // Toon dat de AI bezig is
-    statusHeader.innerText = "AI denkt na...";
-    statusHeader.style.background = "#ff9800";
+html, body {
+  height: 100%;
+}
 
-    try {
-        // Laad het model (of pak de al geladen versie)
-        const model = await loadModel();
+body {
+  margin: 0;
+  background:
+    var(--bg-glow),
+    var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+}
+
+/* -------------------------------------------------------------------- */
+/* Layout                                                                */
+/* -------------------------------------------------------------------- */
+
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 28px 32px 20px;
+}
+
+.app__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid var(--border-soft);
+  flex-wrap: wrap;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand__mark {
+  color: var(--accent-gold);
+  display: inline-flex;
+  filter: drop-shadow(0 0 10px rgba(201, 168, 118, 0.35));
+}
+
+.brand__text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.brand__name {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 24px;
+  letter-spacing: 0.01em;
+}
+
+.brand__tag {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+}
+
+.header__meta {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 7px 13px;
+  border-radius: 999px;
+}
+
+.pill--muted { color: var(--text-muted); }
+.pill strong { color: var(--accent-gold); font-weight: 600; }
+
+.pill__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-sage);
+  box-shadow: 0 0 8px 1px rgba(127, 161, 132, 0.7);
+  animation: pulse 2.6s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.55; transform: scale(0.85); }
+  50% { opacity: 1; transform: scale(1); }
+}
+
+.app__main {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 22px;
+  margin-top: 24px;
+  min-height: 0;
+}
+
+.app__main.matrix-visible {
+  grid-template-columns: minmax(0, 1.5fr) minmax(320px, 1fr);
+}
+
+.panel--matrix {
+  display: none;
+}
+
+.app__main.matrix-visible .panel--matrix {
+  display: flex;
+  animation: rise 380ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (max-width: 920px) {
+  .app__main.matrix-visible { grid-template-columns: 1fr; }
+}
+
+.toggle-matrix-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  font-family: var(--font-body);
+  color: var(--accent-gold);
+  background: transparent;
+  border: 1px solid var(--border);
+  padding: 7px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: border-color 150ms ease, background 150ms ease, color 150ms ease;
+}
+
+.toggle-matrix-btn:hover {
+  border-color: var(--accent-gold-dim);
+  background: rgba(201, 168, 118, 0.08);
+}
+
+.toggle-matrix-btn:focus-visible {
+  outline: 2px solid var(--accent-gold);
+  outline-offset: 2px;
+}
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.panel__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.panel__header h2 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 17px;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.panel__subtitle {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+/* -------------------------------------------------------------------- */
+/* Chat-paneel                                                          */
+/* -------------------------------------------------------------------- */
+
+.panel--chat { height: min(72vh, 720px); }
+
+.status {
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+.status[data-mode="busy"] { color: var(--accent-gold); }
+.status[data-mode="error"] { color: var(--danger); }
+
+.chat {
+  flex: 1;
+  overflow-y: auto;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.msg {
+  display: flex;
+  gap: 12px;
+  max-width: 88%;
+  animation: rise 380ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.msg--user { align-self: flex-end; flex-direction: row-reverse; }
+
+.msg__avatar {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  font-family: var(--font-mono);
+}
+
+.msg--assistant .msg__avatar {
+  background: var(--surface-raised);
+  color: var(--accent-gold);
+  border: 1px solid var(--border);
+}
+
+.msg--user .msg__avatar {
+  background: var(--accent-sage);
+  color: #0E1912;
+}
+
+.msg__bubble {
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  font-size: 14.5px;
+  line-height: 1.6;
+}
+
+.msg--assistant .msg__bubble {
+  background: var(--surface-raised);
+  border: 1px solid var(--border-soft);
+  border-top-left-radius: 4px;
+}
+
+.msg--user .msg__bubble {
+  background: linear-gradient(165deg, #3A4C3E, #2A3B30);
+  border-top-right-radius: 4px;
+  color: var(--text-primary);
+}
+
+.msg__bubble--streaming::after {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 13px;
+  margin-left: 4px;
+  background: var(--accent-gold);
+  vertical-align: -2px;
+  animation: blink 900ms steps(1) infinite;
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+.composer {
+  display: flex;
+  gap: 10px;
+  padding: 16px 18px;
+  border-top: 1px solid var(--border-soft);
+  background: var(--surface);
+}
+
+.composer input {
+  flex: 1;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 12px 18px;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.composer input::placeholder { color: var(--text-muted); }
+
+.composer input:focus {
+  border-color: var(--accent-gold-dim);
+  box-shadow: 0 0 0 3px rgba(201, 168, 118, 0.15);
+}
+
+.send-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: var(--accent-gold);
+  color: #16241A;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform 150ms ease, background 150ms ease;
+}
+
+.send-btn:hover { background: #D8B98A; transform: translateY(-1px); }
+.send-btn:active { transform: translateY(0); }
+.send-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.send-btn:focus-visible, .composer input:focus-visible {
+  outline: 2px solid var(--accent-gold);
+  outline-offset: 2px;
+}
+
+/* -------------------------------------------------------------------- */
+/* Datamatrix-paneel                                                    */
+/* -------------------------------------------------------------------- */
+
+.matrix-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--border-soft);
+}
+
+.matrix-stat {
+  background: var(--surface);
+  padding: 12px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.matrix-stat--wide { grid-column: 1 / -1; }
+
+.matrix-stat__label {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.matrix-stat__value {
+  font-family: var(--font-display);
+  font-size: 17px;
+  color: var(--accent-gold);
+}
+
+.matrix-stat__value--mono {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.matrix-legend {
+  display: grid;
+  grid-template-columns: 1fr 2fr auto;
+  gap: 10px;
+  padding: 12px 18px 6px;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.matrix-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.matrix-empty {
+  color: var(--text-muted);
+  font-size: 13px;
+  text-align: center;
+  margin-top: 40px;
+  font-style: italic;
+}
+
+.matrix-row {
+  display: grid;
+  grid-template-columns: 1fr 2fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 8px;
+  border-radius: var(--radius-sm);
+  animation: fadeIn 260ms ease both;
+  animation-delay: var(--delay, 0ms);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateX(-4px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.matrix-row__label {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.matrix-row__track {
+  height: 7px;
+  border-radius: 999px;
+  background: var(--surface-raised);
+  overflow: hidden;
+  border: 1px solid var(--border-soft);
+}
+
+.matrix-row__bar {
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--accent-sage), var(--accent-gold-dim));
+  transition: width 480ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.matrix-row__score {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.matrix-row--chosen {
+  background: rgba(201, 168, 118, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(201, 168, 118, 0.35);
+}
+
+.matrix-row--chosen .matrix-row__label { color: var(--accent-gold); }
+
+.matrix-row--chosen .matrix-row__bar {
+  background: linear-gradient(90deg, var(--accent-copper), var(--accent-gold));
+  box-shadow: 0 0 10px 1px rgba(201, 168, 118, 0.55);
+}
+
+/* -------------------------------------------------------------------- */
+/* Footer                                                                */
+/* -------------------------------------------------------------------- */
+
+.app__footer {
+  margin-top: 22px;
+  text-align: center;
+}
+
+.app__footer p {
+  font-size: 12px;
+  color: var(--text-muted);
+  max-width: 560px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+/* -------------------------------------------------------------------- */
+/* Scrollbars (subtiel, past bij het thema)                             */
+/* -------------------------------------------------------------------- */
+
+.chat::-webkit-scrollbar,
+.matrix-body::-webkit-scrollbar {
+  width: 8px;
+}
+.chat::-webkit-scrollbar-thumb,
+.matrix-body::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 999px;
+}
+.chat::-webkit-scrollbar-track,
+.matrix-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <header class="app__header">
+    <div class="brand">
+      <span class="brand__mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32" width="26" height="26">
+          <circle cx="16" cy="16" r="3.2" fill="currentColor"/>
+          <circle cx="16" cy="16" r="10.5" fill="none" stroke="currentColor" stroke-width="1.1" opacity="0.55"/>
+          <circle cx="16" cy="16" r="15" fill="none" stroke="currentColor" stroke-width="1" opacity="0.28"/>
+        </svg>
+      </span>
+      <div class="brand__text">
+        <span class="brand__name">Aurora</span>
+        <span class="brand__tag">lokaal taalmodel · <span id="model-name">—</span></span>
+      </div>
+    </div>
+    <div class="header__meta">
+      <span class="pill">
+        <span class="pill__dot"></span>
+        100% lokaal in de browser
+      </span>
+      <span class="pill pill--muted">
+        vocabulaire: <strong id="vocab-size">—</strong> woorden
+      </span>
+      <button type="button" id="toggle-matrix-btn" class="toggle-matrix-btn" aria-expanded="false" aria-controls="matrix-panel">
+        Toon de wiskunde
+      </button>
+    </div>
+  </header>
+
+  <main class="app__main" id="app-main">
+
+    <section class="panel panel--chat" aria-label="Gesprek">
+      <div class="panel__header">
+        <h2>Gesprek</h2>
+        <span class="status" id="status" data-mode="idle">Model wordt geladen…</span>
+      </div>
+
+      <div class="chat" id="chat" role="log" aria-live="polite"></div>
+
+      <form class="composer" id="composer">
+        <input
+          id="user-input"
+          type="text"
+          autocomplete="off"
+          placeholder="Typ een zin, bijvoorbeeld: hoi, hoe gaat het?"
+          aria-label="Jouw bericht"
+        />
+        <button type="submit" id="send-btn" class="send-btn" aria-label="Versturen">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none">
+            <path d="M4 12h15M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </form>
+    </section>
+
+    <aside class="panel panel--matrix" id="matrix-panel" aria-label="Live datavisualisatie">
+      <div class="panel__header">
+        <h2>Datamatrix</h2>
+        <span class="panel__subtitle">cosine similarity × bigram-kans</span>
+      </div>
+
+      <div class="matrix-stats">
+        <div class="matrix-stat">
+          <span class="matrix-stat__label">Huidig woord</span>
+          <span class="matrix-stat__value" id="active-word">—</span>
+        </div>
+        <div class="matrix-stat">
+          <span class="matrix-stat__label">Stap</span>
+          <span class="matrix-stat__value" id="step-counter">0</span>
+        </div>
+        <div class="matrix-stat matrix-stat--wide">
+          <span class="matrix-stat__label">Context-vector</span>
+          <span class="matrix-stat__value matrix-stat__value--mono" id="context-vector">—</span>
+        </div>
+      </div>
+
+      <div class="matrix-legend">
+        <span>kandidaat-woord</span>
+        <span>gecombineerde score</span>
+        <span>cos · P</span>
+      </div>
+
+      <div class="matrix-body" id="matrix-body">
+        <p class="matrix-empty">Wacht op invoer…</p>
+      </div>
+    </aside>
+
+  </main>
+
+  <footer class="app__footer">
+    <p>
+      Aurora rekent uitsluitend in je browser: geen servers, geen API-sleutels, geen tracking.
+      Elke reactie ontstaat uit vectorwiskunde op een lokaal geladen woordmodel.
+    </p>
+  </footer>
+
+</div>
+
+<script>
+const AURORA_MODEL_DATA = {
+  "meta": {
+    "name": "Aurora Taalmodel NL-mini",
+    "version": "1.0",
+    "dimensions": 3,
+    "vocab_size": 1267,
+    "method": "co-occurrence + SVD (embeddings), bigram relatieve frequentie (kansen)",
+    "language": "nl"
+  },
+  "words": {
+    ".": {
+      "id": 0,
+      "freq": 432,
+      "vector": [
+        -1.0,
+        -0.8095,
+        -0.3104
+      ],
+      "next": {}
+    },
+    "aan": {
+      "id": 1,
+      "freq": 11,
+      "vector": [
+        -0.1469,
+        0.0404,
+        0.0034
+      ],
+      "next": {
+        "het": 0.3636,
+        "de": 0.1818,
+        "een": 0.1818,
+        ".": 0.0909,
+        "zee": 0.0909,
+        "met": 0.0909
+      }
+    },
+    "aanbod": {
+      "id": 2,
+      "freq": 1,
+      "vector": [
+        -0.0322,
+        0.0366,
+        -0.0167
+      ],
+      "next": {
+        ".": 1.0
+      }
+    },
+    "aandacht": {
+      "id": 3,
+      "freq": 4,
+      "vector": [
+        -0.072,
+        0.0563,
+        -0.0302
+      ],
+      "next": {
+        ".": 0.5,
+        "voor": 0.25,
+        "nodig": 0.25
+      }
+    },
+    "aanpassen": {
+      "id": 4,
+      "freq": 1,
+      "vector": [
+        -0.0201,
+        0.0311,
+        -0.0171
+      ],
+      "next": {
+        ".": 1.0
+      }
+    },
+    "aanvoelt": {
+      "id": 5,
+      "freq": 1,
+      "vector": [
+        -0.0273,
+        0.0349,
+        -0.0001
+      ],
+      "next": {
+        ".": 1.0
+      }
+    },
+    "aanvragen": {
+      "id": 6,
+      "freq": 1,
+      "vector": [
+        -0.0153,
+        -0.0031,
+        -0.0064
+      ],
+      "next": {
+        "van": 1.0
+      }
+    },
+    "aard": {
+      "id": 7,
+      "freq": 1,
+      "vector": [
+        -0.0318,
+        0.013,
+        -0.0156
+      ],
+      "next": {
+        "van": 1.0
+      }
+    },
+    "aarde": {
+      "id": 8,
+      "freq": 4,
+      "vector": [
+        -0.0846,
+        0.0656,
+        -0.0229
+      ],
+      "next": {
+        ".": 0.75,
+        "is": 0.25
+      }
+    },
+    "acht": {
+      "id": 9,
+      "freq": 1,
+      "vector": [
+        -0.0283,
+        0.03,
+        -0.0057
+      ],
+      "next": {
+        ".": 1.0
+      }
+    },
+    "acteur": {
+      "id": 10,
+      "freq": 1,
+      "vector": [
+        -0.0158,
+        0.0025,
+        -0.0075
+      ],
+      "next": {
+        "speelt": 1.0
+      }
+    },
+    "acteurs": {
+      "id": 11,
+      "freq": 1,
+      "vector": [
+        -0.0017,
+        -0.0019,
+        -0.001
+      ],
+      "next": {
+        "brengen": 1.0
+      }
+    },
+    "adelaar": {
+      "id": 12,
+      "freq": 1,
+      "vector": [
+        -0.0138,
+        0.0034,
+        -0.0092
+      ],
+      "next": {
+        "vliegt": 1.0
+      }
+    },
+    "ademen": {
+      "id": 13,
+      "freq": 1,
+      "vector": [
+        -0.029,
+        0.0318,
+        -0.0243
+      ],
+      "next": {
+        ".": 1.0
+      }
+    },
+    "ademhaling": {
+      "id": 14,
+      "freq": 2,
+      "vector": [
+        -0.0375,
+        0.0149,
+        -0.0054
+      ],
+      "next": {
+        "verbindt": 0.5,
+        "en": 0.5
+      }
+    },
+    "af": {
+      "id": 15,
+      "freq": 2,
+      "vector": [
+        -0.0266,
+        0.0034,
+        -0.0228
+      ],
+      "next": {
+        "dag": 0.5,
+        "te": 0.5
+      }
+    },
+    "afhaalt": {
+      "id": 16,
+      "freq": 1,
+      "vector": [
+        -0.0267,
+        0.0318,
+        -0.0027
+      ],
+      "next": {
+        ".": 1.0
+      }
+    },
+    "afhankelijk": {
+      "id": 17,
+      "freq": 1,
+      "vector": [
+        -0.0217,
+        0.015,
+        -0.0109
+      ],
+      "next": {
+        "zijn": 1.0
+      }
+    },
+    "afleveringen": {
+      "id": 18,
+      "freq": 1,
+      "vector": [
+        -0.0228,
+        0.0305,
+        -0.0151
+      ],
+      "next": {
+        ".": 1.0
+      }
+    },
+    "aftrekken": {
+      "id": 19,
+      "freq": 2,
+      "vector": [
+        -0.0262,
+        0.0292,
+        -0.004
+      ],
+      "next": {
+        ".": 0.5,
+        "betekent": 0.5
+      }
+    },
+    "al": {
+      "id": 20,
+      "freq": 3,
+      "vector": [
+        -0.0576,
+        0.0104,
+        0.0015
+      ],
+      "next": {
+        "het": 0.6667,
+        "eeuwenlang": 0.3333
+      }
+    },
+    "algoritme": {
+      "id": 21,
+      "freq": 2,
+      "vector": [
+        -0.0314,
+        0.0066,
+        0.0176
+      ],
+      "next": {
+        "berekent": 0.5,
+        "volgt": 0.5
+      }
+    },
+    "alle": {
+      "id": 22,
+      "freq": 3,
+      "vector": [
+        -0.0287,
+        0.007,
+        -0.0129
+      ],
+      "next": {
+        "materie": 0.3333,
+        "nieuwe": 0.3333,
+        "spieren": 0.3333
+      }
+    },
+    "alleen": {
+      "id": 23,
+      "freq": 1,
+      "vector": [
+        -0.0132,
+        0.0103,
+        -0.0028
+      ],
+      "next": {
+        "door": 1.0
+      }
+    },
+    "allemaal": {
+      "id": 24,
+      "freq": 1,
+      "vector": [
+        -0.0157,
+        -0.0036,
+        0.0075
+      ],
+      "next": {
+        "voor": 1.0
+      }
+    },
+    "als": {
+      "id": 25,
+      "freq": 8,
+      "vector": [
+        -0.1176,
+        0.0288,
+        0.0469
+      ],
+      "next": {
+        "een": 0.375,
+        "het": 0.25,
+        "de": 0.125,
+        "huisdier": 0.125,
+        "inspanning": 0.125
+      }
+    },
+    "altijd": {
+      "id": 26,
+      "freq": 1,
+      "vector": [
+        -0.0171,
+        0.0032,
+        0.0254
+      ],
+      "next": {
+        "een": 1.0
+      }
+    },
+    "amsterdam": {
+      "id": 27,
+      "freq": 1,
+      "vector": [
+        -0.017,
+        0.0007,
+        0.0042
+      ],
+      "next": {
+        "is": 1.0
+      }
+    },
+    "analyseert": {
+      "id": 28,
+      "freq": 1,
+      "vector": [
+        -0.017,
+        0.0007,
+        -0.0098
+      ],
+      "next": {
+        "patronen": 1.0
+      }
+    },
+    "ander": {
+      "id": 29,
+      "freq": 4,
+      "vector": [
+        -0.0914,
+        0.0521,
+        0.001
+      ],
+      "next": {
+        ".": 0.25,
+        "echt": 0.25,
+        "getal": 0.25,
+        "land": 0.25
+      }
+    },
+    "andere": {
+      "id": 30,
+      "freq": 3,
+      "vector": [
+        -0.0661,
+        0.0264,
+        0.019
+      ],
+      "next": {
+        "wereld": 0.3333,
+        "huizen": 0.3333,
+        "zin": 0.3333
+      }
+    },
+    "anders": {
+      "id": 31,
+      "freq": 3,
+      "vector": [
+        -0.0592,
+        0.0186,
+        -0.0057
+      ],
+      "next": {
+        "durven": 0.3333,
+        "uitleggen": 0.3333,
+        "en": 0.3333
+      }
+    },
+    "angst": {
+      "id": 32,
+      "freq": 1,
+      "vector": [
+        -0.0057,
+        -0.0005,
+        0.0053
+      ],
+      "next": {
+        "kan": 1.0
+      }
+    },
+    "animatie": {
+      "id": 33,
+      "freq": 1,
+      "vector": [
+        -0.0173,
+        0.0051,
+        0.0279
+      ],
+      "next": {
+        "maakt": 1.0
+      }
+    },
+    "animatiefilms": {
+      "id": 34,
+      "freq": 1,
+      "vector": [
+        -0.0034,
+        -0.0005,
+        0.0021
+      ],
+      "next": {
+        "combineren": 1.0
+      }
+    },
+    "antwoord": {
+      "id": 35,
+      "freq": 4,
+      "vector": [
+        -0.0782,
+        0.0445,
+        0.0029
+      ],
+      "next": {
+        ".": 0.25,
+        "te": 0.25,
+        "ontstaat": 0.25,
+        "niet": 0.25
+      }
+    },
+    "apparaat": {
+      "id": 36,
+      "freq": 1,
+      "vector": [
+        -0.0248,
+        0.0024,
+        0.0355
+      ],
+      "next": {
+        "dat": 1.0
+      }
+    },
+    "apparaten": {
+      "id": 37,
+      "freq": 1,
+      "vector": [
+        -0.0172,
+        0.0116,
+        -0.002
+      ],
+      "next": {
+        "met": 1.0
+      }
+    },
+    "applicatie": {
+      "id": 38,
+      "freq": 2,
+      "vector": [
+        -0.0376,
+        0.0039,
+        0.012
+      ],
+      "next": {
+        "draait": 0.5,
+        "prettig": 0.5
+      }
+    },
+    "aquarium": {
+      "id": 39,
+      "freq": 1,
+      "vector": [
+        -0.0236,
+        0.0045,
+        0.0301
+      ],
+      "next": {
+        "met": 1.0
+      }
+    },
+    "architecten": {
+      "id": 40,
+      "freq": 1,
+      "vector": [
+        -0.0005,
+        -0.0004,
+        -0.0003
+      ],
+      "next": {
+        "ontwerpen": 1.0
+      }
+    },
+    "armen": {
+      "id": 41,
+      "freq": 1,
+      "vector": [
+        -0.0203,
+        0.0018,
+        -0.0083
+      ],
+      "next": {
+        "benen": 1.0
+      }
+    },
+    "artsen": {
+      "id": 42,
+      "freq": 1,
+      "vector": [
+        -0.0047,
+        -0.0024,
+        0.0008
+      ],
+      "next": {
+        "helpen": 1.0
+      }
+    },
+    "atomen": {
+      "id": 43,
+      "freq": 1,
+      "vector": [
+        -0.0018,
+        -0.0018,
+        -0.0007
+      ],
+      "next": {
+        "vormen": 1.0
+      }
+    },
+    "aurora": {
+      "id": 44,
+      "freq": 2,
+      "vector": [
+        -0.0435,
+        0.0069,
+        0.0429
+      ],
+      "next": {
+        "een": 0.5,
+        "en": 0.5
+      }
+    },
+    "auto": {
+      "id": 45,
+      "freq": 1,
+      "vector": [
+        -0.017,
+        0.0031,
+        -0.007
+      ],
+      "next": {
+        "stopt": 1.0
+      }
+    },
+    "avond": {
+      "id": 46,
+      "freq": 2,
+      "vector": [
+        -0.0473,
+        0.037,
+        -0.0123
+      ],
+      "next": {
+        ".": 0.5,
+        "eindigt": 0.5
+      }
+    },
+    "avonden": {
+      "id": 47,
+      "freq": 1,
+      "vector": [
+        -0.0241,
+        0.0328,
+        -0.0172
+      ],
+      "next": {
+        ".": 1.0
+      }
+    },
+    "avontuurlijke": {
+      "id": 48,
+      "freq": 1,
+      "vector": [
+        -0.033,
+        0.0055,
+        0.0276
+      ],
+      "next": {
+        "manier": 1.0
+      }
+    },
+    "baan": {
+      "id": 49,
+      "freq": 1,
+      "vector": [
+        -0.0377,
+        0.0368,
+        0.0086
+      ],
+      "next": {
+        ".": 1.0
+      }
+    },
+    "baas": {
+      "id": 50,
+      "freq": 1,
+      "vector": [
+        -0.0145,
+        0.0007,
+        0.0195
+      ],
+      "next": {
+        "luistert": 1.0
+      }
+    },
+    "backpacken": {
+      "id": 51,
+      "freq": 1,
+      "vector": [
+        -0.0179,
+        0.0021,
+        0.0233
+      ],
+      "next": {
+        "is": 1.0
+      }
+    },
+    "bakken": {
+      "id": 52,
+      "freq": 2,
+      "vector": [
+        -0.0115,
+        0.0,
+        0.0051
+      ],
+      "next": {
+        "vraagt": 1.0
+      }
+    },
+    "balans": {
+      "id": 53,
+      "freq": 2,
+      "vector": [
+        -0.0204,
+        0.0035,
+        0.0174
+      ],
+      "next": {
+        "vinden": 0.5,
+        "tussen": 0.5
+      }
+    },
+    "banen": {
+      "id": 54,
+      "freq": 1,
+      "vector": [
+        -0.0068,
+        -0.0029,
+        -0.0037
+      ],
+      "next": {
+        "rond": 1.0
+      }
+    },
+    "basis": {
+      "id": 55,
+      "freq": 3,
+      "vector": [
+        -0.0557,
+        -0.0009,
+        -0.0146
+      ],
+      "next": {
+        "van": 1.0
+      }
+    },
+    "basketbal": {
+      "id": 56,
+      "freq": 1,
+      "vector": [
+        -0.0034,
+        -0.0004,
+        0.0021
+      ],
+      "next": {
+        "wordt": 1.0
+      }
+    },
+    "bedankt": {
+      "id": 57,
+      "freq": 1,
+      "vector": [
+        -0.0108,
+        -0.0026,
+        0.003
+      ],
+      "next": {
+        "voor": 1.0
+      }
+    },
+    "bedekt": {
+      "id": 58,
+      "freq": 1,
+      "vector": [
+        -0.021,
+        0.0043,
+        -0.0088
+      ],
+      "next": {
+        "de": 1.0
+      }
+    },
+    "bedoelt": {
+      "id": 59,
+      "freq": 1,
+      "vector": [
+        -0.011,
+        -0.003,
+        0.0076
+      ],
+      "next": {
+        "laten": 1.0
+      }
+    },
+    "bedragen": {
+      "id": 60,
+      "freq": 1,
+      "vector": [
+        -0.0121,
+        -0.0036,
+        -0.0085
+      ],
+      "next": {
+        "opzij": 1.0
+      }
+    },
+    "bedrijf": {
+      "id": 61,
+      "freq": 1,
+      "vector": [
+        -0.0111,
+        0.0006,
+        -0.0018
+      ],
+      "next": {
+        "groeit": 1.0
+      }
+    },
+    "bedrijfsplan": {
+      "id": 62,
+      "freq": 1,
+      "vector": [
+        -0.0235,
+        0.002,
+        0.0311
+      ],
+      "next": {
+        "begint": 1.0
+      }
+    },
+    "beeld": {
+      "id": 63,
+      "freq": 1,
+      "vector": [
+        -0.0213,
+        0.0096,
+        -0.0168
+      ],
+      "next": {
+        "te": 1.0
+      }
+    },
+    "beetje": {
+      "id": 64,
+      "freq": 1,
+      "vector": [
+        -0.0263,
+        0.0232,
+        0.0158
+      ],
+      "next": {
+        "spannend": 1.0
+      }
+    },
+    "beginnen": {
+      "id": 65,
+      "freq": 2,
+      "vector": [
+        -0.0439,
+        0.0265,
+        -0.0114
+      ],
+      "next": {
+        "over": 0.5,
+        ".": 0.5
+      }
+    },
+    "beginnende": {
+      "id": 66,
+      "freq": 1,
+      "vector": [
+        -0.0058,
+        -0.0017,
+        -0.0018
+      ],
+      "next": {
+        "koks": 1.0
+      }
+    },
+    "begint": {
+      "id": 67,
+      "freq": 9,
+      "vector": [
+        -0.0883,
+        -0.0023,
+        0.1006
+      ],
+      "next": {
+        "met": 0.6667,
+        "vaak": 0.3333
+      }
+    },
+    "begreep": {
+      "id": 68,
+      "freq": 1,
+      "vector": [
+        -0.0082,
+        -0.0035,
+        0.0124
+      ],
+      "next": {
+        "ik": 1.0
+      }
+    },
+    "begrijp": {
+      "id": 69,
+      "freq": 2,
+      "vector": [
+        -0.0231,
+        -0.0025,
+        0.0111
+      ],
+      "next": {
+        "wat": 0.5,
+        "het": 0.5
+      }
+    },
+    "begrijpen": {
+      "id": 70,
+      "freq": 1,
+      "vector": [
+        -0.0245,
+        0.0315,
+        -0.0245
+      ],
+      "next": {
+        ".": 1.0
+      }
+    },
+    "begrip": {
+      "id": 71,
+      "freq": 1,
+      "vector": [
+        -0.004,
+        -0.0005,
+        0.0038
+      ],
+      "next": {
+        "groeit": 1.0
+      }
+    },
+    "begroting": {
+      "id": 72,
+      "freq": 1,
+      "vector": [
+        -0.0189,
+        0.0031,
+        0.0236
+      ],
+      "next": {
+        "maken": 1.0
+      }
+    },
+    "behapbaar": {
+      "id": 73,
+      "freq": 1,
+      "vector": [
+        -0.0268,
+        0.0314,
+        -0.0019
+      ],
+      "next": {
+        ".": 1.0
+      }
+    },
+    "bekende": {
+      "id": 74,
+      "freq": 1,
+      "vector": [
+        -0.0195,
+        0.0192,
+        -0.0157
+      ],
+      "next": {
+        "zone": 1.0
+      }
+    },
+    "beklimmen": {
+      "id": 75,
+      "freq": 1,
+      "vector": [
+        -0.0135,
+        0.0009,
+        0.0155
+      ],
+      "next": {
+        "geeft": 1.0
+      }
+    },
+    "belangrijk": {
+      "id": 76,
+      "freq": 7,
+      "vector": [
+        -0.1107,
+        0.0334,
+        0.0368
+      ],
+      "next": {
+        "voor": 0.2857,
+        "als": 0.2857,
+        ".": 0.1429,
+        "wanneer": 0.1429,
+        "onderdeel": 0.1429
+      }
+    },
+    "belangrijke": {
+      "id": 77,
+      "freq": 3,
+      "vector": [
+        -0.0621,
+        0.0054,
+        0.0502
+      ],
+      "next": {
+        "deugd": 0.3333,
+        "manier": 0.3333,
+        "rol": 0.3333
+      }
+    },
+    "belangrijker": {
+      "id": 78,
+      "freq": 1,
+      "vector": [
+        -0.0146,
+        0.0103,
+        -0.0021
+      ],
+      "next": {
+        "dan": 1.0
+      }
+    },
+    "ben": {
+      "id": 79,
+      "freq": 7,
+      "vector": [
+        -0.0617,
+        0.0015,
+        0.067
+      ],
+      "next": {
+        "aurora": 0.1429,
+        "geen": 0.1429,
+        "gemaakt": 0.1429,
+        "nieuwsgierig": 0.1429,
+        "je": 0.1429,
+        "een": 0.1429,
+        "ik": 0.1429
+      }
+    },
+    "benen": {
+      "id": 80,
+      "freq": 1,
+      "vector": [
+        -0.0249,
+        0.005,
+        -0.0099
+      ],
+      "next": {
+        "en": 1.0
+      }
+    },
+    "bent": {
+      "id": 81,
+      "freq": 3,
+      "vector": [
+        -0.05,
+        0.051,
+        -0.01
+      ],
+      "next": {
+        ".": 0.6667,
+        "waar": 0.3333
+      }
+    },
+    "bepaalt": {
+      "id": 82,
+      "freq": 1,
+      "vector": [
+        -0.003,
+        -0.0009,
+        0.0028
+      ],
+      "next": {
+        "hoe": 1.0
+      }
+    },
+    "bepalen": {
+      "id": 83,
+      "freq": 2,
+      "vector": [
+        -0.0272,
+        0.0038,
+        -0.0025
+      ],
+      "next": {
+        "samen": 0.5,
+        "wanneer": 0.5
+      }
+    },
+    "bereiken": {
+      "id": 84,
+      "freq": 1,
+      "vector": [
+        -0.0247,
+        0.0312,
+        -0.0248
+      ],
+      "next": {
+        ".": 1.0
+      }
+    },
+    "berekent": {
+      "id": 85,
+      "freq": 1,
+      "vector": [
+        -0.0149,
+        0.0021,
+        -0.0062
+      ],
+      "next": {
+        "nauwkeurig": 1.0
+      }
+    },
+    "bergen": {
+      "id": 86,
+      "freq": 4,
+      "vector": [
+        -0.0797,
+        0.0426,
+        -0.0159
+      ],
+      "next": {
+        "en": 0.25,
+        ".": 0.25,
+        "is": 0.25,
+        "beklimmen": 0.25
+      }
+    },
+    "bericht": {
+      "id": 87,
+      "freq": 2,
+      "vector": [
+        -0.0418,
+        0.0267,
+        -0.0054
+      ],
+      "next": {
+        ".": 0.5,
+        "ik": 0.5
+      }
+    },
+    "beschermen": {
+      "id": 88,
+      "freq": 1,
+      "vector": [
+        -0.0298,
+        0.0331,
+        -0.0277
+      ],
+      "next": {
+        ".": 1.0
+      }
+    },
+    "beschrijft": {
+      "id": 89,
+      "freq": 1,
+      "vector": [
+        -0.0041,
+        -0.0018,
+        -0.0004
+      ],
+      "next": {
+        "patronen": 1.0
+      }
+    },
+    "beschrijven": {
+      "id": 90,
+      "freq": 2,
+      "vector": [
+        -0.0481,
+        0.0507,
+        -0.0164
+      ],
+      "next": {
+        ".": 1.0
+      }
+    },
+    "beslissingen": {
+      "id": 91,
+      "freq": 1,
+      "vector": [
+        -0.0216,
+        0.0306,
+        -0.0176
+      ],
+      "next": {
+        ".": 1.0
+      }
+    },
+    "besluit": {
+      "id": 92,
+      "freq": 1,
+      "vector": [
+        -0.0256,
+        0.0336,
+        -0.0024
+      ],
+      "next": {
+        ".": 1.0
+      }
+    },
+    "bespaart": {
+      "id": 93,
+      "freq": 1,
+      "vector": [
+        -0.0168,
+        0.0028,
+        0.011
+      ],
+      "next": {
+        "tijd": 1.0
+      }
+    },
+    "besparen": {
+      "id": 94,
+      "freq": 1,
+      "vector": [
+        -0.013,
+        0.0026,
+        -0.0041
+      ],
+      "next": {
+        "helpt": 1.0
+      }
+    },
+    "bespreken": {
+      "id": 95,
+      "freq": 1,
+      "vector": [
+        -0.0194,
+        0.0306,
+        -0.0156
+      ],
+      "next": {
+        ".": 1.0
+      }
+    },
+    "best": {
+      "id": 96,
+      "freq": 2,
+      "vector": [
+        -0.0394,
+        0.0341,
+        0.0028
+      ],
+      "next": {
+        "om": 0.5,
+        ".": 0.5
+      }
+    },
+    "bestaan": {
+      "id": 97,
+      "freq": 2,
+      "vector": [
+        -0.0237,
+        0.0287,
+        -0.0148
+      ],
+      "next": {
+        ".": 0.5,
+        "uit": 0.5
+      }
+    },
+    "bestaat": {
+      "id": 98,
+      "freq": 3,
+      "vector": [
+        -0.0311,
+        -0.0017,
+        0.0217
+      ],
+      "next": {
+        "uit": 1.0
+      }
+    },
+    "beste": {
+      "id": 99,
+      "freq": 6,
+      "vector": [
+        -0.1032,
+        0.0385,
+        -0.0262
+      ],
+      "next": {
+        "oplossing": 0.1667,
+        "met": 0.1667,
+        ".": 0.1667,
+        "tegen": 0.1667,
+        "in": 0.1667,
+        "kunt": 0.1667
+      }
+    },
+    "bestemming": {
+      "id": 100,
+      "freq": 1,
+      "vector": [
+        -0.0352,
+        0.037,
+        0.0076
+      ],
+      "next": {
+        ".": 1.0
+      }
+    },
+    "bestuiving": {
+      "id": 101,
+      "freq": 1,
+      "vector": [
+        -0.0314,
+        0.0134,
+        -0.0151
+      ],
+      "next": {
+        "van": 1.0
+      }
+    },
+    "betekenis": {
+      "id": 102,
+      "freq": 3,
+      "vector": [
+        -0.0579,
+        0.0407,
+        -0.0282
+      ],
+      "next": {
+        "vormen": 0.3333,
+        ".": 0.3333,
+        "wiskundig": 0.3333
+      }
+    },
+    "betekent": {
+      "id": 103,
+      "freq": 6,
+      "vector": [
+        -0.0545,
+        0.0109,
+        0.0348
+      ],
+      "next": {
+        "dat": 0.5,
+        "veel": 0.1667,
+        "vriendschap": 0.1667,
+        "er": 0.1667
+      }
+    },
+    "beter": {
+      "id": 104,
+      "freq": 2,
+      "vector": [
+        -0.0412,
+        0.0378,
+        -0.0106
+      ],
+      "next": {
+        "maken": 0.5,
+        ".": 0.5
+      }
+    },
+    "betere": {
+      "id": 105,
+      "freq": 2,
+      "vector": [
+        -0.0444,
+        0.0202,
+        0.0133
+      ],
+      "next": {
+        "toekomst": 0.5,
+        "voorspellingen": 0.5
+      }
+    },
+    "bevat": {
+      "id": 106,
+      "freq": 4,
+      "vector": [
+        -0.0364,
+        0.001,
+        0.0211
+      ],
+      "next": {
+        "miljoenen": 0.25,
+        "vaak": 0.25,
+        "voorbeelden": 0.25,
+        "veel": 0.25
+      }
+    },
+    "bevrijdt": {
+      "id": 107,
+      "freq": 1,
+      "vector": [
+        -0.0084,
+        0.0021,
+        -0.0042
+      ],
+      "next": {
+        "zowel": 1.0
+      }
+    },
+    "bewaart": {
+      "id": 108,
+      "freq": 1,
+      "vector": [
+        -0.0104,
+        -0.0003,
+        -0.002
+      ],
+      "next": {
+        "ervaringen": 1.0
+      }
+    },
+    "beweegt": {
+      "id": 109,
+      "freq": 2,
+      "vector": [
+        -0.0249,
+        0.0031,
+        -0.0136
+      ],
+      "next": {
+        "precies": 0.5,
+        "sierlijk": 0.5
+      }
+    },
+    "bewegen": {
+      "id": 110,
+      "freq": 3,
+      "vector": [
+        -0.0452,
+        0.0328,
+        -0.0334
+      ],
+      "next": {
+        "buiten": 0.3333,
+        ".": 0.3333,
+        "houdt": 0.3333
+      }
+    },
+    "beweging": {
+      "id": 111,
+      "freq": 5,
+      "vector": [
+        -0.0835,
+        0.0352,
+        0.0074
+      ],
+      "next": {
+        "met": 0.2,
+        "en": 0.2,
+        "of": 0.2,
+        "helpen": 0.2,
+        ".": 0.2
+      }
+    },
+    "bewerking": {
+      "id": 112,
+      "freq": 1,
+      "vector": [
+        -0.024,
+        0.007,
+        0.0243
+      ],
+      "next": {
+        "zoals": 1.0
+      }
+    },
+    "bewoners": {
+      "id": 113,
+      "freq": 1,
+      "vector": [
+        -0.0238,
+        0.0306,
+        -0.0123
+      ],
+      "next": {
+        ".": 1.0
+      }
+    },
+    "bewustzijn": {
+      "id": 114,
+      "freq": 1,
+      "vector": [
+        -0.0316,
+        0.0319,
+        -0.0191
+      ],
+      "next": {
+        ".": 1.0
+      }
+    },
+    "bezig": {
+      "id": 115,
+      "freq": 1,
+      "vector": [
+        -0.0167,
+        -0.0022,
+        -0.0072
+      ],
+      "next": {
+        "te": 1.0
+      }
+    },
+    "bezoekers": {
+      "id": 116,
+      "freq": 1,
+      "vector": [
+        -0.0153,
+        0.0007,
+        0.0109
+      ],
+      "next": {
+        "dieren": 1.0
+      }
+    },
+    "beïnvloedt": {
+      "id": 117,
+      "freq": 1,
+      "vector": [
+        -0.012,
+        0.0003,
+        -0.004
+      ],
+      "next": {
+        "het": 1.0
+      }
+    },
+    "bibliotheek": {
+      "id": 118,
+      "freq": 1,
+      "vector": [
+        -0.0254,
+        0.0023,
+        0.0034
+      ],
+      "next": {
+        "is": 1.0
+      }
+    },
+    "bieden": {
+      "id": 119,
+      "freq": 1,
+      "vector": [
+        -0.0158,
+        0.005,
+        0.0259
+      ],
+      "next": {
+        "een": 1.0
+      }
+    },
+    "bigram": {
+      "id": 120,
+      "freq": 1,
+      "vector": [
+        -0.0183,
+        0.004,
+        -0.0043
+      ],
+      "next": {
+        "kansen": 1.0
+      }
+    },
+    "bij": {
+      "id": 121,
+      "freq": 13,
+      "vector": [
+        -0.1764,
+        0.052,
+        -0.0466
+      ],
+      "next": {
+        "de": 0.3846,
+        "het": 0.3077,
+        "elkaar": 0.1538,
+        "jou": 0.0769,
+        "grote": 0.0769
+      }
+    },
+    "bijen": {
+      "id": 122,
+      "freq": 3,
+      "vector": [
+        -0.0407,
+        0.01,
+        0.0047
+      ],
+      "next": {
+        "verzamelen": 0.3333,
+        "spelen": 0.3333,
+        "en": 0.3333
+      }
+    },
+    "bijna": {
+      "id": 123,
+      "freq": 2,
+      "vector": [
+        -0.0221,
+        0.0147,
+        -0.0121
+      ],
+      "next": {
+        "iedereen": 0.5,
+        "alle": 0.5
+      }
+    },
+    "bijzonder": {
+      "id": 124,
+      "freq": 1,
+      "vector": [
+        -0.0178,
+        0.0007,
+        0.0136
+      ],
+      "next": {
+        "deel": 1.0
+      }
+    },
+    "binnen": {
+      "id": 125,
+      "freq": 1,
+      "vector": [
+        -0.0181,
+        0.001,
+        -0.0076
+      ],
+      "next": {
+        "de": 1.0
+      }
+    },
+    "bioscopen": {
+      "id": 126,
+      "freq": 1,
+      "vector": [
+        -0.0094,
+        0.0028,
+        0.016
+      ],
+      "next": {
+        "bieden": 1.0
+      }
+    },
+    "bladeren": {
+      "id": 127,
+      "freq": 2,
+      "vector": [
+        -0.0334,
+        0.0052,
+        -0.0126
+      ],
+      "next": {
+        "vallen": 0.5,
+        "en": 0.5
+      }
+    },
+    "blessures": {
+      "id": 128,
+      "freq": 1,
+      "vector": [
+        -0.0056,
+        -0.0019,
+        0.0032
+      ],
+      "next": {
+        "voordat": 1.0
+      }
+    },
+    "blij": {
+      "id": 129,
+      "freq": 1,
+      "vector": [
+        -0.0165,
+        0.0153,
+        -0.0026
+      ],
+      "next": {
+        "mee": 1.0
+      }
+    },
+    "blijven": {
+      "id": 130,
+      "freq": 4,
+      "vector": [
+        -0.0539,
+        0.0456,
+        -0.0386
+      ],
+      "next": {
+        "vaak": 0.25,
+        "stellen": 0.25,
+        ".": 0.25,
+        "denken": 0.25
+      }
+    },
+    "blik": {
+      "id": 131,
+      "freq": 1,
+      "vector": [
+        -0.0156,
+        -0.0059,
+        0.0005
+      ],
+      "next": {
+        "op": 1.0
+      }
+    },
+    "bloeien": {
+      "id": 132,
+      "freq": 1,
+      "vector": [
+        -0.017,
+        0.001,
+        -0.0098
+      ],
+      "next": {
+        "kleurrijk": 1.0
+      }
+    },
+    "bloem": {
+      "id": 133,
+      "freq": 2,
+      "vector": [
+        -0.037,
+        0.0337,
+        -0.0192
+      ],
+      "next": {
+        "naar": 0.5,
+        ".": 0.5
+      }
+    },
+    "bloemen": {
+      "id": 134,
+      "freq": 5,
+      "vector": [
+        -0.0741,
+        0.0319,
+        -0.0212
+      ],
+      "next": {
+        "bloeien": 0.2,
+        "planten": 0.2,
+        ".": 0.2,
+        "groenten": 0.2,
+        "trekken": 0.2
+      }
+    },
+    "bodem": {
+      "id": 135,
+      "freq": 1,
+      "vector": [
+        -0.0221,
+        0.0032,
+        -0.0148
+      ],
+      "next": {
+        "voedingsrijk": 1.0
+      }
+    },
+    "boek": {
+      "id": 136,
+      "freq": 3,
+      "vector": [
+        -0.0605,
+        0.0449,
+        0.038
+      ],
+      "next": {
+        "kan": 0.3333,
+        ".": 0.3333,
+        "of": 0.3333
+      }
+    },
+    "boeken": {
+      "id": 137,
+      "freq": 2,
+      "vector": [
+        -0.0394,
+        0.031,
+        -0.0208
+      ],
+      "next": {
+        ".": 0.5,
+        "tot": 0.5
+      }
+    },
+    "bomen": {
+      "id": 138,
+      "freq": 3,
+      "vector": [
+        -0.0499,
+        0.0003,
+        -0.0196
+      ],
+      "next": {
+        "in": 0.6667,
+        "planten": 0.3333
+      }
+    },
+    "boom": {
+      "id": 139,
+      "freq": 1,
+      "vector": [
+        -0.025,
+        0.0048,
+        0.0343
+      ],
+      "next": {
+        "planten": 1.0
+      }
+    },
+    "bos": {
+      "id": 140,
+      "freq": 2,
+      "vector": [
+        -0.0439,
+        0.0496,
+        -0.03
+      ],
+      "next": {
+        ".": 1.0
+      }
+    },
+    "bouw": {
+      "id": 141,
+      "freq": 1,
+      "vector": [
+        -0.0193,
+        0.0009,
+        0.02
+      ],
+      "next": {
+        "je": 1.0
+      }
+    },
+    "bouwen": {
+      "id": 142,
+      "freq": 3,
+      "vector": [
+        -0.0346,
+        0.001,
+        0.0089
+      ],
+      "next": {
+        "sterke": 0.3333,
+        "van": 0.3333,
+        "nesten": 0.3333
+      }
+    },
+    "boven": {
+      "id": 143,
+      "freq": 3,
+      "vector": [
+        -0.0523,
+        0.0242,
+        -0.036
+      ],
+      "next": {
+        "de": 1.0
+      }
+    },
+    "brede": {
+      "id": 144,
+      "freq": 1,
+      "vector": [
+        -0.0153,
+        0.0153,
+        -0.0116
+      ],
+      "next": {
+        "rivieren": 1.0
+      }
+    },
+    "brein": {
+      "id": 145,
+      "freq": 2,
+      "vector": [
+        -0.0237,
+        0.0279,
+        -0.0146
+      ],
+      "next": {
+        ".": 0.5,
+        "bestaat": 0.5
+      }
+    },
+    "breken": {
+      "id": 146,
+      "freq": 1,
+      "vector": [
+        -0.0154,
+        0.0024,
+        -0.0091
+      ],
+      "next": {
+        "hard": 1.0
+      }
+    },
+    "brengen": {
+      "id": 147,
+      "freq": 3,
+      "vector": [
+        -0.0478,
+        0.0455,
+        -0.032
+      ],
+      "next": {
+        ".": 0.6667,
+        "personages": 0.3333
+      }
+    },
+    "brengt": {
+      "id": 148,
+      "freq": 14,
+      "vector": [
+        -0.128,
+        -0.0114,
+        0.0333
+      ],
+      "next": {
+        "mensen": 0.1,
+        "weer": 0.1,
+        "verhalen": 0.1,
+        "nieuw": 0.1,
+        "lange": 0.1,
+        "gouden": 0.1,
+        "korte": 0.1,
+        "rust": 0.1,
+        "het": 0.1,
+        "een": 0.1
+      }
+    },
+    "brood": {
+      "id": 149,
+      "freq": 2,
+      "vector": [
+        -0.0258,
+        0.0174,
+        -0.0069
+      ],
+      "next": {
+        "en": 0.5,
+        "bakken": 0.5
+      }
+    },
+    "browser": {
+      "id": 150,
+      "freq": 4,
+      "vector": [
+        -0.0831,
+        0.0464,
+        -0.0073
+      ],
+      "next": {
+        ".": 0.25,
+        "voert": 0.25,
+        "van": 0.25,
+        "draait": 0.25
+      }
+    },
+    "bruggen": {
+      "id": 151,
+      "freq": 1,
+      "vector": [
+        -0.0054,
+        -0.0041,
+        -0.0028
+      ],
+      "next": {
+        "over": 1.0
+      }
+    },
+    "buiten": {
+      "id": 152,
+      "freq": 4,
+      "vector": [
+        -0.0666,
+        0.0096,
+        -0.0316
+      ],
+      "next": {
+        "in": 0.5,
+        "de": 0.25,
+        "te": 0.25
+      }
+    },
+    "buren": {
+      "id": 153,
+      "freq": 1,
+      "vector": [
+        -0.0016,
+        -0.0011,
+        -0.0007
+      ],
+      "next": {
+        "groeten": 1.0
+      }
+    },
+    "carrière": {
+      "id": 154,
+      "freq": 1,
+      "vector": [
+        -0.0196,
+        0.0046,
+        0.0272
+      ],
+      "next": {
+        "bouw": 1.0
+      }
+    },
+    "cellen": {
+      "id": 155,
+      "freq": 1,
+      "vector": [
+        -0.002,
+        -0.0014,
+        -0.0002
+      ],
+      "next": {
+        "vormen": 1.0
+      }
+    },
+    "chocolade": {
+      "id": 156,
+      "freq": 1,
+      "vector": [
+        -0.0137,
+        -0.0025,
+        0.0092
+      ],
+      "next": {
+        "is": 1.0
+      }
+    },
+    "cirkel": {
+      "id": 157,
+      "freq": 1,
+      "vector": [
+        -0.0278,
+        0.0019,
+        -0.0104
+      ],
+      "next": {
+        "van": 1.0
+      }
+    },
+    "code": {
+      "id": 158,
+      "freq": 2,
+      "vector": [
+        -0.0194,
+        -0.0052,
+        0.0073
+      ],
+      "next": {
+        "voor": 0.5,
+        "lokaal": 0.5
+      }
+    },
+    "collega's": {
+      "id": 159,
+      "freq": 2,
+      "vector": [
+        -0.0082,
+        -0.0028,
+        0.0017
+      ],
+      "next": {
+        "werken": 0.5,
+        "voorkomt": 0.5
+      }
+    },
+    "combineert": {
+      "id": 160,
+      "freq": 2,
+      "vector": [
+        -0.0189,
+        -0.0008,
+        0.0209
+      ],
+      "next": {
+        "verse": 0.5,
+        "beweging": 0.5
+      }
+    },
+    "combineren": {
+      "id": 161,
+      "freq": 1,
+      "vector": [
+        -0.005,
+        -0.001,
+        0.0028
+      ],
+      "next": {
+        "kunst": 1.0
+      }
+    },
+    "comfortabele": {
+      "id": 162,
+      "freq": 1,
+      "vector": [
+        -0.0239,
+        0.0155,
+        -0.015
+      ],
+      "next": {
+        "bekende": 1.0
+      }
+    },
+    "communicatie": {
+      "id": 163,
+      "freq": 3,
+      "vector": [
+        -0.0423,
+        0.0321,
+        -0.0063
+      ],
+      "next": {
+        "is": 0.3333,
+        "tussen": 0.3333,
+        ".": 0.3333
+      }
+    },
+    "communiceren": {
+      "id": 164,
+      "freq": 1,
+      "vector": [
+        -0.0264,
+        0.0292,
+        -0.0127
+      ],
+      "next": {
+        ".": 1.0
+      }
+    },
+    "complexe": {
+      "id": 165,
+      "freq": 1,
+      "vector": [
+        -0.0146,
+        0.0105,
+        -0.0026
+      ],
+      "next": {
+        "informatie": 1.0
+      }
+    },
+    "complexiteit": {
+      "id": 166,
+      "freq": 1,
+      "vector": [
+        -0.0196,
+        0.0307,
+        -0.0166
+      ],
+      "next": {
+        ".": 1.0
+      }
+    },
+    "compliment": {
+      "id": 167,
+      "freq": 1,
+      "vector": [
+        -0.0304,
+        0.0219,
+        0.0182
+      ],
+      "next": {
+        "geven": 1.0
+      }
+    },
+    "compost": {
+      "id": 168,
+      "freq": 1,
+      "vector": [
+        -0.0063,
+        -0.0013,
+        -0.0006
+      ],
+      "next": {
+        "maken": 1.0
+      }
+    },
+    "computer": {
+      "id": 169,
+      "freq": 3,
+      "vector": [
+        -0.0722,
+        0.0439,
+        0.0313
+      ],
+      "next": {
+        "verwerkt": 0.3333,
+        ".": 0.3333,
+        "is": 0.3333
+      }
+    },
+    "computers": {
+      "id": 170,
+      "freq": 1,
+      "vector": [
+        -0.007,
+        -0.0014,
+        -0.0065
+      ],
+      "next": {
+        "patronen": 1.0
+      }
+    },
+    "concentratie": {
+      "id": 171,
+      "freq": 2,
+      "vector": [
+        -0.0559,
+        0.0585,
+        -0.0356
+      ],
+      "next": {
+        ".": 1.0
+      }
+    },
+    "conditie": {
+      "id": 172,
+      "freq": 1,
+      "vector": [
+        -0.0092,
+        0.0004,
+        -0.0039
+      ],
+      "next": {
+        "kracht": 1.0
+      }
+    },
+    "continu": {
+      "id": 173,
+      "freq": 1,
+      "vector": [
+        -0.0221,
+        0.0055,
+        -0.0121
+      ],
+      "next": {
+        "de": 1.0
+      }
+    },
+    "cool": {
+      "id": 174,
+      "freq": 1,
+      "vector": [
+        -0.0042,
+        -0.001,
+        0.0087
+      ],
+      "next": {
+        "dat": 1.0
+      }
+    },
+    "cosine": {
+      "id": 175,
+      "freq": 1,
+      "vector": [
+        -0.0108,
+        0.0007,
+        -0.0
+      ],
+      "next": {
+        "similarity": 1.0
+      }
+    },
+    "cosinusgelijkenis": {
+      "id": 176,
+      "freq": 1,
+      "vector": [
+        -0.0013,
+        -0.0001,
+        0.0001
+      ],
+      "next": {
+        "meet": 1.0
+      }
+    },
+    "creatief": {
+      "id": 177,
+      "freq": 1,
+      "vector": [
+        -0.0147,
+        -0.0012,
+        -0.0042
+      ],
+      "next": {
+        "bezig": 1.0
+      }
+    },
+    "creativiteit": {
+      "id": 178,
+      "freq": 1,
+      "vector": [
+        -0.0041,
+        0.0,
+        0.0028
+      ],
+      "next": {
+        "ontstaat": 1.0
+      }
+    },
+    "creëren": {
+      "id": 179,
+      "freq": 1,
+      "vector": [
+        -0.025,
+        0.0307,
+        -0.0254
+      ],
+      "next": {
+        ".": 1.0
+      }
+    },
+    "culturen": {
+      "id": 180,
+      "freq": 3,
+      "vector": [
+        -0.0619,
+        0.0344,
+        -0.0298
+      ],
+      "next": {
+        "en": 0.6667,
+        "heen": 0.3333
+      }
+    },
+    "cultuur": {
+      "id": 181,
+      "freq": 2,
+      "vector": [
+        -0.0054,
+        -0.0025,
+        -0.0006
+      ],
+      "next": {
+        "verbindt": 0.5,
+        "heeft": 0.5
+      }
+    },
+    "cultuurverschillen": {
+      "id": 182,
+      "freq": 1,
+      "vector": [
+        -0.0036,
+        -0.0036,
+        -0.0017
+      ],
+      "next": {
+        "maken": 1.0
+      }
+    },
+    "cv": {
+      "id": 183,
+      "freq": 1,
+      "vector": [
+        -0.0175,
+        0.0039,
+        0.0236
+      ],
+      "next": {
+        "laat": 1.0
+      }
+    },
+    "daar": {
+      "id": 184,
+      "freq": 3,
+      "vector": [
+        -0.0186,
+        -0.0073,
+        0.0164
+      ],
+      "next": {
+        "even": 0.3333,
+        "praat": 0.3333,
+        "ben": 0.3333
+      }
+    },
+    "dag": {
+      "id": 185,
+      "freq": 15,
+      "vector": [
+        -0.1906,
+        0.0719,
+        -0.0394
+      ],
+      "next": {
+        ".": 0.2857,
+        "hebt": 0.1429,
+        "iets": 0.0714,
+        "nieuwe": 0.0714,
+        "om": 0.0714,
+        "na": 0.0714,
+        "beter": 0.0714,
+        "vandaag": 0.0714,
+        "het": 0.0714,
+        "verder": 0.0714
+      }
+    },
+    "dagelijkse": {
+      "id": 186,
+      "freq": 1,
+      "vector": [
+        -0.0188,
+        0.0162,
+        -0.0114
+      ],
+      "next": {
+        "keuzes": 1.0
+      }
+    },
+    "dagen": {
+      "id": 187,
+      "freq": 2,
+      "vector": [
+        -0.0334,
+        0.0089,
+        0.0118
+      ],
+      "next": {
+        "en": 1.0
+      }
+    },
+    "dak": {
+      "id": 188,
+      "freq": 1,
+      "vector": [
+        -0.025,
+        -0.0021,
+        -0.0066
+      ],
+      "next": {
+        "van": 1.0
+      }
+    },
+    "dalen": {
+      "id": 189,
+      "freq": 1,
+      "vector": [
+        -0.0112,
+        -0.0012,
+        0.0025
+      ],
+      "next": {
+        "door": 1.0
+      }
+    },
+    "dan": {
+      "id": 190,
+      "freq": 4,
+      "vector": [
+        -0.0331,
+        0.0243,
+        -0.0147
+      ],
+      "next": {
+        "woorden": 0.25,
+        "complexiteit": 0.25,
+        "praten": 0.25,
+        "gaan": 0.25
+      }
+    },
+    "dank": {
+      "id": 191,
+      "freq": 3,
+      "vector": [
+        -0.0342,
+        -0.006,
+        0.0154
+      ],
+      "next": {
+        "je": 1.0
+      }
+    },
+    "dankbaarheid": {
+      "id": 192,
+      "freq": 1,
+      "vector": [
+        -0.0036,
+        -0.0021,
+        0.0002
+      ],
+      "next": {
+        "maakt": 1.0
+      }
+    },
+    "dankzij": {
+      "id": 193,
+      "freq": 1,
+      "vector": [
+        -0.0225,
+        0.0049,
+        0.0218
+      ],
+      "next": {
+        "een": 1.0
+      }
+    },
+    "danser": {
+      "id": 194,
+      "freq": 1,
+      "vector": [
+        -0.016,
+        0.0031,
+        -0.0099
+      ],
+      "next": {
+        "beweegt": 1.0
+      }
+    },
+    "dapper": {
+      "id": 195,
+      "freq": 1,
+      "vector": [
+        -0.0244,
+        0.0197,
+        0.0109
+      ],
+      "next": {
+        "besluit": 1.0
+      }
+    },
+    "dat": {
+      "id": 196,
+      "freq": 22,
+      "vector": [
+        -0.1734,
+        0.0131,
+        0.1439
+      ],
+      "next": {
+        "je": 0.4762,
+        "is": 0.1429,
+        "begreep": 0.0476,
+        "lokaal": 0.0476,
+        "vraagt": 0.0476,
+        "ik": 0.0476,
+        "gegevens": 0.0476,
+        "waardeer": 0.0476,
+        "klinkt": 0.0476,
+        "klopt": 0.0476
+      }
+    },
+    "data": {
+      "id": 197,
+      "freq": 4,
+      "vector": [
+        -0.0542,
+        0.0569,
+        -0.0376
+      ],
+      "next": {
+        ".": 0.75,
+        "bevat": 0.25
+      }
+    },
+    "database": {
+      "id": 198,
+      "freq": 1,
+      "vector": [
+        -0.0141,
+        0.0031,
+        -0.0074
+      ],
+      "next": {
+        "bevat": 1.0
+      }
+    },
+    "dataset": {
+      "id": 199,
+      "freq": 1,
+      "vector": [
+        -0.0159,
+        0.0056,
+        0.0255
+      ],
+      "next": {
+        "bevat": 1.0
+      }
+    },
+    "de": {
+      "id": 200,
+      "freq": 153,
+      "vector": [
+        -0.7229,
+        -0.0973,
+        -0.1588
+      ],
+      "next": {
+        "natuur": 0.2188,
+        "toekomst": 0.125,
+        "hele": 0.125,
+        "geest": 0.125,
+        "wereld": 0.0938,
+        "rivier": 0.0625,
+        "herfst": 0.0625,
+        "bergen": 0.0625,
+        "markt": 0.0625,
+        "basis": 0.0625
+      }
+    },
+    "deadlines": {
+      "id": 201,
+      "freq": 1,
+      "vector": [
+        -0.0064,
+        -0.0016,
+        -0.0017
+      ],
+      "next": {
+        "helpen": 1.0
+      }
+    },
+    "deeg": {
+      "id": 202,
+      "freq": 1,
+      "vector": [
+        -0.0185,
+        0.0133,
+        -0.009
+      ],
+      "next": {
+        "moet": 1.0
+      }
+    },
+    "deel": {
+      "id": 203,
+      "freq": 1,
+      "vector": [
+        -0.0161,
+        -0.0028,
+        0.0018
+      ],
+      "next": {
+        "van": 1.0
+      }
+    },
+    "deken": {
+      "id": 204,
+      "freq": 1,
+      "vector": [
+        -0.0325,
+        0.002,
+        0.035
+      ],
+      "next": {
+        "is": 1.0
+      }
+    },
+    "delen": {
+      "id": 205,
+      "freq": 3,
+      "vector": [
+        -0.0464,
+        0.0316,
+        -0.0213
+      ],
+      "next": {
+        ".": 0.3333,
+        "maakt": 0.3333,
+        "betekent": 0.3333
+      }
+    },
+    "denken": {
+      "id": 206,
+      "freq": 4,
+      "vector": [
+        -0.0686,
+        0.0643,
+        -0.0511
+      ],
+      "next": {
+        ".": 0.75,
+        "zijn": 0.25
+      }
+    },
+    "denkt": {
+      "id": 207,
+      "freq": 1,
+      "vector": [
+        -0.0113,
+        0.0005,
+        -0.0055
+      ],
+      "next": {
+        "diep": 1.0
+      }
+    },
+    "detail": {
+      "id": 208,
+      "freq": 1,
+      "vector": [
+        -0.0077,
+        0.0007,
+        0.0007
+      ],
+      "next": {
+        "maakt": 1.0
+      }
+    },
+    "details": {
+      "id": 209,
+      "freq": 2,
+      "vector": [
+        -0.0446,
+        0.0359,
+        -0.0295
+      ],
+      "next": {
+        ".": 0.5,
+        "zien": 0.5
+      }
+    },
+    "deugd": {
+      "id": 210,
+      "freq": 1,
+      "vector": [
+        -0.0232,
+        0.0003,
+        0.0155
+      ],
+      "next": {
+        "bij": 1.0
+      }
+    },
+    "deuren": {
+      "id": 211,
+      "freq": 1,
+      "vector": [
+        -0.0124,
+        0.0016,
+        0.0148
+      ],
+      "next": {
+        "naar": 1.0
+      }
+    },
+    "dicht": {
+      "id": 212,
+      "freq": 3,
+      "vector": [
+        -0.0515,
+        -0.0002,
+        0.0025
+      ],
+      "next": {
+        "en": 0.3333,
+        "twee": 0.3333,
+        "bij": 0.3333
+      }
+    },
+    "dichte": {
+      "id": 213,
+      "freq": 1,
+      "vector": [
+        -0.0248,
+        0.0179,
+        -0.014
+      ],
+      "next": {
+        "woud": 1.0
+      }
+    },
+    "dichter": {
+      "id": 214,
+      "freq": 1,
+      "vector": [
+        -0.0142,
+        0.0034,
+        -0.0084
+      ],
+      "next": {
+        "kiest": 1.0
+      }
+    },
+    "die": {
+      "id": 215,
+      "freq": 19,
+      "vector": [
+        -0.1587,
+        -0.0395,
+        0.0515
+      ],
+      "next": {
+        "goed": 0.1818,
+        "elkaar": 0.0909,
+        "nog": 0.0909,
+        "samen": 0.0909,
+        "naar": 0.0909,
+        "overal": 0.0909,
+        "wachten": 0.0909,
+        "van": 0.0909,
+        "duidelijk": 0.0909,
+        "we": 0.0909
+      }
+    },
+    "diep": {
+      "id": 216,
+      "freq": 2,
+      "vector": [
+        -0.0397,
+        0.0049,
+        -0.0028
+      ],
+      "next": {
+        "en": 0.5,
+        "na": 0.5
+      }
+    },
+    "diepe": {
+      "id": 217,
+      "freq": 1,
+      "vector": [
+        -0.0311,
+        0.0151,
+        0.0175
+      ],
+      "next": {
+        "manier": 1.0
+      }
+    },
+    "dieper": {
+      "id": 218,
+      "freq": 1,
+      "vector": [
+        -0.0068,
+        -0.0034,
+        -0.0007
+      ],
+      "next": {
+        "dan": 1.0
+      }
+    },
+    "diepte": {
+      "id": 219,
+      "freq": 1,
+      "vector": [
+        -0.0276,
+        0.0189,
+        0.0025
+      ],
+      "next": {
+        "en": 1.0
+      }
+    },
+    "dieren": {
+      "id": 220,
+      "freq": 7,
+      "vector": [
+        -0.0655,
+        -0.0053,
+        -0.007
+      ],
+      "next": {
+        "die": 0.5714,
+        "zoeken": 0.1429,
+        "leven": 0.1429,
+        "van": 0.1429
+      }
+    },
+    "dierenartsen": {
+      "id": 221,
+      "freq": 1,
+      "vector": [
+        -0.0098,
+        0.0009,
+        -0.0024
+      ],
+      "next": {
+        "zorgen": 1.0
+      }
+    },
+    "dierentuin": {
+      "id": 222,
+      "freq": 1,
+      "vector": [
+        -0.0169,
+        0.0061,
+        0.0251
+      ],
+      "next": {
+        "laat": 1.0
+      }
+    },
+    "digitale": {
+      "id": 223,
+      "freq": 2,
+      "vector": [
+        -0.0213,
+        0.0155,
+        -0.0081
+      ],
+      "next": {
+        "producten": 0.5,
+        "technologie": 0.5
+      }
+    },
+    "dik": {
+      "id": 224,
+      "freq": 1,
+      "vector": [
+        -0.0275,
+        0.0168,
+        0.02
+      ],
+      "next": {
+        "wit": 1.0
+      }
+    },
+    "dingen": {
+      "id": 225,
+      "freq": 1,
+      "vector": [
+        -0.0216,
+        0.0104,
+        -0.0168
+      ],
+      "next": {
+        "te": 1.0
+      }
+    },
+    "directer": {
+      "id": 226,
+      "freq": 1,
+      "vector": [
+        -0.0309,
+        0.0365,
+        -0.0187
+      ],
+      "next": {
+        ".": 1.0
+      }
+    },
+    "discipline": {
+      "id": 227,
+      "freq": 2,
+      "vector": [
+        -0.0455,
+        0.036,
+        -0.0088
+      ],
+      "next": {
+        "is": 0.5,
+        ".": 0.5
+      }
+    },
+    "dit": {
+      "id": 228,
+      "freq": 2,
+      "vector": [
+        -0.0295,
+        0.0161,
+        -0.0014
+      ],
+      "next": {
+        "werkt": 0.5,
+        "moeilijk": 0.5
+      }
+    },
+    "documentaires": {
+      "id": 229,
+      "freq": 1,
+      "vector": [
+        -0.0015,
+        -0.0006,
+        0.0003
+      ],
+      "next": {
+        "laten": 1.0
+      }
+    },
+    "doe": {
+      "id": 230,
+      "freq": 3,
+      "vector": [
+        -0.035,
+        0.0126,
+        0.0025
+      ],
+      "next": {
+        "mijn": 0.6667,
+        "jij": 0.3333
+      }
+    },
+    "doel": {
+      "id": 231,
+      "freq": 4,
+      "vector": [
+        -0.0908,
+        0.0599,
+        0.0055
+      ],
+      "next": {
+        ".": 0.5,
+        "is": 0.25,
+        "en": 0.25
+      }
+    },
+    "doelen": {
+      "id": 232,
+      "freq": 2,
+      "vector": [
+        -0.023,
+        0.0105,
+        -0.018
+      ],
+      "next": {
+        "stellen": 0.5,
+        "te": 0.5
+      }
+    },
+    "doen": {
+      "id": 233,
+      "freq": 2,
+      "vector": [
+        -0.0406,
+        0.0494,
+        -0.0309
+      ],
+      "next": {
+        ".": 1.0
+      }
+    },
+    "doet": {
+      "id": 234,
+      "freq": 1,
+      "vector": [
+        -0.0202,
+        -0.0027,
+        -0.0055
+      ],
+      "next": {
+        "goed": 1.0
+      }
+    },
+    "dolfijnen": {
+      "id": 235,
+      "freq": 1,
+      "vector": [
+        -0.0038,
+        -0.0018,
+        -0.0015
+      ],
+      "next": {
+        "zijn": 1.0
+      }
+    },
+    "donker": {
+      "id": 236,
+      "freq": 1,
+      "vector": [
+        -0.0142,
+        0.0038,
+        -0.0044
+      ],
+      "next": {
+        "wisselen": 1.0
+      }
+    },
+    "donkere": {
+      "id": 237,
+      "freq": 3,
+      "vector": [
+        -0.0605,
+        0.031,
+        -0.0253
+      ],
+      "next": {
+        "water": 0.3333,
+        "bos": 0.3333,
+        "periodes": 0.3333
+      }
+    },
+    "door": {
+      "id": 238,
+      "freq": 15,
+      "vector": [
+        -0.1543,
+        0.0172,
+        0.0031
+      ],
+      "next": {
+        "de": 0.2308,
+        "het": 0.1538,
+        "gedeelde": 0.0769,
+        "nieuwe": 0.0769,
+        "oefening": 0.0769,
+        "aandacht": 0.0769,
+        "goede": 0.0769,
+        "talent": 0.0769,
+        "europa": 0.0769,
+        "een": 0.0769
+      }
+    },
+    "doorzetten": {
+      "id": 239,
+      "freq": 1,
+      "vector": [
+        -0.0105,
+        0.0019,
+        0.0144
+      ],
+      "next": {
+        "tijdens": 1.0
+      }
+    },
+    "doorzettingsvermogen": {
+      "id": 240,
+      "freq": 1,
+      "vector": [
+        -0.0118,
+        0.0025,
+        0.0161
+      ],
+      "next": {
+        "brengt": 1.0
+      }
+    },
+    "dorp": {
+      "id": 241,
+      "freq": 1,
+      "vector": [
+        -0.0248,
+        0.0019,
+        0.008
+      ],
+      "next": {
+        "is": 1.0
+      }
+    },
+    "dorpen": {
+      "id": 242,
+      "freq": 1,
+      "vector": [
+        -0.0281,
+        0.033,
+        -0.0193
+      ],
+      "next": {
+        ".": 1.0
+      }
+    },
+    "draaien": {
+      "id": 243,
+      "freq": 1,
+      "vector": [
+        -0.0078,
+        -0.0025,
+        -0.0029
+      ],
+      "next": {
+        "in": 1.0
+      }
+    },
+    "draait": {
+      "id": 244,
+      "freq": 3,
+      "vector": [
+        -0.0542,
+        0.0351,
+        -0.0091
+      ],
+      "next": {
+        "soepel": 0.3333,
+        "volledig": 0.3333,
+        ".": 0.3333
+      }
+    },
+    "dressing": {
+      "id": 245,
+      "freq": 1,
+      "vector": [
+        -0.0302,
+        0.0345,
+        0.0012
+      ],
+      "next": {
+        ".": 1.0
+      }
+    },
+    "drie": {
+      "id": 246,
+      "freq": 2,
+      "vector": [
+        -0.0202,
+        0.0107,
+        0.0091
+      ],
+      "next": {
+        "plus": 0.5,
+        "is": 0.5
+      }
+    },
+    "drijft": {
+      "id": 247,
+      "freq": 1,
+      "vector": [
+        -0.0051,
+        0.0002,
+        -0.001
+      ],
+      "next": {
+        "wetenschappers": 1.0
+      }
+    },
+    "drinken": {
+      "id": 248,
+      "freq": 1,
+      "vector": [
+        -0.015,
+        -0.0046,
+        0.0106
+      ],
+      "next": {
+        "is": 1.0
+      }
+    },
+    "dromen": {
+      "id": 249,
+      "freq": 2,
+      "vector": [
+        -0.0278,
+        0.0123,
+        -0.0114
+      ],
+      "next": {
+        "en": 0.5,
+        "geven": 0.5
+      }
+    },
+    "droog": {
+      "id": 250,
+      "freq": 1,
+      "vector": [
+        -0.0276,
+        0.0048,
+        0.0027
+      ],
+      "next": {
+        "en": 1.0
+      }
+    },
+    "druk": {
+      "id": 251,
+      "freq": 2,
+      "vector": [
+        -0.0615,
+        0.0368,
+        -0.0083
+      ],
+      "next": {
+        ".": 0.5,
+        "met": 0.5
+      }
+    },
+    "drukke": {
+      "id": 252,
+      "freq": 2,
+      "vector": [
+        -0.0557,
+        0.0259,
+        0.0256
+      ],
+      "next": {
+        "week": 0.5,
+        "en": 0.5
+      }
+    },
+    "drukte": {
+      "id": 253,
+      "freq": 1,
+      "vector": [
+        -0.0359,
+        0.0354,
+        -0.0235
+      ],
+      "next": {
+        ".": 1.0
+      }
+    },
+    "duidelijk": {
+      "id": 254,
+      "freq": 2,
+      "vector": [
+        -0.0547,
+        0.0296,
+        0.0248
+      ],
+      "next": {
+        "en": 0.5,
+        "doel": 0.5
+      }
+    },
+    "duidelijke": {
+      "id": 255,
+      "freq": 4,
+      "vector": [
+        -0.079,
+        0.0505,
+        0.0267
+      ],
+      "next": {
+        "nederlandse": 0.25,
+        "planning": 0.25,
+        "feedback": 0.25,
+        "visie": 0.25
+      }
+    },
+    "duizenden": {
+      "id": 256,
+      "freq": 2,
+      "vector": [
+        -0.0155,
+        -0.0051,
+        -0.0007
+      ],
+      "next": {
+        "apparaten": 0.5,
+        "kilometers": 0.5
+      }
+    },
+    "durft": {
+      "id": 257,
+      "freq": 1,
+      "vector": [
+        -0.019,
+        0.0106,
+        -0.0127
+      ],
+      "next": {
+        "te": 1.0
+      }
+    },
+    "durven": {
+      "id": 258,
+      "freq": 1,
+      "vector": [
+        -0.0187,
+        0.01,
+        -0.0153
+      ],
+      "next": {
+        "te": 1.0
+      }
+    },
+    "dus": {
+      "id": 259,
+      "freq": 1,
+      "vector": [
+        -0.0115,
+        -0.0035,
+        0.0152
+      ],
+      "next": {
+        "ik": 1.0
+      }
+    },
+    "duurt": {
+      "id": 260,
+      "freq": 2,
+      "vector": [
+        -0.0102,
+        0.0033,
+        0.0172
+      ],
+      "next": {
+        "meestal": 1.0
+      }
+    },
+    "duurzaamheid": {
+      "id": 261,
+      "freq": 1,
+      "vector": [
+        -0.0061,
+        0.0007,
+        0.0029
+      ],
+      "next": {
+        "vraagt": 1.0
+      }
+    },
+    "dynamisch": {
+      "id": 262,
+      "freq": 1,
+      "vector": [
+        -0.0306,
+        0.0371,
+        -0.018
+      ],
+      "next": {
+        ".": 1.0
+      }
+    },
+    "echt": {
+      "id": 263,
+      "freq": 3,
+      "vector": [
+        -0.0658,
+        0.0477,
+        -0.0082
+      ],
+      "next": {
+        "te": 0.3333,
+        "mens": 0.3333,
+        ".": 0.3333
+      }
+    },
+    "echte": {
+      "id": 264,
+      "freq": 1,
+      "vector": [
+        -0.011,
+        0.0015,
+        -0.0013
+      ],
+      "next": {
+        "gebeurtenissen": 1.0
+      }
+    },
+    "economie": {
+      "id": 265,
+      "freq": 1,
+      "vector": [
+        -0.0145,
+        0.0037,
+        -0.0081
+      ],
+      "next": {
+        "verandert": 1.0
+      }
+    },
+    "ecosystemen": {
+      "id": 266,
+      "freq": 1,
+      "vector": [
+        -0.0021,
+        -0.003,
+        -0.0017
+      ],
+      "next": {
+        "bestaan": 1.0
+      }
+    },
+    "een": {
+      "id": 267,
+      "freq": 177,
+      "vector": [
+        -0.8212,
+        -0.1415,
+        0.4779
+      ],
+      "next": {
+        "goede": 0.2245,
+        "goed": 0.2041,
+        "eenvoudige": 0.102,
+        "model": 0.0816,
+        "klein": 0.0816,
+        "belangrijke": 0.0612,
+        "verhaal": 0.0612,
+        "nieuwe": 0.0612,
+        "getal": 0.0612,
+        "gevoel": 0.0612
+      }
+    },
+    "eenvoud": {
+      "id": 268,
+      "freq": 3,
+      "vector": [
+        -0.0394,
+        0.0005,
+        0.0151
+      ],
+      "next": {
+        "heeft": 0.3333,
+        "maken": 0.3333,
+        "in": 0.3333
+      }
+    },
+    "eenvoudig": {
+      "id": 269,
+      "freq": 1,
+      "vector": [
+        -0.0248,
+        0.0169,
+        0.0202
+      ],
+      "next": {
+        "wiskundig": 1.0
+      }
+    },
+    "eenvoudige": {
+      "id": 270,
+      "freq": 8,
+      "vector": [
+        -0.1219,
+        0.017,
+        0.0762
+      ],
+      "next": {
+        "manier": 0.375,
+        "vraag": 0.125,
+        "duidelijke": 0.125,
+        "zinnen": 0.125,
+        "wiskundige": 0.125,
+        "zin": 0.125
+      }
+    },
+    "eenvoudiger": {
+      "id": 271,
+      "freq": 1,
+      "vector": [
+        -0.0311,
+        0.0165,
+        -0.0087
+      ],
+      "next": {
+        "en": 1.0
+      }
+    },
+    "eerlijkheid": {
+      "id": 272,
+      "freq": 1,
+      "vector": [
+        -0.0083,
+        0.0022,
+        -0.0052
+      ],
+      "next": {
+        "vormt": 1.0
+      }
+    },
+    "eeuwen": {
+      "id": 273,
+      "freq": 1,
+      "vector": [
+        -0.0268,
+        0.0195,
+        -0.019
+      ],
+      "next": {
+        "heen": 1.0
+      }
+    },
+    "eeuwenlang": {
+      "id": 274,
+      "freq": 1,
+      "vector": [
+        -0.0136,
+        -0.0017,
+        0.0063
+      ],
+      "next": {
+        "met": 1.0
+      }
+    },
+    "eieren": {
+      "id": 275,
+      "freq": 1,
+      "vector": [
+        -0.0106,
+        -0.0022,
+        -0.0095
+      ],
+      "next": {
+        "veilig": 1.0
+      }
+    },
+    "eigen": {
+      "id": 276,
+      "freq": 4,
+      "vector": [
+        -0.0422,
+        0.019,
+        -0.0201
+      ],
+      "next": {
+        "ster": 0.25,
+        "verhalen": 0.25,
+        "plek": 0.25,
+        "tuin": 0.25
+      }
+    },
+    "einde": {
+      "id": 277,
+      "freq": 1,
+      "vector": [
+        -0.0321,
+        0.0334,
+        0.0022
+      ],
+      "next": {
+        ".": 1.0
+      }
+    },
+    "eindelijk": {
+      "id": 278,
+      "freq": 1,
+      "vector": [
+        -0.0217,
+        0.0116,
+        0.0119
+      ],
+      "next": {
+        "klaar": 1.0
+      }
+    },
+    "eindigt": {
+      "id": 279,
+      "freq": 1,
+      "vector": [
+        -0.0183,
+        0.0006,
+        0.0177
+      ],
+      "next": {
+        "met": 1.0
+      }
+    },
+    "elk": {
+      "id": 280,
+      "freq": 7,
+      "vector": [
+        -0.0521,
+        -0.0196,
+        0.0096
+      ],
+      "next": {
+        "woord": 0.2857,
+        "jaar": 0.2857,
+        "levend": 0.1429,
+        "project": 0.1429,
+        "antwoord": 0.1429
+      }
+    },
+    "elkaar": {
+      "id": 281,
+      "freq": 10,
+      "vector": [
+        -0.1232,
+        0.0414,
+        -0.0314
+      ],
+      "next": {
+        "vriendelijk": 0.1,
+        ".": 0.1,
+        "goed": 0.1,
+        "verbonden": 0.1,
+        "af": 0.1,
+        "afhankelijk": 0.1,
+        "liggen": 0.1,
+        "op": 0.1,
+        "zijn": 0.1,
+        "communiceren": 0.1
+      }
+    },
+    "elke": {
+      "id": 282,
+      "freq": 11,
+      "vector": [
+        -0.0781,
+        -0.0031,
+        -0.0158
+      ],
+      "next": {
+        "dag": 0.1818,
+        "sterke": 0.1818,
+        "ochtend": 0.0909,
+        "avond": 0.0909,
+        "seconde": 0.0909,
+        "stap": 0.0909,
+        "ervaring": 0.0909,
+        "cultuur": 0.0909,
+        "vraag": 0.0909
+      }
+    },
+    "emotie": {
+      "id": 283,
+      "freq": 2,
+      "vector": [
+        -0.0572,
+        0.0198,
+        -0.0003
+      ],
+      "next": {
+        "en": 0.5,
+        "van": 0.5
+      }
+    },
+    "en": {
+      "id": 284,
+      "freq": 115,
+      "vector": [
+        -0.6843,
+        -0.1238,
+        -0.0536
+      ],
+      "next": {
+        "een": 0.1923,
+        "de": 0.1538,
+        "rust": 0.1154,
+        "vol": 0.0769,
+        "aandacht": 0.0769,
+        "verdient": 0.0769,
+        "geest": 0.0769,
+        "herhaling": 0.0769,
+        "ik": 0.0769,
+        "techniek": 0.0769
+      }
+    },
+    "energie": {
+      "id": 285,
+      "freq": 6,
+      "vector": [
+        -0.0888,
+        0.0117,
+        -0.0167
+      ],
+      "next": {
+        "voor": 0.1667,
+        "kan": 0.1667,
+        "besparen": 0.1667,
+        "aan": 0.1667,
+        "oproepen": 0.1667,
+        "om": 0.1667
+      }
+    },
+    "enorme": {
+      "id": 286,
+      "freq": 2,
+      "vector": [
+        -0.0492,
+        0.0185,
+        0.0109
+      ],
+      "next": {
+        "wolken": 0.5,
+        "snelheid": 0.5
+      }
+    },
+    "er": {
+      "id": 287,
+      "freq": 2,
+      "vector": [
+        -0.0218,
+        -0.0074,
+        0.0126
+      ],
+      "next": {
+        "bent": 0.5,
+        "voor": 0.5
+      }
+    },
+    "ervaring": {
+      "id": 288,
+      "freq": 2,
+      "vector": [
+        -0.0221,
+        -0.0008,
+        0.0002
+      ],
+      "next": {
+        "goed": 0.5,
+        "en": 0.5
+      }
+    },
+    "ervaringen": {
+      "id": 289,
+      "freq": 1,
+      "vector": [
+        -0.0142,
+        -0.0022,
+        -0.0026
+      ],
+      "next": {
+        "voor": 1.0
+      }
+    },
+    "ervoor": {
+      "id": 290,
+      "freq": 1,
+      "vector": [
+        -0.0044,
+        -0.002,
+        0.0062
+      ],
+      "next": {
+        "zorgen": 1.0
+      }
+    },
+    "essentieel": {
+      "id": 291,
+      "freq": 3,
+      "vector": [
+        -0.0506,
+        -0.0033,
+        0.0355
+      ],
+      "next": {
+        "voor": 0.6667,
+        "is": 0.3333
+      }
+    },
+    "eten": {
+      "id": 292,
+      "freq": 1,
+      "vector": [
+        -0.0297,
+        0.03,
+        -0.0151
+      ],
+      "next": {
+        ".": 1.0
+      }
+    },
+    "europa": {
+      "id": 293,
+      "freq": 1,
+      "vector": [
+        -0.0108,
+        0.0013,
+        0.0117
+      ],
+      "next": {
+        "laat": 1.0
+      }
+    },
+    "even": {
+      "id": 294,
+      "freq": 3,
+      "vector": [
+        -0.0527,
+        0.0281,
+        -0.0354
+      ],
+      "next": {
+        "te": 0.6667,
+        "over": 0.3333
+      }
+    },
+    "evolutie": {
+      "id": 295,
+      "freq": 1,
+      "vector": [
+        -0.0008,
+        0.0001,
+        0.0005
+      ],
+      "next": {
+        "verklaart": 1.0
+      }
+    },
+    "externe": {
+      "id": 296,
+      "freq": 1,
+      "vector": [
+        -0.0132,
+        0.0154,
+        -0.0116
+      ],
+      "next": {
+        "server": 1.0
+      }
+    },
+    "extra": {
+      "id": 297,
+      "freq": 3,
+      "vector": [
+        -0.0523,
+        0.0227,
+        0.0236
+      ],
+      "next": {
+        "smaak": 0.3333,
+        "diepte": 0.3333,
+        "gezellig": 0.3333
+      }
+    },
+    "familie": {
+      "id": 298,
+      "freq": 1,
+      "vector": [
+        -0.0025,
+        -0.002,
+        -0.0009
+      ],
+      "next": {
+        "komt": 1.0
+      }
+    },
+    "favoriete": {
+      "id": 299,
+      "freq": 3,
+      "vector": [
+        -0.052,
+        0.0154,
+        0.0262
+      ],
+      "next": {
+        "plek": 0.3333,
+        "boek": 0.3333,
+        "traktatie": 0.3333
+      }
+    },
+    "feedback": {
+      "id": 300,
+      "freq": 2,
+      "vector": [
+        -0.0291,
+        0.0324,
+        -0.0151
+      ],
+      "next": {
+        "helpt": 0.5,
+        ".": 0.5
+      }
+    },
+    "feest": {
+      "id": 301,
+      "freq": 1,
+      "vector": [
+        -0.0217,
+        -0.0018,
+        -0.0056
+      ],
+      "next": {
+        "in": 1.0
+      }
+    },
+    "feiten": {
+      "id": 302,
+      "freq": 1,
+      "vector": [
+        -0.0161,
+        -0.0059,
+        -0.0056
+      ],
+      "next": {
+        "over": 1.0
+      }
+    },
+    "felle": {
+      "id": 303,
+      "freq": 1,
+      "vector": [
+        -0.0249,
+        0.021,
+        -0.0188
+      ],
+      "next": {
+        "zon": 1.0
+      }
+    },
+    "fiets": {
+      "id": 304,
+      "freq": 1,
+      "vector": [
+        -0.0312,
+        0.0056,
+        0.0158
+      ],
+      "next": {
+        "is": 1.0
+      }
+    },
+    "fietsen": {
+      "id": 305,
+      "freq": 1,
+      "vector": [
+        -0.0099,
+        -0.0018,
+        0.0099
+      ],
+      "next": {
+        "is": 1.0
+      }
+    },
+    "fijn": {
+      "id": 306,
+      "freq": 5,
+      "vector": [
+        -0.0796,
+        0.0329,
+        -0.0013
+      ],
+      "next": {
+        "dat": 0.4,
+        "om": 0.4,
+        ".": 0.2
+      }
+    },
+    "fijne": {
+      "id": 307,
+      "freq": 4,
+      "vector": [
+        -0.0742,
+        0.0223,
+        0.0482
+      ],
+      "next": {
+        "dag": 0.75,
+        "manier": 0.25
+      }
+    },
+    "film": {
+      "id": 308,
+      "freq": 3,
+      "vector": [
+        -0.0604,
+        0.0511,
+        0.0103
+      ],
+      "next": {
+        ".": 0.6667,
+        "kijken": 0.3333
+      }
+    },
+    "films": {
+      "id": 309,
+      "freq": 2,
+      "vector": [
+        -0.0296,
+        0.0291,
+        -0.011
+      ],
+      "next": {
+        "vertellen": 0.5,
+        ".": 0.5
+      }
+    },
+    "filmscène": {
+      "id": 310,
+      "freq": 1,
+      "vector": [
+        -0.0378,
+        0.0367,
+        0.008
+      ],
+      "next": {
+        ".": 1.0
+      }
+    },
+    "filosoof": {
+      "id": 311,
+      "freq": 1,
+      "vector": [
+        -0.0144,
+        0.0034,
+        -0.0079
+      ],
+      "next": {
+        "denkt": 1.0
+      }
+    },
+    "financiële": {
+      "id": 312,
+      "freq": 1,
+      "vector": [
+        -0.015,
+        -0.0001,
+        0.0184
+      ],
+      "next": {
+        "planning": 1.0
+      }
+    },
+    "fit": {
+      "id": 313,
+      "freq": 1,
+      "vector": [
+        -0.0261,
+        0.0303,
+        -0.0112
+      ],
+      "next": {
+        ".": 1.0
+      }
+    },
+    "fitter": {
+      "id": 314,
+      "freq": 1,
+      "vector": [
+        -0.0303,
+        0.0158,
+        -0.0191
+      ],
+      "next": {
+        "te": 1.0
+      }
+    },
+    "fladdert": {
+      "id": 315,
+      "freq": 1,
+      "vector": [
+        -0.0134,
+        0.0005,
+        -0.0061
+      ],
+      "next": {
+        "sierlijk": 1.0
+      }
+    },
+    "flexibiliteit": {
+      "id": 316,
+      "freq": 1,
+      "vector": [
+        -0.0143,
+        -0.0061,
+        -0.0047
+      ],
+      "next": {
+        "in": 1.0
+      }
+    },
+    "fonkelen": {
+      "id": 317,
+      "freq": 1,
+      "vector": [
+        -0.0139,
+        0.0025,
+        -0.0082
+      ],
+      "next": {
+        "helder": 1.0
+      }
+    },
+    "fouten": {
+      "id": 318,
+      "freq": 2,
+      "vector": [
+        -0.0358,
+        0.0098,
+        -0.0176
+      ],
+      "next": {
+        "van": 0.5,
+        "maken": 0.5
+      }
+    },
+    "frisse": {
+      "id": 319,
+      "freq": 3,
+      "vector": [
+        -0.0488,
+        0.0152,
+        -0.0234
+      ],
+      "next": {
+        "lucht": 0.6667,
+        "heldere": 0.3333
+      }
+    },
+    "fruit": {
+      "id": 320,
+      "freq": 2,
+      "vector": [
+        -0.026,
+        0.0018,
+        -0.0073
+      ],
+      "next": {
+        "uit": 0.5,
+        "bevat": 0.5
+      }
+    },
+    "functionerend": {
+      "id": 321,
+      "freq": 1,
+      "vector": [
+        -0.028,
+        0.0172,
+        0.0084
+      ],
+      "next": {
+        "team": 1.0
+      }
+    },
+    "gaan": {
+      "id": 322,
+      "freq": 1,
+      "vector": [
+        -0.0036,
+        -0.0034,
+        -0.0021
+      ],
+      "next": {
+        "we": 1.0
+      }
+    },
+    "gaat": {
+      "id": 323,
+      "freq": 5,
+      "vector": [
+        -0.0736,
+        0.0231,
+        -0.0001
+      ],
+      "next": {
+        "het": 0.4,
+        "goed": 0.2,
+        "sporten": 0.2,
+        "vaak": 0.2
+      }
+    },
+    "gas": {
+      "id": 324,
+      "freq": 1,
+      "vector": [
+        -0.0268,
+        0.0294,
+        -0.0161
+      ],
+      "next": {
+        ".": 1.0
+      }
+    },
+    "gebakken": {
+      "id": 325,
+      "freq": 1,
+      "vector": [
+        -0.0098,
+        0.0007,
+        -0.0016
+      ],
+      "next": {
+        "brood": 1.0
+      }
+    },
+    "gebeurt": {
+      "id": 326,
+      "freq": 2,
+      "vector": [
+        -0.019,
+        -0.0026,
+        -0.0023
+      ],
+      "next": {
+        "stap": 0.5,
+        "vaak": 0.5
+      }
+    },
+    "gebeurtenis": {
+      "id": 327,
+      "freq": 1,
+      "vector": [
+        -0.022,
+        0.03,
+        -0.01
+      ],
+      "next": {
+        ".": 1.0
+      }
+    },
+    "gebeurtenissen": {
+      "id": 328,
+      "freq": 2,
+      "vector": [
+        -0.0354,
+        0.0152,
+        -0.0191
+      ],
+      "next": {
+        "te": 0.5,
+        "en": 0.5
+      }
+    },
+    "geboren": {
+      "id": 329,
+      "freq": 1,
+      "vector": [
+        -0.017,
+        0.0014,
+        -0.0055
+      ],
+      "next": {
+        "en": 1.0
+      }
+    },
+    "gebouwen": {
+      "id": 330,
+      "freq": 1,
+      "vector": [
+        -0.0083,
+        -0.0028,
+        0.0033
+      ],
+      "next": {
+        "met": 1.0
+      }
+    },
+    "gebruik": {
+      "id": 331,
+      "freq": 3,
+      "vector": [
+        -0.0535,
+        0.0292,
+        -0.0203
+      ],
+      "next": {
+        "in": 0.3333,
+        ".": 0.3333,
+        "cosine": 0.3333
+      }
+    },
+    "gebruiken": {
+      "id": 332,
+      "freq": 2,
+      "vector": [
+        -0.0519,
+        0.0557,
+        -0.0356
+      ],
+      "next": {
+        ".": 1.0
+      }
+    },
+    "gebruiker": {
+      "id": 333,
+      "freq": 2,
+      "vector": [
+        -0.0565,
+        0.0416,
+        0.01
+      ],
+      "next": {
+        ".": 0.5,
+        "waardeert": 0.5
+      }
+    },
+    "gebruikers": {
+      "id": 334,
+      "freq": 2,
+      "vector": [
+        -0.0263,
+        0.0234,
+        -0.0147
+      ],
+      "next": {
+        "wereldwijd": 0.5,
+        "ze": 0.5
+      }
+    },
+    "gedaan": {
+      "id": 335,
+      "freq": 1,
+      "vector": [
+        -0.0082,
+        -0.0028,
+        0.0063
+      ],
+      "next": {
+        "ik": 1.0
+      }
+    },
+    "gedachten": {
+      "id": 336,
+      "freq": 1,
+      "vector": [
+        -0.0232,
+        0.0039,
+        -0.0077
+      ],
+      "next": {
+        "en": 1.0
+      }
+    },
+    "gedeelde": {
+      "id": 337,
+      "freq": 1,
+      "vector": [
+        -0.0116,
+        0.0,
+        -0.0027
+      ],
+      "next": {
+        "tradities": 1.0
+      }
+    },
+    "gedicht": {
+      "id": 338,
+      "freq": 1,
+      "vector": [
+        -0.0254,
+        0.0296,
+        -0.0156
+      ],
+      "next": {
+        ".": 1.0
+      }
+    },
+    "geduld": {
+      "id": 339,
+      "freq": 6,
+      "vector": [
+        -0.0884,
+        0.0079,
+        0.0451
+      ],
+      "next": {
+        "en": 0.3333,
+        "is": 0.1667,
+        "terwijl": 0.1667,
+        "want": 0.1667,
+        "voordat": 0.1667
+      }
+    },
+    "geduldig": {
+      "id": 340,
+      "freq": 1,
+      "vector": [
+        -0.003,
+        -0.0035,
+        -0.0029
+      ],
+      "next": {
+        "moeilijke": 1.0
+      }
+    },
+    "geeft": {
+      "id": 341,
+      "freq": 15,
+      "vector": [
+        -0.1628,
+        0.016,
+        0.0316
+      ],
+      "next": {
+        "mensen": 0.1538,
+        "je": 0.1538,
+        "veel": 0.1538,
+        "structuur": 0.0769,
+        "het": 0.0769,
+        "energie": 0.0769,
+        "de": 0.0769,
+        "duidelijke": 0.0769,
+        "handige": 0.0769,
+        "een": 0.0769
+      }
+    },
+    "geen": {
+      "id": 342,
+      "freq": 3,
+      "vector": [
+        -0.0237,
+        0.0105,
+        0.011
+      ],
+      "next": {
+        "groot": 0.3333,
+        "klok": 0.3333,
+        "mens": 0.3333
+      }
+    },
+    "geest": {
+      "id": 343,
+      "freq": 7,
+      "vector": [
+        -0.1402,
+        0.0936,
+        -0.0446
+      ],
+      "next": {
+        ".": 0.7143,
+        "voor": 0.1429,
+        "woont": 0.1429
+      }
+    },
+    "gegevens": {
+      "id": 344,
+      "freq": 3,
+      "vector": [
+        -0.0581,
+        0.0392,
+        -0.007
+      ],
+      "next": {
+        ".": 0.3333,
+        "lokaal": 0.3333,
+        "verwerkt": 0.3333
+      }
+    },
+    "geheugen": {
+      "id": 345,
+      "freq": 1,
+      "vector": [
+        -0.0127,
+        0.001,
+        -0.0026
+      ],
+      "next": {
+        "bewaart": 1.0
+      }
+    },
+    "gehouden": {
+      "id": 346,
+      "freq": 1,
+      "vector": [
+        -0.0207,
+        0.0291,
+        -0.015
+      ],
+      "next": {
+        ".": 1.0
+      }
+    },
+    "geld": {
+      "id": 347,
+      "freq": 3,
+      "vector": [
+        -0.02,
+        -0.0036,
+        0.0116
+      ],
+      "next": {
+        "verdienen": 0.3333,
+        "uitgeven": 0.3333,
+        "vraagt": 0.3333
+      }
+    },
+    "gelijke": {
+      "id": 348,
+      "freq": 1,
+      "vector": [
+        -0.0185,
+        0.015,
+        -0.0106
+      ],
+      "next": {
+        "stukken": 1.0
+      }
+    },
+    "geluid": {
+      "id": 349,
+      "freq": 2,
+      "vector": [
+        -0.0525,
+        0.0405,
+        -0.0198
+      ],
+      "next": {
+        ".": 0.5,
+        "voor": 0.5
+      }
+    },
+    "geluk": {
+      "id": 350,
+      "freq": 1,
+      "vector": [
+        -0.0056,
+        -0.0005,
+        0.002
+      ],
+      "next": {
+        "vinden": 1.0
+      }
+    },
+    "gelukkig": {
+      "id": 351,
+      "freq": 1,
+      "vector": [
+        -0.0211,
+        0.0018,
+        0.0024
+      ],
+      "next": {
+        "en": 1.0
+      }
+    },
+    "gemaakt": {
+      "id": 352,
+      "freq": 1,
+      "vector": [
+        -0.016,
+        0.002,
+        0.0042
+      ],
+      "next": {
+        "om": 1.0
+      }
+    },
+    "gemeenschappen": {
+      "id": 353,
+      "freq": 1,
+      "vector": [
+        -0.0041,
+        -0.0012,
+        -0.0006
+      ],
+      "next": {
+        "door": 1.0
+      }
+    },
+    "gemotiveerd": {
+      "id": 354,
+      "freq": 1,
+      "vector": [
+        -0.0313,
+        0.0226,
+        -0.0017
+      ],
+      "next": {
+        "team": 1.0
+      }
+    },
+    "genereren": {
+      "id": 355,
+      "freq": 3,
+      "vector": [
+        -0.0508,
+        0.0456,
+        -0.0404
+      ],
+      "next": {
+        ".": 0.6667,
+        "op": 0.3333
+      }
+    },
+    "genezen": {
+      "id": 356,
+      "freq": 1,
+      "vector": [
+        -0.0272,
+        0.0322,
+        -0.0244
+      ],
+      "next": {
+        ".": 1.0
+      }
+    },
+    "genoemd": {
+      "id": 357,
+      "freq": 1,
+      "vector": [
+        -0.0259,
+        0.0319,
+        -0.0063
+      ],
+      "next": {
+        ".": 1.0
+      }
+    },
+    "gerecht": {
+      "id": 358,
+      "freq": 2,
+      "vector": [
+        -0.0368,
+        0.0075,
+        0.0381
+      ],
+      "next": {
+        "extra": 1.0
+      }
+    },
+    "gerechten": {
+      "id": 359,
+      "freq": 1,
+      "vector": [
+        -0.0118,
+        0.0016,
+        0.0165
+      ],
+      "next": {
+        "proeven": 1.0
+      }
+    },
+    "gerust": {
+      "id": 360,
+      "freq": 2,
+      "vector": [
+        -0.0219,
+        0.0006,
+        0.0222
+      ],
+      "next": {
+        "iets": 0.5,
+        "een": 0.5
+      }
+    },
+    "geschiedenis": {
+      "id": 361,
+      "freq": 1,
+      "vector": [
+        -0.0024,
+        -0.0011,
+        -0.0004
+      ],
+      "next": {
+        "leert": 1.0
+      }
+    },
+    "gespeeld": {
+      "id": 362,
+      "freq": 1,
+      "vector": [
+        -0.0088,
+        -0.0019,
+        0.0054
+      ],
+      "next": {
+        "met": 1.0
+      }
+    },
+    "gesprek": {
+      "id": 363,
+      "freq": 3,
+      "vector": [
+        -0.0668,
+        0.0518,
+        0.0178
+      ],
+      "next": {
+        ".": 0.6667,
+        "beginnen": 0.3333
+      }
+    },
+    "gesprekken": {
+      "id": 364,
+      "freq": 1,
+      "vector": [
+        -0.0257,
+        0.0345,
+        -0.0173
+      ],
+      "next": {
+        ".": 1.0
+      }
+    },
+    "getal": {
+      "id": 365,
+      "freq": 5,
+      "vector": [
+        -0.0924,
+        0.0466,
+        0.0562
+      ],
+      "next": {
+        "kan": 0.2,
+        ".": 0.2,
+        "van": 0.2,
+        "afhaalt": 0.2,
+        "opsplitst": 0.2
+      }
+    },
+    "getallen": {
+      "id": 366,
+      "freq": 4,
+      "vector": [
+        -0.0786,
+        0.0324,
+        0.009
+      ],
+      "next": {
+        ".": 0.25,
+        "en": 0.25,
+        "samenvoegt": 0.25,
+        "vaak": 0.25
+      }
+    },
+    "geur": {
+      "id": 367,
+      "freq": 1,
+      "vector": [
+        -0.0319,
+        0.0359,
+        -0.0189
+      ],
+      "next": {
+        ".": 1.0
+      }
+    },
+    "geuren": {
+      "id": 368,
+      "freq": 1,
+      "vector": [
+        -0.0179,
+        0.003,
+        0.0002
+      ],
+      "next": {
+        "en": 1.0
+      }
+    },
+    "gevels": {
+      "id": 369,
+      "freq": 1,
+      "vector": [
+        -0.0227,
+        0.0313,
+        -0.0127
+      ],
+      "next": {
+        ".": 1.0
+      }
+    },
+    "geven": {
+      "id": 370,
+      "freq": 6,
+      "vector": [
+        -0.0796,
+        0.0498,
+        0.0158
+      ],
+      "next": {
+        ".": 0.3333,
+        "een": 0.3333,
+        "richting": 0.1667,
+        "houdt": 0.1667
+      }
+    },
+    "gever": {
+      "id": 371,
+      "freq": 1,
+      "vector": [
+        -0.0199,
+        0.0033,
+        -0.0081
+      ],
+      "next": {
+        "als": 1.0
+      }
+    },
+    "gevoel": {
+      "id": 372,
+      "freq": 3,
+      "vector": [
+        -0.0646,
+        0.0027,
+        0.052
+      ],
+      "next": {
+        "van": 1.0
+      }
+    },
+    "gevoelens": {
+      "id": 373,
+      "freq": 3,
+      "vector": [
+        -0.061,
+        0.0474,
+        -0.0268
+      ],
+      "next": {
+        "te": 0.3333,
+        ".": 0.3333,
+        "hebben": 0.3333
+      }
+    },
+    "gewerkt": {
+      "id": 374,
+      "freq": 1,
+      "vector": [
+        -0.0119,
+        -0.0033,
+        -0.0025
+      ],
+      "next": {
+        "aan": 1.0
+      }
+    },
+    "gewone": {
+      "id": 375,
+      "freq": 1,
+      "vector": [
+        -0.0197,
+        0.0139,
+        -0.0129
+      ],
+      "next": {
+        "momenten": 1.0
+      }
+    },
+    "gewoon": {
+      "id": 376,
+      "freq": 1,
+      "vector": [
+        -0.0166,
+        0.005,
+        0.0272
+      ],
+      "next": {
+        "een": 1.0
+      }
+    },
+    "gewoontes": {
+      "id": 377,
+      "freq": 1,
+      "vector": [
+        -0.0323,
+        0.0359,
+        -0.0189
+      ],
+      "next": {
+        ".": 1.0
+      }
+    },
+    "gezellig": {
+      "id": 378,
+      "freq": 1,
+      "vector": [
+        -0.0256,
+        0.0309,
+        -0.0084
+      ],
+      "next": {
+        ".": 1.0
+      }
+    },
+    "gezien": {
+      "id": 379,
+      "freq": 1,
+      "vector": [
+        -0.0197,
+        0.0293,
+        -0.0166
+      ],
+      "next": {
+        ".": 1.0
+      }
+    },
+    "gezond": {
+      "id": 380,
+      "freq": 4,
+      "vector": [
+        -0.0809,
+        0.0309,
+        0.0194
+      ],
+      "next": {
+        "en": 0.5,
+        "lichaam": 0.25,
+        "als": 0.25
+      }
+    },
+    "gezonde": {
+      "id": 381,
+      "freq": 4,
+      "vector": [
+        -0.0627,
+        0.0058,
+        0.0418
+      ],
+      "next": {
+        "voeding": 0.25,
+        "manier": 0.25,
+        "geest": 0.25,
+        "levensstijl": 0.25
+      }
+    },
+    "gezondheid": {
+      "id": 382,
+      "freq": 2,
+      "vector": [
+        -0.0403,
+        0.0134,
+        -0.0058
+      ],
+      "next": {
+        "van": 0.5,
+        "begint": 0.5
+      }
+    },
+    "geïnspireerd": {
+      "id": 383,
+      "freq": 1,
+      "vector": [
+        -0.0229,
+        -0.0014,
+        0.0029
+      ],
+      "next": {
+        "op": 1.0
+      }
+    },
+    "gisteren": {
+      "id": 384,
+      "freq": 1,
+      "vector": [
+        -0.0026,
+        -0.0032,
+        -0.0013
+      ],
+      "next": {
+        "hebben": 1.0
+      }
+    },
+    "gitaar": {
+      "id": 385,
+      "freq": 1,
+      "vector": [
+        -0.0244,
+        0.0296,
+        -0.018
+      ],
+      "next": {
+        ".": 1.0
+      }
+    },
+    "glazen": {
+      "id": 386,
+      "freq": 1,
+      "vector": [
+        -0.0186,
+        0.0164,
+        -0.0052
+      ],
+      "next": {
+        "gevels": 1.0
+      }
+    },
+    "glimlach": {
+      "id": 387,
+      "freq": 1,
+      "vector": [
+        -0.0185,
+        0.0052,
+        0.0272
+      ],
+      "next": {
+        "kan": 1.0
+      }
+    },
+    "goed": {
+      "id": 388,
+      "freq": 22,
+      "vector": [
+        -0.2602,
+        0.0595,
+        0.0649
+      ],
+      "next": {
+        "gesprek": 0.1429,
+        "voor": 0.1429,
+        "met": 0.1429,
+        "idee": 0.1429,
+        "kennen": 0.0714,
+        "functionerend": 0.0714,
+        "luisteren": 0.0714,
+        "mogelijk": 0.0714,
+        "of": 0.0714,
+        "ontwerp": 0.0714
+      }
+    },
+    "goede": {
+      "id": 389,
+      "freq": 15,
+      "vector": [
+        -0.1534,
+        0.0258,
+        0.1101
+      ],
+      "next": {
+        "dag": 0.1,
+        "nachtrust": 0.1,
+        "vraag": 0.1,
+        "en": 0.1,
+        "vragen": 0.1,
+        "maaltijd": 0.1,
+        "samenwerking": 0.1,
+        "werkdag": 0.1,
+        "baas": 0.1,
+        "reisplanning": 0.1
+      }
+    },
+    "goedemiddag": {
+      "id": 390,
+      "freq": 1,
+      "vector": [
+        -0.0033,
+        -0.0005,
+        0.0051
+      ],
+      "next": {
+        "waarmee": 1.0
+      }
+    },
+    "goedemorgen": {
+      "id": 391,
+      "freq": 1,
+      "vector": [
+        -0.0058,
+        -0.0016,
+        0.0086
+      ],
+      "next": {
+        "ik": 1.0
+      }
+    },
+    "goedenavond": {
+      "id": 392,
+      "freq": 1,
+      "vector": [
+        -0.0018,
+        -0.0004,
+        0.0008
+      ],
+      "next": {
+        "hoe": 1.0
+      }
+    },
+    "golven": {
+      "id": 393,
+      "freq": 1,
+      "vector": [
+        -0.0159,
+        0.0032,
+        -0.0095
+      ],
+      "next": {
+        "breken": 1.0
+      }
+    },
+    "gouden": {
+      "id": 394,
+      "freq": 1,
+      "vector": [
+        -0.0163,
+        0.0036,
+        -0.005
+      ],
+      "next": {
+        "bladeren": 1.0
+      }
+    },
+    "graag": {
+      "id": 395,
+      "freq": 6,
+      "vector": [
+        -0.0746,
+        0.0215,
+        -0.0157
+      ],
+      "next": {
+        "gedaan": 0.1667,
+        "stap": 0.1667,
+        "over": 0.1667,
+        "buiten": 0.1667,
+        "verder": 0.1667,
+        "hun": 0.1667
+      }
+    },
+    "grammatica": {
+      "id": 396,
+      "freq": 1,
+      "vector": [
+        -0.0045,
+        -0.0021,
+        0.001
+      ],
+      "next": {
+        "geeft": 1.0
+      }
+    },
+    "grenzen": {
+      "id": 397,
+      "freq": 2,
+      "vector": [
+        -0.0395,
+        0.0018,
+        -0.0148
+      ],
+      "next": {
+        "te": 0.5,
+        "en": 0.5
+      }
+    },
+    "groei": {
+      "id": 398,
+      "freq": 1,
+      "vector": [
+        -0.0038,
+        -0.0002,
+        0.0011
+      ],
+      "next": {
+        "gebeurt": 1.0
+      }
+    },
+    "groeien": {
+      "id": 399,
+      "freq": 2,
+      "vector": [
+        -0.0556,
+        0.0551,
+        -0.0375
+      ],
+      "next": {
+        ".": 1.0
+      }
+    },
+    "groeit": {
+      "id": 400,
+      "freq": 3,
+      "vector": [
+        -0.0238,
+        -0.0006,
+        0.0125
+      ],
+      "next": {
+        "langzaam": 0.3333,
+        "snel": 0.3333,
+        "wanneer": 0.3333
+      }
+    },
+    "groene": {
+      "id": 401,
+      "freq": 1,
+      "vector": [
+        -0.0251,
+        0.0213,
+        -0.0175
+      ],
+      "next": {
+        "weilanden": 1.0
+      }
+    },
+    "groenten": {
+      "id": 402,
+      "freq": 5,
+      "vector": [
+        -0.067,
+        0.0143,
+        0.0191
+      ],
+      "next": {
+        "en": 0.4,
+        "geven": 0.2,
+        "met": 0.2,
+        "kweken": 0.2
+      }
+    },
+    "groepen": {
+      "id": 403,
+      "freq": 1,
+      "vector": [
+        -0.0198,
+        0.0018,
+        0.0134
+      ],
+      "next": {
+        "die": 1.0
+      }
+    },
+    "groeten": {
+      "id": 404,
+      "freq": 1,
+      "vector": [
+        -0.0048,
+        -0.0027,
+        -0.0023
+      ],
+      "next": {
+        "elkaar": 1.0
+      }
+    },
+    "groot": {
+      "id": 405,
+      "freq": 4,
+      "vector": [
+        -0.0674,
+        0.0208,
+        0.0522
+      ],
+      "next": {
+        "en": 0.25,
+        "project": 0.25,
+        "taalmodel": 0.25,
+        "scherm": 0.25
+      }
+    },
+    "grootste": {
+      "id": 406,
+      "freq": 1,
+      "vector": [
+        -0.0191,
+        0.0002,
+        -0.0116
+      ],
+      "next": {
+        "landdieren": 1.0
+      }
+    },
+    "grote": {
+      "id": 407,
+      "freq": 4,
+      "vector": [
+        -0.0538,
+        0.0242,
+        -0.0227
+      ],
+      "next": {
+        "hoeveelheden": 0.25,
+        "doelen": 0.25,
+        "en": 0.25,
+        "beslissingen": 0.25
+      }
+    },
+    "haasten": {
+      "id": 408,
+      "freq": 1,
+      "vector": [
+        -0.0223,
+        0.03,
+        -0.0175
+      ],
+      "next": {
+        ".": 1.0
+      }
+    },
+    "hallo": {
+      "id": 409,
+      "freq": 1,
+      "vector": [
+        -0.0054,
+        -0.001,
+        0.0086
+      ],
+      "next": {
+        "leuk": 1.0
+      }
+    },
+    "handige": {
+      "id": 410,
+      "freq": 2,
+      "vector": [
+        -0.0351,
+        -0.0004,
+        0.0357
+      ],
+      "next": {
+        "manier": 0.5,
+        "tips": 0.5
+      }
+    },
+    "hard": {
+      "id": 411,
+      "freq": 3,
+      "vector": [
+        -0.0354,
+        -0.0037,
+        -0.0035
+      ],
+      "next": {
+        "op": 0.3333,
+        "gewerkt": 0.3333,
+        "werken": 0.3333
+      }
+    },
+    "hardlopen": {
+      "id": 412,
+      "freq": 1,
+      "vector": [
+        -0.0185,
+        0.0019,
+        0.0243
+      ],
+      "next": {
+        "is": 1.0
+      }
+    },
+    "hart": {
+      "id": 413,
+      "freq": 1,
+      "vector": [
+        -0.0311,
+        0.0077,
+        -0.0114
+      ],
+      "next": {
+        "en": 1.0
+      }
+    },
+    "heb": {
+      "id": 414,
+      "freq": 1,
+      "vector": [
+        -0.005,
+        -0.0022,
+        0.0064
+      ],
+      "next": {
+        "geen": 1.0
+      }
+    },
+    "hebben": {
+      "id": 415,
+      "freq": 7,
+      "vector": [
+        -0.0725,
+        0.0635,
+        -0.0194
+      ],
+      "next": {
+        ".": 0.4286,
+        "macht": 0.1429,
+        "we": 0.1429,
+        "gezien": 0.1429,
+        "brengt": 0.1429
+      }
+    },
+    "hebt": {
+      "id": 416,
+      "freq": 2,
+      "vector": [
+        -0.0462,
+        0.0503,
+        -0.0075
+      ],
+      "next": {
+        ".": 1.0
+      }
+    },
+    "heeft": {
+      "id": 417,
+      "freq": 4,
+      "vector": [
+        -0.0574,
+        0.0393,
+        0.017
+      ],
+      "next": {
+        "een": 0.25,
+        "vaak": 0.25,
+        "eigen": 0.25,
+        ".": 0.25
+      }
+    },
+    "heel": {
+      "id": 418,
+      "freq": 1,
+      "vector": [
+        -0.0111,
+        -0.001,
+        0.0061
+      ],
+      "next": {
+        "rustgevend": 1.0
+      }
+    },
+    "heen": {
+      "id": 419,
+      "freq": 3,
+      "vector": [
+        -0.0591,
+        0.0677,
+        -0.0401
+      ],
+      "next": {
         
-        if (model) {
-            // Genereer het antwoord
-            const response = await model(text, { max_new_tokens: 60, temperature: 0.7 });
-            
-            // HIER ZAT DE FOUT: we halen de tekst nu op de juiste manier op
-            const aiText = response[0]?.generated_text || response.generated_text;
-            
-            if (aiText) {
-                appendMessage(aiText, 'ai');
-            } else {
-                appendMessage("Ik kon geen logisch antwoord genereren.", 'ai');
-            }
-        } else {
-            appendMessage("Oeps, ik kon het AI-model niet lokaal opstarten.", 'ai');
-        }
-    } catch (error) {
-        appendMessage("Er is een fout opgetreden bij het berekenen van het antwoord.", 'ai');
-        console.error(error);
-    }
-
-    // Zet status weer terug naar normaal
-    statusHeader.innerText = "Mijn Lokale AI Assistent";
-    statusHeader.style.background = "#007bff";
-}
-
-function appendMessage(text, sender) {
-    const div = document.createElement('div');
-    div.classList.add('msg', sender);
-    div.innerText = text;
-    chatBox.appendChild(div);
-    chatBox.scrollTop = chatBox.scrollHeight; // Scroll automatisch omlaag
-}
-
-// Luister naar de klik op de knop en de Enter-toets
-sendBtn.addEventListener('click', handleChat);
-inputField.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleChat(); });
