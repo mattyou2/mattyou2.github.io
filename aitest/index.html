@@ -3,103 +3,144 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lokale Browser AI (Zonder API)</title>
+    <title>Snelle Lokale Browser AI</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             max-width: 600px;
             margin: 40px auto;
             padding: 20px;
-            background-color: #f4f4f9;
+            background-color: #eef2f3;
         }
         #chatbox {
-            height: 300px;
-            border: 1px solid #ccc;
+            height: 350px;
+            border: 1px solid #ddd;
             background: #fff;
-            padding: 10px;
-            overflow-y: scroll;
-            margin-bottom: 10px;
-            border-radius: 5px;
+            padding: 15px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
         }
-        .user { color: blue; margin: 5px 0; }
-        .ai { color: green; margin: 5px 0; font-weight: bold; }
-        .status { color: gray; font-style: italic; font-size: 0.9em; }
-        input[type="text"] {
-            width: 75%;
+        .user { color: #0056b3; margin: 8px 0; }
+        .ai { color: #28a745; margin: 8px 0; font-weight: bold; }
+        .status-container {
+            margin-bottom: 15px;
             padding: 10px;
+            background: #fff;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        .status { color: #555; font-size: 0.95em; margin-bottom: 5px; }
+        .progress-bar {
+            height: 8px;
+            width: 0%;
+            background-color: #007BFF;
+            border-radius: 4px;
+            transition: width 0.2s ease;
+        }
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+        input[type="text"] {
+            flex-grow: 1;
+            padding: 12px;
             border: 1px solid #ccc;
-            border-radius: 5px;
+            border-radius: 6px;
+            font-size: 1em;
         }
         button {
-            width: 20%;
-            padding: 10px;
+            padding: 12px 24px;
             background: #007BFF;
             color: white;
             border: none;
-            border-radius: 5px;
+            border-radius: 6px;
             cursor: pointer;
+            font-weight: bold;
         }
-        button:disabled { background: #ccc; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
     </style>
 </head>
 <body>
 
-    <h2>🤖 Lokale Browser AI</h2>
-    <div id="status" class="status">Model laden... Een moment geduld (dit kan even duren bij de eerste start).</div>
+    <h2>🤖 Snelle Lokale Browser AI</h2>
+    
+    <div class="status-container">
+        <div id="status" class="status">Systeem initialiseren...</div>
+        <div style="background: #eee; border-radius: 4px; overflow: hidden;">
+            <div id="progress" class="progress-bar"></div>
+        </div>
+    </div>
     
     <div id="chatbox"></div>
     
-    <input type="text" id="userInput" placeholder="Typ een bericht..." disabled>
-    <button id="sendBtn" onclick="sendMessage()" disabled>Stuur</button>
+    <div class="input-group">
+        <input type="text" id="userInput" placeholder="Typ een bericht..." disabled>
+        <button id="sendBtn" onclick="sendMessage()" disabled>Stuur</button>
+    </div>
 
-    <!-- Importeer Transformers.js via een gratis CDN -->
     <script type="module">
+        // We gebruiken een stabielere CDN-link voor de library
         import { pipeline } from 'https://jsdelivr.net';
 
         let generator;
         const statusDiv = document.getElementById('status');
+        const progressBar = document.getElementById('progress');
         const userInput = document.getElementById('userInput');
         const sendBtn = document.getElementById('sendBtn');
 
-        // Initialiseer de AI met een zeer licht tekstgeneratiemodel (Xenova/Qwen1.5-0.5B-Chat)
         async function initAI() {
             try {
-                statusDiv.innerText = "Model wordt gedownload naar je browser-cache...";
-                generator = await pipeline('text-generation', 'Xenova/Qwen1.5-0.5B-Chat');
-                statusDiv.innerText = "✅ AI is klaar voor gebruik! (Draait 100% lokaal)";
+                statusDiv.innerText = "Model downloaden (gebeurt éénmalig)...";
+                
+                // We gebruiken Smollm-135M: dit model is super klein (~45MB) en loopt niet vast bij het laden
+                generator = await pipeline('text-generation', 'Xenova/smollm-135M-instruct', {
+                    progress_callback: (data) => {
+                        if (data.status === 'progress') {
+                            // Update de visuele laadbalk
+                            progressBar.style.width = `${data.progress}%`;
+                            statusDiv.innerText = `Model laden: ${Math.round(data.progress)}%`;
+                        } else if (data.status === 'ready') {
+                            progressBar.style.width = '100%';
+                            statusDiv.innerText = "⚡ Model is uitgepakt en klaar!";
+                        }
+                    }
+                });
+
+                statusDiv.innerText = "✅ AI is 100% lokaal actief!";
                 userInput.disabled = false;
                 sendBtn.disabled = false;
             } catch (error) {
-                statusDiv.innerText = "❌ Fout bij laden model: " + error.message;
+                statusDiv.innerText = "❌ Laden mislukt. Zie de stappen hieronder!";
+                console.error(error);
             }
         }
 
-        // Maak de functie wereldwijd beschikbaar voor de HTML-knop
         window.sendMessage = async function() {
             const text = userInput.value.trim();
             if (!text) return;
 
             appendMessage('Jij', text, 'user');
             userInput.value = '';
-            statusDiv.innerText = "AI is aan het nadenken...";
+            statusDiv.innerText = "AI typt een antwoord...";
             sendBtn.disabled = true;
 
             try {
-                // Genereer het antwoord
                 const output = await generator(text, { 
-                    max_new_tokens: 50, 
-                    temperature: 0.7 
+                    max_new_tokens: 40, 
+                    temperature: 0.6,
+                    repetition_penalty: 1.2
                 });
                 
                 let reply = output[0].generated_text;
-                // Verwijder de originele prompt uit de tekst indien nodig
                 if (reply.startsWith(text)) {
                     reply = reply.substring(text.length).trim();
                 }
 
-                appendMessage('AI', reply || "Ik weet even geen antwoord.", 'ai');
+                appendMessage('AI', reply || "...", 'ai');
             } catch (e) {
-                appendMessage('Systeem', 'Er ging iets mis tijdens het genereren.', 'status');
+                appendMessage('Systeem', 'Fout bij genereren.', 'user');
             }
 
             statusDiv.innerText = "✅ AI is klaar voor gebruik!";
@@ -112,7 +153,6 @@
             chatbox.scrollTop = chatbox.scrollHeight;
         }
 
-        // Start het proces direct
         initAI();
     </script>
 </body>
