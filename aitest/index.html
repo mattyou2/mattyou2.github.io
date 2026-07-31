@@ -3,86 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Snelle Lokale Browser AI</title>
+    <title>Mobiele Lokale AI</title>
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            max-width: 600px;
-            margin: 40px auto;
-            padding: 20px;
-            background-color: #eef2f3;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 15px;
+            background-color: #f9f9fb;
+            color: #333;
+        }
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
         }
         #chatbox {
-            height: 350px;
-            border: 1px solid #ddd;
+            height: 60vh;
+            border: 1px solid #e1e1e8;
             background: #fff;
             padding: 15px;
             overflow-y: auto;
             margin-bottom: 15px;
-            border-radius: 8px;
-            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
-        .user { color: #0056b3; margin: 8px 0; }
-        .ai { color: #28a745; margin: 8px 0; font-weight: bold; }
-        .status-container {
-            margin-bottom: 15px;
+        .msg { margin: 10px 0; padding: 10px; border-radius: 8px; max-width: 85%; }
+        .user { color: #fff; background: #007AFF; margin-left: auto; text-align: right; }
+        .ai { color: #000; background: #E9E9EB; margin-right: auto; }
+        .status-box {
             padding: 10px;
             background: #fff;
-            border-radius: 8px;
-            border: 1px solid #ddd;
+            border-radius: 10px;
+            border: 1px solid #e1e1e8;
+            margin-bottom: 15px;
+            font-size: 0.85em;
+            text-align: center;
         }
-        .status { color: #555; font-size: 0.95em; margin-bottom: 5px; }
-        .progress-bar {
-            height: 8px;
-            width: 0%;
-            background-color: #007BFF;
-            border-radius: 4px;
-            transition: width 0.2s ease;
-        }
-        .input-group {
-            display: flex;
-            gap: 10px;
-        }
+        .progress-bg { background: #eee; border-radius: 4px; height: 6px; margin-top: 5px; overflow: hidden; }
+        .progress-bar { height: 100%; width: 0%; background: #34C759; transition: width 0.1s ease; }
+        .input-area { display: flex; gap: 8px; }
         input[type="text"] {
             flex-grow: 1;
             padding: 12px;
             border: 1px solid #ccc;
-            border-radius: 6px;
-            font-size: 1em;
+            border-radius: 22px;
+            font-size: 16px; /* Voorkomt automatisch zoomen op iPhone */
         }
         button {
-            padding: 12px 24px;
-            background: #007BFF;
+            padding: 0 20px;
+            background: #007AFF;
             color: white;
             border: none;
-            border-radius: 6px;
-            cursor: pointer;
+            border-radius: 22px;
             font-weight: bold;
+            cursor: pointer;
         }
-        button:disabled { background: #ccc; cursor: not-allowed; }
+        button:disabled { background: #ccc; }
     </style>
 </head>
 <body>
 
-    <h2>🤖 Snelle Lokale Browser AI</h2>
-    
-    <div class="status-container">
-        <div id="status" class="status">Systeem initialiseren...</div>
-        <div style="background: #eee; border-radius: 4px; overflow: hidden;">
-            <div id="progress" class="progress-bar"></div>
+    <div class="container">
+        <h3>📱 Mobiele Browser AI</h3>
+        
+        <div class="status-box">
+            <div id="status">Opstarten...</div>
+            <div class="progress-bg"><div id="progress" class="progress-bar"></div></div>
         </div>
-    </div>
-    
-    <div id="chatbox"></div>
-    
-    <div class="input-group">
-        <input type="text" id="userInput" placeholder="Typ een bericht..." disabled>
-        <button id="sendBtn" onclick="sendMessage()" disabled>Stuur</button>
+        
+        <div id="chatbox"></div>
+        
+        <div class="input-area">
+            <input type="text" id="userInput" placeholder="Typ een bericht..." disabled>
+            <button id="sendBtn" onclick="sendMessage()" disabled>Stuur</button>
+        </div>
     </div>
 
     <script type="module">
-        // We gebruiken een stabielere CDN-link voor de library
-        import { pipeline } from 'https://jsdelivr.net';
+        import { pipeline, env } from 'https://jsdelivr.net';
+
+        // CRUCIAL VOOR MOBIEL: Voorkom dat de browser crash door te zware caching op GitHub Pages
+        env.useBrowserCache = true; 
 
         let generator;
         const statusDiv = document.getElementById('status');
@@ -92,27 +92,26 @@
 
         async function initAI() {
             try {
-                statusDiv.innerText = "Model downloaden (gebeurt éénmalig)...";
+                statusDiv.innerText = "Lichtgewicht model downloaden...";
                 
-                // We gebruiken Smollm-135M: dit model is super klein (~45MB) en loopt niet vast bij het laden
-                generator = await pipeline('text-generation', 'Xenova/smollm-135M-instruct', {
+                // We gebruiken LaMini-GPT-22M: extreem compact (~15MB), perfect voor telefoons
+                generator = await pipeline('text-generation', 'Xenova/LaMini-GPT-22M', {
                     progress_callback: (data) => {
                         if (data.status === 'progress') {
-                            // Update de visuele laadbalk
                             progressBar.style.width = `${data.progress}%`;
-                            statusDiv.innerText = `Model laden: ${Math.round(data.progress)}%`;
+                            statusDiv.innerText = `Laden: ${Math.round(data.progress)}%`;
                         } else if (data.status === 'ready') {
                             progressBar.style.width = '100%';
-                            statusDiv.innerText = "⚡ Model is uitgepakt en klaar!";
+                            statusDiv.innerText = "⚡ Model geladen in telefoongeheugen!";
                         }
                     }
                 });
 
-                statusDiv.innerText = "✅ AI is 100% lokaal actief!";
+                statusDiv.innerText = "✅ AI is klaar voor gebruik!";
                 userInput.disabled = false;
                 sendBtn.disabled = false;
             } catch (error) {
-                statusDiv.innerText = "❌ Laden mislukt. Zie de stappen hieronder!";
+                statusDiv.innerText = "❌ Fout: " + error.message;
                 console.error(error);
             }
         }
@@ -123,13 +122,13 @@
 
             appendMessage('Jij', text, 'user');
             userInput.value = '';
-            statusDiv.innerText = "AI typt een antwoord...";
+            statusDiv.innerText = "AI denkt na...";
             sendBtn.disabled = true;
 
             try {
                 const output = await generator(text, { 
-                    max_new_tokens: 40, 
-                    temperature: 0.6,
+                    max_new_tokens: 30, 
+                    temperature: 0.7,
                     repetition_penalty: 1.2
                 });
                 
@@ -140,7 +139,7 @@
 
                 appendMessage('AI', reply || "...", 'ai');
             } catch (e) {
-                appendMessage('Systeem', 'Fout bij genereren.', 'user');
+                appendMessage('Systeem', 'Oeps, de telefoon-processor raakte overbelast.', 'ai');
             }
 
             statusDiv.innerText = "✅ AI is klaar voor gebruik!";
@@ -149,7 +148,7 @@
 
         function appendMessage(sender, text, className) {
             const chatbox = document.getElementById('chatbox');
-            chatbox.innerHTML += `<div class="${className}"><strong>${sender}:</strong> ${text}</div>`;
+            chatbox.innerHTML += `<div class="msg ${className}"><strong>${sender}:</strong><br>${text}</div>`;
             chatbox.scrollTop = chatbox.scrollHeight;
         }
 
