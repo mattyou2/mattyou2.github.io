@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <title>2D Minecraft: Mattyou Studios Edition (Movement Sync Fixed)</title>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3540026329815958" crossorigin="anonymous"></script>
+    <style>
+        body { margin: 0; overflow: hidden; background: #75a7ff; font-family: 'Segoe UI', sans-serif; transition: background 0.5s; }
+        canvas { display: block; image-rendering: pixelated; }
+        
+        #hud { position: absolute; top: 10px; left: 10px; color: white; text-shadow: 2px 2px #000; pointer-events: none; z-index: 5; font-size: 14px; }
+        #coords-hud { color: #00ffff; font-weight: bold; }
+        #watermark { position: absolute; bottom: 10px; right: 10px; color: rgba(255,255,255,0.5); font-size: 14px; pointer-events: none; z-index: 5; }
+
+        #hotbar { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); display: flex; background: rgba(0,0,0,0.6); padding: 5px; border: 4px solid #333; }
+        .slot { width: 45px; height: 45px; border: 3px solid #8b8b8b; margin: 2px; display: flex; align-items: center; justify-content: center; background: #c6c6c6; position: relative; }
+        .slot.selected { border-color: white; box-shadow: 0 0 10px white; }
+        .slot span { position: absolute; bottom: 1px; right: 2px; font-size: 11px; color: #000; font-weight: bold; }
+
+        .overlay { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #c6c6c6; border: 4px solid #333; padding: 20px; z-index: 10; width: 420px; box-shadow: 10px 10px 0px rgba(0,0,0,0.3); }
+        button { width: 100%; margin: 5px 0; padding: 10px; cursor: pointer; background: #4CAF50; border: 2px solid #2e7d32; color: white; font-weight: bold; }
+        button.tp-btn { background: #2196F3; border-color: #0b7dda; margin: 3px 0; }
+        input, select { width: 100%; padding: 10px; margin: 5px 0; box-sizing: border-box; font-size: 16px; }
+
+        .studio-tag { display: block; text-align: right; font-size: 10px; color: #555; margin-top: 10px; font-style: italic; }
+
+        #dragon-bar { display: none; position: absolute; top: 50px; left: 50%; transform: translateX(-50%); width: 300px; height: 20px; background: #333; border: 2px solid white; z-index: 5; }
+        #dragon-health { width: 100%; height: 100%; background: #a300a3; transition: width 0.2s; }
+        #win-screen { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); color: gold; text-align: center; justify-content: center; align-items: center; flex-direction: column; z-index: 100; font-size: 30px; }
+        
+        #player-tp-list { max-height: 200px; overflow-y: auto; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+<div id="hud">
+    <b>WASD:</b> Bewegen | <b>L-Klik:</b> Mine | <b>R-Klik:</b> Bouw | <b>T:</b> Teleport Menu<br>
+    <span id="coords-hud">Coördinaten: X: 0, Y: 0</span> | <span id="dim-text" style="color: yellow;">Dimensie: Overworld</span> | <span id="sync-status" style="color: #00ff00;">Cloud: Verbinden...</span>
+</div>
+
+<div id="watermark">Made by Mattyou Studios</div>
+
+<div id="dragon-bar"><div id="dragon-health"></div><div style="position:absolute; width:100%; text-align:center; top:0; color:white; font-size:12px; font-weight:bold;">ENDER DRAGON</div></div>
+
+<div id="win-screen">
+    <h1>GEFELICITEERD!</h1>
+    <p>Je hebt Minecraft Mattyou 2D Edition uitgespeeld!</p>
+    <span style="font-size: 18px;">Productie: Mattyou Studios</span><br>
+    <button onclick="location.reload()" style="width:200px;">Speel Opnieuw</button>
+</div>
+
+<div id="login-overlay" class="overlay" style="display: block;">
+    <h2>🌐 Multiplayer Login</h2>
+    <p>Voer je naam in om de Mattyou Studios Server te betreden:</p>
+    <input type="text" id="usernameInput" placeholder="Spelernaam..." maxlength="12">
+    <select id="colorInput">
+        <option value="#ffcc00">🟡 Geel</option>
+        <option value="#ff4444">🔴 Rood</option>
+        <option value="#4488ff">🔵 Blauw</option>
+        <option value="#44ff44">🟢 Groen</option>
+        <option value="#aa44ff">🟣 Paars</option>
+    </select>
+    <button onclick="joinMultiplayer()">Server Betreden</button>
+    <span class="studio-tag">Made by Mattyou Studios</span>
+</div>
+
+<div id="tp-menu" class="overlay">
+    <h2>🌀 Teleporteer naar Speler</h2>
+    <div id="player-tp-list">Aan het zoeken naar spelers...</div>
+    <button onclick="closeAll()">Sluiten [T]</button>
+    <span class="studio-tag">Made by Mattyou Studios</span>
+</div>
+
+<div id="hotbar">
+    <div class="slot selected" id="slot0"></div>
+    <div class="slot" id="slot1"></div>
+    <div class="slot" id="slot2"></div>
+    <div class="slot" id="slot3"></div>
+    <div class="slot" id="slot4"></div>
+    <div class="slot" id="slot5"></div>
+    <div class="slot" id="slot6"></div>
+    <div class="slot" id="slot7"></div>
+    <div class="slot" id="slot8"></div>
+</div>
+
+<div id="inventory-menu" class="overlay">
+    <h2>🎒 Inventory</h2>
+    <div id="inv-display" style="background:#a9a9a9; padding:10px; border:2px inset #555; margin-bottom:10px;"></div>
+    <button onclick="quickCraft('planks')">Hout -> Planken</button>
+    <button onclick="quickCraft('crafting_table')">Maak Crafting Table</button>
+    <button onclick="closeAll()">Sluiten [E]</button>
+    <span class="studio-tag">Made by Mattyou Studios</span>
+</div>
+
+<div id="dim-menu" class="overlay">
+    <h2>🌌 Dimensies</h2>
+    <button onclick="travel('overworld')">Overworld</button>
+    <button onclick="travel('nether')">Nether</button>
+    <button id="end-btn" onclick="travel('the_end')" disabled>The End (Bezoek eerst Nether)</button>
+    <button onclick="closeAll()">Sluiten [F]</button>
+    <span class="studio-tag">Made by Mattyou Studios</span>
+</div>
+
+<div id="table-menu" class="overlay">
+    <h2>🛠️ Crafting Table</h2>
+    <button onclick="complexCraft('iron_pickaxe')">Iron Pickaxe (3 Iron)</button>
+    <button onclick="complexCraft('sword')">Diamond Sword (2 Diamond)</button>
+    <button onclick="closeAll()">Sluiten [C]</button>
+    <span class="studio-tag">Made by Mattyou Studios</span>
+</div>
+
+<canvas id="gameCanvas"></canvas>
+
+<script>
+const API_KEY = 'sk_cacac16e_t2064oqppggqqvn1l5c8f';
+const BASE_URL = 'https://qzqncoebdglqbivmlbla.supabase.co/functions/v1/api';
+const AUTH_HEADER = {
+    'Authorization': `Bearer ${API_KEY}`,
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+};
+
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+const tileSize = 40;
+let world = {}; 
+let currentDim = 'overworld';
+let hasVisitedNether = false;
+let dragonHP = 100;
+let dragonDefeated = false;
+
+// Multiplayer variabelen
+let myPlayerId = null;
+let playerName = "Speler";
+let playerColor = "#ffcc00";
+let otherPlayers = {};
+let playersFolderId = null;
+let worldFolderId = null;
+let worldEntryId = null;
+let isJoined = false;
+
+// Coördinaten tracking voor bewegingscheck
+let lastSentX = 0;
+let lastSentY = 0;
+let isSendingPos = false;
+let isFetchingPlayers = false;
+
+// Mining
+let miningTile = null;
+let mineTimer = 0;
+const BASE_MINE_TIME = 40;
+
+const inventory = { log: 4, dirt: 0, grass: 0, stone: 0, iron: 0, diamond: 0, netherite: 0, planks: 0, crafting_table: 1, has_sword: false, has_pickaxe: false };
+const hotbarOrder = ['log', 'planks', 'grass', 'dirt', 'stone', 'iron', 'diamond', 'netherite', 'crafting_table'];
+let selectedSlot = 0;
+
+const player = { x: 400, y: 100, w: 26, h: 38, vx: 0, vy: 0, speed: 5, jump: -11, grounded: false };
+const keys = {};
+
+const colors = {
+    grass: '#5d9948', dirt: '#866043', stone: '#7a7a7a', iron: '#d4b49d', diamond: '#33ebff',
+    netherrack: '#722626', netherite: '#312323', end_stone: '#d8d89a', bedrock: '#111',
+    log: '#6b4e31', leaf: '#3eb03e', planks: '#a0764c', crafting_table: '#dfb36e', air: 'transparent'
+};
+
+function generateColumn(x, dim) {
+    if (!world[dim]) world[dim] = {};
+    if (world[dim][x]) return;
+    world[dim][x] = {};
+    const groundLevel = 12;
+
+    if (dim === 'overworld') {
+        for (let y = 0; y < 60; y++) {
+            let type = 'air';
+            if (y === 59) type = 'bedrock';
+            else if (y > groundLevel + 4) { 
+                type = 'stone'; 
+                if (Math.random() < 0.05) type = 'diamond'; 
+                else if (Math.random() < 0.08) type = 'iron'; 
+            }
+            else if (y > groundLevel) type = 'dirt';
+            else if (y === groundLevel) type = 'grass';
+            world[dim][x][y] = type;
+        }
+        if (Math.random() < 0.15) createTree(x, groundLevel - 1, dim);
+    } else if (dim === 'nether') {
+        for (let y = 0; y < 40; y++) {
+            let type = (y === 0 || y === 39) ? 'bedrock' : 'netherrack';
+            if (Math.random() < 0.03) type = 'netherite';
+            if (Math.random() < 0.1) type = 'air';
+            world[dim][x][y] = type;
+        }
+    } else if (dim === 'the_end') {
+        for (let y = 0; y < 40; y++) {
+            world[dim][x][y] = (y > 20 && y < 25 && x > -15 && x < 15) ? 'end_stone' : 'air';
+        }
+    }
+}
+
+function createTree(x, y, dim) {
+    for(let i=0; i<3; i++) {
+        if(!world[dim][x]) world[dim][x] = {};
+        world[dim][x][y-i] = 'log';
+    }
+}
+
+function travel(dim) {
+    currentDim = dim;
+    if (dim === 'nether') { hasVisitedNether = true; document.getElementById('end-btn').disabled = false; document.body.style.background = "#3d0b0b"; }
+    else if (dim === 'the_end') { 
+        document.body.style.background = "#1a0a2a"; 
+        player.x = 0; player.y = 15 * tileSize;
+        document.getElementById('dragon-bar').style.display = 'block';
+    } else { document.body.style.background = "#75a7ff"; document.getElementById('dragon-bar').style.display = 'none'; }
+    document.getElementById('dim-text').innerText = "Dimensie: " + dim.toUpperCase();
+    closeAll();
+    syncMyPlayerToCloud(true);
+}
+
+function teleportToPlayer(targetX, targetY, targetDim) {
+    player.x = Number(targetX);
+    player.y = Number(targetY) - 10;
+    if (currentDim !== targetDim) {
+        travel(targetDim);
+    }
+    closeAll();
+    syncMyPlayerToCloud(true);
+}
+
+function updateTPMenu() {
+    const container = document.getElementById('player-tp-list');
+    container.innerHTML = '';
+
+    const playerKeys = Object.keys(otherPlayers);
+    if (playerKeys.length === 0) {
+        container.innerHTML = '<i>Geen andere spelers online.</i>';
+        return;
+    }
+
+    playerKeys.forEach(id => {
+        const p = otherPlayers[id];
+        const btn = document.createElement('button');
+        btn.className = 'tp-btn';
+        btn.innerHTML = `🌀 Teleport naar <b>${p.name}</b> (${p.dim}) [X: ${Math.round(p.targetX)}, Y: ${Math.round(p.targetY)}]`;
+        btn.onclick = () => teleportToPlayer(p.targetX, p.targetY, p.dim);
+        container.appendChild(btn);
+    });
+}
+
+async function joinMultiplayer() {
+    const input = document.getElementById('usernameInput').value.trim();
+    if (!input) return alert('Vul een spelernaam in!');
+
+    playerName = input;
+    playerColor = document.getElementById('colorInput').value;
+    document.getElementById('login-overlay').style.display = 'none';
+
+    await initCloudStorage();
+}
+
+async function initCloudStorage() {
+    try {
+        document.getElementById('sync-status').innerText = 'Cloud: Verbinden...';
+        document.getElementById('sync-status').style.color = 'yellow';
+        
+        const res = await fetch(`${BASE_URL}/text/folders?parent_id=root`, { headers: AUTH_HEADER });
+        const data = await res.json();
+        let folders = Array.isArray(data) ? data : (data.folders || []);
+
+        let pFolder = folders.find(f => f.name === 'mc_players');
+        if (!pFolder) {
+            const cr = await fetch(`${BASE_URL}/text/folders`, { method: 'POST', headers: AUTH_HEADER, body: JSON.stringify({ name: 'mc_players' }) });
+            pFolder = await cr.json();
+        }
+        playersFolderId = pFolder.id || (pFolder.data && pFolder.data.id);
+
+        let wFolder = folders.find(f => f.name === 'mc_world_data');
+        if (!wFolder) {
+            const cr = await fetch(`${BASE_URL}/text/folders`, { method: 'POST', headers: AUTH_HEADER, body: JSON.stringify({ name: 'mc_world_data' }) });
+            wFolder = await cr.json();
+        }
+        worldFolderId = wFolder.id || (wFolder.data && wFolder.data.id);
+
+        // Zoek of maak speler entry aan
+        const existingEntriesRes = await fetch(`${BASE_URL}/text/folders/${playersFolderId}/entries`, { headers: AUTH_HEADER });
+        const existingData = await existingEntriesRes.json();
+        const existingEntries = existingData.entries || existingData || [];
+        
+        let myEntry = existingEntries.find(e => e.name === `player_${playerName}`);
+
+        if (myEntry) {
+            myPlayerId = myEntry.id;
+        } else {
+            const pRes = await fetch(`${BASE_URL}/text/folders/${playersFolderId}/entries`, {
+                method: 'POST',
+                headers: AUTH_HEADER,
+                body: JSON.stringify({
+                    name: `player_${playerName}`,
+                    content: JSON.stringify({ x: Math.round(player.x), y: Math.round(player.y), color: playerColor, dim: currentDim, lastSeen: Date.now() })
+                })
+            });
+            const pData = await pRes.json();
+            myPlayerId = pData.id || (pData.data && pData.data.id);
+        }
+
+        await fetchWorldFromCloud();
+
+        isJoined = true;
+        document.getElementById('sync-status').innerText = 'Cloud: 🟢 Online';
+        document.getElementById('sync-status').style.color = '#00ff00';
+
+        // SYNC TIMERS
+        setInterval(() => syncMyPlayerToCloud(false), 300); // Check & Stuur posities elke 300ms
+        setInterval(fetchOtherPlayers, 350);               // Haal posities van anderen op elke 350ms
+        setInterval(fetchWorldFromCloud, 2000);              // Wereld verversen elke 2 seconden
+
+    } catch (err) {
+        console.error('Cloud Init Error:', err);
+        document.getElementById('sync-status').innerText = 'Cloud: ⚠️ Fout';
+        document.getElementById('sync-status').style.color = 'red';
+    }
+}
+
+async function syncMyPlayerToCloud(force = false) {
+    if (!isJoined || !myPlayerId || isSendingPos) return;
+
+    const curX = Math.round(player.x);
+    const curY = Math.round(player.y);
+
+    // Stuur alleen data als we écht bewogen zijn of een force update uitvoeren
+    if (!force && Math.abs(curX - lastSentX) < 2 && Math.abs(curY - lastSentY) < 2) {
+        return;
+    }
+
+    isSendingPos = true;
+
+    try {
+        const res = await fetch(`${BASE_URL}/text/entries/${myPlayerId}`, {
+            method: 'PUT',
+            headers: AUTH_HEADER,
+            body: JSON.stringify({
+                content: JSON.stringify({ 
+                    x: curX, 
+                    y: curY, 
+                    color: playerColor, 
+                    dim: currentDim, 
+                    lastSeen: Date.now() 
+                })
+            })
+        });
+
+        if (res.ok) {
+            lastSentX = curX;
+            lastSentY = curY;
+            document.getElementById('sync-status').innerText = 'Cloud: 🟢 Online';
+            document.getElementById('sync-status').style.color = '#00ff00';
+        } else if (res.status === 429) {
+            document.getElementById('sync-status').innerText = 'Cloud: ⚠️ Rate Limit';
+            document.getElementById('sync-status').style.color = 'orange';
+        }
+    } catch (e) {
+        document.getElementById('sync-status').innerText = 'Cloud: 🔴 Netwerk Fout';
+        document.getElementById('sync-status').style.color = 'red';
+    } finally {
+        isSendingPos = false;
+    }
+}
+
+async function fetchOtherPlayers() {
+    if (!isJoined || !playersFolderId || isFetchingPlayers) return;
+    isFetchingPlayers = true;
+
+    try {
+        const res = await fetch(`${BASE_URL}/text/folders/${playersFolderId}/entries`, { headers: AUTH_HEADER });
+        if (!res.ok) return;
+        const data = await res.json();
+        const entries = data.entries || data || [];
+        const now = Date.now();
+
+        entries.forEach(e => {
+            if (e.id === myPlayerId) return;
+            try {
+                const p = JSON.parse(e.content);
+                const cleanName = e.name.replace('player_', '');
+
+                // Zorg dat x en y ALTIJD nummers zijn
+                const posX = Number(p.x);
+                const posY = Number(p.y);
+
+                if (!otherPlayers[e.id]) {
+                    otherPlayers[e.id] = { 
+                        name: cleanName, 
+                        x: posX, y: posY, 
+                        targetX: posX, targetY: posY, 
+                        color: p.color, 
+                        dim: p.dim,
+                        lastSeenLocal: now
+                    };
+                } else {
+                    // Update direct de gewenste coördinaten
+                    otherPlayers[e.id].targetX = posX;
+                    otherPlayers[e.id].targetY = posY;
+                    otherPlayers[e.id].color = p.color;
+                    otherPlayers[e.id].dim = p.dim;
+                    otherPlayers[e.id].name = cleanName;
+                    otherPlayers[e.id].lastSeenLocal = now;
+                }
+            } catch (err) {}
+        });
+
+        // Verwijder spelers na 30 seconden inactiviteit
+        Object.keys(otherPlayers).forEach(id => {
+            if (now - otherPlayers[id].lastSeenLocal > 30000) {
+                delete otherPlayers[id];
+            }
+        });
+
+    } catch (e) {
+    } finally {
+        isFetchingPlayers = false;
+    }
+}
+
+async function saveWorldToCloud() {
+    if (!worldFolderId || !worldEntryId) return;
+    try {
+        await fetch(`${BASE_URL}/text/entries/${worldEntryId}`, {
+            method: 'PUT',
+            headers: AUTH_HEADER,
+            body: JSON.stringify({ content: JSON.stringify({ world, dragonHP }) })
+        });
+    } catch (e) {}
+}
+
+async function fetchWorldFromCloud() {
+    if (!worldFolderId) return;
+    try {
+        const res = await fetch(`${BASE_URL}/text/folders/${worldFolderId}/entries`, { headers: AUTH_HEADER });
+        if (!res.ok) return;
+        const data = await res.json();
+        const entries = data.entries || data || [];
+        let entry = entries.find(e => e.name === 'shared_mc_world');
+
+        if (entry) {
+            worldEntryId = entry.id;
+            const parsed = JSON.parse(entry.content);
+            if (parsed.world) {
+                for (let dim in parsed.world) {
+                    if (!world[dim]) world[dim] = {};
+                    for (let x in parsed.world[dim]) {
+                        world[dim][x] = parsed.world[dim][x];
+                    }
+                }
+            }
+            if (parsed.dragonHP !== undefined) {
+                dragonHP = parsed.dragonHP;
+                document.getElementById('dragon-health').style.width = dragonHP + "%";
+            }
+        } else {
+            const cRes = await fetch(`${BASE_URL}/text/folders/${worldFolderId}/entries`, {
+                method: 'POST',
+                headers: AUTH_HEADER,
+                body: JSON.stringify({ name: 'shared_mc_world', content: JSON.stringify({ world, dragonHP }) })
+            });
+            const cData = await cRes.json();
+            worldEntryId = cData.id || (cData.data && cData.data.id);
+        }
+    } catch (e) {}
+}
+
+function update() {
+    if (keys['a']) player.vx = -player.speed;
+    else if (keys['d']) player.vx = player.speed;
+    else player.vx = 0;
+
+    const currentTX = Math.floor(player.x / tileSize);
+    for(let i = -20; i < 20; i++) generateColumn(currentTX + i, currentDim);
+
+    player.vy += 0.6;
+    const tx = Math.floor((player.x + player.w/2) / tileSize);
+    const ty = Math.floor((player.y + player.h + player.vy) / tileSize);
+    
+    if (world[currentDim] && world[currentDim][tx] && world[currentDim][tx][ty] && world[currentDim][tx][ty] !== 'air') {
+        player.y = ty * tileSize - player.h;
+        player.vy = 0;
+        player.grounded = true;
+    } else { player.y += player.vy; player.grounded = false; }
+    
+    player.x += player.vx;
+    if (keys['w'] && player.grounded) { player.vy = player.jump; player.grounded = false; }
+
+    // Live Coördinaten HUD
+    document.getElementById('coords-hud').innerText = `Coördinaten: X: ${Math.round(player.x)}, Y: ${Math.round(player.y)}`;
+
+    // VERPLAATS ANDERE SPELERS VLOEIEND NAAR HUN COÖRDINATEN
+    Object.keys(otherPlayers).forEach(id => {
+        const p = otherPlayers[id];
+
+        // Zorg dat we getallen vergelijken
+        const tX = Number(p.targetX);
+        const tY = Number(p.targetY);
+
+        if (isNaN(p.x)) p.x = tX;
+        if (isNaN(p.y)) p.y = tY;
+
+        const distX = Math.abs(tX - p.x);
+        const distY = Math.abs(tY - p.y);
+
+        // Als de speler erg ver staat (teleport), spring direct
+        if (distX > 200 || distY > 200) {
+            p.x = tX;
+            p.y = tY;
+        } else {
+            // Anders beweeg met een strakke Lerp (0.35) naar de nieuwe positie
+            p.x += (tX - p.x) * 0.35;
+            p.y += (tY - p.y) * 0.35;
+        }
+    });
+
+    if (miningTile) {
+        let speedMult = inventory.has_pickaxe ? 3 : 1;
+        mineTimer += speedMult;
+        if (mineTimer >= BASE_MINE_TIME) {
+            const type = world[currentDim][miningTile.x][miningTile.y];
+            if (type !== 'bedrock') {
+                inventory[type] = (inventory[type] || 0) + 1;
+                world[currentDim][miningTile.x][miningTile.y] = 'air';
+                updateUI();
+                saveWorldToCloud();
+            }
+            miningTile = null;
+            mineTimer = 0;
+        }
+    }
+    draw();
+    requestAnimationFrame(update);
+}
+
+function draw() {
+    ctx.save();
+    ctx.translate(-player.x + canvas.width/2, -player.y + canvas.height/2);
+    ctx.clearRect(player.x - canvas.width, player.y - canvas.height, canvas.width*2, canvas.height*2);
+    
+    const startX = Math.floor((player.x - canvas.width/2) / tileSize);
+    const endX = Math.ceil((player.x + canvas.width/2) / tileSize);
+
+    if (world[currentDim]) {
+        for (let x = startX; x <= endX; x++) {
+            if (world[currentDim][x]) {
+                for (let y in world[currentDim][x]) {
+                    const type = world[currentDim][x][y];
+                    if (type === 'air') continue;
+                    ctx.fillStyle = colors[type] || '#fff';
+                    ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
+                    if (miningTile && miningTile.x === x && miningTile.y === parseInt(y)) {
+                        ctx.fillStyle = 'white';
+                        ctx.fillRect(x * tileSize, y * tileSize + 35, tileSize * (mineTimer / BASE_MINE_TIME), 5);
+                    }
+                }
+            }
+        }
+    }
+
+    if (currentDim === 'the_end' && !dragonDefeated) {
+        ctx.fillStyle = 'black';
+        ctx.fillRect(-100, 10 * tileSize, 200, 80);
+    }
+
+    // TEKEN ANDERE SPELERS
+    Object.keys(otherPlayers).forEach(id => {
+        const p = otherPlayers[id];
+        if (p.dim === currentDim) {
+            ctx.fillStyle = p.color;
+            ctx.fillRect(p.x, p.y, player.w, player.h);
+            
+            ctx.fillStyle = 'white';
+            ctx.font = '12px Segoe UI';
+            ctx.textAlign = 'center';
+            ctx.fillText(p.name, p.x + player.w/2, p.y - 8);
+        }
+    });
+
+    // TEKEN EIGEN SPELER
+    ctx.fillStyle = playerColor;
+    ctx.fillRect(player.x, player.y, player.w, player.h);
+    ctx.fillStyle = 'white';
+    ctx.font = 'bold 12px Segoe UI';
+    ctx.textAlign = 'center';
+    ctx.fillText(`[Jij] ${playerName}`, player.x + player.w/2, player.y - 8);
+
+    ctx.restore();
+}
+
+canvas.onmousedown = (e) => {
+    const rx = e.clientX + (player.x - canvas.width/2);
+    const ry = e.clientY + (player.y - canvas.height/2);
+    const tx = Math.floor(rx / tileSize);
+    const ty = Math.floor(ry / tileSize);
+
+    if (e.button === 0) {
+        if (currentDim === 'the_end' && !dragonDefeated && rx > -100 && rx < 100 && ry > 10 * tileSize && ry < 10 * tileSize + 80) {
+            dragonHP -= inventory.has_sword ? 10 : 2;
+            document.getElementById('dragon-health').style.width = dragonHP + "%";
+            if (dragonHP <= 0) { dragonDefeated = true; document.getElementById('win-screen').style.display = 'flex'; }
+            saveWorldToCloud();
+        } else if (world[currentDim] && world[currentDim][tx] && world[currentDim][tx][ty] !== 'air') {
+            miningTile = { x: tx, y: ty };
+            mineTimer = 0;
+        }
+    } else if (e.button === 2) {
+        const item = hotbarOrder[selectedSlot];
+        if (inventory[item] > 0) {
+            if (!world[currentDim][tx]) world[currentDim][tx] = {};
+            world[currentDim][tx][ty] = item;
+            inventory[item]--;
+            updateUI();
+            saveWorldToCloud();
+        }
+    }
+};
+
+window.onmouseup = () => { miningTile = null; mineTimer = 0; };
+canvas.oncontextmenu = (e) => e.preventDefault();
+
+window.onkeydown = (e) => {
+    const k = e.key.toLowerCase();
+    keys[k] = true;
+    if (k === 'e') toggleMenu('inventory-menu');
+    if (k === 'f') toggleMenu('dim-menu');
+    if (k === 't') { toggleMenu('tp-menu'); updateTPMenu(); }
+    if (k === 'c' && inventory.crafting_table > 0) toggleMenu('table-menu');
+    if (k >= '1' && k <= '9') { selectedSlot = parseInt(k) - 1; updateUI(); }
+};
+window.onkeyup = (e) => keys[e.key.toLowerCase()] = false;
+
+function toggleMenu(id) {
+    const m = document.getElementById(id);
+    const open = m.style.display === 'block';
+    closeAll();
+    if (!open) { m.style.display = 'block'; updateUI(); }
+}
+
+function updateUI() {
+    for (let i = 0; i < 9; i++) {
+        const slot = document.getElementById('slot' + i);
+        slot.classList.toggle('selected', i === selectedSlot);
+        const item = hotbarOrder[i];
+        if (item && inventory[item] > 0) {
+            slot.style.backgroundColor = colors[item] || '#c6c6c6';
+            slot.innerHTML = `<span>${inventory[item]}</span>`;
+        } else { slot.style.backgroundColor = '#c6c6c6'; slot.innerHTML = ''; }
+    }
+    document.getElementById('inv-display').innerHTML = `Hout: ${inventory.log || 0} | Diamond: ${inventory.diamond || 0} | IJzer: ${inventory.iron || 0}`;
+}
+
+function quickCraft(item) {
+    if (item === 'planks' && inventory.log > 0) { inventory.log--; inventory.planks = (inventory.planks || 0) + 4; }
+    if (item === 'crafting_table' && inventory.planks >= 4) { inventory.planks -= 4; inventory.crafting_table = (inventory.crafting_table || 0) + 1; }
+    updateUI();
+}
+
+function complexCraft(item) {
+    if (item === 'iron_pickaxe' && inventory.iron >= 3) { inventory.iron -= 3; inventory.has_pickaxe = true; alert("Pickaxe gemaakt!"); }
+    if (item === 'sword' && inventory.diamond >= 2) { inventory.diamond -= 2; inventory.has_sword = true; alert("Sword gemaakt!"); }
+    updateUI();
+}
+
+function closeAll() { document.querySelectorAll('.overlay').forEach(o => o.style.display = 'none'); }
+
+updateUI();
+update();
+</script>
+</body>
+</html>
