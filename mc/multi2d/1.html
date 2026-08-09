@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mattyou Cloud Block World</title>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3540026329815958" crossorigin="anonymous"></script>
+    <style>
+        :root {
+            --bg-color: #0d0f18;
+            --panel-bg: #1a1d28;
+            --border-color: #2e3346;
+            --accent-color: #7aa2f7;
+            --text-color: #c0caf5;
+            --subtext-color: #a6adc8;
+            --danger-color: #f7768e;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            user-select: none;
+        }
+
+        .game-card {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 1.2rem;
+            color: var(--accent-color);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            background: var(--bg-color);
+            padding: 8px 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .block-option {
+            width: 32px;
+            height: 32px;
+            border-radius: 4px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: transform 0.1s, border-color 0.1s;
+        }
+
+        .block-option:hover { transform: scale(1.1); }
+        .block-option.active { border-color: #ffffff; transform: scale(1.15); }
+
+        button {
+            background: #2a2e45;
+            color: white;
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: background 0.15s;
+        }
+
+        button:hover { background: #3b405f; }
+
+        button.btn-reset {
+            background: #412434;
+            color: #f7768e;
+            border-color: rgba(247, 118, 142, 0.3);
+        }
+
+        button.btn-reset:hover {
+            background: #5a2c47;
+        }
+
+        canvas {
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            cursor: crosshair;
+            background-color: #1a233a;
+        }
+
+        .hints {
+            font-size: 0.85rem;
+            color: var(--subtext-color);
+            text-align: center;
+        }
+
+        .status {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--accent-color);
+        }
+
+        .status.error {
+            color: var(--danger-color);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-card">
+        <div class="header">
+            <h1>🌍 Mattyou Shared Cloud Block World</h1>
+            <div class="status" id="statusText">Verbinden met cloud...</div>
+            <div class="header-actions">
+                <button onclick="fetchWorldFromCloud()">🔄 Verversen</button>
+                <button class="btn-reset" onclick="resetWorld()">🧹 Reset Wereld</button>
+            </div>
+        </div>
+
+        <div class="toolbar">
+            <span>Kies bouwblok:</span>
+            <div class="block-option active" style="background: #4bae4f;" onclick="selectBlock(1, this)" title="Gras"></div>
+            <div class="block-option" style="background: #795548;" onclick="selectBlock(2, this)" title="Aarde"></div>
+            <div class="block-option" style="background: #757575;" onclick="selectBlock(3, this)" title="Steen"></div>
+            <div class="block-option" style="background: #8d6e63;" onclick="selectBlock(4, this)" title="Hout"></div>
+            <div class="block-option" style="background: #2e7d32;" onclick="selectBlock(5, this)" title="Bladeren"></div>
+        </div>
+
+        <canvas id="worldCanvas" width="700" height="420"></canvas>
+
+        <div class="hints">
+            🖱️ <b>Linkermuisknop</b>: Breek blok &nbsp;|&nbsp; 🖱️ <b>Rechtermuisknop</b>: Plaats gekozen blok<br>
+            <i>Gesynchroniseerd met de cloud voor elk apparaat!</i>
+        </div>
+    </div>
+
+    <script>
+        const API_KEY = 'sk_cacac16e_t2064oqppggqqvn1l5c8f';
+        const BASE_URL = 'https://qzqncoebdglqbivmlbla.supabase.co/functions/v1/api';
+        
+        const AUTH_HEADER = {
+            'Authorization': `Bearer ${API_KEY}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        };
+
+        const COLS = 25;
+        const ROWS = 15;
+        const BLOCK_SIZE = 28;
+
+        const canvas = document.getElementById('worldCanvas');
+        const ctx = canvas.getContext('2d');
+        const statusText = document.getElementById('statusText');
+
+        const BLOCK_TYPES = {
+            0: { name: 'Lucht', color: null },
+            1: { name: 'Gras', color: '#4bae4f', topColor: '#81c784' },
+            2: { name: 'Aarde', color: '#795548' },
+            3: { name: 'Steen', color: '#757575' },
+            4: { name: 'Hout', color: '#8d6e63' },
+            5: { name: 'Bladeren', color: '#2e7d32' }
+        };
+
+        let selectedBlockType = 1;
+        let worldData = Array(ROWS * COLS).fill(0);
+        let worldEntryId = null;
+        let worldFolderId = null;
+        let isSaving = false;
+
+        canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+        canvas.addEventListener('mousedown', e => {
+            const rect = canvas.getBoundingClientRect();
+            const col = Math.floor((e.clientX - rect.left) / BLOCK_SIZE);
+            const row = Math.floor((e.clientY - rect.top) / BLOCK_SIZE);
+
+            if (col >= 0 && col < COLS && row >= 0 && row < ROWS) {
+                const index = row * COLS + col;
+
+                if (e.button === 0) {
+                    worldData[index] = 0;
+                } else if (e.button === 2) {
+                    worldData[index] = selectedBlockType;
+                }
+                renderWorld();
+                saveWorldToCloud();
+            }
+        });
+
+        function selectBlock(type, element) {
+            selectedBlockType = type;
+            document.querySelectorAll('.block-option').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+        }
+
+        async function initCloudWorld() {
+            try {
+                updateStatus('Map zoeken...', false);
+                
+                const res = await fetch(`${BASE_URL}/text/folders?parent_id=root`, { 
+                    method: 'GET',
+                    headers: AUTH_HEADER 
+                });
+
+                if (!res.ok) throw new Error(`HTTP Fout: ${res.status}`);
+
+                const data = await res.json();
+                let folders = Array.isArray(data) ? data : (data.folders || []);
+
+                let folder = folders.find(f => f.name === 'block_world_folder');
+
+                if (!folder) {
+                    const createRes = await fetch(`${BASE_URL}/text/folders`, {
+                        method: 'POST',
+                        headers: AUTH_HEADER,
+                        body: JSON.stringify({ name: 'block_world_folder', parent_id: null })
+                    });
+                    folder = await createRes.json();
+                }
+
+                worldFolderId = folder.id || (folder.data && folder.data.id);
+                
+                if (worldFolderId) {
+                    await fetchWorldFromCloud();
+                    setInterval(fetchWorldFromCloud, 2000);
+                } else {
+                    throw new Error('Geen Folder ID gekregen');
+                }
+
+            } catch (err) {
+                console.error('Init Fout:', err);
+                updateStatus('❌ Verbindingsfout (' + err.message + ')', true);
+            }
+        }
+
+        async function fetchWorldFromCloud() {
+            if (!worldFolderId || isSaving) return;
+
+            try {
+                const res = await fetch(`${BASE_URL}/text/folders/${worldFolderId}/entries`, { 
+                    method: 'GET',
+                    headers: AUTH_HEADER 
+                });
+
+                if (!res.ok) throw new Error(`HTTP Fout: ${res.status}`);
+
+                const data = await res.json();
+                const entries = data.entries || data || [];
+
+                let worldEntry = entries.find(e => e.name === 'shared_world');
+
+                if (worldEntry) {
+                    worldEntryId = worldEntry.id;
+                    const parsed = JSON.parse(worldEntry.content);
+                    if (Array.isArray(parsed) && parsed.length === ROWS * COLS) {
+                        worldData = parsed;
+                        renderWorld();
+                    }
+                } else {
+                    generateDefaultWorld();
+                    await createWorldInCloud();
+                }
+                updateStatus('🟢 Live Synced', false);
+            } catch (err) {
+                console.error('Fetch Fout:', err);
+                updateStatus('⚠️ Offline / Herverbinden...', true);
+            }
+        }
+
+        function generateDefaultWorld() {
+            worldData = Array(ROWS * COLS).fill(0);
+            for (let c = 0; c < COLS; c++) {
+                worldData[10 * COLS + c] = 1; // Gras
+                worldData[11 * COLS + c] = 2; // Aarde
+                worldData[12 * COLS + c] = 2; // Aarde
+                worldData[13 * COLS + c] = 3; // Steen
+                worldData[14 * COLS + c] = 3; // Steen
+            }
+        }
+
+        // --- RESET FUNCTIE ---
+        async function resetWorld() {
+            const confirmed = confirm("Weet je zeker dat je de wereld wilt resetten naar de beginstand?");
+            if (!confirmed) return;
+
+            generateDefaultWorld();
+            renderWorld();
+            await saveWorldToCloud();
+        }
+
+        async function createWorldInCloud() {
+            try {
+                const res = await fetch(`${BASE_URL}/text/folders/${worldFolderId}/entries`, {
+                    method: 'POST',
+                    headers: AUTH_HEADER,
+                    body: JSON.stringify({
+                        name: 'shared_world',
+                        content: JSON.stringify(worldData)
+                    })
+                });
+                const data = await res.json();
+                worldEntryId = data.id || (data.data && data.data.id);
+            } catch (err) {
+                console.error('Create Fout:', err);
+            }
+        }
+
+        async function saveWorldToCloud() {
+            if (!worldEntryId) return;
+
+            isSaving = true;
+            updateStatus('Opslaan...', false);
+
+            try {
+                const res = await fetch(`${BASE_URL}/text/entries/${worldEntryId}`, {
+                    method: 'PUT',
+                    headers: AUTH_HEADER,
+                    body: JSON.stringify({
+                        content: JSON.stringify(worldData)
+                    })
+                });
+
+                if (!res.ok) throw new Error('Opslaan mislukt');
+                updateStatus('🟢 Live Synced', false);
+            } catch (err) {
+                console.error('Save Fout:', err);
+                updateStatus('❌ Opslaan mislukt', true);
+            } finally {
+                isSaving = false;
+            }
+        }
+
+        function updateStatus(text, isError) {
+            statusText.innerText = text;
+            if (isError) {
+                statusText.classList.add('error');
+            } else {
+                statusText.classList.remove('error');
+            }
+        }
+
+        function renderWorld() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.05)";
+            for (let r = 0; r <= ROWS; r++) {
+                ctx.beginPath();
+                ctx.moveTo(0, r * BLOCK_SIZE);
+                ctx.lineTo(canvas.width, r * BLOCK_SIZE);
+                ctx.stroke();
+            }
+            for (let c = 0; c <= COLS; c++) {
+                ctx.beginPath();
+                ctx.moveTo(c * BLOCK_SIZE, 0);
+                ctx.lineTo(c * BLOCK_SIZE, canvas.height);
+                ctx.stroke();
+            }
+
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    const blockType = worldData[r * COLS + c];
+                    if (blockType !== 0 && BLOCK_TYPES[blockType]) {
+                        const x = c * BLOCK_SIZE;
+                        const y = r * BLOCK_SIZE;
+
+                        ctx.fillStyle = BLOCK_TYPES[blockType].color;
+                        ctx.fillRect(x, y, BLOCK_SIZE, BLOCK_SIZE);
+
+                        if (blockType === 1 && BLOCK_TYPES[1].topColor) {
+                            ctx.fillStyle = BLOCK_TYPES[1].topColor;
+                            ctx.fillRect(x, y, BLOCK_SIZE, 6);
+                        }
+
+                        ctx.strokeStyle = "rgba(0, 0, 0, 0.3)";
+                        ctx.strokeRect(x, y, BLOCK_SIZE, BLOCK_SIZE);
+                    }
+                }
+            }
+        }
+
+        window.onload = initCloudWorld;
+    </script>
+</body>
+</html>
