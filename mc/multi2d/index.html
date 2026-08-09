@@ -59,6 +59,12 @@
             color: var(--accent-color);
         }
 
+        .header-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
         .toolbar {
             display: flex;
             gap: 10px;
@@ -90,9 +96,20 @@
             font-weight: 600;
             cursor: pointer;
             font-size: 0.85rem;
+            transition: background 0.15s;
         }
 
         button:hover { background: #3b405f; }
+
+        button.btn-reset {
+            background: #412434;
+            color: #f7768e;
+            border-color: rgba(247, 118, 142, 0.3);
+        }
+
+        button.btn-reset:hover {
+            background: #5a2c47;
+        }
 
         canvas {
             border: 2px solid var(--border-color);
@@ -124,7 +141,10 @@
         <div class="header">
             <h1>🌍 Mattyou Shared Cloud Block World</h1>
             <div class="status" id="statusText">Verbinden met cloud...</div>
-            <button onclick="fetchWorldFromCloud()">🔄 Verversen</button>
+            <div class="header-actions">
+                <button onclick="fetchWorldFromCloud()">🔄 Verversen</button>
+                <button class="btn-reset" onclick="resetWorld()">🧹 Reset Wereld</button>
+            </div>
         </div>
 
         <div class="toolbar">
@@ -148,7 +168,6 @@
         const API_KEY = 'sk_cacac16e_t2064oqppggqqvn1l5c8f';
         const BASE_URL = 'https://qzqncoebdglqbivmlbla.supabase.co/functions/v1/api';
         
-        // Gebruik extra headers om CORS-problemen op mobiel/andere apparaten te voorkomen
         const AUTH_HEADER = {
             'Authorization': `Bearer ${API_KEY}`,
             'Content-Type': 'application/json',
@@ -208,7 +227,6 @@
             try {
                 updateStatus('Map zoeken...', false);
                 
-                // Mappen ophalen
                 const res = await fetch(`${BASE_URL}/text/folders?parent_id=root`, { 
                     method: 'GET',
                     headers: AUTH_HEADER 
@@ -221,7 +239,6 @@
 
                 let folder = folders.find(f => f.name === 'block_world_folder');
 
-                // Als map niet bestaat, maak aan
                 if (!folder) {
                     const createRes = await fetch(`${BASE_URL}/text/folders`, {
                         method: 'POST',
@@ -235,7 +252,6 @@
                 
                 if (worldFolderId) {
                     await fetchWorldFromCloud();
-                    // Sync elke 2 seconden om netwerkoverbelasting te voorkomen
                     setInterval(fetchWorldFromCloud, 2000);
                 } else {
                     throw new Error('Geen Folder ID gekregen');
@@ -284,12 +300,22 @@
         function generateDefaultWorld() {
             worldData = Array(ROWS * COLS).fill(0);
             for (let c = 0; c < COLS; c++) {
-                worldData[10 * COLS + c] = 1;
-                worldData[11 * COLS + c] = 2;
-                worldData[12 * COLS + c] = 2;
-                worldData[13 * COLS + c] = 3;
-                worldData[14 * COLS + c] = 3;
+                worldData[10 * COLS + c] = 1; // Gras
+                worldData[11 * COLS + c] = 2; // Aarde
+                worldData[12 * COLS + c] = 2; // Aarde
+                worldData[13 * COLS + c] = 3; // Steen
+                worldData[14 * COLS + c] = 3; // Steen
             }
+        }
+
+        // --- RESET FUNCTIE ---
+        async function resetWorld() {
+            const confirmed = confirm("Weet je zeker dat je de wereld wilt resetten naar de beginstand?");
+            if (!confirmed) return;
+
+            generateDefaultWorld();
+            renderWorld();
+            await saveWorldToCloud();
         }
 
         async function createWorldInCloud() {
