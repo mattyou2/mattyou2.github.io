@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <title>2D Minecraft: Mattyou Studios Edition</title>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <style>
+        body { margin: 0; overflow: hidden; background: #75a7ff; font-family: 'Segoe UI', sans-serif; transition: background 0.5s; user-select: none; }
+        canvas { display: block; image-rendering: pixelated; }
+
+        #main-menu {
+            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #2b2b2b url('https://assets.mojang.com/dirt.png') repeat;
+            background-size: 64px 64px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 1000; box-sizing: border-box;
+        }
+
+        .mc-title {
+            font-size: 52px; font-weight: 900; color: #fff; text-shadow: 4px 4px #000;
+            letter-spacing: 2px; margin-bottom: 20px; text-align: center;
+            font-family: 'Trebuchet MS', sans-serif;
+        }
+        .mc-title span { color: #55ff55; font-size: 20px; display: block; font-style: italic; font-weight: normal; margin-top: 5px; }
+
+        .user-status-bar {
+            color: #ffcc00; font-size: 16px; font-weight: bold; text-shadow: 2px 2px #000; margin-bottom: 15px;
+        }
+
+        .mc-btn {
+            width: 320px; padding: 12px; margin: 8px 0;
+            background: #7c7c7c; border: 3px solid #3c3c3c;
+            border-top-color: #a0a0a0; border-left-color: #a0a0a0;
+            color: #fff; font-size: 18px; font-weight: bold; text-shadow: 2px 2px #000;
+            cursor: pointer; text-align: center; transition: background 0.1s;
+        }
+        .mc-btn:hover { background: #8e8e8e; }
+        .mc-btn:active { border-color: #a0a0a0; border-top-color: #3c3c3c; border-left-color: #3c3c3c; }
+
+        #hud { position: absolute; top: 10px; left: 10px; color: white; text-shadow: 2px 2px #000; pointer-events: none; z-index: 5; font-size: 14px; }
+        #coords-hud { color: #00ffff; font-weight: bold; }
+        #watermark { position: absolute; bottom: 10px; right: 10px; color: rgba(255,255,255,0.5); font-size: 14px; pointer-events: none; z-index: 5; }
+
+        /* CHAT STYLES */
+        #chat-container {
+            position: absolute; bottom: 80px; left: 15px; width: 380px;
+            max-height: 250px; z-index: 20; pointer-events: none;
+            display: flex; flex-direction: column; justify-content: flex-end;
+        }
+        #chat-messages {
+            display: flex; flex-direction: column; gap: 4px;
+            overflow-y: auto; max-height: 200px; padding-right: 5px;
+        }
+        .chat-msg {
+            background: rgba(0, 0, 0, 0.55); color: #fff; padding: 4px 8px;
+            border-radius: 4px; font-size: 13px; text-shadow: 1px 1px #000;
+            word-wrap: break-word; transition: opacity 0.5s ease;
+        }
+        .chat-msg.expired { display: none; }
+        .chat-msg.force-show { display: block !important; opacity: 1 !important; background: rgba(0, 0, 0, 0.75); }
+
+        #chat-bar {
+            display: none; position: absolute; bottom: 35px; left: 15px; width: 380px;
+            background: rgba(0, 0, 0, 0.85); border: 2px solid #555;
+            padding: 6px 10px; z-index: 25; box-sizing: border-box; border-radius: 4px;
+        }
+        #chatInput {
+            width: 100%; background: transparent; border: none; color: #fff;
+            font-size: 14px; font-family: 'Segoe UI', sans-serif; outline: none;
+        }
+
+        #hotbar { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); display: flex; background: rgba(0,0,0,0.6); padding: 5px; border: 4px solid #333; }
+        .slot { width: 45px; height: 45px; border: 3px solid #8b8b8b; margin: 2px; display: flex; align-items: center; justify-content: center; background: #c6c6c6; position: relative; }
+        .slot.selected { border-color: white; box-shadow: 0 0 10px white; }
+        .slot span { position: absolute; bottom: 1px; right: 2px; font-size: 11px; color: #000; font-weight: bold; }
+
+        .overlay { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #c6c6c6; border: 4px solid #333; padding: 20px; z-index: 1010; width: 420px; box-shadow: 10px 10px 0px rgba(0,0,0,0.3); }
+        button { width: 100%; margin: 5px 0; padding: 10px; cursor: pointer; background: #4CAF50; border: 2px solid #2e7d32; color: white; font-weight: bold; }
+        button.tp-btn { background: #2196F3; border-color: #0b7dda; margin: 3px 0; text-align: left; }
+        button.danger-btn { background: #f44336; border-color: #d32f2f; }
+        input, select { width: 100%; padding: 10px; margin: 5px 0; box-sizing: border-box; font-size: 16px; }
+
+        .studio-tag { display: block; text-align: right; font-size: 10px; color: #555; margin-top: 10px; font-style: italic; }
+
+        #dragon-bar { display: none; position: absolute; top: 50px; left: 50%; transform: translateX(-50%); width: 300px; height: 20px; background: #333; border: 2px solid white; z-index: 5; }
+        #dragon-health { width: 100%; height: 100%; background: #a300a3; transition: width 0.2s; }
+        #win-screen { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); color: gold; text-align: center; justify-content: center; align-items: center; flex-direction: column; z-index: 100; font-size: 30px; }
+        #player-tp-list { max-height: 200px; overflow-y: auto; margin-bottom: 10px; }
+        #save-status { color: #00ff00; font-size: 12px; display: block; text-align: center; margin-top: 5px; }
+        .auth-msg { font-size: 13px; font-weight: bold; text-align: center; margin: 5px 0; min-height: 18px; }
+    </style>
+</head>
+<body>
+
+<div id="main-menu">
+    <div class="mc-title">
+        MINECRAFT 2D
+        <span>Mattyou Studios Edition</span>
+    </div>
+
+    <div class="user-status-bar" id="user-status-text">Ingelogd als: Gast</div>
+
+    <div class="mc-btn" onclick="startSingleplayer()">Singleplayer (Offline Local)</div>
+    <div class="mc-btn" onclick="startMultiplayerAuto()">Multiplayer (Cloud World)</div>
+    <div class="mc-btn" onclick="openAuthMenu()">👤 Account (Inloggen / Registreren)</div>
+    <div class="mc-btn" onclick="openSettingsMenu('main-menu')">⚙️ Instellingen</div>
+    <span style="color: #aaa; margin-top: 30px; font-size: 12px;">© Mattyou Studios - All Rights Reserved</span>
+</div>
+
+<div id="hud">
+    <b>WASD:</b> Bewegen | <b>L-Klik:</b> Mine | <b>R-Klik:</b> Bouw | <b>ESC:</b> Menu | <b>T:</b> Chat | <b>P:</b> Teleport<br>
+    <span id="coords-hud">Coördinaten: X: 0, Y: 0</span> | <span id="dim-text" style="color: yellow;">Dimensie: Overworld</span> | <span id="sync-status" style="color: #aaaaaa;">Modus: Offline</span>
+</div>
+
+<div id="watermark">Made by Mattyou Studios</div>
+
+<div id="chat-container">
+    <div id="chat-messages"></div>
+</div>
+<div id="chat-bar">
+    <input type="text" id="chatInput" placeholder="Typ een bericht... (Druk op Enter om te sturen)" maxlength="100">
+</div>
+
+<div id="dragon-bar"><div id="dragon-health"></div><div style="position:absolute; width:100%; text-align:center; top:0; color:white; font-size:12px; font-weight:bold;">ENDER DRAGON</div></div>
+
+<div id="win-screen">
+    <h1>GEFELICITEERD!</h1>
+    <p>Je hebt Minecraft Mattyou 2D Edition uitgespeeld!</p>
+    <span style="font-size: 18px;">Productie: Mattyou Studios</span><br>
+    <button onclick="quitToMainMenu()" style="width:200px;">Speel Opnieuw</button>
+</div>
+
+<div id="auth-overlay" class="overlay">
+    <h2 id="auth-title">🔐 Inloggen / Registreren</h2>
+    
+    <label style="font-weight:bold;">Gebruikersnaam:</label>
+    <input type="text" id="authUsernameInput" placeholder="Kies een gebruikersnaam..." maxlength="12">
+    
+    <label style="font-weight:bold;">Wachtwoord:</label>
+    <input type="password" id="authPasswordInput" placeholder="Wachtwoord...">
+
+    <div id="register-extra-fields">
+        <label style="font-weight:bold; margin-top:5px; display:block;">Kies Kleur van je Poppetje:</label>
+        <select id="authColorInput">
+            <option value="#ffcc00">🟡 Geel</option>
+            <option value="#ff4444">🔴 Rood</option>
+            <option value="#4488ff">🔵 Blauw</option>
+            <option value="#44ff44">🟢 Groen</option>
+            <option value="#aa44ff">🟣 Paars</option>
+            <option value="#ff6600">🟠 Oranje</option>
+        </select>
+    </div>
+
+    <div class="auth-msg" id="auth-msg"></div>
+
+    <button onclick="handleLogin()" id="btn-login">🔑 Inloggen</button>
+    <button onclick="handleRegister()" id="btn-register" style="background:#2196F3; border-color:#0b7dda;">📝 Nieuw Account Maken</button>
+    <button onclick="closeAuthMenu()" class="danger-btn">Sluiten</button>
+    <span class="studio-tag">Made by Mattyou Studios</span>
+</div>
+
+<div id="settings-overlay" class="overlay">
+    <h2>⚙️ Instellingen</h2>
+    <label style="font-weight:bold;">Spelernaam:</label>
+    <input type="text" id="settingNameInput" placeholder="Spelernaam..." maxlength="12" disabled>
+    <small style="color:#555;">(Pas je naam aan via de Account knop)</small>
+    
+    <label style="font-weight:bold; margin-top:10px; display:block;">Speler Kleur:</label>
+    <select id="settingColorInput">
+        <option value="#ffcc00">🟡 Geel</option>
+        <option value="#ff4444">🔴 Rood</option>
+        <option value="#4488ff">🔵 Blauw</option>
+        <option value="#44ff44">🟢 Groen</option>
+        <option value="#aa44ff">🟣 Paars</option>
+        <option value="#ff6600">🟠 Oranje</option>
+    </select>
+    
+    <button onclick="saveSettings()">💾 Opslaan & Sync</button>
+    <button onclick="closeSettings()" class="danger-btn">Terug</button>
+    <span class="studio-tag">Made by Mattyou Studios</span>
+</div>
+
+<div id="pause-menu" class="overlay">
+    <h2>⏸️ Game Pauze</h2>
+    <button onclick="closeAll()">▶️ Verder Spelen [ESC]</button>
+    <button onclick="saveAndContinue()">💾 Spel Opslaan</button>
+    <button onclick="openSettingsMenu('pause-menu')">⚙️ Instellingen</button>
+    <button onclick="quitToMainMenu()" class="danger-btn">🚪 Opslaan & Afsluiten</button>
+    <span id="save-status"></span>
+    <span class="studio-tag">Made by Mattyou Studios</span>
+</div>
+
+<div id="tp-menu" class="overlay">
+    <h2>🌀 Teleporteer naar Speler</h2>
+    <div id="player-tp-list">Aan het zoeken naar spelers...</div>
+    <button onclick="closeAll()">Sluiten [P]</button>
+    <span class="studio-tag">Made by Mattyou Studios</span>
+</div>
+
+<div id="hotbar">
+    <div class="slot selected" id="slot0"></div>
+    <div class="slot" id="slot1"></div>
+    <div class="slot" id="slot2"></div>
+    <div class="slot" id="slot3"></div>
+    <div class="slot" id="slot4"></div>
+    <div class="slot" id="slot5"></div>
+    <div class="slot" id="slot6"></div>
+    <div class="slot" id="slot7"></div>
+    <div class="slot" id="slot8"></div>
+</div>
+
+<div id="inventory-menu" class="overlay">
+    <h2>🎒 Inventory</h2>
+    <div id="inv-display" style="background:#a9a9a9; padding:10px; border:2px inset #555; margin-bottom:10px;"></div>
+    <button onclick="quickCraft('planks')">Hout -> Planken</button>
+    <button onclick="quickCraft('crafting_table')">Maak Crafting Table</button>
+    <button onclick="closeAll()">Sluiten [E]</button>
+    <span class="studio-tag">Made by Mattyou Studios</span>
+</div>
+
+<div id="dim-menu" class="overlay">
+    <h2>🌌 Dimensies</h2>
+    <button onclick="travel('overworld')">Overworld</button>
+    <button onclick="travel('nether')">Nether</button>
+    <button id="end-btn" onclick="travel('the_end')" disabled>The End (Bezoek eerst Nether)</button>
+    <button onclick="closeAll()">Sluiten [F]</button>
+    <span class="studio-tag">Made by Mattyou Studios</span>
+</div>
+
+<div id="table-menu" class="overlay">
+    <h2>🛠️ Crafting Table</h2>
+    <button onclick="complexCraft('iron_pickaxe')">Iron Pickaxe (3 Iron)</button>
+    <button onclick="complexCraft('sword')">Diamond Sword (2 Diamond)</button>
+    <button onclick="closeAll()">Sluiten [C]</button>
+    <span class="studio-tag">Made by Mattyou Studios</span>
+</div>
+
+<canvas id="gameCanvas"></canvas>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+const tileSize = 40;
+let world = {}; 
+let currentDim = 'overworld';
+let hasVisitedNether = false;
+let dragonHP = 100;
+let dragonDefeated = false;
+
+// ---------------- CLOUD API & LOBBY CONFIGURATIE ----------------
+const API_KEY = 'sk_cacac16e_t2064oqppggqqvn1l5c8f';
+const BASE_URL = 'https://qzqncoebdglqbivmlbla.supabase.co/functions/v1/api';
+const AUTH_HEADER = {
+    'Authorization': `Bearer ${API_KEY}`,
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+};
+
+let worldFolderId = null;
+let worldEntryId = null;
+let lobbyFolderId = null;
+let accountsFolderId = null;
+let myLobbyEntryId = null;
+
+let isMultiplayer = false;
+let gameRunning = false;
+let myPeer = null;
+let myPeerId = null;
+
+let playerName = localStorage.getItem('mc_player_name') || "";
+let playerColor = localStorage.getItem('mc_player_color') || "#ffcc00";
+
+let connections = {}; 
+let otherPlayers = {}; 
+let previousMenu = 'main-menu';
+
+let isChatOpen = false;
+
+// Intervallen
+let intervalBroadcast = null;
+let intervalHeartbeat = null;
+let intervalScanLobby = null;
+let intervalCleanInactive = null;
+let intervalFetchWorld = null;
+
+let miningTile = null;
+let mineTimer = 0;
+const BASE_MINE_TIME = 40;
+
+let inventory = { log: 4, dirt: 0, grass: 0, stone: 0, iron: 0, diamond: 0, netherite: 0, planks: 0, crafting_table: 1, has_sword: false, has_pickaxe: false };
+const hotbarOrder = ['log', 'planks', 'grass', 'dirt', 'stone', 'iron', 'diamond', 'netherite', 'crafting_table'];
+let selectedSlot = 0;
+
+const player = { x: 400, y: 100, w: 26, h: 38, vx: 0, vy: 0, speed: 5, jump: -11, grounded: false };
+const keys = {};
+
+const colors = {
+    grass: '#5d9948', dirt: '#866043', stone: '#7a7a7a', iron: '#d4b49d', diamond: '#33ebff',
+    netherrack: '#722626', netherite: '#312323', end_stone: '#d8d89a', bedrock: '#111',
+    log: '#6b4e31', leaf: '#3eb03e', planks: '#a0764c', crafting_table: '#dfb36e', air: 'transparent'
+};
+
+function updateUIStatus() {
+    if (playerName) {
+        document.getElementById('user-status-text').innerText = `Ingelogd als: ${playerName}`;
+        document.getElementById('user-status-text').style.color = "#55ff55";
+    } else {
+        document.getElementById('user-status-text').innerText = `Ingelogd als: Gast (Maak een account aan)`;
+        document.getElementById('user-status-text').style.color = "#ffcc00";
+    }
+}
+
+// ---------------- LOCAL SINGLEPLAYER STORAGE ----------------
+
+function saveSingleplayerWorld() {
+    const data = { world: world, dragonHP: dragonHP, inventory: inventory };
+    localStorage.setItem('mc_sp_world', JSON.stringify(data));
+}
+
+function loadSingleplayerWorld() {
+    world = {};
+    const saved = localStorage.getItem('mc_sp_world');
+    if (saved) {
+        try {
+            const parsed = JSON.parse(saved);
+            if (parsed.world) world = parsed.world;
+            if (parsed.dragonHP !== undefined) dragonHP = parsed.dragonHP;
+            if (parsed.inventory) inventory = parsed.inventory;
+        } catch(e) {}
+    }
+}
+
+// ---------------- CLOUD STORAGE & ACCOUNT SYSTEM ----------------
+
+async function initCloudStorage() {
+    try {
+        const res = await fetch(`${BASE_URL}/text/folders?parent_id=root`, { headers: AUTH_HEADER });
+        const data = await res.json();
+        let folders = Array.isArray(data) ? data : (data.folders || []);
+
+        let wFolder = folders.find(f => f.name === 'mc_world_data');
+        if (!wFolder) {
+            const cr = await fetch(`${BASE_URL}/text/folders`, { method: 'POST', headers: AUTH_HEADER, body: JSON.stringify({ name: 'mc_world_data' }) });
+            wFolder = await cr.json();
+        }
+        worldFolderId = wFolder.id || (wFolder.data && wFolder.data.id);
+
+        let lFolder = folders.find(f => f.name === 'mc_peer_lobby');
+        if (!lFolder) {
+            const cr = await fetch(`${BASE_URL}/text/folders`, { method: 'POST', headers: AUTH_HEADER, body: JSON.stringify({ name: 'mc_peer_lobby' }) });
+            lFolder = await cr.json();
+        }
+        lobbyFolderId = lFolder.id || (lFolder.data && lFolder.data.id);
+
+        let accFolder = folders.find(f => f.name === 'mc_user_accounts');
+        if (!accFolder) {
+            const cr = await fetch(`${BASE_URL}/text/folders`, { method: 'POST', headers: AUTH_HEADER, body: JSON.stringify({ name: 'mc_user_accounts' }) });
+            accFolder = await cr.json();
+        }
+        accountsFolderId = accFolder.id || (accFolder.data && accFolder.data.id);
+
+        await fetchWorldFromCloud();
+    } catch (e) {
+        console.error("Cloud storage initialisatie fout:", e);
+    }
+}
+
+function openAuthMenu() {
+    closeAll();
+    document.getElementById('main-menu').style.display = 'none';
+    document.getElementById('auth-overlay').style.display = 'block';
+    document.getElementById('auth-msg').innerText = "";
+}
+
+function closeAuthMenu() {
+    document.getElementById('auth-overlay').style.display = 'none';
+    document.getElementById('main-menu').style.display = 'flex';
+}
+
+async function handleRegister() {
+    const user = document.getElementById('authUsernameInput').value.trim();
+    const pass = document.getElementById('authPasswordInput').value.trim();
+    const color = document.getElementById('authColorInput').value;
+    const msg = document.getElementById('auth-msg');
+
+    if (!user || !pass) {
+        msg.style.color = "red";
+        msg.innerText = "❌ Vul een gebruikersnaam en wachtwoord in!";
+        return;
+    }
+
+    msg.style.color = "yellow";
+    msg.innerText = "⏳ Account controleren...";
+
+    if (!accountsFolderId) await initCloudStorage();
+
+    try {
+        const res = await fetch(`${BASE_URL}/text/folders/${accountsFolderId}/entries`, { headers: AUTH_HEADER });
+        const data = await res.json();
+        const entries = data.entries || data || [];
+
+        const exists = entries.find(e => e.name.toLowerCase() === `user_${user.toLowerCase()}`);
+        if (exists) {
+            msg.style.color = "red";
+            msg.innerText = "❌ Deze gebruikersnaam is al in gebruik! Kies een andere.";
+            return;
+        }
+
+        const accountData = JSON.stringify({ username: user, password: pass, color: color });
+        await fetch(`${BASE_URL}/text/folders/${accountsFolderId}/entries`, {
+            method: 'POST',
+            headers: AUTH_HEADER,
+            body: JSON.stringify({ name: `user_${user.toLowerCase()}`, content: accountData })
+        });
+
+        playerName = user;
+        playerColor = color;
+        localStorage.setItem('mc_player_name', playerName);
+        localStorage.setItem('mc_player_color', playerColor);
+
+        msg.style.color = "#00ff00";
+        msg.innerText = "✅ Account succesvol aangemaakt!";
+        updateUIStatus();
+        setTimeout(closeAuthMenu, 1500);
+
+    } catch(e) {
+        msg.style.color = "red";
+        msg.innerText = "❌ Er is een fout opgetreden bij het aanmaken.";
+    }
+}
+
+async function handleLogin() {
+    const user = document.getElementById('authUsernameInput').value.trim();
+    const pass = document.getElementById('authPasswordInput').value.trim();
+    const msg = document.getElementById('auth-msg');
+
+    if (!user || !pass) {
+        msg.style.color = "red";
+        msg.innerText = "❌ Vul je gebruikersnaam en wachtwoord in!";
+        return;
+    }
+
+    msg.style.color = "yellow";
+    msg.innerText = "⏳ Inloggen...";
+
+    if (!accountsFolderId) await initCloudStorage();
+
+    try {
+        const res = await fetch(`${BASE_URL}/text/folders/${accountsFolderId}/entries`, { headers: AUTH_HEADER });
+        const data = await res.json();
+        const entries = data.entries || data || [];
+
+        const entry = entries.find(e => e.name.toLowerCase() === `user_${user.toLowerCase()}`);
+        if (!entry) {
+            msg.style.color = "red";
+            msg.innerText = "❌ Onbekende gebruikersnaam. Maak eerst een account aan!";
+            return;
+        }
+
+        const parsed = JSON.parse(entry.content);
+        if (parsed.password !== pass) {
+            msg.style.color = "red";
+            msg.innerText = "❌ Onjuist wachtwoord!";
+            return;
+        }
+
+        playerName = parsed.username;
+        playerColor = parsed.color || "#ffcc00";
+        localStorage.setItem('mc_player_name', playerName);
+        localStorage.setItem('mc_player_color', playerColor);
+
+        msg.style.color = "#00ff00";
+        msg.innerText = "✅ Succesvol ingelogd!";
+        updateUIStatus();
+        setTimeout(closeAuthMenu, 1200);
+
+    } catch(e) {
+        msg.style.color = "red";
+        msg.innerText = "❌ Inloggen mislukt.";
+    }
+}
+
+async function fetchWorldFromCloud() {
+    if (!worldFolderId || !isMultiplayer) return;
+    try {
+        const res = await fetch(`${BASE_URL}/text/folders/${worldFolderId}/entries`, { headers: AUTH_HEADER });
+        if (!res.ok) return;
+        const data = await res.json();
+        const entries = data.entries || data || [];
+        let entry = entries.find(e => e.name === 'shared_mc_world');
+
+        if (entry) {
+            worldEntryId = entry.id;
+            const parsed = JSON.parse(entry.content);
+            if (parsed.world) {
+                for (let dim in parsed.world) {
+                    if (!world[dim]) world[dim] = {};
+                    for (let x in parsed.world[dim]) {
+                        if (!world[dim][x]) world[dim][x] = {};
+                        for (let y in parsed.world[dim][x]) {
+                            world[dim][x][y] = parsed.world[dim][x][y];
+                        }
+                    }
+                }
+            }
+            if (parsed.dragonHP !== undefined) {
+                dragonHP = parsed.dragonHP;
+                document.getElementById('dragon-health').style.width = dragonHP + "%";
+            }
+        } else {
+            const cRes = await fetch(`${BASE_URL}/text/folders/${worldFolderId}/entries`, {
+                method: 'POST',
+                headers: AUTH_HEADER,
+                body: JSON.stringify({ name: 'shared_mc_world', content: JSON.stringify({ world, dragonHP }) })
+            });
+            const cData = await cRes.json();
+            worldEntryId = cData.id || (cData.data && cData.data.id);
+        }
+    } catch (e) {}
+}
+
+async function saveWorldToCloud() {
+    if (!worldFolderId || !worldEntryId || !isMultiplayer) return;
+    try {
+        await fetch(`${BASE_URL}/text/entries/${worldEntryId}`, {
+            method: 'PUT',
+            headers: AUTH_HEADER,
+            body: JSON.stringify({ content: JSON.stringify({ world, dragonHP }) })
+        });
+    } catch (e) {}
+}
+
+async function updateLobbyHeartbeat() {
+    if (!lobbyFolderId || !myPeerId) return;
+
+    const payload = JSON.stringify({
+        peerId: myPeerId,
+        name: playerName,
+        color: playerColor,
+        x: Math.round(player.x),
+        y: Math.round(player.y),
+        dim: currentDim,
+        time: Date.now()
+    });
+
+    try {
+        if (!myLobbyEntryId) {
+            const cr = await fetch(`${BASE_URL}/text/folders/${lobbyFolderId}/entries`, {
+                method: 'POST',
+                headers: AUTH_HEADER,
+                body: JSON.stringify({ name: `peer_${myPeerId}`, content: payload })
+            });
+            const cData = await cr.json();
+            myLobbyEntryId = cData.id || (cData.data && cData.data.id);
+        } else {
+            const up = await fetch(`${BASE_URL}/text/entries/${myLobbyEntryId}`, {
+                method: 'PUT',
+                headers: AUTH_HEADER,
+                body: JSON.stringify({ content: payload })
+            });
+            if (!up.ok) myLobbyEntryId = null;
+        }
+    } catch(e) { myLobbyEntryId = null; }
+}
+
+async function scanLobbyAndConnect() {
+    if (!lobbyFolderId || !myPeer) return;
+    try {
+        const res = await fetch(`${BASE_URL}/text/folders/${lobbyFolderId}/entries`, { headers: AUTH_HEADER });
+        if (!res.ok) { await initCloudStorage(); return; }
+        const data = await res.json();
+        const entries = data.entries || data || [];
+        const now = Date.now();
+
+        entries.forEach(e => {
+            try {
+                const p = JSON.parse(e.content);
+                if (p.peerId && p.peerId !== myPeerId && (now - p.time < 5000)) {
+                    updatePlayerData(p.peerId, p.name, p.x, p.y, p.color, p.dim);
+
+                    if (!connections[p.peerId]) {
+                        const conn = myPeer.connect(p.peerId);
+                        setupConnection(conn);
+                    }
+                }
+            } catch(err) {}
+        });
+    } catch(e) {}
+}
+
+async function removeMeFromLobby() {
+    if (!myLobbyEntryId) return;
+    try {
+        await fetch(`${BASE_URL}/text/entries/${myLobbyEntryId}`, { method: 'DELETE', headers: AUTH_HEADER });
+        myLobbyEntryId = null;
+    } catch(e) {}
+}
+
+// ---------------- LOCAL STORAGE & PROFILE ----------------
+
+function loadSavedPosition() {
+    const key = isMultiplayer ? `mc_saved_pos_mp_${playerName}` : `mc_saved_pos_sp_${playerName}`;
+    const saved = localStorage.getItem(key);
+    if (saved) {
+        try {
+            const data = JSON.parse(saved);
+            player.x = Number(data.x) || 400;
+            player.y = Number(data.y) || 100;
+            if (data.dim) travel(data.dim);
+        } catch(e) {}
+    } else {
+        player.x = 400; player.y = 100;
+    }
+}
+
+function saveAndContinue() {
+    const posData = { x: Math.round(player.x), y: Math.round(player.y), dim: currentDim, name: playerName };
+    const key = isMultiplayer ? `mc_saved_pos_mp_${playerName}` : `mc_saved_pos_sp_${playerName}`;
+    localStorage.setItem(key, JSON.stringify(posData));
+    
+    if (isMultiplayer) { saveWorldToCloud(); } else { saveSingleplayerWorld(); }
+    
+    document.getElementById('save-status').innerText = '✅ Spel opgeslagen!';
+    setTimeout(() => { document.getElementById('save-status').innerText = ''; }, 2500);
+}
+
+function openSettingsMenu(fromMenu) {
+    previousMenu = fromMenu;
+    closeAll();
+    if (fromMenu === 'main-menu') document.getElementById('main-menu').style.display = 'none';
+    
+    document.getElementById('settingNameInput').value = playerName || "Gast";
+    document.getElementById('settingColorInput').value = playerColor;
+    document.getElementById('settings-overlay').style.display = 'block';
+}
+
+function saveSettings() {
+    playerColor = document.getElementById('settingColorInput').value;
+    localStorage.setItem('mc_player_color', playerColor);
+    closeSettings();
+}
+
+function closeSettings() {
+    document.getElementById('settings-overlay').style.display = 'none';
+    if (previousMenu === 'main-menu') {
+        document.getElementById('main-menu').style.display = 'flex';
+    } else if (previousMenu === 'pause-menu') {
+        document.getElementById('pause-menu').style.display = 'block';
+    }
+}
+
+// ---------------- CHAT FUNCTIONALITEIT ----------------
+
+function openChat() {
+    closeAll();
+    isChatOpen = true;
+    const chatBar = document.getElementById('chat-bar');
+    const chatInput = document.getElementById('chatInput');
+    chatBar.style.display = 'block';
+    chatInput.focus();
+
+    // Toon alle berichten (ook verlopen berichten) zolang de chat open is
+    const msgs = document.querySelectorAll('.chat-msg');
+    msgs.forEach(m => m.classList.add('force-show'));
+}
+
+function closeChat() {
+    isChatOpen = false;
+    const chatBar = document.getElementById('chat-bar');
+    const chatInput = document.getElementById('chatInput');
+    chatBar.style.display = 'none';
+    chatInput.blur();
+    chatInput.value = '';
+
+    // Verberg weer alle berichten die verlopen waren
+    const msgs = document.querySelectorAll('.chat-msg');
+    msgs.forEach(m => m.classList.remove('force-show'));
+}
+
+function sendChatMessage() {
+    const input = document.getElementById('chatInput');
+    const text = input.value.trim();
+    if (text.length > 0) {
+        addChatMessage(playerName || "Gast", text, playerColor);
+
+        if (isMultiplayer) {
+            const payload = { type: 'chat', name: playerName || "Gast", text: text, color: playerColor };
+            Object.values(connections).forEach(conn => {
+                if (conn.open) conn.send(payload);
+            });
+        }
+    }
+    closeChat();
+}
+
+function addChatMessage(senderName, text, color) {
+    const chatMessages = document.getElementById('chat-messages');
+    const msgDiv = document.createElement('div');
+    msgDiv.className = 'chat-msg';
+    msgDiv.innerHTML = `<b style="color: ${color || '#ffcc00'};">${senderName}:</b> ${escapeHTML(text)}`;
+
+    if (isChatOpen) {
+        msgDiv.classList.add('force-show');
+    }
+
+    chatMessages.appendChild(msgDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    // Bericht valt na 12 seconden weg
+    setTimeout(() => {
+        msgDiv.classList.add('expired');
+    }, 12000);
+}
+
+function escapeHTML(str) {
+    return str.replace(/[&<>'"]/g, 
+        tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+    );
+}
+
+// ---------------- PEERJS MULTIPLAYER ----------------
+
+function initPeerJS() {
+    const cleanName = (playerName || "Speler").replace(/[^a-zA-Z0-9]/g, '');
+    const peerCleanId = 'mattyou_mc_' + cleanName + '_' + Math.floor(Math.random() * 10000);
+    myPeer = new Peer(peerCleanId);
+
+    myPeer.on('open', (id) => {
+        myPeerId = id;
+        document.getElementById('sync-status').innerText = 'Multiplayer: 🟢 Online (' + playerName + ')';
+        document.getElementById('sync-status').style.color = '#00ff00';
+    });
+
+    myPeer.on('connection', (conn) => { setupConnection(conn); });
+    myPeer.on('error', (err) => { console.warn('PeerJS Status:', err); });
+}
+
+function setupConnection(conn) {
+    connections[conn.peer] = conn;
+
+    conn.on('data', (data) => {
+        if (data.type === 'pos') {
+            updatePlayerData(data.peerId || conn.peer, data.name, data.x, data.y, data.color, data.dim);
+        } else if (data.type === 'block_change' && isMultiplayer) {
+            if (!world[data.dim]) world[data.dim] = {};
+            if (!world[data.dim][data.x]) world[data.dim][data.x] = {};
+            world[data.dim][data.x][data.y] = data.blockType;
+        } else if (data.type === 'chat') {
+            addChatMessage(data.name, data.text, data.color);
+        }
+    });
+
+    conn.on('close', () => { delete connections[conn.peer]; delete otherPlayers[conn.peer]; });
+    conn.on('error', () => { delete connections[conn.peer]; delete otherPlayers[conn.peer]; });
+}
+
+function broadcastMyPosition() {
+    if (!myPeerId || !isMultiplayer) return;
+
+    const payload = {
+        type: 'pos',
+        peerId: myPeerId,
+        name: playerName,
+        x: Math.round(player.x),
+        y: Math.round(player.y),
+        color: playerColor,
+        dim: currentDim
+    };
+
+    Object.values(connections).forEach(conn => {
+        if (conn.open) conn.send(payload);
+    });
+}
+
+function updateBlockAndSync(x, y, blockType, dim) {
+    if (!world[dim]) world[dim] = {};
+    if (!world[dim][x]) world[dim][x] = {};
+    world[dim][x][y] = blockType;
+
+    if (isMultiplayer) {
+        const payload = { type: 'block_change', x: x, y: y, blockType: blockType, dim: dim };
+        Object.values(connections).forEach(conn => { if (conn.open) conn.send(payload); });
+        saveWorldToCloud();
+    } else {
+        saveSingleplayerWorld();
+    }
+}
+
+function updatePlayerData(id, name, x, y, color, dim) {
+    if (name === playerName || id === myPeerId) return;
+
+    const posX = Number(x);
+    const posY = Number(y);
+    const now = Date.now();
+
+    if (!otherPlayers[id]) {
+        otherPlayers[id] = { name: name, x: posX, y: posY, targetX: posX, targetY: posY, color: color, dim: dim, lastSeen: now };
+    } else {
+        otherPlayers[id].targetX = posX; otherPlayers[id].targetY = posY; otherPlayers[id].color = color;
+        otherPlayers[id].dim = dim; otherPlayers[id].name = name; otherPlayers[id].lastSeen = now;
+    }
+}
+
+function cleanInactivePlayers() {
+    const now = Date.now();
+    Object.keys(otherPlayers).forEach(id => {
+        if (now - otherPlayers[id].lastSeen > 4000) delete otherPlayers[id];
+    });
+}
+
+// ---------------- GAME MODES & STARTING ----------------
+
+function startSingleplayer() {
+    isMultiplayer = false;
+    world = {};
+    otherPlayers = {};
+    
+    document.getElementById('main-menu').style.display = 'none';
+    document.getElementById('sync-status').innerText = 'Modus: 👤 Singleplayer (LocalStorage)';
+    document.getElementById('sync-status').style.color = '#55ff55';
+
+    loadSingleplayerWorld();
+    loadSavedPosition();
+    startGameLoop();
+}
+
+async function startMultiplayerAuto() {
+    if (!playerName) {
+        openAuthMenu();
+        alert("🔒 Maak eerst een account aan of log in om Multiplayer te spelen!");
+        return;
+    }
+
+    isMultiplayer = true;
+    world = {};
+    
+    document.getElementById('main-menu').style.display = 'none';
+    closeAll();
+    
+    document.getElementById('sync-status').innerText = 'Multiplayer: ☁️ Cloud & Lobby Initialiseren...';
+
+    loadSavedPosition();
+    await initCloudStorage();
+    initPeerJS();
+
+    clearInterval(intervalBroadcast);
+    clearInterval(intervalHeartbeat);
+    clearInterval(intervalScanLobby);
+    clearInterval(intervalCleanInactive);
+    clearInterval(intervalFetchWorld);
+
+    intervalBroadcast = setInterval(broadcastMyPosition, 50);          
+    intervalHeartbeat = setInterval(updateLobbyHeartbeat, 500);        
+    intervalScanLobby = setInterval(scanLobbyAndConnect, 1000);        
+    intervalCleanInactive = setInterval(cleanInactivePlayers, 2000);   
+    intervalFetchWorld = setInterval(fetchWorldFromCloud, 3000);       
+
+    startGameLoop();
+}
+
+function startGameLoop() {
+    if (gameRunning) return;
+    gameRunning = true;
+    updateUI();
+    update();
+}
+
+function quitToMainMenu() {
+    saveAndContinue();
+
+    if (isMultiplayer) {
+        removeMeFromLobby();
+        clearInterval(intervalBroadcast);
+        clearInterval(intervalHeartbeat);
+        clearInterval(intervalScanLobby);
+        clearInterval(intervalCleanInactive);
+        clearInterval(intervalFetchWorld);
+
+        Object.values(connections).forEach(conn => conn.close());
+        connections = {}; otherPlayers = {};
+
+        if (myPeer) { myPeer.destroy(); myPeer = null; }
+    }
+
+    gameRunning = false;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    closeAll();
+    closeChat();
+    document.getElementById('sync-status').innerText = 'Modus: Offline';
+    document.getElementById('sync-status').style.color = '#aaaaaa';
+    document.getElementById('main-menu').style.display = 'flex';
+}
+
+// ---------------- GAME ENGINE & RENDERER ----------------
+
+function generateColumn(x, dim) {
+    if (!world[dim]) world[dim] = {};
+    if (world[dim][x]) return;
+    world[dim][x] = {};
+    const groundLevel = 12;
+
+    if (dim === 'overworld') {
+        for (let y = 0; y < 60; y++) {
+            let type = 'air';
+            if (y === 59) type = 'bedrock';
+            else if (y > groundLevel + 4) { 
+                type = 'stone'; 
+                if (Math.random() < 0.05) type = 'diamond'; 
+                else if (Math.random() < 0.08) type = 'iron'; 
+            }
+            else if (y > groundLevel) type = 'dirt';
+            else if (y === groundLevel) type = 'grass';
+            world[dim][x][y] = type;
+        }
+        if (Math.random() < 0.15) createTree(x, groundLevel - 1, dim);
+    } else if (dim === 'nether') {
+        for (let y = 0; y < 40; y++) {
+            let type = (y === 0 || y === 39) ? 'bedrock' : 'netherrack';
+            if (Math.random() < 0.03) type = 'netherite';
+            if (Math.random() < 0.1) type = 'air';
+            world[dim][x][y] = type;
+        }
+    } else if (dim === 'the_end') {
+        for (let y = 0; y < 40; y++) {
+            world[dim][x][y] = (y > 20 && y < 25 && x > -15 && x < 15) ? 'end_stone' : 'air';
+        }
+    }
+}
+
+function createTree(x, y, dim) {
+    for(let i=0; i<3; i++) {
+        if(!world[dim][x]) world[dim][x] = {};
+        world[dim][x][y-i] = 'log';
+    }
+}
+
+function travel(dim) {
+    currentDim = dim;
+    if (dim === 'nether') { hasVisitedNether = true; document.getElementById('end-btn').disabled = false; document.body.style.background = "#3d0b0b"; }
+    else if (dim === 'the_end') { 
+        document.body.style.background = "#1a0a2a"; 
+        player.x = 0; player.y = 15 * tileSize;
+        document.getElementById('dragon-bar').style.display = 'block';
+    } else { document.body.style.background = "#75a7ff"; document.getElementById('dragon-bar').style.display = 'none'; }
+    document.getElementById('dim-text').innerText = "Dimensie: " + dim.toUpperCase();
+    closeAll();
+    if (isMultiplayer) broadcastMyPosition();
+}
+
+function teleportToPlayer(targetX, targetY, targetDim) {
+    player.x = Number(targetX);
+    player.y = Number(targetY) - 10;
+    if (currentDim !== targetDim) travel(targetDim);
+    closeAll();
+    if (isMultiplayer) broadcastMyPosition();
+}
+
+function updateTPMenu() {
+    const container = document.getElementById('player-tp-list');
+    container.innerHTML = '';
+    
+    if (!isMultiplayer) {
+        container.innerHTML = '<i>Teleport is alleen beschikbaar in Multiplayer.</i>';
+        return;
+    }
+
+    const activeIds = Object.keys(otherPlayers);
+    if (activeIds.length === 0) {
+        container.innerHTML = '<i>Geen andere spelers online...</i>';
+        return;
+    }
+    activeIds.forEach(id => {
+        const p = otherPlayers[id];
+        const btn = document.createElement('button');
+        btn.className = 'tp-btn';
+        btn.style.borderLeft = `8px solid ${p.color || '#fff'}`;
+        btn.innerHTML = `🌀 Teleport naar <b>${p.name}</b> (${p.dim.toUpperCase()})<br><small>X: ${Math.round(p.targetX)}, Y: ${Math.round(p.targetY)}</small>`;
+        btn.onclick = () => teleportToPlayer(p.targetX, p.targetY, p.dim);
+        container.appendChild(btn);
+    });
+}
+
+function update() {
+    if (!gameRunning) return;
+
+    if (!isChatOpen) {
+        if (keys['a']) player.vx = -player.speed;
+        else if (keys['d']) player.vx = player.speed;
+        else player.vx = 0;
+    } else {
+        player.vx = 0;
+    }
+
+    const currentTX = Math.floor(player.x / tileSize);
+    for(let i = -20; i < 20; i++) generateColumn(currentTX + i, currentDim);
+
+    player.vy += 0.6;
+    const tx = Math.floor((player.x + player.w/2) / tileSize);
+    const ty = Math.floor((player.y + player.h + player.vy) / tileSize);
+    
+    if (world[currentDim] && world[currentDim][tx] && world[currentDim][tx][ty] && world[currentDim][tx][ty] !== 'air') {
+        player.y = ty * tileSize - player.h;
+        player.vy = 0;
+        player.grounded = true;
+    } else { player.y += player.vy; player.grounded = false; }
+    
+    player.x += player.vx;
+    if (keys['w'] && player.grounded && !isChatOpen) { player.vy = player.jump; player.grounded = false; }
+
+    document.getElementById('coords-hud').innerText = `Coördinaten: X: ${Math.round(player.x)}, Y: ${Math.round(player.y)}`;
+
+    if (isMultiplayer) {
+        Object.keys(otherPlayers).forEach(id => {
+            const p = otherPlayers[id];
+            if (isNaN(p.x)) p.x = p.targetX;
+            if (isNaN(p.y)) p.y = p.targetY;
+            const distX = Math.abs(p.targetX - p.x);
+            const distY = Math.abs(p.targetY - p.y);
+            if (distX > 250 || distY > 250) { p.x = p.targetX; p.y = p.targetY; } 
+            else { p.x += (p.targetX - p.x) * 0.4; p.y += (p.targetY - p.y) * 0.4; }
+        });
+    }
+
+    if (miningTile) {
+        let speedMult = inventory.has_pickaxe ? 3 : 1;
+        mineTimer += speedMult;
+        if (mineTimer >= BASE_MINE_TIME) {
+            const type = world[currentDim][miningTile.x][miningTile.y];
+            if (type !== 'bedrock') {
+                inventory[type] = (inventory[type] || 0) + 1;
+                updateBlockAndSync(miningTile.x, miningTile.y, 'air', currentDim);
+                updateUI();
+            }
+            miningTile = null;
+            mineTimer = 0;
+        }
+    }
+    draw();
+    requestAnimationFrame(update);
+}
+
+function draw() {
+    ctx.save();
+    ctx.translate(-player.x + canvas.width/2, -player.y + canvas.height/2);
+    ctx.clearRect(player.x - canvas.width, player.y - canvas.height, canvas.width*2, canvas.height*2);
+    
+    const startX = Math.floor((player.x - canvas.width/2) / tileSize);
+    const endX = Math.ceil((player.x + canvas.width/2) / tileSize);
+
+    if (world[currentDim]) {
+        for (let x = startX; x <= endX; x++) {
+            if (world[currentDim][x]) {
+                for (let y in world[currentDim][x]) {
+                    const type = world[currentDim][x][y];
+                    if (type === 'air') continue;
+                    ctx.fillStyle = colors[type] || '#fff';
+                    ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
+                    if (miningTile && miningTile.x === x && miningTile.y === parseInt(y)) {
+                        ctx.fillStyle = 'white';
+                        ctx.fillRect(x * tileSize, y * tileSize + 35, tileSize * (mineTimer / BASE_MINE_TIME), 5);
+                    }
+                }
+            }
+        }
+    }
+
+    if (currentDim === 'the_end' && !dragonDefeated) {
+        ctx.fillStyle = 'black';
+        ctx.fillRect(-100, 10 * tileSize, 200, 80);
+    }
+
+    if (isMultiplayer) {
+        Object.keys(otherPlayers).forEach(id => {
+            const p = otherPlayers[id];
+            if (p.dim === currentDim) {
+                ctx.fillStyle = p.color || '#ff4444';
+                ctx.fillRect(p.x, p.y, player.w, player.h);
+                ctx.fillStyle = 'white';
+                ctx.font = '12px Segoe UI';
+                ctx.textAlign = 'center';
+                ctx.fillText(p.name, p.x + player.w/2, p.y - 8);
+            }
+        });
+    }
+
+    ctx.fillStyle = playerColor;
+    ctx.fillRect(player.x, player.y, player.w, player.h);
+    ctx.fillStyle = 'white';
+    ctx.font = 'bold 12px Segoe UI';
+    ctx.textAlign = 'center';
+    ctx.fillText(`[Jij] ${playerName || "Gast"}`, player.x + player.w/2, player.y - 8);
+
+    ctx.restore();
+}
+
+canvas.onmousedown = (e) => {
+    if (!gameRunning || isChatOpen) return;
+    const rx = e.clientX + (player.x - canvas.width/2);
+    const ry = e.clientY + (player.y - canvas.height/2);
+    const tx = Math.floor(rx / tileSize);
+    const ty = Math.floor(ry / tileSize);
+
+    if (e.button === 0) {
+        if (currentDim === 'the_end' && !dragonDefeated && rx > -100 && rx < 100 && ry > 10 * tileSize && ry < 10 * tileSize + 80) {
+            dragonHP -= inventory.has_sword ? 10 : 2;
+            document.getElementById('dragon-health').style.width = dragonHP + "%";
+            if (dragonHP <= 0) { dragonDefeated = true; document.getElementById('win-screen').style.display = 'flex'; }
+            if (isMultiplayer) saveWorldToCloud(); else saveSingleplayerWorld();
+        } else if (world[currentDim] && world[currentDim][tx] && world[currentDim][tx][ty] !== 'air') {
+            miningTile = { x: tx, y: ty };
+            mineTimer = 0;
+        }
+    } else if (e.button === 2) {
+        const item = hotbarOrder[selectedSlot];
+        if (inventory[item] > 0) {
+            updateBlockAndSync(tx, ty, item, currentDim);
+            inventory[item]--;
+            updateUI();
+        }
+    }
+};
+
+window.onmouseup = () => { miningTile = null; mineTimer = 0; };
+canvas.oncontextmenu = (e) => e.preventDefault();
+
+window.onkeydown = (e) => {
+    if (!gameRunning) return;
+
+    if (isChatOpen) {
+        if (e.key === 'Enter') {
+            sendChatMessage();
+        } else if (e.key === 'Escape') {
+            closeChat();
+        }
+        return;
+    }
+
+    const k = e.key.toLowerCase();
+    keys[k] = true;
+
+    if (k === 't') {
+        e.preventDefault();
+        openChat();
+        return;
+    }
+
+    if (e.key === 'Escape') toggleMenu('pause-menu');
+    if (k === 'e') toggleMenu('inventory-menu');
+    if (k === 'f') toggleMenu('dim-menu');
+    if (k === 'p') { toggleMenu('tp-menu'); updateTPMenu(); }
+    if (k === 'c' && inventory.crafting_table > 0) toggleMenu('table-menu');
+    if (k >= '1' && k <= '9') { selectedSlot = parseInt(k) - 1; updateUI(); }
+};
+
+window.onkeyup = (e) => {
+    if (!isChatOpen) {
+        keys[e.key.toLowerCase()] = false;
+    }
+};
+
+function toggleMenu(id) {
+    const m = document.getElementById(id);
+    const open = m.style.display === 'block';
+    closeAll();
+    closeChat();
+    if (!open) { m.style.display = 'block'; updateUI(); }
+}
+
+function updateUI() {
+    for (let i = 0; i < 9; i++) {
+        const slot = document.getElementById('slot' + i);
+        slot.classList.toggle('selected', i === selectedSlot);
+        const item = hotbarOrder[i];
+        if (item && inventory[item] > 0) {
+            slot.style.backgroundColor = colors[item] || '#c6c6c6';
+            slot.innerHTML = `<span>${inventory[item]}</span>`;
+        } else { slot.style.backgroundColor = '#c6c6c6'; slot.innerHTML = ''; }
+    }
+    document.getElementById('inv-display').innerHTML = `Hout: ${inventory.log || 0} | Diamond: ${inventory.diamond || 0} | IJzer: ${inventory.iron || 0}`;
+}
+
+function quickCraft(item) {
+    if (item === 'planks' && inventory.log > 0) { inventory.log--; inventory.planks = (inventory.planks || 0) + 4; }
+    if (item === 'crafting_table' && inventory.planks >= 4) { inventory.planks -= 4; inventory.crafting_table = (inventory.crafting_table || 0) + 1; }
+    updateUI();
+}
+
+function complexCraft(item) {
+    if (item === 'iron_pickaxe' && inventory.iron >= 3) { inventory.iron -= 3; inventory.has_pickaxe = true; alert("Pickaxe gemaakt!"); }
+    if (item === 'sword' && inventory.diamond >= 2) { inventory.diamond -= 2; inventory.has_sword = true; alert("Sword gemaakt!"); }
+    updateUI();
+}
+
+function closeAll() { 
+    document.querySelectorAll('.overlay').forEach(o => o.style.display = 'none'); 
+}
+
+window.onbeforeunload = () => {
+    saveAndContinue();
+    if (isMultiplayer) removeMeFromLobby();
+};
+
+initCloudStorage();
+updateUIStatus();
+</script>
+</body>
+</html>
