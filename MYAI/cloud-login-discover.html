@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mattyou — Inloggen &amp; Ontdekken</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-0:#04060c; --bg-1:#080c18;
+    --blue-deep:#0a2a66; --blue-mid:#1c5fd1; --blue-glow:#4da6ff;
+    --white:#f4f7fc; --dim:#9aa7bd; --line:rgba(255,255,255,0.09); --panel:rgba(255,255,255,0.045);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    background:var(--bg-0); color:var(--white); font-family:'Inter',sans-serif;
+    min-height:100vh; position:relative; overflow-x:hidden;
+  }
+  body::before{
+    content:""; position:fixed; inset:0;
+    background-image:radial-gradient(rgba(255,255,255,0.14) 1.1px, transparent 1.1px);
+    background-size:26px 26px; z-index:0;
+  }
+  .glow{
+    position:fixed; inset:0; z-index:0; pointer-events:none;
+    background:
+      radial-gradient(700px 500px at 15% 20%, rgba(28,95,209,0.5), transparent 60%),
+      radial-gradient(900px 650px at 90% 10%, rgba(77,166,255,0.3), transparent 55%);
+  }
+
+  /* ---------- LOGIN OVERLAY ---------- */
+  #loginOverlay{
+    position:fixed; inset:0; z-index:50;
+    background:rgba(4,6,12,0.88); backdrop-filter:blur(6px);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .auth-card{
+    width:min(380px,90vw);
+    background:var(--bg-1); border:1px solid var(--line); border-radius:18px;
+    padding:32px 28px; box-shadow:0 25px 70px rgba(0,0,0,0.5);
+  }
+  .auth-logo{display:flex;align-items:center;gap:9px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:19px;margin-bottom:6px;}
+  .auth-logo .mark{width:22px;height:22px;border-radius:7px;background:linear-gradient(135deg,var(--blue-glow),var(--blue-mid));}
+  .auth-sub{color:var(--dim);font-size:13.5px;margin-bottom:22px;}
+  .field{margin-bottom:13px;}
+  .field label{display:block;font-size:12.5px;color:var(--dim);margin-bottom:6px;font-weight:600;}
+  .field input{
+    width:100%;padding:11px 13px;border-radius:9px;
+    background:rgba(255,255,255,0.04);border:1px solid var(--line);
+    color:var(--white);font-size:14px;outline:none;
+  }
+  .field input:focus{border-color:var(--blue-glow);}
+  .auth-btn{
+    width:100%;padding:12px;border-radius:10px;border:none;
+    background:linear-gradient(135deg,var(--blue-glow),var(--blue-mid));
+    color:white;font-weight:700;font-size:14.5px;cursor:pointer;margin-top:6px;
+  }
+  .auth-switch{text-align:center;margin-top:16px;font-size:13px;color:var(--dim);}
+  .auth-switch a{color:var(--blue-glow);cursor:pointer;text-decoration:none;font-weight:600;}
+  .auth-error{color:#ff6b6b;font-size:12.5px;margin-top:8px;display:none;}
+
+  /* ---------- DISCOVER PAGE ---------- */
+  header{
+    position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;
+    padding:20px 32px;
+  }
+  .logo{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:19px;display:flex;align-items:center;gap:8px;}
+  .logo .mark{width:22px;height:22px;border-radius:7px;background:linear-gradient(135deg,var(--blue-glow),var(--blue-mid));}
+  .header-right{display:flex;align-items:center;gap:14px;}
+  .avatar-pill{
+    display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);
+    padding:6px 12px;border-radius:20px;font-size:13.5px;cursor:pointer;
+  }
+  .avatar-dot{width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,var(--blue-glow),var(--blue-mid));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;}
+
+  main{position:relative;z-index:2;padding:20px 32px 60px;max-width:1100px;margin:0 auto;}
+  h1{font-family:'Space Grotesk',sans-serif;font-size:32px;margin-bottom:6px;}
+  .sub{color:var(--dim);margin-bottom:26px;}
+  .search-bar{
+    display:flex;align-items:center;gap:10px;
+    background:rgba(255,255,255,0.04);border:1px solid var(--line);border-radius:12px;
+    padding:12px 16px;margin-bottom:30px;max-width:520px;
+  }
+  .search-bar input{flex:1;background:transparent;border:none;outline:none;color:var(--white);font-size:14.5px;}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:18px;}
+  .card{
+    background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;
+    cursor:pointer;transition:transform .15s ease,border-color .15s ease;
+  }
+  .card:hover{transform:translateY(-3px);border-color:rgba(255,255,255,0.2);}
+  .card-thumb{
+    height:120px;background:linear-gradient(135deg,var(--blue-deep),var(--blue-mid));
+    display:flex;align-items:center;justify-content:center;font-size:26px;
+  }
+  .card-body{padding:13px 14px;}
+  .card-title{font-weight:600;font-size:14.5px;margin-bottom:4px;}
+  .card-author{color:var(--dim);font-size:12.5px;margin-bottom:10px;}
+  .card-actions{display:flex;gap:8px;}
+  .mini-btn{
+    flex:1;text-align:center;padding:7px;border-radius:7px;font-size:12.5px;font-weight:600;
+    border:1px solid var(--line);color:var(--dim);cursor:pointer;
+  }
+  .mini-btn:hover{color:var(--white);border-color:rgba(255,255,255,0.25);}
+
+  /* ---------- SHARE MODAL ---------- */
+  #shareOverlay{
+    position:fixed;inset:0;z-index:60;background:rgba(4,6,12,0.75);
+    display:none;align-items:center;justify-content:center;
+  }
+  #shareOverlay.show{display:flex;}
+  .share-card{width:min(380px,90vw);background:var(--bg-1);border:1px solid var(--line);border-radius:16px;padding:22px;}
+  .share-card h3{font-family:'Space Grotesk',sans-serif;font-size:16px;margin-bottom:14px;}
+  .user-results{max-height:150px;overflow-y:auto;margin-bottom:10px;}
+  .user-row{
+    display:flex;align-items:center;justify-content:between;gap:10px;
+    padding:8px 10px;border-radius:8px;cursor:pointer;font-size:13.5px;
+  }
+  .user-row:hover{background:var(--panel);}
+  .user-row.selected{background:rgba(77,166,255,0.15);color:var(--blue-glow);}
+  textarea#shareMsg{
+    width:100%;min-height:60px;background:rgba(255,255,255,0.04);border:1px solid var(--line);
+    border-radius:9px;color:var(--white);padding:10px;font-family:'Inter',sans-serif;font-size:13.5px;
+    outline:none;resize:none;margin:10px 0 14px;
+  }
+  .share-footer{display:flex;justify-content:flex-end;gap:8px;}
+  .btn-ghost2{background:transparent;border:1px solid var(--line);color:var(--dim);padding:9px 16px;border-radius:8px;font-size:13.5px;font-weight:600;cursor:pointer;}
+  .btn-send{background:linear-gradient(135deg,var(--blue-glow),var(--blue-mid));border:none;color:white;padding:9px 18px;border-radius:8px;font-size:13.5px;font-weight:700;cursor:pointer;}
+</style>
+</head>
+<body>
+
+<div class="glow"></div>
+
+<!-- LOGIN / REGISTREREN -->
+<div id="loginOverlay">
+  <div class="auth-card">
+    <div class="auth-logo"><span class="mark"></span>Mattyou</div>
+    <div class="auth-sub" id="authSub">Log in om verder te bouwen.</div>
+
+    <div class="field" id="usernameField">
+      <label>Gebruikersnaam</label>
+      <input type="text" id="authUsername" placeholder="bijv. sanne_dev">
+    </div>
+    <div class="field" id="emailField" style="display:none;">
+      <label>E-mailadres</label>
+      <input type="email" id="authEmail" placeholder="jij@voorbeeld.nl">
+    </div>
+    <div class="field">
+      <label>Wachtwoord</label>
+      <input type="password" id="authPassword" placeholder="••••••••">
+    </div>
+
+    <button class="auth-btn" id="authSubmit">Inloggen</button>
+    <div class="auth-error" id="authError">Onjuiste gegevens, probeer opnieuw.</div>
+    <div class="auth-switch">
+      <span id="authSwitchText">Nog geen account?</span> <a id="authSwitchLink">Registreer</a>
+    </div>
+  </div>
+</div>
+
+<!-- ONTDEKKEN -->
+<header>
+  <div class="logo"><span class="mark"></span>Mattyou</div>
+  <div class="header-right">
+    <div class="avatar-pill" id="userPill">
+      <div class="avatar-dot" id="userInitial">?</div>
+      <span id="userNameLabel">—</span>
+    </div>
+  </div>
+</header>
+
+<main>
+  <h1>Ontdekken</h1>
+  <p class="sub">Bekijk wat andere gebruikers hebben gebouwd met Mattyou.</p>
+
+  <div class="search-bar">
+    🔍 <input type="text" id="discoverSearch" placeholder="Zoek op naam, maker of onderwerp...">
+  </div>
+
+  <div class="grid" id="grid"></div>
+</main>
+
+<!-- DELEN MODAL -->
+<div id="shareOverlay">
+  <div class="share-card">
+    <h3>🪄 Delen</h3>
+    <input type="text" id="shareUserSearch" placeholder="Zoek een gebruiker..."
+      style="width:100%;padding:10px 12px;border-radius:9px;background:rgba(255,255,255,0.04);border:1px solid var(--line);color:white;font-size:13.5px;outline:none;margin-bottom:10px;">
+    <div class="user-results" id="userResults"></div>
+    <textarea id="shareMsg" placeholder="Optioneel berichtje..."></textarea>
+    <div class="share-footer">
+      <button class="btn-ghost2" id="shareCancel">Annuleren</button>
+      <button class="btn-send" id="shareSend">Versturen</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================= DEMO DATA (in het echt komt dit van je backend) ================= */
+const DEMO_USERS = ["sanne_dev","teun92","koffiebar_amy","pixel_max","lotte.codes","robin_builds"];
+const DEMO_PROJECTS = [
+  {id:"p1", title:"Koffie Landingspagina", author:"sanne_dev", emoji:"☕"},
+  {id:"p2", title:"Taken-app", author:"teun92", emoji:"✅"},
+  {id:"p3", title:"Portfolio Sjabloon", author:"lotte.codes", emoji:"🎨"},
+  {id:"p4", title:"Restaurant Menu", author:"koffiebar_amy", emoji:"🍽️"},
+  {id:"p5", title:"Fitness Tracker", author:"robin_builds", emoji:"🏋️"},
+  {id:"p6", title:"Reis Blog", author:"pixel_max", emoji:"✈️"}
+];
+
+/* ================= AUTH ================= */
+let authMode = 'login';
+const authSubmit = document.getElementById('authSubmit');
+const authSwitchLink = document.getElementById('authSwitchLink');
+const authSwitchText = document.getElementById('authSwitchText');
+const authSub = document.getElementById('authSub');
+const emailField = document.getElementById('emailField');
+const authError = document.getElementById('authError');
+
+authSwitchLink.addEventListener('click', ()=>{
+  authMode = authMode === 'login' ? 'register' : 'login';
+  if(authMode === 'register'){
+    authSub.textContent = 'Maak een account om te bouwen en te delen.';
+    emailField.style.display = 'block';
+    authSubmit.textContent = 'Account aanmaken';
+    authSwitchText.textContent = 'Heb je al een account?';
+    authSwitchLink.textContent = 'Log in';
+  } else {
+    authSub.textContent = 'Log in om verder te bouwen.';
+    emailField.style.display = 'none';
+    authSubmit.textContent = 'Inloggen';
+    authSwitchText.textContent = 'Nog geen account?';
+    authSwitchLink.textContent = 'Registreer';
+  }
+});
+
+authSubmit.addEventListener('click', ()=>{
+  const username = document.getElementById('authUsername').value.trim();
+  const password = document.getElementById('authPassword').value.trim();
+  if(!username || !password){
+    authError.textContent = 'Vul een gebruikersnaam en wachtwoord in.';
+    authError.style.display='block';
+    return;
+  }
+  // In het echt: fetch('/api/auth/login' of '/api/auth/register', {...})
+  currentUser = username;
+  document.getElementById('loginOverlay').style.display='none';
+  document.getElementById('userInitial').textContent = username[0].toUpperCase();
+  document.getElementById('userNameLabel').textContent = username;
+});
+
+/* ================= DISCOVER GRID ================= */
+let currentUser = null;
+const grid = document.getElementById('grid');
+
+function renderGrid(filter=''){
+  const f = filter.toLowerCase();
+  const items = DEMO_PROJECTS.filter(p =>
+    p.title.toLowerCase().includes(f) || p.author.toLowerCase().includes(f)
+  );
+  grid.innerHTML = items.map(p => `
+    <div class="card">
+      <div class="card-thumb">${p.emoji}</div>
+      <div class="card-body">
+        <div class="card-title">${p.title}</div>
+        <div class="card-author">door ${p.author}</div>
+        <div class="card-actions">
+          <div class="mini-btn" onclick="openProject('${p.id}')">Openen</div>
+          <div class="mini-btn" onclick="openShare('${p.id}','${p.title}')">Delen</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+renderGrid();
+
+document.getElementById('discoverSearch').addEventListener('input', (e)=> renderGrid(e.target.value));
+
+function openProject(id){
+  alert('Opent project: ' + id + ' (in het echt: navigeer naar de chat+preview pagina)');
+}
+
+/* ================= SHARE MODAL ================= */
+const shareOverlay = document.getElementById('shareOverlay');
+const userResults = document.getElementById('userResults');
+const shareUserSearch = document.getElementById('shareUserSearch');
+let selectedUser = null;
+let shareProjectId = null;
+
+function openShare(projectId, title){
+  shareProjectId = projectId;
+  selectedUser = null;
+  shareUserSearch.value = '';
+  document.getElementById('shareMsg').value = '';
+  renderUserResults('');
+  shareOverlay.classList.add('show');
+}
+function renderUserResults(query){
+  const q = query.toLowerCase();
+  const matches = DEMO_USERS.filter(u => u.toLowerCase().includes(q));
+  userResults.innerHTML = matches.map(u => `
+    <div class="user-row ${u===selectedUser?'selected':''}" onclick="selectUser('${u}')">👤 ${u}</div>
+  `).join('') || '<div style="color:var(--dim);font-size:13px;padding:6px;">Geen gebruikers gevonden</div>';
+}
+function selectUser(u){
+  selectedUser = u;
+  renderUserResults(shareUserSearch.value);
+}
+shareUserSearch.addEventListener('input', (e)=> renderUserResults(e.target.value));
+
+document.getElementById('shareCancel').addEventListener('click', ()=> shareOverlay.classList.remove('show'));
+document.getElementById('shareSend').addEventListener('click', ()=>{
+  if(!selectedUser){ alert('Kies eerst een gebruiker.'); return; }
+  // In het echt: fetch(`/api/projects/${shareProjectId}/share`, {method:'POST', body: JSON.stringify({toUsername:selectedUser, message: ...})})
+  shareOverlay.classList.remove('show');
+  alert(`Gedeeld met ${selectedUser} ✅`);
+});
+</script>
+
+</body>
+</html>
