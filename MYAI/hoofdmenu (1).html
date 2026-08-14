@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mattyou Cloud AI Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-0:#04060c;
+    --bg-1:#070b16;
+    --blue-deep:#0a2a66;
+    --blue-mid:#1c5fd1;
+    --blue-glow:#4da6ff;
+    --white:#f4f7fc;
+    --dim:#9aa7bd;
+    --line:rgba(255,255,255,0.08);
+    --panel:rgba(255,255,255,0.04);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{
+    background:var(--bg-0);
+    color:var(--white);
+    font-family:'Inter',sans-serif;
+    overflow-x:hidden;
+    position:relative;
+    min-height:100vh;
+  }
+
+  /* dotted field */
+  body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    background-image:radial-gradient(rgba(255,255,255,0.16) 1.1px, transparent 1.1px);
+    background-size:26px 26px;
+    z-index:0;
+    pointer-events:none;
+  }
+
+  /* glow */
+  .glow{
+    position:fixed;
+    inset:0;
+    z-index:0;
+    pointer-events:none;
+    background:
+      radial-gradient(700px 500px at 18% 30%, rgba(28,95,209,0.55), transparent 60%),
+      radial-gradient(900px 650px at 85% 15%, rgba(77,166,255,0.35), transparent 55%),
+      radial-gradient(1200px 800px at 50% 100%, rgba(10,42,102,0.6), transparent 60%);
+    animation:drift 18s ease-in-out infinite alternate;
+  }
+  @keyframes drift{
+    from{ filter:hue-rotate(0deg) brightness(1); }
+    to{ filter:hue-rotate(6deg) brightness(1.08); }
+  }
+
+  header{
+    position:relative;
+    z-index:2;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:22px 32px;
+  }
+  .left-cluster{display:flex;align-items:center;gap:18px;}
+  .hamburger{
+    width:38px;height:38px;
+    display:flex;align-items:center;justify-content:center;
+    border-radius:10px;
+    cursor:pointer;
+    background:var(--panel);
+    border:1px solid var(--line);
+    transition:background .15s ease;
+  }
+  .hamburger:hover{background:rgba(255,255,255,0.08);}
+  .hamburger span{
+    display:block;width:16px;height:2px;background:var(--white);
+    position:relative;
+  }
+  .hamburger span::before,.hamburger span::after{
+    content:"";position:absolute;left:0;width:16px;height:2px;background:var(--white);
+  }
+  .hamburger span::before{top:-5px;}
+  .hamburger span::after{top:5px;}
+
+  .logo{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:700;
+    font-size:19px;
+    letter-spacing:-0.02em;
+    display:flex;align-items:center;gap:8px;
+  }
+  .logo .mark{
+    width:22px;height:22px;border-radius:7px;
+    background:linear-gradient(135deg,var(--blue-glow),var(--blue-mid));
+    display:inline-block;
+  }
+
+  nav{display:flex;gap:30px;}
+  nav a{
+    color:var(--dim);
+    text-decoration:none;
+    font-size:14.5px;
+    font-weight:500;
+    transition:color .15s ease;
+  }
+  nav a:hover{color:var(--white);}
+
+  .header-right{display:flex;align-items:center;gap:12px;}
+  .btn-ghost{
+    color:var(--dim);
+    background:transparent;
+    border:1px solid var(--line);
+    padding:9px 16px;
+    border-radius:8px;
+    font-size:14px;
+    font-weight:500;
+    cursor:pointer;
+  }
+  .btn-ghost:hover{color:var(--white);border-color:rgba(255,255,255,0.25);}
+
+  /* sidebar */
+  .overlay{
+    position:fixed;inset:0;
+    background:rgba(0,0,0,0.4);
+    z-index:5;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .2s ease;
+  }
+  .overlay.open{opacity:1;pointer-events:auto;}
+
+  .sidebar{
+    position:fixed;top:0;left:0;bottom:0;
+    width:260px;
+    background:#080c18;
+    border-right:1px solid var(--line);
+    z-index:6;
+    transform:translateX(-100%);
+    transition:transform .25s ease;
+    padding:22px 18px;
+    display:flex;flex-direction:column;gap:4px;
+  }
+  .sidebar.open{transform:translateX(0);}
+  .sidebar-header{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:22px;
+  }
+  .sidebar-item{
+    display:flex;align-items:center;gap:12px;
+    padding:11px 12px;
+    border-radius:9px;
+    color:var(--dim);
+    font-size:14.5px;
+    font-weight:500;
+    cursor:pointer;
+    transition:background .15s ease, color .15s ease;
+  }
+  .sidebar-item:hover, .sidebar-item.active{
+    background:var(--panel);
+    color:var(--white);
+  }
+  .sidebar-item .icon{width:18px;text-align:center;opacity:0.9;}
+
+  main{
+    position:relative;
+    z-index:2;
+    min-height:calc(100vh - 82px);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:40px 20px 80px;
+    text-align:center;
+  }
+
+  h1{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:700;
+    font-size:clamp(34px,5vw,54px);
+    letter-spacing:-0.02em;
+    margin-bottom:14px;
+  }
+  .sub{
+    color:var(--dim);
+    font-size:17px;
+    margin-bottom:38px;
+  }
+
+  .prompt-box{
+    width:min(680px,90vw);
+    background:rgba(10,14,24,0.75);
+    backdrop-filter:blur(10px);
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:18px 20px 14px;
+    text-align:left;
+    box-shadow:0 20px 60px rgba(0,0,0,0.45);
+  }
+  .prompt-box textarea{
+    width:100%;
+    background:transparent;
+    border:none;
+    outline:none;
+    resize:none;
+    color:var(--white);
+    font-family:'Inter',sans-serif;
+    font-size:15.5px;
+    min-height:44px;
+  }
+  .prompt-box textarea::placeholder{color:#5c6980;}
+  .prompt-row{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-top:10px;
+  }
+  .prompt-left, .prompt-right{display:flex;align-items:center;gap:10px;}
+  .chip{
+    display:flex;align-items:center;gap:6px;
+    color:var(--dim);
+    font-size:13px;
+    padding:6px 10px;
+    border-radius:8px;
+    cursor:pointer;
+  }
+  .chip:hover{background:var(--panel);color:var(--white);}
+  .icon-btn{
+    width:32px;height:32px;
+    border-radius:8px;
+    display:flex;align-items:center;justify-content:center;
+    color:var(--dim);
+    cursor:pointer;
+  }
+  .icon-btn:hover{background:var(--panel);color:var(--white);}
+  .send-btn{
+    width:34px;height:34px;
+    border-radius:50%;
+    background:linear-gradient(135deg,var(--blue-glow),var(--blue-mid));
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    border:none;
+  }
+  .send-btn svg{width:16px;height:16px;}
+
+  .modes{
+    display:flex;gap:16px;
+    margin-top:34px;
+    flex-wrap:wrap;
+    justify-content:center;
+  }
+  .mode-card{
+    width:96px;
+    padding:16px 8px;
+    border-radius:14px;
+    background:rgba(255,255,255,0.03);
+    border:1px solid var(--line);
+    cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;gap:8px;
+    font-size:13px;
+    color:var(--dim);
+    transition:transform .15s ease, background .15s ease, color .15s ease;
+    position:relative;
+  }
+  .mode-card:hover{background:rgba(255,255,255,0.06);color:var(--white);transform:translateY(-2px);}
+  .mode-card .badge{
+    position:absolute;top:-8px;right:-6px;
+    background:var(--blue-mid);
+    color:var(--white);
+    font-size:9.5px;
+    font-weight:600;
+    padding:2px 6px;
+    border-radius:6px;
+  }
+
+  .start-from{
+    margin-top:30px;
+    color:#6b7690;
+    font-size:13.5px;
+    display:flex;align-items:center;gap:14px;
+    flex-wrap:wrap;
+    justify-content:center;
+  }
+  .start-chip{
+    display:flex;align-items:center;gap:7px;
+    background:rgba(255,255,255,0.04);
+    border:1px solid var(--line);
+    padding:7px 13px;
+    border-radius:20px;
+    color:var(--dim);
+    cursor:pointer;
+  }
+  .start-chip:hover{color:var(--white);border-color:rgba(255,255,255,0.25);}
+
+  @media (max-width:640px){
+    nav{display:none;}
+    header{padding:18px 16px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="glow"></div>
+
+<div class="overlay" id="overlay"></div>
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="logo"><span class="mark"></span>Mattyou</div>
+  </div>
+  <div class="sidebar-item active"><span class="icon">⌂</span>Home</div>
+  <div class="sidebar-item"><span class="icon">▤</span>Projecten</div>
+  <div class="sidebar-item"><span class="icon">↗</span>Gedeeld met mij</div>
+</aside>
+
+<header>
+  <div class="left-cluster">
+    <div class="hamburger" id="hamburgerBtn"><span></span></div>
+    <div class="logo"><span class="mark"></span>Mattyou</div>
+  </div>
+  <nav>
+    <a href="#">Community</a>
+    <a href="#">Zakelijk</a>
+    <a href="#">Sjablonen</a>
+    <a href="#">Bronnen</a>
+    <a href="#">Vacatures</a>
+    <a href="#">Prijzen</a>
+  </nav>
+  <div class="header-right">
+    <button class="btn-ghost">Delen</button>
+  </div>
+</header>
+
+<main>
+  <h1>Wat ga je vandaag bouwen?</h1>
+  <p class="sub">Maak prachtige apps &amp; websites door met AI te chatten.</p>
+
+  <div class="prompt-box">
+    <textarea rows="2" placeholder="Laten we een adminpaneel bouwen..."></textarea>
+    <div class="prompt-row">
+      <div class="prompt-left">
+        <div class="icon-btn" title="Bijlage toevoegen">+</div>
+        <div class="chip">Standaard <span style="font-size:10px;">▾</span></div>
+        <div class="chip">🎨 <span style="font-size:10px;">▾</span></div>
+      </div>
+      <div class="prompt-right">
+        <div class="chip">💡 Plan</div>
+        <div class="icon-btn" title="Spraak">🎤</div>
+        <button class="send-btn" title="Versturen">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.4" stroke-linecap="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modes">
+    <div class="mode-card">
+      <div style="font-size:22px;">🌐</div>
+      Website
+    </div>
+    <div class="mode-card">
+      <span class="badge">Nieuw</span>
+      <div style="font-size:22px;">🖥️</div>
+      Presentatie
+    </div>
+    <div class="mode-card">
+      <div style="font-size:22px;">📱</div>
+      App
+    </div>
+    <div class="mode-card">
+      <div style="font-size:22px;">🧪</div>
+      Prototype
+    </div>
+  </div>
+
+  <div class="start-from">
+    of begin vanuit
+    <div class="start-chip">Figma</div>
+    <div class="start-chip">GitHub</div>
+    <div class="start-chip">Team sjabloon</div>
+  </div>
+</main>
+
+<script>
+  const btn = document.getElementById('hamburgerBtn');
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('overlay');
+  function toggle(open){
+    sidebar.classList.toggle('open', open);
+    overlay.classList.toggle('open', open);
+  }
+  btn.addEventListener('click', () => toggle(!sidebar.classList.contains('open')));
+  overlay.addEventListener('click', () => toggle(false));
+</script>
+
+</body>
+</html>
