@@ -1,0 +1,657 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Premium Lokale Muziekspeler</title>
+<link rel="icon" href="data:," />
+<style>
+  /* Premium dark theme layout */
+  :root{
+    --bg:#0b0d10; --panel:#0f1316; --card:#0f1417; --muted:#9aa0a6;
+    --accent:#1db954; --glass: rgba(255,255,255,0.03); --radius:12px;
+    --shadow: 0 8px 30px rgba(2,6,23,0.6);
+    font-family: Inter, "Segoe UI", Roboto, system-ui, -apple-system, Arial;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:linear-gradient(180deg,#071014 0%, #0b0d10 100%);color:#e6eef3;display:flex;flex-direction:column}
+  header{height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);border-bottom:1px solid rgba(255,255,255,0.02)}
+  .brand{display:flex;align-items:center;gap:12px;font-weight:700}
+  .logo{width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,#1db954,#0ea5a3);display:flex;align-items:center;justify-content:center;font-weight:700;color:#021;box-shadow:0 6px 18px rgba(13, 148, 136, 0.12)}
+  .brand span{font-size:1.05rem}
+  .top-controls{display:flex;gap:8px;align-items:center}
+  button{background:#0f1417;color:#e6eef3;border:1px solid rgba(255,255,255,0.03);padding:8px 12px;border-radius:10px;cursor:pointer}
+  button.ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted)}
+  button.primary{background:linear-gradient(90deg,var(--accent),#0ea5a3);color:#021;border:0}
+  main.app{flex:1;display:grid;grid-template-columns:260px 1fr 360px;gap:18px;padding:18px;align-items:stretch}
+  /* Left library */
+  .sidebar{background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent);border-radius:var(--radius);padding:12px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:12px}
+  .sidebar h4{margin:0 0 6px 0;color:var(--muted);font-size:0.85rem}
+  .library-list{flex:1;overflow:auto;padding-right:6px}
+  .lib-item{display:flex;align-items:center;gap:10px;padding:8px;border-radius:8px;cursor:pointer;color:var(--muted)}
+  .lib-item:hover{background:rgba(255,255,255,0.02);color:#fff}
+  .lib-item.active{background:linear-gradient(90deg, rgba(29,185,84,0.12), rgba(14,165,163,0.06));color:#fff}
+  .lib-icon{width:36px;height:36px;border-radius:8px;background:linear-gradient(180deg,#0b0f10,#0e1416);display:flex;align-items:center;justify-content:center;color:var(--muted)}
+  /* Center content */
+  .content{background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:12px;overflow:hidden}
+  .top-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .search{display:flex;gap:8px;align-items:center}
+  .search input{background:transparent;border:1px solid rgba(255,255,255,0.04);padding:10px 12px;border-radius:10px;color:#e6eef3;width:420px}
+  .dropzone{border:2px dashed rgba(255,255,255,0.03);padding:14px;border-radius:10px;text-align:center;color:var(--muted)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;overflow:auto;padding-bottom:12px}
+  .card{background:linear-gradient(180deg,#0b0f11,#0d1113);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px;min-height:120px}
+  .card .title{font-weight:700}
+  /* Right details */
+  .details{background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:12px}
+  .art{width:100%;height:220px;border-radius:10px;background:linear-gradient(135deg,#111,#0b0f12);display:flex;align-items:center;justify-content:center;font-size:48px;color:var(--muted)}
+  .meta{display:flex;flex-direction:column;gap:6px}
+  .meta .name{font-weight:700;font-size:1.05rem}
+  .meta .sub{color:var(--muted);font-size:0.9rem}
+  .meta .desc{margin-top:8px;color:var(--muted);font-size:0.9rem;line-height:1.3}
+  .meta .edit{margin-top:8px}
+  /* Player bottom */
+  .player-bar{position:fixed;left:18px;right:18px;bottom:18px;height:84px;background:linear-gradient(180deg,#071014,#0b0d10);border-radius:14px;padding:12px 18px;display:flex;align-items:center;gap:18px;border:1px solid rgba(255,255,255,0.03);box-shadow:0 20px 60px rgba(2,6,23,0.6)}
+  .player-left{display:flex;gap:12px;align-items:center;width:36%}
+  .player-thumb{width:64px;height:64px;border-radius:8px;background:linear-gradient(135deg,#111,#0b0f12);display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--muted)}
+  .player-info{display:flex;flex-direction:column}
+  .player-info .title{font-weight:700}
+  .player-info .artist{color:var(--muted);font-size:0.9rem}
+  .player-center{flex:1;display:flex;flex-direction:column;gap:8px}
+  .controls{display:flex;align-items:center;gap:8px;justify-content:center}
+  .controls button{width:44px;height:44px;border-radius:10px}
+  .progress{height:8px;background:rgba(255,255,255,0.03);border-radius:8px;overflow:hidden}
+  .progress > i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),#0ea5a3);width:0%}
+  .player-right{width:220px;text-align:right;color:var(--muted)}
+  /* small utilities */
+  .muted{color:var(--muted)}
+  .hidden{display:none}
+  /* responsive */
+  @media (max-width:1100px){
+    main.app{grid-template-columns:220px 1fr}
+    .details{display:none}
+  }
+  @media (max-width:700px){
+    header .brand span{display:none}
+    main.app{grid-template-columns:1fr}
+    .sidebar{display:none}
+    .player-bar{left:8px;right:8px}
+  }
+</style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <div class="logo">M</div>
+      <span>Mijn Muziek</span>
+    </div>
+    <div class="top-controls">
+      <div id="dir-info" class="muted">Geen map gekozen</div>
+      <button id="btn-pick">Kies muziekmap</button>
+      <button id="btn-change" class="ghost">Verander</button>
+      <button id="btn-clear" class="ghost">Vergeet</button>
+    </div>
+  </header>
+
+  <main class="app">
+    <!-- Left library -->
+    <aside class="sidebar" id="sidebar">
+      <h4>Bibliotheek</h4>
+      <div class="library-list" id="library-list">
+        <!-- dynamisch -->
+      </div>
+      <div style="display:flex;gap:8px">
+        <button id="btn-new-playlist" class="primary">Nieuwe playlist</button>
+        <button id="btn-open-playlists" class="ghost">Playlists</button>
+      </div>
+    </aside>
+
+    <!-- Center content -->
+    <section class="content">
+      <div class="top-row">
+        <div class="search">
+          <input id="search" placeholder="Zoek nummers, artiest of bestand..." />
+        </div>
+        <div style="display:flex;gap:8px">
+          <button id="btn-upload" class="ghost">Upload</button>
+          <input id="file-input" type="file" accept="audio/*" multiple class="hidden" />
+        </div>
+      </div>
+
+      <div id="dropzone" class="dropzone">Sleep audio hierheen of klik Upload</div>
+
+      <div class="grid" id="grid">
+        <!-- album / radio cards or track list -->
+      </div>
+    </section>
+
+    <!-- Right details -->
+    <aside class="details" id="details">
+      <div class="art" id="art">♪</div>
+      <div class="meta">
+        <div class="name" id="detail-name">Selecteer een nummer</div>
+        <div class="sub" id="detail-sub">—</div>
+        <div class="desc" id="detail-desc">Beschrijving en metadata verschijnen hier. Je kunt de weergavenaam bewerken en een korte beschrijving toevoegen.</div>
+        <div class="edit">
+          <button id="btn-edit-meta" class="ghost">Bewerk weergaveld</button>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <!-- Player -->
+  <div class="player-bar" role="region" aria-label="Afspeelbalk">
+    <div class="player-left">
+      <div class="player-thumb" id="player-thumb">♪</div>
+      <div class="player-info">
+        <div class="title" id="player-title">Geen nummer</div>
+        <div class="artist" id="player-artist">—</div>
+      </div>
+    </div>
+
+    <div class="player-center">
+      <div class="controls">
+        <button id="btn-prev" class="ghost">⏮</button>
+        <button id="btn-play" class="primary">▶</button>
+        <button id="btn-next" class="ghost">⏭</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <div id="time-current" class="muted" style="width:40px">0:00</div>
+        <div class="progress" style="flex:1"><i id="progress-bar"></i></div>
+        <div id="time-total" class="muted" style="width:40px;text-align:right">0:00</div>
+      </div>
+    </div>
+
+    <div class="player-right">
+      <div id="player-file" class="muted">—</div>
+    </div>
+  </div>
+
+  <!-- Templates -->
+  <template id="tpl-lib-item">
+    <div class="lib-item">
+      <div class="lib-icon">♫</div>
+      <div>
+        <div class="lib-title"></div>
+        <div class="muted lib-sub" style="font-size:0.85rem"></div>
+      </div>
+    </div>
+  </template>
+
+  <template id="tpl-track-card">
+    <div class="card track-card">
+      <div style="display:flex;gap:12px;align-items:center">
+        <div style="width:64px;height:64px;border-radius:8px;background:linear-gradient(135deg,#0b0f12,#111);display:flex;align-items:center;justify-content:center;color:var(--muted)">♪</div>
+        <div style="flex:1">
+          <div class="title"></div>
+          <div class="muted subtitle" style="font-size:0.9rem"></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
+        <button class="small play">▶</button>
+        <button class="small add">+</button>
+        <button class="small rename">✎</button>
+      </div>
+    </div>
+  </template>
+
+<script>
+(async () => {
+  // State
+  let dirHandle = null;
+  let files = []; // {name, handle?, file?}
+  let playlists = []; // {id,name,items}
+  let currentPlaylist = []; // [{name}]
+  let displayNames = JSON.parse(localStorage.getItem('displayNames') || '{}');
+  const playlistsDirName = 'playlists';
+  const supportsFS = 'showDirectoryPicker' in window;
+
+  // IndexedDB helper to persist handles
+  const DB_NAME = 'local-music-db';
+  const STORE = 'handles';
+  function idbOpen() {
+    return new Promise((res, rej) => {
+      const r = indexedDB.open(DB_NAME, 1);
+      r.onupgradeneeded = () => r.result.createObjectStore(STORE);
+      r.onsuccess = () => res(r.result);
+      r.onerror = () => rej(r.error);
+    });
+  }
+  async function idbPut(key, value) {
+    try {
+      const db = await idbOpen();
+      const tx = db.transaction(STORE, 'readwrite');
+      tx.objectStore(STORE).put(value, key);
+      return new Promise((res, rej) => { tx.oncomplete = () => res(); tx.onerror = () => rej(tx.error); });
+    } catch(e){ console.warn('idb put failed', e); }
+  }
+  async function idbGet(key) {
+    try {
+      const db = await idbOpen();
+      return new Promise((res, rej) => {
+        const tx = db.transaction(STORE, 'readonly');
+        const req = tx.objectStore(STORE).get(key);
+        req.onsuccess = () => res(req.result);
+        req.onerror = () => rej(req.error);
+      });
+    } catch(e){ return null; }
+  }
+  async function idbDelete(key) {
+    try {
+      const db = await idbOpen();
+      const tx = db.transaction(STORE, 'readwrite');
+      tx.objectStore(STORE).delete(key);
+      return new Promise((res, rej) => { tx.oncomplete = () => res(); tx.onerror = () => rej(tx.error); });
+    } catch(e){}
+  }
+
+  // Elements
+  const btnPick = document.getElementById('btn-pick');
+  const btnChange = document.getElementById('btn-change');
+  const btnClear = document.getElementById('btn-clear');
+  const dirInfo = document.getElementById('dir-info');
+  const dropzone = document.getElementById('dropzone');
+  const fileInput = document.getElementById('file-input');
+  const btnUpload = document.getElementById('btn-upload');
+  const grid = document.getElementById('grid');
+  const search = document.getElementById('search');
+  const libraryList = document.getElementById('library-list');
+  const tplLibItem = document.getElementById('tpl-lib-item');
+  const tplTrackCard = document.getElementById('tpl-track-card');
+  const details = document.getElementById('details');
+  const art = document.getElementById('art');
+  const detailName = document.getElementById('detail-name');
+  const detailSub = document.getElementById('detail-sub');
+  const detailDesc = document.getElementById('detail-desc');
+  const btnEditMeta = document.getElementById('btn-edit-meta');
+  const btnNewPlaylist = document.getElementById('btn-new-playlist');
+  const btnOpenPlaylists = document.getElementById('btn-open-playlists');
+
+  // Player elements
+  const audio = new Audio();
+  audio.preload = 'metadata';
+  const btnPlay = document.getElementById('btn-play');
+  const btnPrev = document.getElementById('btn-prev');
+  const btnNext = document.getElementById('btn-next');
+  const playerTitle = document.getElementById('player-title');
+  const playerArtist = document.getElementById('player-artist');
+  const playerFile = document.getElementById('player-file');
+  const playerThumb = document.getElementById('player-thumb');
+  const progressBar = document.getElementById('progress-bar');
+  const timeCurrent = document.getElementById('time-current');
+  const timeTotal = document.getElementById('time-total');
+
+  // Helpers
+  function readableName(filename) {
+    const base = filename.replace(/\.[^/.]+$/, '');
+    return base.replace(/[_\-]+/g,' ').replace(/\b(\d{4,})\b/g,'').trim() || filename;
+  }
+  function formatTime(sec){ if(!isFinite(sec)) return '0:00'; const m=Math.floor(sec/60); const s=Math.floor(sec%60).toString().padStart(2,'0'); return `${m}:${s}`; }
+  function setDirInfo(text, path=''){ dirInfo.textContent = text; dirInfo.title = path || ''; }
+
+  // Persist displayNames
+  function saveDisplayNames(){ localStorage.setItem('displayNames', JSON.stringify(displayNames)); }
+
+  // Directory pick and persistence
+  async function pickDirectory() {
+    if (!supportsFS) { alert('Gebruik Chrome of Edge voor volledige maptoegang.'); return; }
+    try {
+      dirHandle = await window.showDirectoryPicker();
+      setDirInfo('map gekozen', dirHandle.name || '');
+      // persist handle if possible
+      try { await idbPut('dirHandle', dirHandle); } catch(e){ console.warn('persist handle failed', e); }
+      await loadFilesFromDir();
+    } catch(e){ console.warn('pick cancelled', e); }
+  }
+
+  async function restoreDirectoryIfPossible() {
+    if (!supportsFS) return;
+    const stored = await idbGet('dirHandle');
+    if (stored) {
+      try {
+        // verify permission
+        const permission = await stored.queryPermission?.({ mode: 'readwrite' }) || await stored.requestPermission?.({ mode: 'readwrite' });
+        dirHandle = stored;
+        setDirInfo('map hersteld', dirHandle.name || '');
+        await loadFilesFromDir();
+      } catch(e){ console.warn('restore failed', e); setDirInfo('klik Kies muziekmap om toegang te herstellen',''); }
+    }
+  }
+
+  // Load files from directory
+  async function loadFilesFromDir() {
+    files = [];
+    if (!dirHandle) return;
+    for await (const [name, handle] of dirHandle.entries()) {
+      if (handle.kind === 'file') {
+        const ext = name.split('.').pop().toLowerCase();
+        if (['mp3','ogg','wav','m4a','flac','aac'].includes(ext)) {
+          files.push({ name, handle });
+        }
+      }
+    }
+    files.sort((a,b)=> a.name.localeCompare(b.name, undefined, {sensitivity:'base'}));
+    // ensure playlists dir exists
+    try { await dirHandle.getDirectoryHandle(playlistsDirName, { create: true }); } catch(e){}
+    renderLibrary();
+    renderGrid(files);
+  }
+
+  // Render library (left)
+  function renderLibrary() {
+    libraryList.innerHTML = '';
+    const items = [
+      {title:'Alle nummers', sub: files.length + ' tracks', id:'all'},
+      {title:'Afspeellijsten', sub: 'Beheer je playlists', id:'playlists'},
+      {title:'Favorieten', sub: 'Nummers die je leuk vindt', id:'likes'}
+    ];
+    items.forEach(it => {
+      const node = tplLibItem.content.cloneNode(true);
+      const el = node.querySelector('.lib-item');
+      el.querySelector('.lib-title').textContent = it.title;
+      el.querySelector('.lib-sub').textContent = it.sub;
+      el.addEventListener('click', () => {
+        $$('.lib-item').forEach(x=>x.classList.remove('active'));
+        el.classList.add('active');
+        if (it.id === 'all') renderGrid(files);
+        if (it.id === 'playlists') openPlaylistsPanel();
+        if (it.id === 'likes') renderGrid(files.filter(f=> (displayNames[f.name]||'').toLowerCase().includes('like')));
+      });
+      libraryList.appendChild(el);
+    });
+  }
+
+  // Render center grid as track cards
+  function renderGrid(list) {
+    grid.innerHTML = '';
+    if (!list.length) { grid.innerHTML = '<div class="muted">Geen nummers gevonden</div>'; return; }
+    list.forEach(item => {
+      const node = tplTrackCard.content.cloneNode(true);
+      const card = node.querySelector('.track-card');
+      card.querySelector('.title').textContent = displayNames[item.name] || readableName(item.name);
+      card.querySelector('.subtitle').textContent = item.name;
+      const playBtn = card.querySelector('.play');
+      const addBtn = card.querySelector('.add');
+      const renameBtn = card.querySelector('.rename');
+
+      playBtn.addEventListener('click', async () => {
+        await togglePlayFor(item);
+      });
+      addBtn.addEventListener('click', async () => {
+        await addToPlaylist(item);
+      });
+      renameBtn.addEventListener('click', async () => {
+        await renameFilePrompt(item);
+      });
+
+      grid.appendChild(card);
+    });
+    updatePlayingIndicators();
+  }
+
+  // Toggle play/pause for a file and sync UI
+  async function togglePlayFor(item) {
+    const current = playerFile.textContent;
+    if (current === item.name && !audio.paused) {
+      audio.pause();
+      btnPlay.textContent = '▶';
+      updatePlayingIndicators();
+      return;
+    }
+    await playFile(item);
+  }
+
+  async function playFile(item) {
+    try {
+      let file = item.file;
+      if (item.handle) file = await item.handle.getFile();
+      if (!file) { alert('Bestand niet beschikbaar'); return; }
+      const url = URL.createObjectURL(file);
+      audio.src = url;
+      await audio.play();
+      playerTitle.textContent = displayNames[item.name] || readableName(item.name);
+      playerArtist.textContent = '—';
+      playerFile.textContent = item.name;
+      playerThumb.textContent = '♪';
+      btnPlay.textContent = '⏸';
+      audio.onloadedmetadata = () => { timeTotal.textContent = formatTime(audio.duration); };
+      audio.ontimeupdate = () => {
+        const pct = (audio.currentTime / (audio.duration || 1)) * 100;
+        progressBar.style.width = pct + '%';
+        timeCurrent.textContent = formatTime(audio.currentTime);
+      };
+      audio.onended = () => { URL.revokeObjectURL(url); btnPlay.textContent = '▶'; updatePlayingIndicators(); };
+      // update details pane
+      detailName.textContent = displayNames[item.name] || readableName(item.name);
+      detailSub.textContent = item.name;
+      detailDesc.textContent = (localStorage.getItem('desc_' + item.name) || 'Geen beschrijving. Klik Bewerk om toe te voegen.');
+      updatePlayingIndicators();
+    } catch(e){ console.error(e); alert('Kon niet afspelen'); }
+  }
+
+  function updatePlayingIndicators() {
+    // For every play button in grid, if its file matches current playing file, show pause style
+    const playing = playerFile.textContent;
+    $$('.track-card').forEach(card => {
+      const fname = card.querySelector('.subtitle').textContent;
+      const btn = card.querySelector('.play');
+      if (fname === playing && !audio.paused) {
+        btn.textContent = '⏸';
+        btn.classList.add('primary');
+      } else {
+        btn.textContent = '▶';
+        btn.classList.remove('primary');
+      }
+    });
+  }
+
+  // Add to playlist with duplicate check
+  async function addToPlaylist(item) {
+    const exists = currentPlaylist.some(i => i.name === item.name);
+    if (exists) {
+      const ok = confirm('Dit liedje staat al in de playlist. Wil je het nogmaals toevoegen?');
+      if (!ok) return;
+    }
+    currentPlaylist.push({ name: item.name });
+    renderCurrentPlaylist();
+  }
+
+  function renderCurrentPlaylist() {
+    // show in details right panel as well
+    const ul = document.getElementById('current-playlist');
+    if (!ul) {
+      // create small inline list in details if not present
+      return;
+    }
+  }
+
+  // Rename file on disk
+  async function renameFilePrompt(item) {
+    const newName = prompt('Nieuwe bestandsnaam (inclusief extensie):', item.name);
+    if (!newName || newName === item.name) return;
+    if (!supportsFS || !dirHandle || !item.handle) { alert('Hernoemen niet ondersteund in deze browser of map. Gebruik Chrome/Edge en kies een map.'); return; }
+    try {
+      const newHandle = await dirHandle.getFileHandle(newName, { create: true });
+      const writable = await newHandle.createWritable();
+      const file = await item.handle.getFile();
+      await writable.write(await file.arrayBuffer());
+      await writable.close();
+      try { await dirHandle.removeEntry(item.name); } catch(e){ console.warn('Kon oude niet verwijderen', e); }
+      // migrate display name mapping
+      if (displayNames[item.name]) { displayNames[newName] = displayNames[item.name]; delete displayNames[item.name]; saveDisplayNames(); }
+      await loadFilesFromDir();
+      alert('Hernoemd naar ' + newName);
+    } catch(e){ console.error(e); alert('Hernoemen mislukt: ' + (e.message || e)); }
+  }
+
+  // Upload files into chosen directory or fallback
+  async function uploadFiles(fileList) {
+    if (supportsFS && dirHandle) {
+      for (const f of fileList) {
+        const safeName = f.name.replace(/[/\\?%*:|"<>]/g, '_');
+        try {
+          const dest = await dirHandle.getFileHandle(safeName, { create: true });
+          const writable = await dest.createWritable();
+          await writable.write(await f.arrayBuffer());
+          await writable.close();
+        } catch(e){ console.error('Upload fout', e); alert('Kon bestand niet uploaden: ' + f.name); }
+      }
+      await loadFilesFromDir();
+    } else {
+      // fallback: add to in-memory list
+      for (const f of fileList) files.push({ name: f.name, file: f });
+      renderGrid(files);
+    }
+  }
+
+  // Drag & drop
+  dropzone.addEventListener('dragover', (e)=>{ e.preventDefault(); dropzone.style.borderColor = 'rgba(255,255,255,0.12)'; });
+  dropzone.addEventListener('dragleave', ()=>{ dropzone.style.borderColor = ''; });
+  dropzone.addEventListener('drop', async (e)=>{ e.preventDefault(); dropzone.style.borderColor = ''; if (e.dataTransfer.files.length) await uploadFiles(e.dataTransfer.files); });
+
+  btnUpload.addEventListener('click', ()=> fileInput.click());
+  fileInput.addEventListener('change', async ()=> { if (fileInput.files.length) await uploadFiles(fileInput.files); fileInput.value = ''; });
+
+  // Search
+  search.addEventListener('input', ()=> {
+    const q = search.value.trim().toLowerCase();
+    const filtered = files.filter(f => (displayNames[f.name] || f.name).toLowerCase().includes(q) || f.name.toLowerCase().includes(q));
+    renderGrid(filtered);
+  });
+
+  // Player controls
+  btnPlay.addEventListener('click', ()=> {
+    if (!audio.src) return;
+    if (audio.paused) { audio.play(); btnPlay.textContent = '⏸'; } else { audio.pause(); btnPlay.textContent = '▶'; }
+    updatePlayingIndicators();
+  });
+  btnPrev.addEventListener('click', ()=> {
+    // play previous in currentPlaylist if exists
+    if (!currentPlaylist.length) return;
+    const idx = Math.max(0, currentPlaylist.findIndex(i=>i.name===playerFile.textContent)-1);
+    if (idx>=0) playByName(currentPlaylist[idx].name);
+  });
+  btnNext.addEventListener('click', ()=> {
+    if (!currentPlaylist.length) return;
+    const idx = currentPlaylist.findIndex(i=>i.name===playerFile.textContent)+1;
+    if (idx < currentPlaylist.length) playByName(currentPlaylist[idx].name);
+  });
+
+  function playByName(name) {
+    const f = files.find(x=>x.name===name);
+    if (f) playFile(f);
+    else alert('Bestand niet gevonden in map');
+  }
+
+  // Edit metadata (description)
+  btnEditMeta.addEventListener('click', ()=> {
+    const current = playerFile.textContent;
+    if (!current) { alert('Selecteer eerst een nummer'); return; }
+    const curDesc = localStorage.getItem('desc_' + current) || '';
+    const newDesc = prompt('Beschrijving voor dit nummer:', curDesc);
+    if (newDesc === null) return;
+    localStorage.setItem('desc_' + current, newDesc);
+    detailDesc.textContent = newDesc || 'Geen beschrijving. Klik Bewerk om toe te voegen.';
+  });
+
+  // Playlists management
+  btnNewPlaylist.addEventListener('click', async ()=> {
+    const name = prompt('Naam nieuwe playlist:', 'Nieuwe playlist');
+    if (!name) return;
+    const id = Date.now().toString(36);
+    const pl = { id, name, items: [] };
+    playlists.push(pl);
+    await savePlaylistToDisk(pl);
+    alert('Playlist aangemaakt');
+  });
+
+  btnOpenPlaylists.addEventListener('click', openPlaylistsPanel);
+
+  async function openPlaylistsPanel() {
+    // simple UI: prompt to choose playlist or create new
+    // load playlists from disk if possible
+    await loadPlaylistsFromDisk();
+    const names = playlists.map(p=>p.name).join('\\n');
+    const sel = prompt('Playlists:\\n' + names + '\\n\\nTyp naam om te openen of nieuw naam om te maken');
+    if (!sel) return;
+    let pl = playlists.find(p=>p.name===sel);
+    if (!pl) {
+      const id = Date.now().toString(36);
+      pl = { id, name: sel, items: [] };
+      playlists.push(pl);
+      await savePlaylistToDisk(pl);
+    }
+    // open playlist: set currentPlaylist
+    currentPlaylist = pl.items.slice();
+    // show in details panel
+    detailName.textContent = pl.name;
+    detailSub.textContent = pl.items.length + ' items';
+    detailDesc.textContent = 'Playlist geladen. Gebruik + op nummers om toe te voegen.';
+    renderGrid(files);
+  }
+
+  async function savePlaylistToDisk(pl) {
+    if (supportsFS && dirHandle) {
+      try {
+        const plDir = await dirHandle.getDirectoryHandle(playlistsDirName, { create: true });
+        const fileName = pl.name.replace(/[/\\\\?%*:|"<>]/g,'_') + '.json';
+        const fileHandle = await plDir.getFileHandle(fileName, { create: true });
+        const writable = await fileHandle.createWritable();
+        await writable.write(JSON.stringify(pl, null, 2));
+        await writable.close();
+      } catch(e){ console.warn('save playlist failed', e); localStorage.setItem('pl_' + pl.id, JSON.stringify(pl)); }
+    } else {
+      localStorage.setItem('pl_' + pl.id, JSON.stringify(pl));
+    }
+  }
+
+  async function loadPlaylistsFromDisk() {
+    playlists = [];
+    if (supportsFS && dirHandle) {
+      try {
+        const plDir = await dirHandle.getDirectoryHandle(playlistsDirName, { create: true });
+        for await (const [name, handle] of plDir.entries()) {
+          if (handle.kind === 'file' && name.endsWith('.json')) {
+            const f = await handle.getFile();
+            const txt = await f.text();
+            try { const obj = JSON.parse(txt); playlists.push({ id: name.replace(/\\.json$/,''), name: obj.name || name, items: obj.items || [] }); } catch(e){}
+          }
+        }
+      } catch(e){ console.warn('load playlists failed', e); }
+    }
+    // fallback localStorage
+    for (const k in localStorage) {
+      if (k.startsWith('pl_')) {
+        try { playlists.push(JSON.parse(localStorage.getItem(k))); } catch(e){}
+      }
+    }
+  }
+
+  // Utility to select all elements
+  function $$(sel, ctx=document){ return Array.from((ctx||document).querySelectorAll(sel)); }
+
+  // Update playing indicators periodically
+  setInterval(updatePlayingIndicators, 300);
+
+  // Directory controls
+  btnPick.addEventListener('click', pickDirectory);
+  btnChange.addEventListener('click', pickDirectory);
+  btnClear.addEventListener('click', async ()=> {
+    dirHandle = null;
+    await idbDelete('dirHandle');
+    setDirInfo('geen map gekozen','');
+    files = [];
+    renderLibrary();
+    renderGrid(files);
+  });
+
+  // Restore directory if possible on load
+  await restoreDirectoryIfPossible();
+
+  // Expose for debugging
+  window._localMusicPremium = { pickDirectory, loadFilesFromDir, files, currentPlaylist, displayNames };
+
+})();
+</script>
+</body>
+</html>
