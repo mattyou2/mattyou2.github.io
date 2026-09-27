@@ -113,10 +113,10 @@
                 <!-- Message Limit Pill Badge -->
                 <div id="limit-badge-container" class="flex items-center gap-1.5 bg-gray-100 dark:bg-gray-700/80 border border-gray-200 dark:border-gray-600 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-gray-700 dark:text-gray-200 shadow-sm">
                     <i class="fa-solid fa-bolt text-amber-500"></i>
-                    <span id="limit-counter-text">10 / 10 over</span>
-                    <button id="reset-limit-btn" title="Reset Limiet (Demo)" class="ml-1 text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 transition-colors">
-                        <i class="fa-solid fa-rotate-right text-[10px]"></i>
-                    </button>
+                <!-- Usage Limit Pill Badge (Credit/Token Based) -->
+                <div id="limit-badge-container" class="flex items-center gap-1.5 bg-gray-100 dark:bg-gray-700/80 border border-gray-200 dark:border-gray-600 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-gray-700 dark:text-gray-200 shadow-sm">
+                    <i class="fa-solid fa-bolt text-amber-500"></i>
+                    <span id="limit-counter-text">0 / 10.000 Credits</span>
                 </div>
 
                 <!-- Clear Chat Button -->
@@ -258,21 +258,32 @@
             const headerLoginBtn = document.getElementById('header-login-btn');
             const authStatusContainer = document.getElementById('auth-status-container');
 
-            // Usage Limit State
-            const MAX_MESSAGES = 10;
-            let messagesSent = parseInt(localStorage.getItem('my_ai_studio_message_count') || '0', 10);
+            // Usage Limit State (Based on response & prompt length / Credits)
+            const MAX_CREDITS = 10000; // Total credits limit (e.g. 10,000 tokens/credits)
+            let creditsUsed = parseInt(localStorage.getItem('my_ai_studio_credits_used') || '0', 10);
 
             const limitCounterText = document.getElementById('limit-counter-text');
-            const resetLimitBtn = document.getElementById('reset-limit-btn');
+
+            // Model multiplier map for credit consumption (~4 chars = 1 token base)
+            const modelMultipliers = {
+                'gpt-5.6-luna': 1,
+                'google/gemini-3.8-flash': 1,
+                'meta-llama/llama-3.3-70b-instruct': 1,
+                'openai/gpt-5.5': 2.5,
+                'anthropic/claude-opus-5': 3,
+                'deepseek/deepseek-r1': 1.5
+            };
 
             function updateLimitUI() {
-                const remaining = Math.max(0, MAX_MESSAGES - messagesSent);
+                const formattedUsed = creditsUsed.toLocaleString('nl-NL');
+                const formattedMax = MAX_CREDITS.toLocaleString('nl-NL');
+
                 if (limitCounterText) {
-                    limitCounterText.textContent = `${remaining} / ${MAX_MESSAGES} over`;
+                    limitCounterText.textContent = `${formattedUsed} / ${formattedMax} Credits`;
                 }
 
-                if (remaining <= 0) {
-                    userInput.placeholder = "Je hebt je limiet van 10 berichten bereikt.";
+                if (creditsUsed >= MAX_CREDITS) {
+                    userInput.placeholder = "Je hebt je maximale verbruikslimiet (credits) bereikt.";
                     userInput.disabled = true;
                     sendBtn.disabled = true;
                 } else {
@@ -283,12 +294,6 @@
                     }
                 }
             }
-
-            resetLimitBtn?.addEventListener('click', () => {
-                messagesSent = 0;
-                localStorage.setItem('my_ai_studio_message_count', '0');
-                updateLimitUI();
-            });
 
             updateLimitUI();
 
@@ -592,9 +597,9 @@
             chatForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
 
-                // Check message limit
-                if (messagesSent >= MAX_MESSAGES) {
-                    appendErrorMessage(`Je hebt het limiet van ${MAX_MESSAGES} gratis berichten bereikt! Klik op het herlaad-icoontje (<i class="fa-solid fa-rotate-right"></i>) bovenin om de teller te resetten.`);
+                // Check credit limit
+                if (creditsUsed >= MAX_CREDITS) {
+                    appendErrorMessage(`Je hebt het limiet van ${MAX_CREDITS.toLocaleString('nl-NL')} credits bereikt op basis van de lengte van je berichten en antwoorden.`);
                     return;
                 }
 
@@ -609,11 +614,6 @@
                     showAuthModal();
                     return;
                 }
-
-                // Increment message count and update UI
-                messagesSent++;
-                localStorage.setItem('my_ai_studio_message_count', messagesSent.toString());
-                updateLimitUI();
 
                 // Disable UI controls while pending
                 userInput.value = '';
@@ -637,6 +637,15 @@
                     });
                     const responseText = extractResponseText(response);
 
+                    // Calculate credits based on length (prompt + response) and model cost multiplier
+                    const totalChars = prompt.length + responseText.length;
+                    const estimatedTokens = Math.max(1, Math.ceil(totalChars / 4));
+                    const multiplier = modelMultipliers[selectedModel] || 1;
+                    const turnCredits = Math.ceil(estimatedTokens * multiplier);
+
+                    creditsUsed += turnCredits;
+                    localStorage.setItem('my_ai_studio_credits_used', creditsUsed.toString());
+
                     // Save response to history and display
                     conversationHistory.push({ role: 'assistant', content: responseText });
                     appendAIMessage(responseText);
@@ -647,10 +656,10 @@
                         error.message || "Er is een onverwachte fout opgetreden bij de verwerking van de aanvraag."
                     );
                 } finally {
-                    // Re-enable UI controls
+                    // Re-enable UI controls and update limit UI
                     delete userInput.dataset.thinking;
                     updateLimitUI();
-                    if (messagesSent < MAX_MESSAGES) {
+                    if (creditsUsed < MAX_CREDITS) {
                         userInput.focus();
                     }
                 }
