@@ -3,23 +3,25 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ball Parkour 3D</title>
+  <title>Ball Parkour 3D - Stunt Edition</title>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
   <style>
     * { box-sizing: border-box; user-select: none; margin: 0; padding: 0; }
-    body, html { width: 100%; height: 100%; overflow: hidden; font-family: sans-serif; background: #0d1117; color: #fff; }
+    body, html { width: 100%; height: 100%; overflow: hidden; font-family: 'Segoe UI', Tahoma, sans-serif; background: #0d1117; color: #fff; }
     #canvas-container { width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 1; }
     .ui-layer { position: absolute; z-index: 10; pointer-events: none; }
     .interactive { pointer-events: auto; }
     #top-bar { top: 15px; left: 15px; right: 15px; display: flex; justify-content: space-between; }
-    .hud-box { background: rgba(16, 22, 34, 0.85); border: 1px solid rgba(255, 255, 255, 0.15); padding: 8px 14px; border-radius: 10px; }
-    .hud-title { font-size: 10px; color: #8b949e; text-transform: uppercase; }
+    .hud-box { background: rgba(16, 22, 34, 0.85); border: 1px solid rgba(255, 255, 255, 0.15); padding: 8px 14px; border-radius: 10px; backdrop-filter: blur(4px); }
+    .hud-title { font-size: 10px; color: #8b949e; text-transform: uppercase; letter-spacing: 1px; }
     .hud-value { font-size: 18px; font-weight: bold; color: #58a6ff; }
-    .btn { background: #238636; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+    .btn { background: #238636; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
+    .btn:hover { background: #2ea043; }
     .btn-blue { background: #1f6feb; }
+    .btn-blue:hover { background: #388bfd; }
     #multiplayer-panel { top: 85px; left: 15px; width: 220px; }
     #leaderboard-panel { top: 85px; right: 15px; width: 200px; }
     input[type="text"] { width: 100%; padding: 6px; margin: 6px 0; border-radius: 4px; border: 1px solid #30363d; background: #0d1117; color: #fff; }
@@ -31,22 +33,28 @@
 
   <div id="canvas-container"></div>
 
+  <!-- HUD Top Bar -->
   <div id="top-bar" class="ui-layer">
     <div style="display: flex; gap: 8px;">
       <div class="hud-box"><div class="hud-title">Level</div><div class="hud-value" id="hud-level">1</div></div>
       <div class="hud-box"><div class="hud-title">Tijd</div><div class="hud-value" id="hud-time">0.0s</div></div>
       <div class="hud-box"><div class="hud-title">Saldo</div><div class="hud-value" id="hud-balance">...</div></div>
     </div>
-    <button class="btn btn-blue interactive" onclick="openShop()">Winkel 🛒</button>
+    <div style="display: flex; gap: 8px;">
+      <button class="btn interactive" onclick="resetProgress()" style="background: #da3633;">Reset Level</button>
+      <button class="btn btn-blue interactive" onclick="openShop()">Winkel 🛒</button>
+    </div>
   </div>
 
+  <!-- Multiplayer Panel -->
   <div id="multiplayer-panel" class="ui-layer hud-box interactive">
-    <div class="hud-title">P2P Ghost Multiplayer</div>
-    <div style="font-size: 11px; color: #8b949e;">ID: <span id="my-peer-id" style="color:#fff;">Laden...</span></div>
-    <input type="text" id="join-peer-id" placeholder="Kamer ID...">
+    <div class="hud-title">Ghost Multiplayer</div>
+    <div style="font-size: 11px; color: #8b949e; margin-top: 2px;">Kamer ID: <span id="my-peer-id" style="color:#fff;">Laden...</span></div>
+    <input type="text" id="join-peer-id" placeholder="Kamer ID plakken...">
     <button class="btn btn-blue" style="width: 100%;" onclick="connectToPeer()">Verbinden</button>
   </div>
 
+  <!-- Leaderboard Panel -->
   <div id="leaderboard-panel" class="ui-layer hud-box">
     <div class="hud-title">Online Spelers</div>
     <ul id="leaderboard-list" style="list-style: none; font-size: 12px; margin-top: 6px;">
@@ -54,6 +62,7 @@
     </ul>
   </div>
 
+  <!-- Shop Modal -->
   <div id="shop-modal" class="modal ui-layer interactive">
     <div style="display: flex; justify-content: space-between; align-items: center;">
       <h3>ITLab Shop</h3>
@@ -70,12 +79,33 @@
   </div>
 
   <script>
+    /* ==========================================
+       1. LOCALSTORAGE LEVEL VOORTGANG
+       ========================================== */
     var currentLevel = 1;
-    var timer = 0, timerInterval = null, isPlaying = false, speedMultiplier = 1.0;
+    var savedLvl = localStorage.getItem('ball_parkour_level');
+    if (savedLvl) {
+      currentLevel = parseInt(savedLvl, 10);
+    }
+
+    function saveLevelProgress() {
+      localStorage.setItem('ball_parkour_level', currentLevel);
+      updateHUD();
+    }
+
+    function resetProgress() {
+      if (confirm("Wil je echt terug naar Level 1?")) {
+        currentLevel = 1;
+        saveLevelProgress();
+        initLevel(currentLevel);
+      }
+    }
 
     /* ==========================================
-       POSTMESSAGE BRIDGE MET ITLAB PARENT
+       2. POSTMESSAGE COMMUNICATIE VOOR TOKENS
        ========================================== */
+    var speedMultiplier = 1.0;
+
     window.addEventListener('message', function(event) {
       var data = event.data;
       if (!data) return;
@@ -84,19 +114,11 @@
         document.getElementById('hud-balance').innerText = data.balance + " 🪙";
       }
 
-      if (data.type === 'LOAD_RESPONSE' && data.saveData) {
-        if (data.saveData.level) {
-          currentLevel = data.saveData.level;
-          updateHUD();
-          initLevel(currentLevel);
-        }
-      }
-
       if (data.type === 'BUY_RESPONSE') {
         if (data.result && data.result.ok) {
-          alert("Aankoop gelukt!");
+          alert("Aankoop geslaagd!");
           if (data.passName === 'Gouden Skin') applyGoldSkin();
-          if (data.passName === 'Speed Boost') speedMultiplier = 1.35;
+          if (data.passName === 'Speed Boost') speedMultiplier = 1.25;
           refreshBalance();
         } else {
           alert("Fout bij aankoop: " + (data.result.error || "Onvoldoende saldo"));
@@ -112,79 +134,163 @@
       window.parent.postMessage({ type: 'BUY_PASS', passName: passName }, '*');
     }
 
-    function saveProgress() {
-      window.parent.postMessage({ type: 'SAVE_GAME', saveData: { level: currentLevel } }, '*');
-    }
-
     function updateHUD() {
       document.getElementById('hud-level').innerText = currentLevel;
       document.getElementById('lb-my-lvl').innerText = currentLevel;
     }
 
     /* ==========================================
-       THREE.JS GAME LOGICA
+       3. THREE.JS 3D SCENE & ENGINE SETUP
        ========================================== */
     var scene = new THREE.Scene();
     scene.background = new THREE.Color(0x0d1117);
-    scene.fog = new THREE.FogExp2(0x0d1117, 0.015);
+    scene.fog = new THREE.FogExp2(0x0d1117, 0.012);
 
     var camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
     var renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
     document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+    scene.add(new THREE.AmbientLight(0xffffff, 0.7));
     var dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    dirLight.position.set(20, 40, 20);
+    dirLight.position.set(20, 50, 20);
+    dirLight.castShadow = true;
     scene.add(dirLight);
 
+    // Speler Bal
     var ballGeo = new THREE.SphereGeometry(1, 32, 32);
-    var ballMat = new THREE.MeshStandardMaterial({ color: 0x58a6ff });
+    var ballMat = new THREE.MeshStandardMaterial({ color: 0x58a6ff, roughness: 0.3, metalness: 0.1 });
     var playerBall = new THREE.Mesh(ballGeo, ballMat);
+    playerBall.castShadow = true;
     scene.add(playerBall);
 
     var velocity = new THREE.Vector3();
-    var levelPlatforms = [], finishZone = null;
+    var levelPlatforms = [];
+    var rotatingObstacles = [];
+    var finishZone = null;
+    var timer = 0, timerInterval = null, isPlaying = false;
+
     var keys = { Up: false, Down: false, Left: false, Right: false };
 
     window.addEventListener('keydown', function(e) {
-      if (e.key === 'ArrowUp' || e.key === 'w') keys.Up = true;
-      if (e.key === 'ArrowDown' || e.key === 's') keys.Down = true;
-      if (e.key === 'ArrowLeft' || e.key === 'a') keys.Left = true;
-      if (e.key === 'ArrowRight' || e.key === 'd') keys.Right = true;
+      if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') keys.Up = true;
+      if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') keys.Down = true;
+      if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.Left = true;
+      if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.Right = true;
     });
     window.addEventListener('keyup', function(e) {
-      if (e.key === 'ArrowUp' || e.key === 'w') keys.Up = false;
-      if (e.key === 'ArrowDown' || e.key === 's') keys.Down = false;
-      if (e.key === 'ArrowLeft' || e.key === 'a') keys.Left = false;
-      if (e.key === 'ArrowRight' || e.key === 'd') keys.Right = false;
+      if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') keys.Up = false;
+      if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') keys.Down = false;
+      if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.Left = false;
+      if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.Right = false;
     });
 
-    function initLevel(lvl) {
+    /* ==========================================
+       4. ECHTE PARCOURS MET STUNTS & HINDERISSEN
+       ========================================== */
+    function clearLevel() {
       for (var i = 0; i < levelPlatforms.length; i++) scene.remove(levelPlatforms[i]);
+      for (var i = 0; i < rotatingObstacles.length; i++) scene.remove(rotatingObstacles[i]);
       levelPlatforms = [];
+      rotatingObstacles = [];
       if (finishZone) scene.remove(finishZone);
+    }
+
+    function createPlatform(x, y, z, w, h, d, color, rx, ry, rz) {
+      var mat = new THREE.MeshStandardMaterial({ color: color || 0x21262d, roughness: 0.5 });
+      var mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+      mesh.position.set(x, y, z);
+      if (rx) mesh.rotation.x = rx;
+      if (ry) mesh.rotation.y = ry;
+      if (rz) mesh.rotation.z = rz;
+      mesh.receiveShadow = true;
+      scene.add(mesh);
+      levelPlatforms.push(mesh);
+      return mesh;
+    }
+
+    function initLevel(lvl) {
+      clearLevel();
 
       playerBall.position.set(0, 3, 0);
       velocity.set(0, 0, 0);
 
-      var platformCount = 5 + lvl * 2;
-      var curZ = 0, curX = 0;
+      // Start Platform
+      createPlatform(0, 0, 0, 8, 1, 10, 0x30363d);
 
-      for (var i = 0; i < platformCount; i++) {
-        var w = Math.max(3, 8 - lvl * 0.3);
-        var len = 12 + Math.random() * 6;
-        var mesh = new THREE.Mesh(new THREE.BoxGeometry(w, 1, len), new THREE.MeshStandardMaterial({ color: i % 2 === 0 ? 0x21262d : 0x30363d }));
-        if (i > 0) { curX += (Math.random() - 0.5) * (w * 0.8); curZ -= (len / 2 + 4); }
-        mesh.position.set(curX, 0, curZ);
-        scene.add(mesh);
-        levelPlatforms.push(mesh);
+      var curZ = -10;
+
+      // Bouw unieke elementen op basis van level
+      if (lvl === 1) {
+        // Level 1: Intro - rechte weg, schans en lange helling
+        createPlatform(0, -1, curZ - 8, 6, 1, 16, 0x21262d);
+        curZ -= 20;
+
+        // Schans (Ramp Stunt)
+        createPlatform(0, 0, curZ - 5, 6, 0.8, 10, 0x1f6feb, -0.25, 0, 0);
+        curZ -= 22; // Gat om over te springen!
+
+        // Landingsplatform
+        createPlatform(0, -3, curZ - 8, 8, 1, 16, 0x21262d);
+        curZ -= 20;
+      } 
+      else if (lvl === 2) {
+        // Level 2: Balans & Smalle Bulten
+        createPlatform(0, -1, curZ - 6, 4, 1, 12, 0x21262d);
+        curZ -= 15;
+
+        // Smalle balansbalk (Smal parcours)
+        createPlatform(0, -1, curZ - 8, 1.8, 1, 18, 0xda3633);
+        curZ -= 20;
+
+        // Dubbele schans stunt
+        createPlatform(0, -0.5, curZ - 5, 5, 0.8, 8, 0x1f6feb, -0.3, 0, 0);
+        curZ -= 20;
+
+        createPlatform(0, -3, curZ - 8, 6, 1, 16, 0x21262d);
+        curZ -= 20;
+      } 
+      else {
+        // Level 3+: Obstakels, Roterende balken & Bochten
+        var sections = 3 + lvl;
+        for (var i = 0; i < sections; i++) {
+          var type = i % 3;
+          if (type === 0) {
+            // Smal recht stuk met roterende hindernis
+            var plat = createPlatform(0, -1, curZ - 10, 5, 1, 20, 0x21262d);
+            
+            // Draaiende obstacle vanger
+            var obsMat = new THREE.MeshStandardMaterial({ color: 0xd97706 });
+            var obs = new THREE.Mesh(new THREE.BoxGeometry(6, 1.2, 1), obsMat);
+            obs.position.set(0, 0.6, curZ - 10);
+            scene.add(obs);
+            rotatingObstacles.push(obs);
+
+            curZ -= 22;
+          } else if (type === 1) {
+            // Schans Stunt over een diep gat
+            createPlatform(0, 0, curZ - 4, 5, 0.8, 8, 0x1f6feb, -0.35, 0, 0);
+            curZ -= 22;
+            createPlatform(0, -4, curZ - 6, 6, 1, 14, 0x21262d);
+            curZ -= 16;
+          } else {
+            // S-Bocht / Schuine balans
+            createPlatform(-3, -2, curZ - 6, 4, 1, 12, 0x30363d, 0, 0, 0.15);
+            createPlatform(3, -2, curZ - 18, 4, 1, 12, 0x30363d, 0, 0, -0.15);
+            curZ -= 28;
+          }
+        }
       }
 
-      finishZone = new THREE.Mesh(new THREE.CylinderGeometry(3, 3, 0.5, 32), new THREE.MeshBasicMaterial({ color: 0x2ea043, wireframe: true }));
-      finishZone.position.set(curX, 0.3, curZ - 10);
+      // Finish Portaal
+      var finishGeo = new THREE.CylinderGeometry(3, 3, 0.5, 32);
+      var finishMat = new THREE.MeshBasicMaterial({ color: 0x2ea043, wireframe: true });
+      finishZone = new THREE.Mesh(finishGeo, finishMat);
+      finishZone.position.set(0, -1.5, curZ - 6);
       scene.add(finishZone);
 
+      // Timer Reset
       clearInterval(timerInterval);
       timer = 0;
       isPlaying = true;
@@ -194,53 +300,91 @@
           document.getElementById('hud-time').innerText = timer.toFixed(1) + "s";
         }
       }, 100);
+
+      updateHUD();
     }
 
+    /* ==========================================
+       5. AANGEPASTE FYSICA & MOVEMENT (RUSTIG & UITROLLEN)
+       ========================================== */
     function animate() {
       requestAnimationFrame(animate);
+
+      // Laat obstakels langzaam ronddraaien
+      for (var i = 0; i < rotatingObstacles.length; i++) {
+        rotatingObstacles[i].rotation.y += 0.03;
+      }
+
       if (isPlaying) {
-        var accel = 0.025 * speedMultiplier;
+        // Rustigere versnelling voor meer controle
+        var accel = 0.008 * speedMultiplier;
+
         if (keys.Up) velocity.z -= accel;
         if (keys.Down) velocity.z += accel;
         if (keys.Left) velocity.x -= accel;
         if (keys.Right) velocity.x += accel;
 
-        velocity.x *= 0.95; velocity.z *= 0.95; velocity.y -= 0.03;
+        // DOORROLLEN: Hoge wrijvingwaarde (0.985 in plaats van 0.95) zorgt dat de bal realistisch uitrolt!
+        velocity.x *= 0.985;
+        velocity.z *= 0.985;
+        velocity.y -= 0.025; // Zwaartekracht
+
         playerBall.position.add(velocity);
 
+        // Draai de 3D bal visueel mee met zijn beweging voor het rol-effect
+        playerBall.rotation.x += velocity.z * 0.5;
+        playerBall.rotation.z -= velocity.x * 0.5;
+
+        // Collision Check met Platforms & Hellingen
         var pPos = playerBall.position;
+        var onGround = false;
+
         for (var i = 0; i < levelPlatforms.length; i++) {
-          var box = new THREE.Box3().setFromObject(levelPlatforms[i]);
-          if (pPos.x >= box.min.x - 0.5 && pPos.x <= box.max.x + 0.5 && pPos.z >= box.min.z - 0.5 && pPos.z <= box.max.z + 0.5 && pPos.y <= box.max.y + 1 && pPos.y >= box.min.y) {
-            playerBall.position.y = box.max.y + 1;
-            velocity.y = 0;
+          var plat = levelPlatforms[i];
+          var box = new THREE.Box3().setFromObject(plat);
+
+          if (pPos.x >= box.min.x - 0.6 && pPos.x <= box.max.x + 0.6 &&
+              pPos.z >= box.min.z - 0.6 && pPos.z <= box.max.z + 0.6 &&
+              pPos.y <= box.max.y + 1.1 && pPos.y >= box.min.y - 0.5) {
+            
+            // Sta op het platform
+            if (velocity.y <= 0) {
+              onGround = true;
+              playerBall.position.y = box.max.y + 1;
+              velocity.y = 0;
+            }
             break;
           }
         }
 
-        if (pPos.y < -15) initLevel(currentLevel);
-
-        if (finishZone && pPos.distanceTo(finishZone.position) < 3) {
-          isPlaying = false;
-          currentLevel++;
-          saveProgress();
-          updateHUD();
-          alert("Level " + (currentLevel - 1) + " haald!");
+        // Vallen in de afgrond (Respawn)
+        if (pPos.y < -20) {
           initLevel(currentLevel);
         }
 
-        camera.position.x += (playerBall.position.x - camera.position.x) * 0.1;
-        camera.position.y += (playerBall.position.y + 6 - camera.position.y) * 0.1;
-        camera.position.z += (playerBall.position.z + 12 - camera.position.z) * 0.1;
-        camera.lookAt(playerBall.position);
+        // Finish bereikt
+        if (finishZone && pPos.distanceTo(finishZone.position) < 3.5) {
+          isPlaying = false;
+          currentLevel++;
+          saveLevelProgress();
+          alert("Gefeliciteerd! Level " + (currentLevel - 1) + " gehaald!");
+          initLevel(currentLevel);
+        }
+
+        // Camera volgt de bal vloeiend
+        camera.position.x += (playerBall.position.x - camera.position.x) * 0.08;
+        camera.position.y += (playerBall.position.y + 5 - camera.position.y) * 0.08;
+        camera.position.z += (playerBall.position.z + 10 - camera.position.z) * 0.08;
+        camera.lookAt(playerBall.position.x, playerBall.position.y + 0.5, playerBall.position.z);
 
         broadcastPosition();
       }
+
       renderer.render(scene, camera);
     }
 
     /* ==========================================
-       MULTIPLAYER (PEERJS)
+       6. PEERJS MULTIPLAYER
        ========================================== */
     var peer = new Peer(), connections = {}, ghostMeshes = {};
     peer.on('open', function(id) { document.getElementById('my-peer-id').innerText = id; });
@@ -254,7 +398,8 @@
     function setupConn(conn) {
       conn.on('open', function() {
         connections[conn.peer] = conn;
-        var ghost = new THREE.Mesh(ballGeo, new THREE.MeshStandardMaterial({ color: 0xff4757, transparent: true, opacity: 0.5 }));
+        var ghostMat = new THREE.MeshStandardMaterial({ color: 0xff4757, transparent: true, opacity: 0.5 });
+        var ghost = new THREE.Mesh(ballGeo, ghostMat);
         scene.add(ghost);
         ghostMeshes[conn.peer] = ghost;
 
@@ -276,14 +421,22 @@
     function applyGoldSkin() {
       ballMat.color.setHex(0xffd700);
       ballMat.metalness = 0.8;
+      ballMat.roughness = 0.2;
     }
 
     function openShop() { refreshBalance(); document.getElementById('shop-modal').style.display = 'flex'; }
     function closeShop() { document.getElementById('shop-modal').style.display = 'none'; }
 
+    // Start de game
     refreshBalance();
     initLevel(currentLevel);
     animate();
+
+    window.addEventListener('resize', function() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
   </script>
 </body>
 </html>
