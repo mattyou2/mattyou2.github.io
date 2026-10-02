@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ball Parkour 3D - Fixed World Load</title>
+  <title>Ball Parkour 3D - Fixed Levels & Jump Upgrades</title>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
@@ -26,7 +26,7 @@
     #multiplayer-panel { top: 85px; left: 15px; width: 220px; }
     #leaderboard-panel { top: 85px; right: 15px; width: 200px; }
     input[type="text"] { width: 100%; padding: 6px; margin: 6px 0; border-radius: 4px; border: 1px solid #30363d; background: #0d1117; color: #fff; }
-    .modal { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 320px; background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 20px; display: none; flex-direction: column; gap: 12px; }
+    .modal { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 340px; background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 20px; display: none; flex-direction: column; gap: 12px; }
     .shop-item { display: flex; justify-content: space-between; align-items: center; background: #0d1117; padding: 10px; border-radius: 6px; border: 1px solid #30363d; }
   </style>
 </head>
@@ -69,19 +69,48 @@
       <h3>ITLab Shop</h3>
       <button class="btn" onclick="closeShop()" style="padding: 2px 8px;">X</button>
     </div>
+
     <div class="shop-item">
-      <div><strong>Gouden Skin</strong></div>
+      <div>
+        <strong>Gouden Skin</strong>
+        <div style="font-size: 10px; color: #8b949e;">Mooie gouden glans</div>
+      </div>
       <button class="btn" id="btn-gold" onclick="buyPass('Gouden Skin')">Kopen</button>
     </div>
+
     <div class="shop-item">
-      <div><strong>Speed Boost</strong></div>
+      <div>
+        <strong>Speed Boost</strong>
+        <div style="font-size: 10px; color: #8b949e;">25% sneller rollen</div>
+      </div>
       <button class="btn" id="btn-speed" onclick="buyPass('Speed Boost')">Kopen</button>
+    </div>
+
+    <!-- Sprong Pass (7 Tokens) -->
+    <div class="shop-item">
+      <div>
+        <strong>Sprong (Spatiebalk)</strong>
+        <div style="font-size: 10px; color: #8b949e;">Spring een klein beetje (7 Tokens)</div>
+      </div>
+      <button class="btn" id="btn-jump" onclick="buyPass('Sprong')">Kopen</button>
+    </div>
+
+    <!-- Hogere Sprong Pass (7 Tokens) - Zichtbaar pas nadat Sprong is gekocht -->
+    <div class="shop-item" id="item-high-jump" style="display: none;">
+      <div>
+        <strong>Hogere Sprong</strong>
+        <div style="font-size: 10px; color: #8b949e;">Spring nog hoger (7 Tokens)</div>
+      </div>
+      <button class="btn" id="btn-high-jump" onclick="buyPass('Hogere Sprong')">Kopen</button>
     </div>
   </div>
 
   <script>
     var currentLevel = 1;
     var speedMultiplier = 1.0;
+    var canJump = false;
+    var jumpPower = 0.0; // 0.28 = klein, 0.45 = hoger
+    var isGrounded = false;
 
     /* ==========================================
        1. POSTMESSAGE COMMUNICATIE (ITLAB COMPLIANT)
@@ -90,25 +119,37 @@
       var data = event.data;
       if (!data) return;
 
-      // Ontvang Saldo & Game Passes van ITLab
       if (data.type === 'INIT_DATA_RESPONSE') {
         if (data.balance !== undefined) {
           document.getElementById('hud-balance').innerText = data.balance + " 🪙";
         }
         
+        // Skins & Upgrades checks
         if (data.hasGold) {
           applyGoldSkin();
-          var btnG = document.getElementById('btn-gold');
-          if (btnG) { btnG.innerText = "Gekocht ✓"; btnG.disabled = true; }
+          setButtonBought('btn-gold');
         }
         if (data.hasSpeed) {
           speedMultiplier = 1.25;
-          var btnS = document.getElementById('btn-speed');
-          if (btnS) { btnS.innerText = "Gekocht ✓"; btnS.disabled = true; }
+          setButtonBought('btn-speed');
+        }
+
+        // Jump Upgrades
+        if (data.hasJump) {
+          canJump = true;
+          jumpPower = 0.28; // Kleine sprong
+          setButtonBought('btn-jump');
+          // Toon Hogere Sprong optie pas als Sprong bezeten is!
+          document.getElementById('item-high-jump').style.display = 'flex';
+        }
+
+        if (data.hasHighJump) {
+          canJump = true;
+          jumpPower = 0.45; // Hogere sprong
+          setButtonBought('btn-high-jump');
         }
       }
 
-      // Ontvang ITLab Cloud Save (Veilig uitgelijnd tegen undefined values)
       if (data.type === 'LOAD_RESPONSE') {
         if (data.saveData && typeof data.saveData.level === 'number' && data.saveData.level > 0) {
           currentLevel = data.saveData.level;
@@ -119,7 +160,6 @@
         initLevel(currentLevel);
       }
 
-      // Ontvang Aankoop uitslag
       if (data.type === 'BUY_RESPONSE') {
         if (data.result && data.result.ok) {
           alert("Aankoop geslaagd!");
@@ -129,6 +169,11 @@
         }
       }
     });
+
+    function setButtonBought(id) {
+      var btn = document.getElementById(id);
+      if (btn) { btn.innerText = "Gekocht ✓"; btn.disabled = true; }
+    }
 
     function requestInitData() {
       window.parent.postMessage({ type: 'GET_INIT_DATA' }, '*');
@@ -157,7 +202,7 @@
     }
 
     /* ==========================================
-       2. THREE.JS 3D SCENE & ENGINE SETUP
+       2. THREE.JS SCENE SETUP
        ========================================== */
     var scene = new THREE.Scene();
     scene.background = new THREE.Color(0x0d1117);
@@ -173,7 +218,6 @@
     dirLight.position.set(20, 50, 20);
     scene.add(dirLight);
 
-    // Speler Bal
     var ballGeo = new THREE.SphereGeometry(1, 32, 32);
     var ballMat = new THREE.MeshStandardMaterial({ color: 0x58a6ff, roughness: 0.3, metalness: 0.1 });
     var playerBall = new THREE.Mesh(ballGeo, ballMat);
@@ -192,7 +236,16 @@
       if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') keys.Down = true;
       if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.Left = true;
       if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.Right = true;
+      
+      // Spatiebalk Sprong
+      if (e.key === ' ' || e.code === 'Space') {
+        if (canJump && isGrounded) {
+          velocity.y = jumpPower;
+          isGrounded = false;
+        }
+      }
     });
+
     window.addEventListener('keyup', function(e) {
       if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') keys.Up = false;
       if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') keys.Down = false;
@@ -201,7 +254,7 @@
     });
 
     /* ==========================================
-       3. PARCOURS GENERATOR
+       3. GEBALANSEERDE & HAALBARE PARCOURS
        ========================================== */
     function clearLevel() {
       for (var i = 0; i < levelPlatforms.length; i++) scene.remove(levelPlatforms[i]);
@@ -224,64 +277,70 @@
     }
 
     function initLevel(lvl) {
-      // Zorg er altijd voor dat lvl minimaal 1 is
       lvl = (typeof lvl === 'number' && lvl > 0) ? lvl : 1;
-      
       clearLevel();
 
       playerBall.position.set(0, 3, 0);
       velocity.set(0, 0, 0);
 
-      // Start Platform
+      // Start Vlak
       createPlatform(0, 0, 0, 8, 1, 10, 0x30363d);
       var curZ = -10;
 
       if (lvl === 1) {
-        createPlatform(0, -1, curZ - 8, 6, 1, 16, 0x21262d);
-        curZ -= 20;
-        createPlatform(0, 0, curZ - 5, 6, 0.8, 10, 0x1f6feb, -0.25, 0, 0);
-        curZ -= 22;
-        createPlatform(0, -3, curZ - 8, 8, 1, 16, 0x21262d);
-        curZ -= 20;
+        // Level 1: Makkelijk & Haalbare schans
+        createPlatform(0, -0.5, curZ - 8, 7, 1, 16, 0x21262d);
+        curZ -= 18;
+        // Schans
+        createPlatform(0, 0, curZ - 4, 7, 0.8, 8, 0x1f6feb, -0.2, 0, 0);
+        curZ -= 14; // Gat is verkleind naar 14 units (perfect haalbaar!)
+        // Landingsbaan
+        createPlatform(0, -2, curZ - 8, 8, 1, 16, 0x21262d);
+        curZ -= 18;
       } 
       else if (lvl === 2) {
-        createPlatform(0, -1, curZ - 6, 4, 1, 12, 0x21262d);
+        // Level 2: Fijn gebalanceerde smalle strook
+        createPlatform(0, -0.5, curZ - 6, 6, 1, 12, 0x21262d);
+        curZ -= 14;
+        // Verbrede balansbalk (2.6 breed i.p.v. 1.8)
+        createPlatform(0, -0.5, curZ - 8, 2.6, 1, 16, 0xda3633);
+        curZ -= 18;
+        // Korte Schans
+        createPlatform(0, 0, curZ - 4, 6, 0.8, 8, 0x1f6feb, -0.22, 0, 0);
         curZ -= 15;
-        createPlatform(0, -1, curZ - 8, 1.8, 1, 18, 0xda3633);
-        curZ -= 20;
-        createPlatform(0, -0.5, curZ - 5, 5, 0.8, 8, 0x1f6feb, -0.3, 0, 0);
-        curZ -= 20;
-        createPlatform(0, -3, curZ - 8, 6, 1, 16, 0x21262d);
-        curZ -= 20;
+        createPlatform(0, -2, curZ - 8, 7, 1, 16, 0x21262d);
+        curZ -= 18;
       } 
       else {
-        var sections = 3 + lvl;
+        // Level 3+: Echte hindernissen & Roterende balken op goede afstand
+        var sections = 2 + Math.min(lvl, 5);
         for (var i = 0; i < sections; i++) {
           var type = i % 3;
           if (type === 0) {
-            createPlatform(0, -1, curZ - 10, 5, 1, 20, 0x21262d);
-            var obs = new THREE.Mesh(new THREE.BoxGeometry(6, 1.2, 1), new THREE.MeshStandardMaterial({ color: 0xd97706 }));
-            obs.position.set(0, 0.6, curZ - 10);
+            createPlatform(0, -1, curZ - 10, 6, 1, 18, 0x21262d);
+            var obs = new THREE.Mesh(new THREE.BoxGeometry(5, 1, 0.8), new THREE.MeshStandardMaterial({ color: 0xd97706 }));
+            obs.position.set(0, 0.5, curZ - 10);
             scene.add(obs);
             rotatingObstacles.push(obs);
-            curZ -= 22;
+            curZ -= 20;
           } else if (type === 1) {
-            createPlatform(0, 0, curZ - 4, 5, 0.8, 8, 0x1f6feb, -0.35, 0, 0);
-            curZ -= 22;
-            createPlatform(0, -4, curZ - 6, 6, 1, 14, 0x21262d);
+            createPlatform(0, 0, curZ - 4, 6, 0.8, 8, 0x1f6feb, -0.25, 0, 0);
             curZ -= 16;
+            createPlatform(0, -3, curZ - 6, 7, 1, 14, 0x21262d);
+            curZ -= 14;
           } else {
-            createPlatform(-3, -2, curZ - 6, 4, 1, 12, 0x30363d, 0, 0, 0.15);
-            createPlatform(3, -2, curZ - 18, 4, 1, 12, 0x30363d, 0, 0, -0.15);
-            curZ -= 28;
+            createPlatform(-2.5, -1.5, curZ - 6, 5, 1, 12, 0x30363d, 0, 0, 0.1);
+            createPlatform(2.5, -1.5, curZ - 16, 5, 1, 12, 0x30363d, 0, 0, -0.1);
+            curZ -= 24;
           }
         }
       }
 
+      // Finish Zone
       var finishGeo = new THREE.CylinderGeometry(3, 3, 0.5, 32);
       var finishMat = new THREE.MeshBasicMaterial({ color: 0x2ea043, wireframe: true });
       finishZone = new THREE.Mesh(finishGeo, finishMat);
-      finishZone.position.set(0, -1.5, curZ - 6);
+      finishZone.position.set(0, -1, curZ - 6);
       scene.add(finishZone);
 
       clearInterval(timerInterval);
@@ -298,13 +357,13 @@
     }
 
     /* ==========================================
-       4. GAME LOOP & PHYSICS
+       4. GAME LOOP & MOVEMENT
        ========================================== */
     function animate() {
       requestAnimationFrame(animate);
 
       for (var i = 0; i < rotatingObstacles.length; i++) {
-        rotatingObstacles[i].rotation.y += 0.03;
+        rotatingObstacles[i].rotation.y += 0.025;
       }
 
       if (isPlaying) {
@@ -315,17 +374,18 @@
         if (keys.Left) velocity.x -= accel;
         if (keys.Right) velocity.x += accel;
 
-        // Uitrollen met traagheid (0.985 wrijving)
+        // Uitrollen met traagheid
         velocity.x *= 0.985;
         velocity.z *= 0.985;
-        velocity.y -= 0.025;
+        velocity.y -= 0.02; // Zwaartekracht
 
         playerBall.position.add(velocity);
 
-        playerBall.rotation.x += velocity.z * 0.5;
-        playerBall.rotation.z -= velocity.x * 0.5;
+        playerBall.rotation.x += velocity.z * 0.4;
+        playerBall.rotation.z -= velocity.x * 0.4;
 
         var pPos = playerBall.position;
+        isGrounded = false;
 
         for (var i = 0; i < levelPlatforms.length; i++) {
           var plat = levelPlatforms[i];
@@ -338,6 +398,7 @@
             if (velocity.y <= 0) {
               playerBall.position.y = box.max.y + 1;
               velocity.y = 0;
+              isGrounded = true;
             }
             break;
           }
@@ -409,7 +470,6 @@
     function openShop() { requestInitData(); document.getElementById('shop-modal').style.display = 'flex'; }
     function closeShop() { document.getElementById('shop-modal').style.display = 'none'; }
 
-    // Direct Level 1 opbouwen als basis
     initLevel(currentLevel);
     requestInitData();
     animate();
