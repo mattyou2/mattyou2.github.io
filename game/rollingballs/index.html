@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ball Parkour 3D - ITLab Compliant</title>
+  <title>Ball Parkour 3D - Fixed World Load</title>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
@@ -90,31 +90,33 @@
       var data = event.data;
       if (!data) return;
 
-      // Ontvang initiële data (Saldo + Echte Game Passes van ITLab)
+      // Ontvang Saldo & Game Passes van ITLab
       if (data.type === 'INIT_DATA_RESPONSE') {
-        document.getElementById('hud-balance').innerText = data.balance + " 🪙";
+        if (data.balance !== undefined) {
+          document.getElementById('hud-balance').innerText = data.balance + " 🪙";
+        }
         
         if (data.hasGold) {
           applyGoldSkin();
           var btnG = document.getElementById('btn-gold');
-          btnG.innerText = "Gekocht ✓";
-          btnG.disabled = true;
+          if (btnG) { btnG.innerText = "Gekocht ✓"; btnG.disabled = true; }
         }
         if (data.hasSpeed) {
           speedMultiplier = 1.25;
           var btnS = document.getElementById('btn-speed');
-          btnS.innerText = "Gekocht ✓";
-          btnS.disabled = true;
+          if (btnS) { btnS.innerText = "Gekocht ✓"; btnS.disabled = true; }
         }
       }
 
-      // Ontvang ITLab Cloud Save
-      if (data.type === 'LOAD_RESPONSE' && data.saveData) {
-        if (data.saveData.level) {
+      // Ontvang ITLab Cloud Save (Veilig uitgelijnd tegen undefined values)
+      if (data.type === 'LOAD_RESPONSE') {
+        if (data.saveData && typeof data.saveData.level === 'number' && data.saveData.level > 0) {
           currentLevel = data.saveData.level;
-          updateHUD();
-          initLevel(currentLevel);
+        } else {
+          currentLevel = 1;
         }
+        updateHUD();
+        initLevel(currentLevel);
       }
 
       // Ontvang Aankoop uitslag
@@ -123,7 +125,7 @@
           alert("Aankoop geslaagd!");
           requestInitData();
         } else {
-          alert("Fout bij aankoop: " + (data.result.error || "Onvoldoende saldo"));
+          alert("Fout bij aankoop: " + (data.result && data.result.error ? data.result.error : "Onvoldoende saldo"));
         }
       }
     });
@@ -137,7 +139,6 @@
     }
 
     function saveLevelProgress() {
-      // Gebruikt ITLab Cloud Save i.p.v. localStorage
       window.parent.postMessage({ type: 'SAVE_GAME', saveData: { level: currentLevel } }, '*');
       updateHUD();
     }
@@ -165,20 +166,17 @@
     var camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
     var renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.shadowMap.enabled = true;
     document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-    scene.add(new THREE.AmbientLight(0xffffff, 0.7));
-    var dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+    var dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
     dirLight.position.set(20, 50, 20);
-    dirLight.castShadow = true;
     scene.add(dirLight);
 
     // Speler Bal
     var ballGeo = new THREE.SphereGeometry(1, 32, 32);
     var ballMat = new THREE.MeshStandardMaterial({ color: 0x58a6ff, roughness: 0.3, metalness: 0.1 });
     var playerBall = new THREE.Mesh(ballGeo, ballMat);
-    playerBall.castShadow = true;
     scene.add(playerBall);
 
     var velocity = new THREE.Vector3();
@@ -203,7 +201,7 @@
     });
 
     /* ==========================================
-       3. PARCOURS MET STUNTS & HINDERISSEN
+       3. PARCOURS GENERATOR
        ========================================== */
     function clearLevel() {
       for (var i = 0; i < levelPlatforms.length; i++) scene.remove(levelPlatforms[i]);
@@ -220,18 +218,21 @@
       if (rx) mesh.rotation.x = rx;
       if (ry) mesh.rotation.y = ry;
       if (rz) mesh.rotation.z = rz;
-      mesh.receiveShadow = true;
       scene.add(mesh);
       levelPlatforms.push(mesh);
       return mesh;
     }
 
     function initLevel(lvl) {
+      // Zorg er altijd voor dat lvl minimaal 1 is
+      lvl = (typeof lvl === 'number' && lvl > 0) ? lvl : 1;
+      
       clearLevel();
 
       playerBall.position.set(0, 3, 0);
       velocity.set(0, 0, 0);
 
+      // Start Platform
       createPlatform(0, 0, 0, 8, 1, 10, 0x30363d);
       var curZ = -10;
 
@@ -408,9 +409,9 @@
     function openShop() { requestInitData(); document.getElementById('shop-modal').style.display = 'flex'; }
     function closeShop() { document.getElementById('shop-modal').style.display = 'none'; }
 
-    // Start
-    requestInitData();
+    // Direct Level 1 opbouwen als basis
     initLevel(currentLevel);
+    requestInitData();
     animate();
 
     window.addEventListener('resize', function() {
