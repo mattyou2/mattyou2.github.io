@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ball Parkour 3D</title>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+
+  <style>
+    * { box-sizing: border-box; user-select: none; margin: 0; padding: 0; }
+    body, html { width: 100%; height: 100%; overflow: hidden; font-family: sans-serif; background: #0d1117; color: #fff; }
+    #canvas-container { width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 1; }
+    .ui-layer { position: absolute; z-index: 10; pointer-events: none; }
+    .interactive { pointer-events: auto; }
+    #top-bar { top: 15px; left: 15px; right: 15px; display: flex; justify-content: space-between; }
+    .hud-box { background: rgba(16, 22, 34, 0.85); border: 1px solid rgba(255, 255, 255, 0.15); padding: 8px 14px; border-radius: 10px; }
+    .hud-title { font-size: 10px; color: #8b949e; text-transform: uppercase; }
+    .hud-value { font-size: 18px; font-weight: bold; color: #58a6ff; }
+    .btn { background: #238636; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+    .btn-blue { background: #1f6feb; }
+    #multiplayer-panel { top: 85px; left: 15px; width: 220px; }
+    #leaderboard-panel { top: 85px; right: 15px; width: 200px; }
+    input[type="text"] { width: 100%; padding: 6px; margin: 6px 0; border-radius: 4px; border: 1px solid #30363d; background: #0d1117; color: #fff; }
+    .modal { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 320px; background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 20px; display: none; flex-direction: column; gap: 12px; }
+    .shop-item { display: flex; justify-content: space-between; align-items: center; background: #0d1117; padding: 10px; border-radius: 6px; border: 1px solid #30363d; }
+  </style>
+</head>
+<body>
+
+  <div id="canvas-container"></div>
+
+  <div id="top-bar" class="ui-layer">
+    <div style="display: flex; gap: 8px;">
+      <div class="hud-box"><div class="hud-title">Level</div><div class="hud-value" id="hud-level">1</div></div>
+      <div class="hud-box"><div class="hud-title">Tijd</div><div class="hud-value" id="hud-time">0.0s</div></div>
+      <div class="hud-box"><div class="hud-title">Saldo</div><div class="hud-value" id="hud-balance">...</div></div>
+    </div>
+    <button class="btn btn-blue interactive" onclick="openShop()">Winkel 🛒</button>
+  </div>
+
+  <div id="multiplayer-panel" class="ui-layer hud-box interactive">
+    <div class="hud-title">P2P Ghost Multiplayer</div>
+    <div style="font-size: 11px; color: #8b949e;">ID: <span id="my-peer-id" style="color:#fff;">Laden...</span></div>
+    <input type="text" id="join-peer-id" placeholder="Kamer ID...">
+    <button class="btn btn-blue" style="width: 100%;" onclick="connectToPeer()">Verbinden</button>
+  </div>
+
+  <div id="leaderboard-panel" class="ui-layer hud-box">
+    <div class="hud-title">Online Spelers</div>
+    <ul id="leaderboard-list" style="list-style: none; font-size: 12px; margin-top: 6px;">
+      <li>Jij (Lvl <span id="lb-my-lvl">1</span>)</li>
+    </ul>
+  </div>
+
+  <div id="shop-modal" class="modal ui-layer interactive">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <h3>ITLab Shop</h3>
+      <button class="btn" onclick="closeShop()" style="padding: 2px 8px;">X</button>
+    </div>
+    <div class="shop-item">
+      <div><strong>Gouden Skin</strong></div>
+      <button class="btn" id="btn-gold" onclick="buyPass('Gouden Skin')">Kopen</button>
+    </div>
+    <div class="shop-item">
+      <div><strong>Speed Boost</strong></div>
+      <button class="btn" id="btn-speed" onclick="buyPass('Speed Boost')">Kopen</button>
+    </div>
+  </div>
+
+  <script>
+    var currentLevel = 1;
+    var timer = 0, timerInterval = null, isPlaying = false, speedMultiplier = 1.0;
+
+    /* ==========================================
+       POSTMESSAGE BRIDGE MET ITLAB PARENT
+       ========================================== */
+    window.addEventListener('message', function(event) {
+      var data = event.data;
+      if (!data) return;
+
+      if (data.type === 'BALANCE_RESPONSE') {
+        document.getElementById('hud-balance').innerText = data.balance + " 🪙";
+      }
+
+      if (data.type === 'LOAD_RESPONSE' && data.saveData) {
+        if (data.saveData.level) {
+          currentLevel = data.saveData.level;
+          updateHUD();
+          initLevel(currentLevel);
+        }
+      }
+
+      if (data.type === 'BUY_RESPONSE') {
+        if (data.result && data.result.ok) {
+          alert("Aankoop gelukt!");
+          if (data.passName === 'Gouden Skin') applyGoldSkin();
+          if (data.passName === 'Speed Boost') speedMultiplier = 1.35;
+          refreshBalance();
+        } else {
+          alert("Fout bij aankoop: " + (data.result.error || "Onvoldoende saldo"));
+        }
+      }
+    });
+
+    function refreshBalance() {
+      window.parent.postMessage({ type: 'GET_BALANCE' }, '*');
+    }
+
+    function buyPass(passName) {
+      window.parent.postMessage({ type: 'BUY_PASS', passName: passName }, '*');
+    }
+
+    function saveProgress() {
+      window.parent.postMessage({ type: 'SAVE_GAME', saveData: { level: currentLevel } }, '*');
+    }
+
+    function updateHUD() {
+      document.getElementById('hud-level').innerText = currentLevel;
+      document.getElementById('lb-my-lvl').innerText = currentLevel;
+    }
+
+    /* ==========================================
+       THREE.JS GAME LOGICA
+       ========================================== */
+    var scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0d1117);
+    scene.fog = new THREE.FogExp2(0x0d1117, 0.015);
+
+    var camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+    var renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+    var dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    dirLight.position.set(20, 40, 20);
+    scene.add(dirLight);
+
+    var ballGeo = new THREE.SphereGeometry(1, 32, 32);
+    var ballMat = new THREE.MeshStandardMaterial({ color: 0x58a6ff });
+    var playerBall = new THREE.Mesh(ballGeo, ballMat);
+    scene.add(playerBall);
+
+    var velocity = new THREE.Vector3();
+    var levelPlatforms = [], finishZone = null;
+    var keys = { Up: false, Down: false, Left: false, Right: false };
+
+    window.addEventListener('keydown', function(e) {
+      if (e.key === 'ArrowUp' || e.key === 'w') keys.Up = true;
+      if (e.key === 'ArrowDown' || e.key === 's') keys.Down = true;
+      if (e.key === 'ArrowLeft' || e.key === 'a') keys.Left = true;
+      if (e.key === 'ArrowRight' || e.key === 'd') keys.Right = true;
+    });
+    window.addEventListener('keyup', function(e) {
+      if (e.key === 'ArrowUp' || e.key === 'w') keys.Up = false;
+      if (e.key === 'ArrowDown' || e.key === 's') keys.Down = false;
+      if (e.key === 'ArrowLeft' || e.key === 'a') keys.Left = false;
+      if (e.key === 'ArrowRight' || e.key === 'd') keys.Right = false;
+    });
+
+    function initLevel(lvl) {
+      for (var i = 0; i < levelPlatforms.length; i++) scene.remove(levelPlatforms[i]);
+      levelPlatforms = [];
+      if (finishZone) scene.remove(finishZone);
+
+      playerBall.position.set(0, 3, 0);
+      velocity.set(0, 0, 0);
+
+      var platformCount = 5 + lvl * 2;
+      var curZ = 0, curX = 0;
+
+      for (var i = 0; i < platformCount; i++) {
+        var w = Math.max(3, 8 - lvl * 0.3);
+        var len = 12 + Math.random() * 6;
+        var mesh = new THREE.Mesh(new THREE.BoxGeometry(w, 1, len), new THREE.MeshStandardMaterial({ color: i % 2 === 0 ? 0x21262d : 0x30363d }));
+        if (i > 0) { curX += (Math.random() - 0.5) * (w * 0.8); curZ -= (len / 2 + 4); }
+        mesh.position.set(curX, 0, curZ);
+        scene.add(mesh);
+        levelPlatforms.push(mesh);
+      }
+
+      finishZone = new THREE.Mesh(new THREE.CylinderGeometry(3, 3, 0.5, 32), new THREE.MeshBasicMaterial({ color: 0x2ea043, wireframe: true }));
+      finishZone.position.set(curX, 0.3, curZ - 10);
+      scene.add(finishZone);
+
+      clearInterval(timerInterval);
+      timer = 0;
+      isPlaying = true;
+      timerInterval = setInterval(function() {
+        if (isPlaying) {
+          timer += 0.1;
+          document.getElementById('hud-time').innerText = timer.toFixed(1) + "s";
+        }
+      }, 100);
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      if (isPlaying) {
+        var accel = 0.025 * speedMultiplier;
+        if (keys.Up) velocity.z -= accel;
+        if (keys.Down) velocity.z += accel;
+        if (keys.Left) velocity.x -= accel;
+        if (keys.Right) velocity.x += accel;
+
+        velocity.x *= 0.95; velocity.z *= 0.95; velocity.y -= 0.03;
+        playerBall.position.add(velocity);
+
+        var pPos = playerBall.position;
+        for (var i = 0; i < levelPlatforms.length; i++) {
+          var box = new THREE.Box3().setFromObject(levelPlatforms[i]);
+          if (pPos.x >= box.min.x - 0.5 && pPos.x <= box.max.x + 0.5 && pPos.z >= box.min.z - 0.5 && pPos.z <= box.max.z + 0.5 && pPos.y <= box.max.y + 1 && pPos.y >= box.min.y) {
+            playerBall.position.y = box.max.y + 1;
+            velocity.y = 0;
+            break;
+          }
+        }
+
+        if (pPos.y < -15) initLevel(currentLevel);
+
+        if (finishZone && pPos.distanceTo(finishZone.position) < 3) {
+          isPlaying = false;
+          currentLevel++;
+          saveProgress();
+          updateHUD();
+          alert("Level " + (currentLevel - 1) + " haald!");
+          initLevel(currentLevel);
+        }
+
+        camera.position.x += (playerBall.position.x - camera.position.x) * 0.1;
+        camera.position.y += (playerBall.position.y + 6 - camera.position.y) * 0.1;
+        camera.position.z += (playerBall.position.z + 12 - camera.position.z) * 0.1;
+        camera.lookAt(playerBall.position);
+
+        broadcastPosition();
+      }
+      renderer.render(scene, camera);
+    }
+
+    /* ==========================================
+       MULTIPLAYER (PEERJS)
+       ========================================== */
+    var peer = new Peer(), connections = {}, ghostMeshes = {};
+    peer.on('open', function(id) { document.getElementById('my-peer-id').innerText = id; });
+    peer.on('connection', function(conn) { setupConn(conn); });
+
+    function connectToPeer() {
+      var id = document.getElementById('join-peer-id').value.trim();
+      if (id) setupConn(peer.connect(id));
+    }
+
+    function setupConn(conn) {
+      conn.on('open', function() {
+        connections[conn.peer] = conn;
+        var ghost = new THREE.Mesh(ballGeo, new THREE.MeshStandardMaterial({ color: 0xff4757, transparent: true, opacity: 0.5 }));
+        scene.add(ghost);
+        ghostMeshes[conn.peer] = ghost;
+
+        conn.on('data', function(data) {
+          if (data.type === 'pos' && ghostMeshes[conn.peer]) {
+            ghostMeshes[conn.peer].position.set(data.x, data.y, data.z);
+          }
+        });
+      });
+    }
+
+    function broadcastPosition() {
+      var data = { type: 'pos', x: playerBall.position.x, y: playerBall.position.y, z: playerBall.position.z };
+      for (var id in connections) {
+        if (connections[id] && connections[id].open) connections[id].send(data);
+      }
+    }
+
+    function applyGoldSkin() {
+      ballMat.color.setHex(0xffd700);
+      ballMat.metalness = 0.8;
+    }
+
+    function openShop() { refreshBalance(); document.getElementById('shop-modal').style.display = 'flex'; }
+    function closeShop() { document.getElementById('shop-modal').style.display = 'none'; }
+
+    refreshBalance();
+    initLevel(currentLevel);
+    animate();
+  </script>
+</body>
+</html>
